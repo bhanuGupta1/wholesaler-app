@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/common/Layout';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 
 function App() {
   return (
@@ -16,10 +17,7 @@ function App() {
           } />
           <Route path="/login" element={
             <Layout>
-              <div className="p-4">
-                <h1 className="text-2xl font-bold">Login Page</h1>
-                <p>Login form will go here</p>
-              </div>
+              <Login />
             </Layout>
           } />
           <Route path="/inventory" element={
