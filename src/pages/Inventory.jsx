@@ -43,7 +43,47 @@ const Inventory = () => {
   }
 };
 //
+///
+//import { useMemo } from 'react';
 
+//const filteredProducts = useMemo(() => {
+  let result = [...products];
+
+  if (searchTerm) {
+    result = result.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (categoryFilter) {
+    result = result.filter(product => product.category === categoryFilter);
+  }
+
+  switch (sortBy) {
+    case 'name_desc':
+      result.sort((a, b) => b.name.localeCompare(a.name));
+      break;
+    case 'price_asc':
+      result.sort((a, b) => a.price - b.price);
+      break;
+    case 'price_desc':
+      result.sort((a, b) => b.price - a.price);
+      break;
+    case 'stock_asc':
+      result.sort((a, b) => a.stock - b.stock);
+      break;
+    case 'stock_desc':
+      result.sort((a, b) => b.stock - a.stock);
+      break;
+    default:
+      result.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  return result;}
+//},// [products, searchTerm, categoryFilter, sortBy];
+///
 
   // Available categories from our products
   const categories = ['Electronics', 'Office Supplies', 'Furniture', 'Kitchen', 'Clothing'];
@@ -311,6 +351,7 @@ const Inventory = () => {
         </div>
       </div>
 
+
       {/* Products list */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -504,6 +545,6 @@ const Inventory = () => {
       )}
     </div>
   );
-};
+;
 
 export default Inventory;
