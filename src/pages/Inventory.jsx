@@ -7,7 +7,7 @@ import ProductModal from '../components/Inventory/ProductModal';
 import LowStockAlert from '../components/Inventory/LowStockAlert';
 
 const Inventory = () => {
-  // State management
+  ///State Mangement 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
