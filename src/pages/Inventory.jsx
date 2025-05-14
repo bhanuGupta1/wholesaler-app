@@ -5,10 +5,52 @@ import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 
 const Inventory = () => {
+<<<<<<< HEAD
   const { darkMode } = useTheme();
+=======
+  //State Mangement 
+>>>>>>> 5cb0420 (Defined asynchronous function that load product data from Firestore.)
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+<<<<<<< HEAD
+=======
+  const [showModal, setShowModal] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [sortBy, setSortBy] = useState('name_asc');
+  const [lowStockThreshold, setLowStockThreshold] = useState(10);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+////   handles loading and error state
+  const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    const productsRef = collection(db, 'products');
+    const productsSnapshot = await getDocs(productsRef);
+    const productsList = productsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setProducts(productsList);
+    setFilteredProducts(productsList);
+
+    const lowStockItems = productsList.filter(product => product.stock <= lowStockThreshold);
+    setLowStockCount(lowStockItems.length);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    setError('Failed to fetch products. Please try again later.');
+  } finally {
+    setLoading(false);
+  }
+};
+//
+
+
+  // Available categories from our products
+  const categories = ['Electronics', 'Office Supplies', 'Furniture', 'Kitchen', 'Clothing'];
+>>>>>>> 5cb0420 (Defined asynchronous function that load product data from Firestore.)
 
   // Fetch products from Firestore
   useEffect(() => {
