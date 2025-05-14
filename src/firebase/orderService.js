@@ -17,13 +17,13 @@ import { db } from './config';
 
 const ORDERS_COLLECTION = 'orders';
 
-// Create a new order with items subcollection
+// Here I Create a new order with items subcollection
 export const createOrder = async (orderData) => {
   try {
     // Extract items from order data
     const { items, ...orderDetails } = orderData;
     
-    // Create order document
+    // Create order document 
     const orderRef = await addDoc(collection(db, ORDERS_COLLECTION), {
       ...orderDetails,
       createdAt: serverTimestamp(),
@@ -112,13 +112,13 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 };
 
-// Get orders with pagination and filtering
+// Here I will pagination and filtering to get a order.
 export const getOrders = async (options = {}) => {
   try {
     let ordersQuery = collection(db, ORDERS_COLLECTION);
     const constraints = [];
     
-    // Apply filters
+    // Here I have applied filtering.
     if (options.status && options.status !== 'all') {
       constraints.push(where('status', '==', options.status));
     }
@@ -127,15 +127,15 @@ export const getOrders = async (options = {}) => {
       constraints.push(where('customerEmail', '==', options.customerEmail));
     }
     
-    // Apply sorting
+    // Then apply sorting
     constraints.push(orderBy('createdAt', 'desc'));
     
-    // Apply pagination
+    // After that apply pagination
     if (options.limit) {
       constraints.push(limit(options.limit));
     }
     
-    // Execute query
+    // Then run query 
     if (constraints.length > 0) {
       ordersQuery = query(ordersQuery, ...constraints);
     }
@@ -157,7 +157,7 @@ export const getOrders = async (options = {}) => {
   }
 };
 
-// Get recent orders
+// Here I get recent orders
 export const getRecentOrders = async (count = 5) => {
   return getOrders({ limit: count });
 };
