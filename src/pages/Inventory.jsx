@@ -7,7 +7,7 @@ import ProductModal from '../components/Inventory/ProductModal';
 import LowStockAlert from '../components/Inventory/LowStockAlert';
 
 const Inventory = () => {
-  ///State Mangement 
+  //State Mangement 
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,30 @@ const Inventory = () => {
   const [lowStockThreshold, setLowStockThreshold] = useState(10);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+////   handles loading and error state
+  const fetchProducts = async () => {
+  try {
+    setLoading(true);
+    const productsRef = collection(db, 'products');
+    const productsSnapshot = await getDocs(productsRef);
+    const productsList = productsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setProducts(productsList);
+    setFilteredProducts(productsList);
+
+    const lowStockItems = productsList.filter(product => product.stock <= lowStockThreshold);
+    setLowStockCount(lowStockItems.length);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    setError('Failed to fetch products. Please try again later.');
+  } finally {
+    setLoading(false);
+  }
+};
+//
+
 
   // Available categories from our products
   const categories = ['Electronics', 'Office Supplies', 'Furniture', 'Kitchen', 'Clothing'];
