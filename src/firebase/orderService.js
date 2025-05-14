@@ -1,4 +1,4 @@
-// src/firebase/orderService.js
+// This is src/firebase/orderService.js file.
 import { 
   collection, 
   doc, 
@@ -31,7 +31,7 @@ export const createOrder = async (orderData) => {
       status: orderDetails.status || 'pending'
     });
     
-    // Add items to subcollection
+    // Add items to subcollection in the order collection.
     if (items && items.length > 0) {
       for (const item of items) {
         await addDoc(collection(db, ORDERS_COLLECTION, orderRef.id, 'orderItems'), {
@@ -50,17 +50,17 @@ export const createOrder = async (orderData) => {
   }
 };
 
-// Get order with items
+// here I will get all the order items
 export const getOrderWithItems = async (orderId) => {
   try {
-    // Get order document
+    // Here i will get order document
     const orderDoc = await getDoc(doc(db, ORDERS_COLLECTION, orderId));
     
     if (!orderDoc.exists()) {
       throw new Error(`Order with ID ${orderId} not found`);
     }
     
-    // Get order items
+    // Here I will get order from the customer.
     const itemsQuery = query(
       collection(db, ORDERS_COLLECTION, orderId, 'orderItems')
     );
@@ -75,7 +75,7 @@ export const getOrderWithItems = async (orderId) => {
       });
     });
     
-    // Return combined data
+    // Here I will return all the data as single.
     return {
       id: orderDoc.id,
       ...orderDoc.data(),
@@ -85,4 +85,79 @@ export const getOrderWithItems = async (orderId) => {
     console.error('Error getting order with items:', error);
     throw error;
   }
+};
+// Here I will update order by firebase database.
+export const updateOrder = async (orderId, orderData) => {
+  try {
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+      ...orderData,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating order:', error);
+    throw error;
+  }
+};
+
+// here i am will update order status.
+export const updateOrderStatus = async (orderId, status) => {
+  try {
+    await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
+      status,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    throw error;
+  }
+};
+
+// Get orders with pagination and filtering
+export const getOrders = async (options = {}) => {
+  try {
+    let ordersQuery = collection(db, ORDERS_COLLECTION);
+    const constraints = [];
+    
+    // Apply filters
+    if (options.status && options.status !== 'all') {
+      constraints.push(where('status', '==', options.status));
+    }
+    
+    if (options.customerEmail) {
+      constraints.push(where('customerEmail', '==', options.customerEmail));
+    }
+    
+    // Apply sorting
+    constraints.push(orderBy('createdAt', 'desc'));
+    
+    // Apply pagination
+    if (options.limit) {
+      constraints.push(limit(options.limit));
+    }
+    
+    // Execute query
+    if (constraints.length > 0) {
+      ordersQuery = query(ordersQuery, ...constraints);
+    }
+    
+    const snapshot = await getDocs(ordersQuery);
+    
+    const orders = [];
+    snapshot.forEach((doc) => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    return orders;
+  } catch (error) {
+    console.error('Error getting orders:', error);
+    throw error;
+  }
+};
+
+// Get recent orders
+export const getRecentOrders = async (count = 5) => {
+  return getOrders({ limit: count });
 };
