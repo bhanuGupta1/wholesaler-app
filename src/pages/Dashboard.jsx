@@ -1,6 +1,9 @@
 // src/pages/Dashboard.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// Add Firebase imports
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 // Activity Timeline Component with premium design
 const ActivityTimeline = () => {
@@ -133,7 +136,7 @@ const QuickActions = () => {
 
 // Main Dashboard Component
 const Dashboard = () => {
-  // Mock data (same as before)
+  // Original state with mock data (keep this for now)
   const [stats, setStats] = useState({
     totalProducts: 24,
     lowStockProducts: 6,
@@ -165,6 +168,16 @@ const Dashboard = () => {
       }
     ]
   });
+  
+  // Add new state for Firebase integration (but don't use it yet)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  
+  // Empty useEffect for now
+  useEffect(() => {
+    // We'll add Firebase fetching here in the next step
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
