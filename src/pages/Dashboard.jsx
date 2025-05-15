@@ -6,15 +6,7 @@ import { collection, getDocs, query, where, orderBy, limit } from 'firebase/fire
 import { db } from '../firebase/config';
 
 // Activity Timeline Component with premium design
-const ActivityTimeline = () => {
-  const activities = [
-    { id: 1, type: 'order', description: 'New order from John Smith', time: '2 hours ago' },
-    { id: 2, type: 'inventory', description: 'Product "USB Flash Drive 32GB" is low on stock', time: '4 hours ago' },
-    { id: 3, type: 'order', description: 'Order #1082 has been completed', time: '5 hours ago' },
-    { id: 4, type: 'inventory', description: 'Added 20 units of "Wireless Mouse"', time: 'Yesterday' },
-    { id: 5, type: 'order', description: 'Order #1081 has been cancelled', time: 'Yesterday' },
-  ];
-
+const ActivityTimeline = ({ activities }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
       <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
@@ -69,6 +61,9 @@ const ActivityTimeline = () => {
     </div>
   );
 };
+
+// Quick Actions Component with premium design
+// Continue from previous code...
 
 // Quick Actions Component with premium design
 const QuickActions = () => {
@@ -157,7 +152,7 @@ function getRelativeTime(date) {
 
 // Main Dashboard Component
 const Dashboard = () => {
-  // State for dashboard data - Now with completely empty fields
+  // State for dashboard data
   const [stats, setStats] = useState({
     totalProducts: 0,
     lowStockProducts: 0,
@@ -165,7 +160,8 @@ const Dashboard = () => {
     recentOrders: []
   });
   
-  // Add new state for Firebase integration
+  // Add activities state
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -215,6 +211,37 @@ const Dashboard = () => {
         const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
         const totalOrders = ordersCountSnapshot.size;
 
+        // Generate activities from recent actions
+        const combinedActivities = [];
+        
+        // Add order activities
+        recentOrders.forEach((order, index) => {
+          combinedActivities.push({
+            id: `order-${order.id}`,
+            type: 'order',
+            description: `New order from ${order.customerName}`,
+            time: getRelativeTime(order.createdAt)
+          });
+        });
+
+        // Add inventory activities for low stock
+        const lowStockItems = products.filter(product => product.stock <= lowStockThreshold);
+        lowStockItems.slice(0, 3).forEach((product, index) => {
+          combinedActivities.push({
+            id: `inventory-${product.id}`,
+            type: 'inventory',
+            description: `Product "${product.name}" is low on stock`,
+            time: 'Today' // This would ideally be based on the product's last update timestamp
+          });
+        });
+
+        // Sort activities by time (this is a simplification)
+        combinedActivities.sort((a, b) => {
+          if (a.time === 'Today' && b.time !== 'Today') return -1;
+          if (a.time !== 'Today' && b.time === 'Today') return 1;
+          return 0;
+        });
+
         // Update state with all fetched data
         setStats({
           totalProducts,
@@ -223,6 +250,7 @@ const Dashboard = () => {
           recentOrders
         });
         
+        setActivities(combinedActivities);
         setLastUpdated(new Date());
         setLoading(false);
       } catch (err) {
@@ -519,8 +547,8 @@ const Dashboard = () => {
               )}
             </div>
             
-            {/* Activity Timeline */}
-            <ActivityTimeline />
+            {/* Activity Timeline - Now using activities from state */}
+            <ActivityTimeline activities={activities} />
           </div>
           {/* Sidebar with Quick Actions and Reports */}
           <div className="space-y-8">
