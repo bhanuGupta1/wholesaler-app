@@ -141,7 +141,8 @@ const filterBySearch = (products, searchTerm) => {
     }
     
     // Apply category filter
-    if (categoryFilter) {
+    if (categoryFilter)
+       {
       result = result.filter(product => product.category === categoryFilter);
     }
     
