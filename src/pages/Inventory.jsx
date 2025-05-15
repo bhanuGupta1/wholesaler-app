@@ -45,53 +45,41 @@ const Inventory = () => {
 //
 ///
 //import { useMemo } from 'react';
-//
-const filterBySearch = (products, searchTerm) => {
-  if (!searchTerm) return products;
-  const lowerSearch = searchTerm.toLowerCase();
-  return products.filter(product =>
-    product.name.toLowerCase().includes(lowerSearch) ||
-    product.sku?.toLowerCase().includes(lowerSearch) ||
-    product.description?.toLowerCase().includes(lowerSearch)
-  );
-};
-//
-//const filteredProducts = useMemo(() => {
-  let result = [...products];
 
+//
+// Centralized filtering function that handles search, category, and sorting
+function Inventory() {}
+const filterAndSortProducts = (products, { searchTerm = '', categoryFilter = '', sortBy = 'name_asc' } = {}) => {
+  if (!products || !Array.isArray(products)) {
+    console.warn('Invalid products data provided');
+    return [];
+  }
+  
+  // Make a copy to avoid mutating the original
+  let result = [...products];
+  
+  // Apply search filter if provided
   if (searchTerm) {
-    result = result.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const lowerSearch = searchTerm.toLowerCase();
+    result = result.filter(product => 
+      (product.name && product.name.toLowerCase().includes(lowerSearch)) || 
+      (product.sku && product.sku.toLowerCase().includes(lowerSearch)) || 
+      (product.description && product.description.toLowerCase().includes(lowerSearch))
     );
   }
-
+  
+  // Apply category filter if provided
   if (categoryFilter) {
     result = result.filter(product => product.category === categoryFilter);
   }
-
-  switch (sortBy) {
-    case 'name_desc':
-      result.sort((a, b) => b.name.localeCompare(a.name));
-      break;
-    case 'price_asc':
-      result.sort((a, b) => a.price - b.price);
-      break;
-    case 'price_desc':
-      result.sort((a, b) => b.price - a.price);
-      break;
-    case 'stock_asc':
-      result.sort((a, b) => a.stock - b.stock);
-      break;
-    case 'stock_desc':
-      result.sort((a, b) => b.stock - a.stock);
-      break;
-    default:
-      result.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  return result;}
+  
+  // Apply sorting
+  const sortingFunctions = {
+    name_asc: (a, b) => a.name.localeCompare(b.name),
+    name_desc: (a, b) => b.name.localeCompare(a.name),
+    price_asc: (a, b) => (a.price || 0) - (b.price || 0),
+    price_desc: (a, b) => (b.price || 0) - (a.price || 0),
+    stock_asc: (a)}
 //},// [products, searchTerm, categoryFilter, sortBy];
 ///
 
@@ -590,6 +578,6 @@ const toggleStockAdjustment1 = (productId, initialAdjustment = 0) => {
       )}
     </div>
   );
-;
-
-export default Inventory;
+;}
+}
+//export default Inventory;}
