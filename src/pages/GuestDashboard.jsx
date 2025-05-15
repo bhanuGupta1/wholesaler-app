@@ -6,9 +6,20 @@ import { useTheme } from '../context/ThemeContext';
 // Basic ProductCard Component
 const ProductCard = ({ product, darkMode }) => (
   <div className={`border rounded-lg p-4 shadow ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-    <div className="h-32 bg-gray-100 flex items-center justify-center rounded mb-4">
-      {/* Placeholder for image */}
-      <span className="text-2xl">{product.name[0]}</span>
+    <div className="h-32 bg-gray-100 flex items-center justify-center rounded mb-4 overflow-hidden">
+      {product.imageUrl ? (
+        <img
+          src={product.imageUrl}
+          alt={product.name}
+          className="object-cover h-full w-full"
+        />
+      ) : (
+        // SVG placeholder
+        <svg width="40" height="40" fill={darkMode ? "#666" : "#ccc"} viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <text x="12" y="16" textAnchor="middle" fill="#fff" fontSize="10">{product.name[0]}</text>
+        </svg>
+      )}
     </div>
     <h3 className="font-bold text-lg mb-1">{product.name}</h3>
     <p className="text-sm mb-2">{product.description}</p>
