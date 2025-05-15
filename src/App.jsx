@@ -117,6 +117,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <div className="dark:bg-gray-900 dark:text-white">
         <Router>
           <Routes>
             <Route path="/" element={
@@ -146,6 +147,7 @@ function App() {
             } />
           </Routes>
         </Router>
+        </div>
       </ThemeProvider>
     </AuthProvider>
   );
