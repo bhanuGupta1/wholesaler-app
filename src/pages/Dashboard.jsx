@@ -1,13 +1,242 @@
 // src/pages/Dashboard.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { useTheme } from '../context/ThemeContext'; // Import the theme hook
+import { useTheme } from '../context/ThemeContext';
+
+// Activity Timeline Component
+const ActivityTimeline = ({ activities, darkMode }) => {
+  const [filter, setFilter] = useState('all');
+  
+  // Filter activities based on selected type
+  const filteredActivities = useMemo(() => {
+    if (filter === 'all') return activities;
+    return activities.filter(activity => activity.type === filter);
+  }, [activities, filter]);
+  
+  return (
+    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Recent Activities</h2>
+        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center`}>
+          <span className="mr-2">Filter by:</span>
+          <select 
+            className={`form-select rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-300' : 'border-gray-300 text-gray-600'} text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">All Activities</option>
+            <option value="order">Orders</option>
+            <option value="inventory">Inventory</option>
+          </select>
+        </div>
+      </div>
+      <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
+        {filteredActivities.length > 0 ? (
+          filteredActivities.map((activity) => (
+            <div key={activity.id} className={`p-5 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
+              <div className="flex items-start">
+                <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                  activity.type === 'order' 
+                    ? darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'
+                    : darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600'
+                }`}>
+                  {activity.type === 'order' ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-4 flex-1">
+                  <div className="flex justify-between">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{activity.description}</p>
+                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{activity.time}</span>
+                  </div>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                    {activity.type === 'order' ? 'Order Management' : 'Inventory Update'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-6 text-center">
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No activities found with the selected filter.</p>
+          </div>
+        )}
+      </div>
+      <div className={`${darkMode ? 'bg-gray-700 border-gray-700' : 'bg-gray-50 border-gray-100'} px-6 py-3 border-t`}>
+        <Link to="/activity" className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} flex items-center justify-center`}>
+          View all activities
+          <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// Quick Actions Component
+const QuickActions = ({ darkMode }) => {
+  const actions = [
+    {
+      id: 'new-order',
+      to: '/create-order',
+      name: 'New Order',
+      description: 'Create customer order',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      ),
+      color: 'blue'
+    },
+    {
+      id: 'add-product',
+      to: '/inventory',
+      name: 'Add Product',
+      description: 'Add to inventory',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      ),
+      color: 'green'
+    },
+    {
+      id: 'low-stock',
+      to: '/inventory',
+      name: 'Low Stock',
+      description: 'View alerts',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      color: 'yellow'
+    },
+    {
+      id: 'pending-orders',
+      to: '/orders',
+      name: 'Pending Orders',
+      description: 'Process orders',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      color: 'purple'
+    },
+  ];
+  
+  return (
+    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
+      </div>
+      <div className="p-5 grid grid-cols-2 gap-4">
+        {actions.map((action) => (
+          <Link 
+            key={action.id}
+            to={action.to}
+            className={`flex flex-col items-center p-4 rounded-xl 
+              hover:bg-${action.color}-${darkMode ? '900/20' : '50'} 
+              transition-colors group border ${darkMode ? 
+                `border-gray-700 hover:border-${action.color}-800` : 
+                `border-gray-100 hover:border-${action.color}-100`}`}
+          >
+            <div className={`h-12 w-12 rounded-full ${darkMode ? 
+              `bg-${action.color}-900/30` : 
+              `bg-${action.color}-100`} 
+              flex items-center justify-center mb-3 
+              ${darkMode ? 
+                `group-hover:bg-${action.color}-900/50` : 
+                `group-hover:bg-${action.color}-200`} 
+              transition-colors`}
+            >
+              <span className={`${darkMode ? 
+                `text-${action.color}-400` : 
+                `text-${action.color}-600`}`}
+              >
+                {action.icon}
+              </span>
+            </div>
+            <span className={`text-sm font-medium ${darkMode ? 
+              `text-gray-200 group-hover:text-${action.color}-400` : 
+              `text-gray-800 group-hover:text-${action.color}-700`}`}
+            >
+              {action.name}
+            </span>
+            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+              {action.description}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Skeleton Loader for better loading UX
+const SkeletonLoader = ({ type, darkMode }) => {
+  const bgColor = darkMode ? 'bg-gray-700' : 'bg-gray-200';
+  const pulseClass = 'animate-pulse';
+  
+  if (type === 'card') {
+    return (
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md overflow-hidden h-40`}>
+        <div className="p-6">
+          <div className="flex items-center">
+            <div className={`${bgColor} ${pulseClass} h-12 w-12 rounded-xl`}></div>
+            <div className="ml-5 space-y-2">
+              <div className={`${bgColor} ${pulseClass} h-4 w-24 rounded`}></div>
+              <div className={`${bgColor} ${pulseClass} h-6 w-16 rounded`}></div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className={`${bgColor} ${pulseClass} h-4 w-full rounded`}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (type === 'table') {
+    return (
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md overflow-hidden`}>
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between">
+            <div className={`${bgColor} ${pulseClass} h-6 w-40 rounded`}></div>
+            <div className={`${bgColor} ${pulseClass} h-6 w-24 rounded`}></div>
+          </div>
+        </div>
+        <div className="p-6 space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center space-x-4">
+              <div className={`${bgColor} ${pulseClass} h-10 w-10 rounded-full`}></div>
+              <div className="flex-1">
+                <div className={`${bgColor} ${pulseClass} h-4 w-full rounded mb-2`}></div>
+                <div className={`${bgColor} ${pulseClass} h-3 w-1/2 rounded`}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  
+  return null;
+};
 
 // Main Dashboard Component
 const Dashboard = () => {
-  const { darkMode } = useTheme(); // Use theme context
+  const { darkMode } = useTheme();
   
   // State for dashboard data
   const [stats, setStats] = useState({
@@ -21,7 +250,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const lowStockThreshold = 10; // This could be moved to app settings
+  const lowStockThreshold = 10;
   
   // Fetch dashboard data from Firebase
   useEffect(() => {
@@ -186,12 +415,59 @@ const Dashboard = () => {
     }
   }
 
-  // Handle refresh
-  const handleRefresh = () => {
-    setLoading(true);
-    // Re-fetch data (this would re-run the useEffect)
+  // Handle refresh - now with useCallback for better performance
+  const handleRefresh = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
+  
+  // Memoize stat cards data to prevent unnecessary recalculations
+  const statCards = useMemo(() => [
+    {
+      id: 'products',
+      title: 'Products',
+      value: stats.totalProducts,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+        </svg>
+      ),
+      color: 'indigo',
+      description: 'in inventory',
+      link: '/inventory',
+      linkText: 'View inventory',
+      trend: 'up'
+    },
+    {
+      id: 'low-stock',
+      title: 'Low Stock',
+      value: stats.lowStockProducts,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      color: 'red',
+      description: 'need attention',
+      link: '/inventory',
+      linkText: 'View alerts',
+      trend: 'down'
+    },
+    {
+      id: 'orders',
+      title: 'Orders',
+      value: stats.totalOrders,
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      color: 'green',
+      description: 'total orders',
+      link: '/orders',
+      linkText: 'View orders',
+      trend: 'up'
+    }
+  ], [stats.totalProducts, stats.lowStockProducts, stats.totalOrders]);
 
   return (
     <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -244,11 +520,26 @@ const Dashboard = () => {
         </nav>
       </div>
       
-      {/* Loading state */}
+      {/* Loading state with skeleton loaders */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-          <p className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading dashboard data...</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Stats Cards Skeletons */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <SkeletonLoader key={i} type="card" darkMode={darkMode} />
+              ))}
+            </div>
+            
+            {/* Table and Activity Skeletons */}
+            <SkeletonLoader type="table" darkMode={darkMode} />
+            <SkeletonLoader type="table" darkMode={darkMode} />
+          </div>
+          
+          <div className="space-y-8">
+            <SkeletonLoader type="table" darkMode={darkMode} />
+            <SkeletonLoader type="table" darkMode={darkMode} />
+          </div>
         </div>
       ) : error ? (
         <div className={`${darkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-400 text-red-700'} border-l-4 p-4 mb-6`}>
@@ -273,97 +564,50 @@ const Dashboard = () => {
         // Dashboard content
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {/* Stats Cards - Enhanced */}
+            {/* Stats Cards - now using memoized data */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md overflow-hidden transition-all border`}>
-                <div className="px-6 py-5">
-                  <div className="flex items-center">
-                    <div className={`flex-shrink-0 rounded-xl ${darkMode ? 'bg-indigo-900/30' : 'bg-indigo-100'} p-3`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                      </svg>
-                    </div>
-                    <div className="ml-5">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>Products</div>
-                      <div className={`mt-1 text-3xl font-extrabold ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{stats.totalProducts}</div>
-                      <div className="mt-1 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                        <span className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'} ml-1`}>in inventory</span>
+              {statCards.map(card => (
+                <div 
+                  key={card.id}
+                  className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md overflow-hidden transition-all border hover:shadow-lg`}
+                >
+                  <div className="px-6 py-5">
+                    <div className="flex items-center">
+                      <div className={`flex-shrink-0 rounded-xl ${darkMode ? `bg-${card.color}-900/30` : `bg-${card.color}-100`} p-3`}>
+                        <span className={`${darkMode ? `text-${card.color}-400` : `text-${card.color}-600`}`}>
+                          {card.icon}
+                        </span>
+                      </div>
+                      <div className="ml-5">
+                        <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>{card.title}</div>
+                        <div className={`mt-1 text-3xl font-extrabold ${darkMode ? `text-${card.color}-400` : `text-${card.color}-600`}`}>{card.value}</div>
+                        <div className="mt-1 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${
+                            card.trend === 'up' ? 'text-green-500' : 'text-red-500'
+                          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                              card.trend === 'up' 
+                                ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" 
+                                : "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                            } />
+                          </svg>
+                          <span className={`text-sm ${
+                            card.trend === 'up' ? darkMode ? 'text-green-400' : 'text-green-600' : darkMode ? 'text-red-400' : 'text-red-600'
+                          } ml-1`}>{card.description}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-6">
-                    <Link to="/inventory" className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium flex items-center`}>
-                      View inventory
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              
-              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md overflow-hidden transition-all border`}>
-                <div className="px-6 py-5">
-                  <div className="flex items-center">
-                    <div className={`flex-shrink-0 rounded-xl ${darkMode ? 'bg-red-900/30' : 'bg-red-100'} p-3`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${darkMode ? 'text-red-400' : 'text-red-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    </div>
-                    <div className="ml-5">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>Low Stock</div>
-                      <div className={`mt-1 text-3xl font-extrabold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{stats.lowStockProducts}</div>
-                      <div className="mt-1 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                    <div className="mt-6">
+                      <Link to={card.link} className={`text-sm ${darkMode ? `text-${card.color}-400 hover:text-${card.color}-300` : `text-${card.color}-600 hover:text-${card.color}-800`} font-medium flex items-center`}>
+                        {card.linkText}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-600'} ml-1`}>need attention</span>
-                      </div>
+                      </Link>
                     </div>
-                  </div>
-                  <div className="mt-6">
-                    <Link to="/inventory" className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'} font-medium flex items-center`}>
-                      View alerts
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
                   </div>
                 </div>
-              </div>
-              
-              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md overflow-hidden transition-all border`}>
-                <div className="px-6 py-5">
-                  <div className="flex items-center">
-                    <div className={`flex-shrink-0 rounded-xl ${darkMode ? 'bg-green-900/30' : 'bg-green-100'} p-3`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${darkMode ? 'text-green-400' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <div className="ml-5">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>Orders</div>
-                      <div className={`mt-1 text-3xl font-extrabold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>{stats.totalOrders}</div>
-                      <div className="mt-1 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                        <span className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'} ml-1`}>total orders</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <Link to="/orders" className={`text-sm ${darkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-800'} font-medium flex items-center`}>
-                      View orders
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
             
             {/* Recent Orders - Enhanced with theme support */}
@@ -483,206 +727,14 @@ const Dashboard = () => {
               )}
             </div>
             
-            {/* Activity Timeline */}
-            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-              <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Recent Activities</h2>
-                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center`}>
-                  <span className="mr-2">Filter by:</span>
-                  <select className={`form-select rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-300' : 'border-gray-300 text-gray-600'} text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}>
-                    <option>All Activities</option>
-                    <option>Orders</option>
-                    <option>Inventory</option>
-                  </select>
-                </div>
-              </div>
-              <div className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
-                {activities.length > 0 ? (
-                  activities.map((activity) => (
-                    <div key={activity.id} className={`p-5 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
-                      <div className="flex items-start">
-                        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
-                          activity.type === 'order' 
-                            ? darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'
-                            : darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600'
-                        }`}>
-                          {activity.type === 'order' ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="ml-4 flex-1">
-                          <div className="flex justify-between">
-                            <p className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{activity.description}</p>
-                            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{activity.time}</span>
-                          </div>
-                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                            {activity.type === 'order' ? 'Order Management' : 'Inventory Update'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-6 text-center">
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No recent activities found.</p>
-                  </div>
-                )}
-              </div>
-              <div className={`${darkMode ? 'bg-gray-700 border-gray-700' : 'bg-gray-50 border-gray-100'} px-6 py-3 border-t`}>
-                <a href="#" className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} flex items-center justify-center`}>
-                  View all activities
-                  <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
+            {/* Activity Timeline - now using extracted component */}
+            <ActivityTimeline activities={activities} darkMode={darkMode} />
           </div>
 
           {/* Sidebar with Quick Actions and Reports */}
           <div className="space-y-8">
-            {/* Quick Actions */}
-            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-              <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
-              </div>
-              <div className="p-5 grid grid-cols-2 gap-4">
-                <Link 
-                  to="/create-order"
-                  className={`flex flex-col items-center p-4 rounded-xl 
-                    hover:bg-blue-${darkMode ? '900/20' : '50'} 
-                    transition-colors group border ${darkMode ? 
-                      'border-gray-700 hover:border-blue-800' : 
-                      'border-gray-100 hover:border-blue-100'}`}
-                >
-                  <div className={`h-12 w-12 rounded-full ${darkMode ? 
-                    'bg-blue-900/30' : 
-                    'bg-blue-100'} 
-                    flex items-center justify-center mb-3 
-                    ${darkMode ? 
-                      'group-hover:bg-blue-900/50' : 
-                      'group-hover:bg-blue-200'} 
-                    transition-colors`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <span className={`text-sm font-medium ${darkMode ? 
-                    'text-gray-200 group-hover:text-blue-400' : 
-                    'text-gray-800 group-hover:text-blue-700'}`}
-                  >
-                    New Order
-                  </span>
-                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                    Create customer order
-                  </span>
-                </Link>
-                
-                {/* Other similar quick action links */}
-                <Link 
-                  to="/inventory"
-                  className={`flex flex-col items-center p-4 rounded-xl 
-                    hover:bg-green-${darkMode ? '900/20' : '50'} 
-                    transition-colors group border ${darkMode ? 
-                      'border-gray-700 hover:border-green-800' : 
-                      'border-gray-100 hover:border-green-100'}`}
-                >
-                  <div className={`h-12 w-12 rounded-full ${darkMode ? 
-                    'bg-green-900/30' : 
-                    'bg-green-100'} 
-                    flex items-center justify-center mb-3 
-                    ${darkMode ? 
-                      'group-hover:bg-green-900/50' : 
-                      'group-hover:bg-green-200'} 
-                    transition-colors`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${darkMode ? 'text-green-400' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <span className={`text-sm font-medium ${darkMode ? 
-                    'text-gray-200 group-hover:text-green-400' : 
-                    'text-gray-800 group-hover:text-green-700'}`}
-                  >
-                    Add Product
-                  </span>
-                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                    Add to inventory
-                  </span>
-                </Link>
-                
-                <Link 
-                  to="/inventory"
-                  className={`flex flex-col items-center p-4 rounded-xl 
-                    hover:bg-yellow-${darkMode ? '900/20' : '50'} 
-                    transition-colors group border ${darkMode ? 
-                      'border-gray-700 hover:border-yellow-800' : 
-                      'border-gray-100 hover:border-yellow-100'}`}
-                >
-                  <div className={`h-12 w-12 rounded-full ${darkMode ? 
-                    'bg-yellow-900/30' : 
-                    'bg-yellow-100'} 
-                    flex items-center justify-center mb-3 
-                    ${darkMode ? 
-                      'group-hover:bg-yellow-900/50' : 
-                      'group-hover:bg-yellow-200'} 
-                    transition-colors`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <span className={`text-sm font-medium ${darkMode ? 
-                    'text-gray-200 group-hover:text-yellow-400' : 
-                    'text-gray-800 group-hover:text-yellow-700'}`}
-                  >
-                    Low Stock
-                  </span>
-                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                    View alerts
-                  </span>
-                </Link>
-                
-                <Link 
-                  to="/orders"
-                  className={`flex flex-col items-center p-4 rounded-xl 
-                    hover:bg-purple-${darkMode ? '900/20' : '50'} 
-                    transition-colors group border ${darkMode ? 
-                      'border-gray-700 hover:border-purple-800' : 
-                      'border-gray-100 hover:border-purple-100'}`}
-                >
-                  <div className={`h-12 w-12 rounded-full ${darkMode ? 
-                    'bg-purple-900/30' : 
-                    'bg-purple-100'} 
-                    flex items-center justify-center mb-3 
-                    ${darkMode ? 
-                      'group-hover:bg-purple-900/50' : 
-                      'group-hover:bg-purple-200'} 
-                    transition-colors`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className={`text-sm font-medium ${darkMode ? 
-                    'text-gray-200 group-hover:text-purple-400' : 
-                    'text-gray-800 group-hover:text-purple-700'}`}
-                  >
-                    Pending Orders
-                  </span>
-                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                    Process orders
-                  </span>
-                </Link>
-              </div>
-            </div>
+            {/* Quick Actions - now using extracted component */}
+            <QuickActions darkMode={darkMode} />
             
             {/* Analytics Summary */}
             <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
