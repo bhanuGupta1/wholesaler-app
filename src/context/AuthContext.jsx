@@ -1,110 +1,91 @@
 // src/context/AuthContext.jsx
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import { 
-  signIn, 
-  registerUser, 
-  logOut, 
-  resetPassword, 
-  getUserProfile,
-  subscribeToAuthChanges,
-  getAuthErrorMessage
-} from '../firebase/authService';
+  subscribeToAuthChanges, 
+  getAuthErrorMessage, 
+  signInWithEmail,
+  registerWithEmailAndPassword,
+  logOut,
+  resetPassword
+} from "../firebase/authService";
 
+// Create the AuthContext
 export const AuthContext = createContext(null);
 
+// Create a provider component
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Subscribe to auth state changes
+  // Subscribe to auth state changes when the component mounts
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((user) => {
       setCurrentUser(user);
       setLoading(false);
-      
-      // Fetch user profile if logged in
-      if (user) {
-        fetchUserProfile(user.uid);
-      } else {
-        setUserProfile(null);
-      }
     });
-    
+
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-  
-  // Fetch user profile from Firestore
-  const fetchUserProfile = async (userId) => {
+
+  // Register a new user
+  const register = async (email, password, displayName) => {
+    setError(null);
     try {
-      const userData = await getUserProfile(userId);
-      setUserProfile(userData);
-    } catch (err) {
-      console.error('Error fetching user profile:', err);
+      await registerWithEmailAndPassword(email, password, displayName);
+    } catch (error) {
+      setError(getAuthErrorMessage(error));
+      throw error;
     }
   };
 
-  // Login function
+  // Sign in a user
   const login = async (email, password) => {
     setError(null);
     try {
-      await signIn(email, password);
-      // User state will be updated by the auth state observer
-    } catch (err) {
-      const errorMessage = getAuthErrorMessage(err);
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      await signInWithEmail(email, password);
+    } catch (error) {
+      setError(getAuthErrorMessage(error));
+      throw error;
     }
   };
 
-  // Register function
-  const register = async (email, password, userData) => {
-    setError(null);
-    try {
-      await registerUser(email, password, userData);
-      // User state will be updated by the auth state observer
-    } catch (err) {
-      const errorMessage = getAuthErrorMessage(err);
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  };
-
-  // Logout function
+  // Sign out the current user
   const logout = async () => {
     setError(null);
     try {
       await logOut();
-      // User state will be updated by the auth state observer
-    } catch (err) {
-      const errorMessage = getAuthErrorMessage(err);
-      setError(errorMessage);
-      throw new Error(errorMessage);
+    } catch (error) {
+      setError(getAuthErrorMessage(error));
+      throw error;
     }
   };
 
-  // Password reset function
-  const sendPasswordReset = async (email) => {
+  // Send password reset email
+  const forgotPassword = async (email) => {
     setError(null);
     try {
       await resetPassword(email);
-    } catch (err) {
-      const errorMessage = getAuthErrorMessage(err);
-      setError(errorMessage);
-      throw new Error(errorMessage);
+    } catch (error) {
+      setError(getAuthErrorMessage(error));
+      throw error;
     }
   };
 
+  // Clear any authentication errors
+  const clearError = () => setError(null);
+
+  // The value to be provided to consumers of this context
   const value = {
     currentUser,
-    userProfile,
     loading,
     error,
     login,
     register,
     logout,
-    sendPasswordReset
+    forgotPassword,
+    clearError
   };
 
   return (
@@ -114,4 +95,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export default AuthProvider;
+// Custom hook to use the auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
