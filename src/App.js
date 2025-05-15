@@ -1,31 +1,65 @@
-import logo from './logo.svg'; // Here I import the logo image for the app
-import './App.css'; // Here I import the CSS file to style the app
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/common/Layout';
+import Dashboard from './pages/Dashboard';
+import Inventory from './pages/Inventory';
+import CreateOrder from './pages/CreateOrder';
+import Orders from './pages/Orders';
+import Login from './pages/Login';
+import BulkImportPage from './pages/BulkImportPage';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
   return (
-    <div className="App">
-      {/* Here I create the main container div for the app */}
-      <header className="App-header">
-        {/* Here I define the header section of the app */}
-        <img src={logo} className="App-logo" alt="logo" />
-        {/* Here I add the logo image */}
-        <p>
-          {/* Here I add text instructing the user to edit the code */}
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        {/* Here I style the link using App-link class and set destination */}
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {/* Here I add the text for the link */}
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/inventory" element={
+            <ProtectedRoute>
+              <Layout>
+                <Inventory />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <Layout>
+                <Orders />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/create-order" element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateOrder />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/bulk-import" element={
+            <ProtectedRoute>
+              <Layout>
+                <BulkImportPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
-export default App; // Here I export the App component for use elsewhere
+export default App;
