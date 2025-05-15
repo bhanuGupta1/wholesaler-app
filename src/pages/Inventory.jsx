@@ -580,4 +580,41 @@ const toggleStockAdjustment1 = (productId, initialAdjustment = 0) => {
   );
 ;}
 }
+// Complete the missing stock_asc case in filterAndSortProducts
+const filterAndSortProducts = (products, { searchTerm = '', categoryFilter = '', sortBy = 'name_asc' } = {}) => {
+  // Existing code remains the same
+  
+  // Apply sorting
+  const sortingFunctions = {
+    name_asc: (a, b) => a.name.localeCompare(b.name),
+    name_desc: (a, b) => b.name.localeCompare(a.name),
+    price_asc: (a, b) => (a.price || 0) - (b.price || 0),
+    price_desc: (a, b) => (b.price || 0) - (a.price || 0),
+    stock_asc: (a, b) => (a.stock || 0) - (b.stock || 0),
+    stock_desc: (a, b) => (b.stock || 0) - (a.stock || 0)
+  };
+  
+  // Use the sorting function from the map
+  if (sortingFunctions[sortBy]) {
+    result.sort(sortingFunctions[sortBy]);
+  }
+  
+  return result;
+};
+
+// Fix the component structure by removing the duplicate function declaration
+// Replace this line:
+// function Inventory() {}
+// with:
+// const Inventory = () => {
+//   ...existing code...
+// };
+
+// Fix the export syntax at the bottom
+// Replace:
+// };
+// }
+// //export default Inventory;}
+// with:
+export default Inventory;
 //export default Inventory;}
