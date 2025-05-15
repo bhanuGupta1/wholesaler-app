@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// Add Firebase imports
+// Firebase imports
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -70,6 +70,8 @@ const ActivityTimeline = () => {
   );
 };
 
+// Continue from previous code...
+
 // Quick Actions Component with premium design
 const QuickActions = () => {
   return (
@@ -136,12 +138,12 @@ const QuickActions = () => {
 
 // Main Dashboard Component
 const Dashboard = () => {
-  // Original state with mock data (keep this for now)
+  // State for dashboard data - Now with some empty fields to be filled by Firebase
   const [stats, setStats] = useState({
-    totalProducts: 24,
-    lowStockProducts: 6,
-    totalOrders: 18,
-    recentOrders: [
+    totalProducts: 0,
+    lowStockProducts: 0,
+    totalOrders: 18,  // We'll update orders in next step
+    recentOrders: [   // We'll update orders in next step
       {
         id: '1',
         customerName: 'John Smith',
@@ -174,14 +176,44 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   
-  // Empty useEffect for now, but set loading to false after a delay for testing
+  // Add Firebase data fetching
   useEffect(() => {
-    // Simulate loading for now
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
-    
-    return () => clearTimeout(timer);
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+
+        // Fetch product stats
+        const productsRef = collection(db, 'products');
+        const productsSnapshot = await getDocs(productsRef);
+        const products = productsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Calculate product stats
+        const totalProducts = products.length;
+        const lowStockThreshold = 10; // This could be moved to app settings
+        const lowStockProducts = products.filter(
+          product => product.stock <= lowStockThreshold
+        ).length;
+
+        // Update state with product stats, keep other mock data for now
+        setStats(prevStats => ({
+          ...prevStats,
+          totalProducts,
+          lowStockProducts,
+        }));
+        
+        setLastUpdated(new Date());
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching product data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
   }, []);
 
   return (
@@ -277,7 +309,7 @@ const Dashboard = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
-                        <span className="text-sm text-green-600 ml-1">12% increase</span>
+                        <span className="text-sm text-green-600 ml-1">in inventory</span>
                       </div>
                     </div>
                   </div>
@@ -307,7 +339,7 @@ const Dashboard = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                         </svg>
-                        <span className="text-sm text-red-600 ml-1">3 new alerts</span>
+                        <span className="text-sm text-red-600 ml-1">need attention</span>
                       </div>
                     </div>
                   </div>
@@ -337,7 +369,7 @@ const Dashboard = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
-                        <span className="text-sm text-green-600 ml-1">6 today</span>
+                        <span className="text-sm text-green-600 ml-1">total orders</span>
                       </div>
                     </div>
                   </div>
