@@ -1,7 +1,6 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-// Firebase imports
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -97,7 +96,7 @@ const QuickActions = () => {
         </Link>
         
         <Link 
-          to="/inventory/low-stock"
+          to="/inventory"
           className="flex flex-col items-center p-4 rounded-xl hover:bg-yellow-50 transition-colors group border border-gray-100 hover:border-yellow-100"
         >
           <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center mb-3 group-hover:bg-yellow-200 transition-colors">
@@ -110,7 +109,7 @@ const QuickActions = () => {
         </Link>
         
         <Link 
-          to="/orders/pending"
+          to="/orders"
           className="flex flex-col items-center p-4 rounded-xl hover:bg-purple-50 transition-colors group border border-gray-100 hover:border-purple-100"
         >
           <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
@@ -126,27 +125,6 @@ const QuickActions = () => {
   );
 };
 
-// Helper function to format relative time
-function getRelativeTime(date) {
-  if (!date) return 'Unknown';
-  
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMinutes < 60) {
-    return diffMinutes <= 1 ? 'Just now' : `${diffMinutes} minutes ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-  } else if (diffDays < 7) {
-    return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
-  } else {
-    return date.toLocaleDateString();
-  }
-}
-
 // Main Dashboard Component
 const Dashboard = () => {
   // State for dashboard data
@@ -156,115 +134,135 @@ const Dashboard = () => {
     totalOrders: 0,
     recentOrders: []
   });
-  
-  // Add activities state
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const lowStockThreshold = 10; // This could be moved to app settings
   
-  // Function to fetch dashboard data
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch product stats
-      const productsRef = collection(db, 'products');
-      const productsSnapshot = await getDocs(productsRef);
-      const products = productsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      // Calculate product stats
-      const totalProducts = products.length;
-      const lowStockThreshold = 10; // This could be moved to app settings
-      const lowStockProducts = products.filter(
-        product => product.stock <= lowStockThreshold
-      ).length;
-
-      // Fetch recent orders
-      const ordersRef = collection(db, 'orders');
-      const recentOrdersQuery = query(
-        ordersRef,
-        orderBy('createdAt', 'desc'),
-        limit(3)
-      );
-      const ordersSnapshot = await getDocs(recentOrdersQuery);
-      const recentOrders = ordersSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          customerName: data.customerName || 'Unknown Customer',
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-          items: data.items || [],
-          total: data.total || 0,
-          status: data.status || 'pending'
-        };
-      });
-
-      // Get total orders count
-      const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
-      const totalOrders = ordersCountSnapshot.size;
-
-      // Generate activities from recent actions
-      const combinedActivities = [];
-      
-      // Add order activities
-      recentOrders.forEach((order, index) => {
-        combinedActivities.push({
-          id: `order-${order.id}`,
-          type: 'order',
-          description: `New order from ${order.customerName}`,
-          time: getRelativeTime(order.createdAt)
-        });
-      });
-
-      // Add inventory activities for low stock
-      const lowStockItems = products.filter(product => product.stock <= lowStockThreshold);
-      lowStockItems.slice(0, 3).forEach((product, index) => {
-        combinedActivities.push({
-          id: `inventory-${product.id}`,
-          type: 'inventory',
-          description: `Product "${product.name}" is low on stock`,
-          time: 'Today' // This would ideally be based on the product's last update timestamp
-        });
-      });
-
-      // Sort activities by time (this is a simplification)
-      combinedActivities.sort((a, b) => {
-        if (a.time === 'Today' && b.time !== 'Today') return -1;
-        if (a.time !== 'Today' && b.time === 'Today') return 1;
-        return 0;
-      });
-
-      // Update state with all fetched data
-      setStats({
-        totalProducts,
-        lowStockProducts,
-        totalOrders,
-        recentOrders
-      });
-      
-      setActivities(combinedActivities);
-      setLastUpdated(new Date());
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data. Please try again later.');
-      setLoading(false);
-    }
-  };
-  
-  // Add new refresh handler
-  const handleRefresh = () => {
-    fetchDashboardData();
-  };
-  
-  // Add Firebase data fetching on component mount
+  // Fetch dashboard data from Firebase
   useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+
+        // Fetch product stats
+        const productsRef = collection(db, 'products');
+        const productsSnapshot = await getDocs(productsRef);
+        const products = productsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Calculate product stats
+        const totalProducts = products.length;
+        const lowStockProducts = products.filter(
+          product => product.stock <= lowStockThreshold
+        ).length;
+
+        // Fetch recent orders
+        const ordersRef = collection(db, 'orders');
+        const recentOrdersQuery = query(
+          ordersRef,
+          orderBy('createdAt', 'desc'),
+          limit(3)
+        );
+        const ordersSnapshot = await getDocs(recentOrdersQuery);
+        const recentOrders = ordersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            customerName: data.customerName || 'Unknown Customer',
+            createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
+            items: data.items || [],
+            total: data.total || 0,
+            status: data.status || 'pending'
+          };
+        });
+
+        // Get total orders count
+        const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
+        const totalOrders = ordersCountSnapshot.size;
+
+        // Generate activities from recent actions
+        const combinedActivities = [];
+        
+        // Add order activities
+        recentOrders.forEach((order, index) => {
+          combinedActivities.push({
+            id: `order-${order.id}`,
+            type: 'order',
+            description: `New order from ${order.customerName}`,
+            time: getRelativeTime(order.createdAt)
+          });
+        });
+
+        // Add inventory activities for low stock
+        const lowStockItems = products.filter(product => product.stock <= lowStockThreshold);
+        lowStockItems.slice(0, 3).forEach((product, index) => {
+          combinedActivities.push({
+            id: `inventory-${product.id}`,
+            type: 'inventory',
+            description: `Product "${product.name}" is low on stock`,
+            time: 'Today' // This would ideally be based on the product's last update timestamp
+          });
+        });
+
+        // Sort activities by time (this is a simplification)
+        combinedActivities.sort((a, b) => {
+          if (a.time === 'Today' && b.time !== 'Today') return -1;
+          if (a.time !== 'Today' && b.time === 'Today') return 1;
+          return 0;
+        });
+
+        // Update state with all fetched data
+        setStats({
+          totalProducts,
+          lowStockProducts,
+          totalOrders,
+          recentOrders
+        });
+        
+        setActivities(combinedActivities);
+        setLastUpdated(new Date());
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+        setLoading(false);
+      }
+    }
+
     fetchDashboardData();
   }, []);
+
+  // Helper function to format relative time
+  function getRelativeTime(date) {
+    if (!date) return 'Unknown';
+    
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 60) {
+      return diffMinutes <= 1 ? 'Just now' : `${diffMinutes} minutes ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffDays < 7) {
+      return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  }
+
+  // Handle refresh
+  const handleRefresh = () => {
+    setLoading(true);
+    // Re-fetch data (this would re-run the useEffect)
+    window.location.reload();
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -554,7 +552,7 @@ const Dashboard = () => {
               )}
             </div>
             
-            {/* Activity Timeline - Now using activities from state */}
+            {/* Activity Timeline */}
             <ActivityTimeline activities={activities} />
           </div>
           {/* Sidebar with Quick Actions and Reports */}
