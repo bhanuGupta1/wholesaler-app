@@ -1,15 +1,16 @@
-// src/App.jsx - More reliable seeding process
+// src/App.jsx - Updated with DashboardSelector
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/common/Layout';
-import Dashboard from './pages/Dashboard';
+import DashboardSelector from './components/DashboardSelector';
 import Login from './pages/Login';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import CreateOrder from './pages/CreateOrder';
 import { seedFirebaseData } from './utils/seedFirebase';
+import { generateFakerData } from './utils/fakerData'; // Optional: Import if you want to use faker
 
 function App() {
   const [isSeeding, setIsSeeding] = useState(true);
@@ -43,7 +44,19 @@ function App() {
     try {
       setIsSeeding(true);
       setSeedStatus('Creating sample data...');
+      
+      // You can use either your original seeding or the faker data
+      // Option 1: Original seeding
       await seedFirebaseData(true); // Force reseed
+      
+      // Option 2: Use faker data (uncomment if you want to use faker)
+      // await generateFakerData({
+      //   productsCount: 25,
+      //   ordersCount: 30,
+      //   activitiesCount: 20,
+      //   clearExisting: true
+      // });
+      
       setIsSeeding(false);
       setShowSeedOption(false);
     } catch (error) {
@@ -122,7 +135,8 @@ function App() {
           <Routes>
             <Route path="/" element={
               <Layout>
-                <Dashboard />
+                {/* Replace Dashboard with DashboardSelector */}
+                <DashboardSelector />
               </Layout>
             } />
             <Route path="/login" element={
