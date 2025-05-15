@@ -3,6 +3,19 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 
+// Basic ProductCard Component
+const ProductCard = ({ product, darkMode }) => (
+  <div className={`border rounded-lg p-4 shadow ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+    <div className="h-32 bg-gray-100 flex items-center justify-center rounded mb-4">
+      {/* Placeholder for image */}
+      <span className="text-2xl">{product.name[0]}</span>
+    </div>
+    <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+    <p className="text-sm mb-2">{product.description}</p>
+    <span className="font-bold">${Number(product.price).toFixed(2)}</span>
+  </div>
+);
+
 const GuestDashboard = () => {
   const { darkMode } = useTheme();
   const [products, setProducts] = useState([]);
@@ -22,7 +35,6 @@ const GuestDashboard = () => {
         }));
         setProducts(productsData);
 
-        // Extract unique categories
         const uniqueCategories = [...new Set(productsData.map(product => product.category))].filter(Boolean);
         setCategories(uniqueCategories);
         setLoading(false);
@@ -39,7 +51,11 @@ const GuestDashboard = () => {
       <h1 className="text-3xl font-bold mb-8">Welcome to Wholesaler</h1>
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-500">{error}</div>}
-      {/* Content will go here */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map(product => (
+          <ProductCard key={product.id} product={product} darkMode={darkMode} />
+        ))}
+      </div>
     </div>
   );
 };
