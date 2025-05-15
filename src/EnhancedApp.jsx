@@ -1,20 +1,30 @@
-// src/App.jsx - Updated with DashboardSelector
-import { useState, useEffect } from 'react';
+// src/EnhancedApp.jsx
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/common/Layout';
-import DashboardSelector from './components/DashboardSelector';
 import Login from './pages/Login';
-import Inventory from './pages/Inventory';
-import Orders from './pages/Orders';
-import CreateOrder from './pages/CreateOrder';
 import { seedFirebaseData } from './utils/seedFirebase';
-import { generateFakerData } from './utils/fakerData'; // Optional: Import if you want to use faker
+import { generateFakerData } from './utils/fakerData';
 
-function App() {
-  const [isSeeding, setIsSeeding] = useState(true);
-  const [seedStatus, setSeedStatus] = useState('Checking database...');
+// Lazy-loaded components for better performance
+const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Orders = lazy(() => import('./pages/Orders'));
+const CreateOrder = lazy(() => import('./pages/CreateOrder'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+    <p className="mt-4 text-gray-600">Loading...</p>
+  </div>
+);
+
+function EnhancedApp() {
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedStatus, setSeedStatus] = useState('');
   const [seedError, setSeedError] = useState(null);
   const [showSeedOption, setShowSeedOption] = useState(false);
   
@@ -24,7 +34,6 @@ function App() {
       try {
         // First just check if data exists (forceReseed = false)
         const result = await seedFirebaseData(false);
-        setIsSeeding(false);
         // If empty database, show option to seed
         if (!result) {
           setShowSeedOption(true);
@@ -32,33 +41,34 @@ function App() {
       } catch (error) {
         console.error('Error checking database:', error);
         setSeedError(error.message);
-        setIsSeeding(false);
       }
     }
 
     checkDatabase();
   }, []);
 
-  // Handle manual seed request
+  // Handle manual seed request with Faker data
   const handleSeedData = async () => {
     try {
       setIsSeeding(true);
       setSeedStatus('Creating sample data...');
       
-      // You can use either your original seeding or the faker data
-      // Option 1: Original seeding
-      await seedFirebaseData(true); // Force reseed
-      
-      // Option 2: Use faker data (uncomment if you want to use faker)
-      // await generateFakerData({
-      //   productsCount: 25,
-      //   ordersCount: 30,
-      //   activitiesCount: 20,
-      //   clearExisting: true
-      // });
+      // Generate random data using our Faker utility
+      await generateFakerData({
+        productsCount: 25,
+        ordersCount: 30,
+        activitiesCount: 20,
+        clearExisting: true
+      });
       
       setIsSeeding(false);
+      setSeedStatus('Data successfully created!');
       setShowSeedOption(false);
+      
+      // Refresh after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error('Error seeding data:', error);
       setSeedError(error.message);
@@ -130,41 +140,42 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <div className="dark:bg-gray-900 dark:text-white">
-        <Router>
-          <Routes>
-            <Route path="/" element={
-              <Layout>
-                {/* Replace Dashboard with DashboardSelector */}
-                <DashboardSelector />
-              </Layout>
-            } />
-            <Route path="/login" element={
-              <Layout>
-                <Login />
-              </Layout>
-            } />
-            <Route path="/inventory" element={
-              <Layout>
-                <Inventory />
-              </Layout>
-            } />
-            <Route path="/orders" element={
-              <Layout>
-                <Orders />
-              </Layout>
-            } />
-            <Route path="/create-order" element={
-              <Layout>
-                <CreateOrder />
-              </Layout>
-            } />
-          </Routes>
-        </Router>
+        <div className="min-h-screen dark:bg-gray-900 dark:text-white">
+          <Router>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={
+                  <Layout>
+                    <EnhancedDashboard />
+                  </Layout>
+                } />
+                <Route path="/login" element={
+                  <Layout>
+                    <Login />
+                  </Layout>
+                } />
+                <Route path="/inventory" element={
+                  <Layout>
+                    <Inventory />
+                  </Layout>
+                } />
+                <Route path="/orders" element={
+                  <Layout>
+                    <Orders />
+                  </Layout>
+                } />
+                <Route path="/create-order" element={
+                  <Layout>
+                    <CreateOrder />
+                  </Layout>
+                } />
+              </Routes>
+            </Suspense>
+          </Router>
         </div>
       </ThemeProvider>
     </AuthProvider>
   );
 }
 
-export default App;
+export default EnhancedApp;
