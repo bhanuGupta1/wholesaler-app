@@ -1,250 +1,299 @@
-// src/utils/seedFirebase.js
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+// src/utils/seedFirebase.js - Smaller, more reliable seeder
+import { collection, addDoc, getDocs, doc, setDoc, serverTimestamp, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 /**
- * Function to seed the database with sample products and orders if none exist
- * This should be called once during application initialization
+ * Function to seed the database with sample data
+ * This version is smaller and more reliable
  */
-export const seedFirebaseData = async () => {
+export const seedFirebaseData = async (forceReseed = false) => {
   try {
-    // Check if products already exist
+    console.log('Starting Firebase data seeding process...');
+    
+    // Check if data already exists first
     const productsRef = collection(db, 'products');
     const productsSnapshot = await getDocs(productsRef);
     
-    // Only seed products if none exist
-    if (productsSnapshot.empty) {
-      console.log('Seeding products to Firebase...');
-      
-      // Sample products data
-      const productsData = [
-        {
-          name: 'Premium Office Chair',
-          sku: 'CHAIR-001',
-          category: 'Furniture',
-          price: 249.99,
-          stock: 15,
-          description: 'Ergonomic office chair with lumbar support and adjustable height.',
-          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
-          costPrice: 175.50,
-          supplier: 'Office Essentials Inc.',
-          reorderPoint: 5,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          name: 'Wireless Keyboard',
-          sku: 'KEY-100',
-          category: 'Electronics',
-          price: 79.99,
-          stock: 8,
-          description: 'Bluetooth wireless keyboard with backlit keys and ergonomic design.',
-          imageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3',
-          costPrice: 45.00,
-          supplier: 'TechGear Supplies',
-          reorderPoint: 10,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          name: 'Wireless Mouse',
-          sku: 'MOUSE-55',
-          category: 'Electronics',
-          price: 39.99,
-          stock: 12,
-          description: 'Ergonomic wireless mouse with adjustable DPI settings.',
-          imageUrl: 'https://images.unsplash.com/photo-1605773527852-c546a8584ea3',
-          costPrice: 18.50,
-          supplier: 'TechGear Supplies',
-          reorderPoint: 8,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          name: 'USB Flash Drive 32GB',
-          sku: 'USB-32GB',
-          category: 'Electronics',
-          price: 19.99,
-          stock: 4,
-          description: '32GB USB 3.0 flash drive with metal casing.',
-          imageUrl: 'https://images.unsplash.com/photo-1624913503273-5f9c4e980dba',
-          costPrice: 8.75,
-          supplier: 'Digital Storage Co.',
-          reorderPoint: 15,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          name: 'Desk Lamp',
-          sku: 'LAMP-201',
-          category: 'Office Supplies',
-          price: 35.50,
-          stock: 20,
-          description: 'LED desk lamp with adjustable brightness and color temperature.',
-          imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c',
-          costPrice: 16.80,
-          supplier: 'Office Essentials Inc.',
-          reorderPoint: 7,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          name: 'Premium Notebook',
-          sku: 'NOTE-512',
-          category: 'Office Supplies',
-          price: 12.99,
-          stock: 35,
-          description: 'Premium hardcover notebook with 240 pages of acid-free paper.',
-          imageUrl: 'https://images.unsplash.com/photo-1531346680769-a1d79b57de5c',
-          costPrice: 5.20,
-          supplier: 'Paper Products Ltd.',
-          reorderPoint: 20,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }
-      ];
-      
-      // Add products to Firestore
-      for (const product of productsData) {
-        await addDoc(collection(db, 'products'), product);
-      }
-      
-      console.log('Products seeded successfully!');
+    // If we already have products and not forcing reseed, just return
+    if (!productsSnapshot.empty && !forceReseed) {
+      console.log(`Using ${productsSnapshot.size} existing products. Set forceReseed to true to recreate data.`);
+      return true;
     }
     
-    // Check if orders already exist
-    const ordersRef = collection(db, 'orders');
-    const ordersSnapshot = await getDocs(ordersRef);
-    
-    // Only seed orders if none exist
-    if (ordersSnapshot.empty) {
-      console.log('Seeding orders to Firebase...');
-      
-      // Get product IDs for order items
-      const updatedProductsSnapshot = await getDocs(productsRef);
-      const productsList = [];
-      updatedProductsSnapshot.forEach(doc => {
-        productsList.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-      
-      // Sample order data
-      const ordersData = [
-        {
-          customerName: 'John Smith',
-          customerEmail: 'john.smith@example.com',
-          status: 'completed',
-          total: 149.99,
-          items: [
-            {
-              productId: productsList[0].id,
-              productName: productsList[0].name,
-              price: productsList[0].price,
-              quantity: 1
-            },
-            {
-              productId: productsList[2].id,
-              productName: productsList[2].name,
-              price: productsList[2].price,
-              quantity: 1
-            }
-          ],
-          shippingAddress: {
-            street: '123 Main St',
-            city: 'Anytown',
-            state: 'NY',
-            zipCode: '12345'
-          },
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          customerName: 'Sarah Johnson',
-          customerEmail: 'sarah.j@example.com',
-          status: 'pending',
-          total: 79.50,
-          items: [
-            {
-              productId: productsList[1].id,
-              productName: productsList[1].name,
-              price: productsList[1].price,
-              quantity: 1
-            }
-          ],
-          shippingAddress: {
-            street: '456 Elm St',
-            city: 'Othertown',
-            state: 'CA',
-            zipCode: '90210'
-          },
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        },
-        {
-          customerName: 'Mike Anderson',
-          customerEmail: 'mike.a@example.com',
-          status: 'completed',
-          total: 237.75,
-          items: [
-            {
-              productId: productsList[4].id,
-              productName: productsList[4].name,
-              price: productsList[4].price,
-              quantity: 2
-            },
-            {
-              productId: productsList[5].id,
-              productName: productsList[5].name,
-              price: productsList[5].price,
-              quantity: 3
-            },
-            {
-              productId: productsList[3].id,
-              productName: productsList[3].name,
-              price: productsList[3].price,
-              quantity: 1
-            }
-          ],
-          shippingAddress: {
-            street: '789 Oak St',
-            city: 'Somewhere',
-            state: 'TX',
-            zipCode: '75001'
-          },
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }
-      ];
-      
-      // Add orders to Firestore
-      for (const order of ordersData) {
-        // Create the order document
-        const orderRef = await addDoc(collection(db, 'orders'), {
-          customerName: order.customerName,
-          customerEmail: order.customerEmail,
-          status: order.status,
-          total: order.total,
-          shippingAddress: order.shippingAddress,
-          createdAt: order.createdAt,
-          updatedAt: order.updatedAt
-        });
-        
-        // Add order items as a subcollection
-        for (const item of order.items) {
-          await addDoc(collection(db, 'orders', orderRef.id, 'orderItems'), item);
-        }
-      }
-      
-      console.log('Orders seeded successfully!');
+    // If we're here, we need to seed data
+    if (forceReseed) {
+      console.log('Force reseed enabled - clearing existing data...');
+      await clearCollection('products');
+      await clearCollection('orders');
+      await clearCollection('activities');
     }
+    
+    // Generate small dataset to prevent timeouts
+    console.log('Creating sample data...');
+    
+    // Create products
+    const products = await seedProducts(8); // Smaller number
+    
+    // Create orders
+    const orders = await seedOrders(5, products); // Smaller number
+    
+    // Create activities
+    await seedActivities(5, products, orders); // Smaller number
+    
+    // Create metrics
+    await seedMetrics();
+    
+    console.log('Seeding process completed successfully!');
     
     return true;
   } catch (error) {
     console.error('Error seeding Firebase data:', error);
-    return false;
+    throw error; // Rethrow to handle in the UI
   }
+};
+
+/**
+ * Clear a collection to start fresh
+ */
+const clearCollection = async (collectionName) => {
+  try {
+    const collectionRef = collection(db, collectionName);
+    const snapshot = await getDocs(collectionRef);
+    
+    // Use batched writes for efficiency
+    const batchSize = 100;
+    let batch = writeBatch(db);
+    let count = 0;
+    
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+      count++;
+      
+      // Commit batch when it reaches batchSize
+      if (count === batchSize) {
+        batch.commit();
+        batch = writeBatch(db);
+        count = 0;
+      }
+    });
+    
+    // Commit any remaining deletes
+    if (count > 0) {
+      await batch.commit();
+    }
+    
+    console.log(`Cleared ${snapshot.size} documents from ${collectionName}`);
+  } catch (error) {
+    console.error(`Error clearing ${collectionName}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Seed products with realistic data
+ */
+const seedProducts = async (count) => {
+  const categories = ['Electronics', 'Office Supplies', 'Furniture'];
+  const suppliers = ['Office Essentials Inc.', 'TechGear Supplies'];
+  
+  const productNames = [
+    "Wireless Keyboard",
+    "Ergonomic Mouse",
+    "27-inch Monitor",
+    "Desk Lamp",
+    "Office Chair",
+    "Standing Desk",
+    "USB Hub",
+    "Laptop Stand",
+    "Webcam HD",
+    "Noise-Cancelling Headphones"
+  ];
+  
+  const products = [];
+  
+  for (let i = 0; i < count; i++) {
+    const category = categories[i % categories.length];
+    const name = productNames[i % productNames.length] + " " + (i + 1);
+    const price = 20 + (i * 15); // Simple price formula
+    const stock = Math.max(3, (i * 5) % 25); // Simple stock formula
+    
+    const product = {
+      name,
+      sku: `SKU-${100 + i}`,
+      category,
+      price,
+      stock,
+      description: `High-quality ${name.toLowerCase()} for office and home use.`,
+      imageUrl: `https://source.unsplash.com/400x300/?${category.toLowerCase().replace(' ', '-')},product`,
+      costPrice: price * 0.6, // 60% of selling price
+      supplier: suppliers[i % suppliers.length],
+      reorderPoint: 5,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    
+    const docRef = await addDoc(collection(db, 'products'), product);
+    
+    products.push({
+      id: docRef.id,
+      ...product
+    });
+  }
+  
+  console.log(`Created ${products.length} products`);
+  return products;
+};
+
+/**
+ * Seed orders with realistic data
+ */
+const seedOrders = async (count, products) => {
+  const statuses = ['pending', 'completed', 'shipped'];
+  const customers = [
+    "John Smith",
+    "Sarah Johnson",
+    "Michael Brown",
+    "Emily Wilson",
+    "David Clark"
+  ];
+  
+  const orders = [];
+  
+  for (let i = 0; i < count; i++) {
+    // Create 1-3 items per order
+    const itemCount = 1 + (i % 3);
+    const items = [];
+    let totalAmount = 0;
+    
+    // Select products for order items
+    for (let j = 0; j < itemCount; j++) {
+      const prodIndex = (i + j) % products.length;
+      const product = products[prodIndex];
+      const quantity = 1 + (j % 3);
+      const itemTotal = product.price * quantity;
+      totalAmount += itemTotal;
+      
+      items.push({
+        productId: product.id,
+        productName: product.name,
+        price: product.price,
+        quantity
+      });
+    }
+    
+    // Determine date (simple formula for different dates)
+    const orderDate = new Date();
+    orderDate.setDate(orderDate.getDate() - (i * 2)); // Each order 2 days apart
+    
+    // Create the order
+    const order = {
+      customerName: customers[i % customers.length],
+      customerEmail: `customer${i+1}@example.com`,
+      status: statuses[i % statuses.length],
+      total: parseFloat(totalAmount.toFixed(2)),
+      itemCount,
+      shippingAddress: {
+        street: `${100 + i} Main St`,
+        city: "Anytown",
+        state: "ST",
+        zipCode: "12345"
+      },
+      createdAt: orderDate,
+      updatedAt: orderDate
+    };
+    
+    // Add to Firestore
+    const orderRef = await addDoc(collection(db, 'orders'), {
+      ...order,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Add order items as a subcollection
+    for (const item of items) {
+      await addDoc(collection(db, 'orders', orderRef.id, 'orderItems'), item);
+    }
+    
+    orders.push({
+      id: orderRef.id,
+      ...order,
+      items
+    });
+  }
+  
+  console.log(`Created ${orders.length} orders`);
+  return orders;
+};
+
+/**
+ * Seed simple activity log
+ */
+const seedActivities = async (count, products, orders) => {
+  const activityTypes = ['order', 'inventory'];
+  
+  for (let i = 0; i < count; i++) {
+    const activityType = activityTypes[i % activityTypes.length];
+    let description = '';
+    
+    // Randomize timestamp within last 7 days
+    const activityDate = new Date();
+    activityDate.setDate(activityDate.getDate() - (i % 7));
+    activityDate.setHours(9 + (i % 8)); // Business hours
+    
+    // Create description and details based on activity type
+    if (activityType === 'order') {
+      const orderIndex = i % orders.length;
+      const order = orders[orderIndex];
+      const actions = ['placed', 'completed', 'shipped'];
+      const action = actions[i % actions.length];
+      
+      description = `Order #${order.id.slice(0, 6)} ${action} for ${order.customerName}`;
+    } else {
+      const productIndex = i % products.length;
+      const product = products[productIndex];
+      const actions = ['added', 'updated', 'restocked'];
+      const action = actions[i % actions.length];
+      const quantity = 5 + (i * 2);
+      
+      description = `${product.name} ${action} (${quantity} units)`;
+    }
+    
+    // Add to Firestore
+    await addDoc(collection(db, 'activities'), {
+      type: activityType,
+      description,
+      createdAt: activityDate,
+      timestamp: serverTimestamp()
+    });
+  }
+  
+  console.log(`Created ${count} activities`);
+};
+
+/**
+ * Seed metrics for dashboard
+ */
+const seedMetrics = async () => {
+  const metrics = {
+    revenue: {
+      total: 7320.80,
+      percentChange: 16,
+      lastUpdated: serverTimestamp()
+    },
+    orders: {
+      total: 18,
+      percentChange: 8,
+      lastUpdated: serverTimestamp()
+    },
+    inventory: {
+      usagePercent: 32,
+      percentChange: -4,
+      lastUpdated: serverTimestamp()
+    }
+  };
+  
+  await setDoc(doc(db, 'metrics', 'current'), metrics);
+  console.log('Created metrics');
 };
 
 export default seedFirebaseData;
