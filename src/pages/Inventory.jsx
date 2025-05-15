@@ -230,64 +230,10 @@ const filterBySearch = (products, searchTerm) => {
     }
   };
 ///
-<div className="container mx-auto px-4 py-8">
-  {/* Header with actions */}
-  <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
-    <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
-    <div className="flex items-center space-x-4 mt-4 md:mt-0">
-      {/* Search bar */}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-64 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-          <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-      </div>
-      {/* Filter dropdown */}
-      <select 
-        className="px-4 py-2 border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        value={stockFilter}
-        onChange={(e) => setStockFilter(e.target.value)}
-      >
-        <option value="all">All Products</option>
-        <option value="low">Low Stock</option>
-        <option value="out">Out of Stock</option>
-      </select>
-      <button
-        onClick={handleAddProduct}
-        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        Add Product
-      </button>
-    </div>
-  </div>
+
   
-  {/* Add stats summary cards */}
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div className="bg-white rounded-lg shadow p-6 border-l-4 border-indigo-500">
-      <h3 className="text-gray-500 text-sm font-medium">Total Products</h3>
-      <p className="text-3xl font-bold">{products.length}</p>
-    </div>
-    <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-      <h3 className="text-gray-500 text-sm font-medium">Low Stock Items</h3>
-      <p className="text-3xl font-bold">{products.filter(p => p.stock < 10 && p.stock > 0).length}</p>
-    </div>
-    <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
-      <h3 className="text-gray-500 text-sm font-medium">Out of Stock</h3>
-      <p className="text-3xl font-bold">{products.filter(p => p.stock === 0).length}</p>
-    </div>
-  </div>
-</div>
+  
+
 ////
 const toggleStockAdjustment1 = (productId, initialAdjustment = 0) => {
   setProducts(prevProducts => {
