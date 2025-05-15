@@ -70,8 +70,6 @@ const ActivityTimeline = () => {
   );
 };
 
-// Continue from previous code...
-
 // Quick Actions Component with premium design
 const QuickActions = () => {
   return (
@@ -136,39 +134,35 @@ const QuickActions = () => {
   );
 };
 
+// Helper function to format relative time
+function getRelativeTime(date) {
+  if (!date) return 'Unknown';
+  
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMinutes < 60) {
+    return diffMinutes <= 1 ? 'Just now' : `${diffMinutes} minutes ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+  } else if (diffDays < 7) {
+    return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+}
+
 // Main Dashboard Component
 const Dashboard = () => {
-  // State for dashboard data - Now with some empty fields to be filled by Firebase
+  // State for dashboard data - Now with completely empty fields
   const [stats, setStats] = useState({
     totalProducts: 0,
     lowStockProducts: 0,
-    totalOrders: 18,  // We'll update orders in next step
-    recentOrders: [   // We'll update orders in next step
-      {
-        id: '1',
-        customerName: 'John Smith',
-        createdAt: new Date('2025-05-01'),
-        items: [{ id: '1' }, { id: '2' }],
-        total: 149.99,
-        status: 'completed'
-      },
-      {
-        id: '2',
-        customerName: 'Sarah Johnson',
-        createdAt: new Date('2025-05-03'),
-        items: [{ id: '3' }],
-        total: 79.50,
-        status: 'pending'
-      },
-      {
-        id: '3',
-        customerName: 'Mike Anderson',
-        createdAt: new Date('2025-05-05'),
-        items: [{ id: '4' }, { id: '5' }, { id: '6' }],
-        total: 237.75,
-        status: 'completed'
-      }
-    ]
+    totalOrders: 0,
+    recentOrders: []
   });
   
   // Add new state for Firebase integration
@@ -197,17 +191,42 @@ const Dashboard = () => {
           product => product.stock <= lowStockThreshold
         ).length;
 
-        // Update state with product stats, keep other mock data for now
-        setStats(prevStats => ({
-          ...prevStats,
+        // Fetch recent orders
+        const ordersRef = collection(db, 'orders');
+        const recentOrdersQuery = query(
+          ordersRef,
+          orderBy('createdAt', 'desc'),
+          limit(3)
+        );
+        const ordersSnapshot = await getDocs(recentOrdersQuery);
+        const recentOrders = ordersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            customerName: data.customerName || 'Unknown Customer',
+            createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
+            items: data.items || [],
+            total: data.total || 0,
+            status: data.status || 'pending'
+          };
+        });
+
+        // Get total orders count
+        const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
+        const totalOrders = ordersCountSnapshot.size;
+
+        // Update state with all fetched data
+        setStats({
           totalProducts,
           lowStockProducts,
-        }));
+          totalOrders,
+          recentOrders
+        });
         
         setLastUpdated(new Date());
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching product data:', err);
+        console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data. Please try again later.');
         setLoading(false);
       }
@@ -425,7 +444,7 @@ const Dashboard = () => {
                       {stats.recentOrders.map((order) => (
                         <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-gray-900">#{order.id}</span>
+                            <span className="text-sm font-medium text-gray-900">#{order.id.slice(0, 6)}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -453,7 +472,7 @@ const Dashboard = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-bold text-gray-900">${order.total.toFixed(2)}</div>
+                            <div className="text-sm font-bold text-gray-900">${parseFloat(order.total).toFixed(2)}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
@@ -552,7 +571,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between mt-1 text-xs text-gray-500">
                       <span>0</span>
-                      <span>42</span>
+                      <span>{stats.totalOrders}</span>
                     </div>
                   </div>
                 </div>
