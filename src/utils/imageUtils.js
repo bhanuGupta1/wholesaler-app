@@ -42,4 +42,8 @@ export const generateProductImageUrl = (product) => {
   
   // Return URL with seed for consistent image
   return `${imageService}/seed/${seed}/${width}/${height}`;
+main
 };
+=======
+};
+ feature/paras/orders-and-firebase
