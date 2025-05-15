@@ -63,9 +63,6 @@ const ActivityTimeline = ({ activities }) => {
 };
 
 // Quick Actions Component with premium design
-// Continue from previous code...
-
-// Quick Actions Component with premium design
 const QuickActions = () => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
@@ -166,100 +163,106 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   
-  // Add Firebase data fetching
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setLoading(true);
+  // Function to fetch dashboard data
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-        // Fetch product stats
-        const productsRef = collection(db, 'products');
-        const productsSnapshot = await getDocs(productsRef);
-        const products = productsSnapshot.docs.map(doc => ({
+      // Fetch product stats
+      const productsRef = collection(db, 'products');
+      const productsSnapshot = await getDocs(productsRef);
+      const products = productsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Calculate product stats
+      const totalProducts = products.length;
+      const lowStockThreshold = 10; // This could be moved to app settings
+      const lowStockProducts = products.filter(
+        product => product.stock <= lowStockThreshold
+      ).length;
+
+      // Fetch recent orders
+      const ordersRef = collection(db, 'orders');
+      const recentOrdersQuery = query(
+        ordersRef,
+        orderBy('createdAt', 'desc'),
+        limit(3)
+      );
+      const ordersSnapshot = await getDocs(recentOrdersQuery);
+      const recentOrders = ordersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
           id: doc.id,
-          ...doc.data()
-        }));
-        
-        // Calculate product stats
-        const totalProducts = products.length;
-        const lowStockThreshold = 10; // This could be moved to app settings
-        const lowStockProducts = products.filter(
-          product => product.stock <= lowStockThreshold
-        ).length;
+          customerName: data.customerName || 'Unknown Customer',
+          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
+          items: data.items || [],
+          total: data.total || 0,
+          status: data.status || 'pending'
+        };
+      });
 
-        // Fetch recent orders
-        const ordersRef = collection(db, 'orders');
-        const recentOrdersQuery = query(
-          ordersRef,
-          orderBy('createdAt', 'desc'),
-          limit(3)
-        );
-        const ordersSnapshot = await getDocs(recentOrdersQuery);
-        const recentOrders = ordersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            customerName: data.customerName || 'Unknown Customer',
-            createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-            items: data.items || [],
-            total: data.total || 0,
-            status: data.status || 'pending'
-          };
+      // Get total orders count
+      const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
+      const totalOrders = ordersCountSnapshot.size;
+
+      // Generate activities from recent actions
+      const combinedActivities = [];
+      
+      // Add order activities
+      recentOrders.forEach((order, index) => {
+        combinedActivities.push({
+          id: `order-${order.id}`,
+          type: 'order',
+          description: `New order from ${order.customerName}`,
+          time: getRelativeTime(order.createdAt)
         });
+      });
 
-        // Get total orders count
-        const ordersCountSnapshot = await getDocs(collection(db, 'orders'));
-        const totalOrders = ordersCountSnapshot.size;
-
-        // Generate activities from recent actions
-        const combinedActivities = [];
-        
-        // Add order activities
-        recentOrders.forEach((order, index) => {
-          combinedActivities.push({
-            id: `order-${order.id}`,
-            type: 'order',
-            description: `New order from ${order.customerName}`,
-            time: getRelativeTime(order.createdAt)
-          });
+      // Add inventory activities for low stock
+      const lowStockItems = products.filter(product => product.stock <= lowStockThreshold);
+      lowStockItems.slice(0, 3).forEach((product, index) => {
+        combinedActivities.push({
+          id: `inventory-${product.id}`,
+          type: 'inventory',
+          description: `Product "${product.name}" is low on stock`,
+          time: 'Today' // This would ideally be based on the product's last update timestamp
         });
+      });
 
-        // Add inventory activities for low stock
-        const lowStockItems = products.filter(product => product.stock <= lowStockThreshold);
-        lowStockItems.slice(0, 3).forEach((product, index) => {
-          combinedActivities.push({
-            id: `inventory-${product.id}`,
-            type: 'inventory',
-            description: `Product "${product.name}" is low on stock`,
-            time: 'Today' // This would ideally be based on the product's last update timestamp
-          });
-        });
+      // Sort activities by time (this is a simplification)
+      combinedActivities.sort((a, b) => {
+        if (a.time === 'Today' && b.time !== 'Today') return -1;
+        if (a.time !== 'Today' && b.time === 'Today') return 1;
+        return 0;
+      });
 
-        // Sort activities by time (this is a simplification)
-        combinedActivities.sort((a, b) => {
-          if (a.time === 'Today' && b.time !== 'Today') return -1;
-          if (a.time !== 'Today' && b.time === 'Today') return 1;
-          return 0;
-        });
-
-        // Update state with all fetched data
-        setStats({
-          totalProducts,
-          lowStockProducts,
-          totalOrders,
-          recentOrders
-        });
-        
-        setActivities(combinedActivities);
-        setLastUpdated(new Date());
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again later.');
-        setLoading(false);
-      }
+      // Update state with all fetched data
+      setStats({
+        totalProducts,
+        lowStockProducts,
+        totalOrders,
+        recentOrders
+      });
+      
+      setActivities(combinedActivities);
+      setLastUpdated(new Date());
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again later.');
+      setLoading(false);
     }
-
+  };
+  
+  // Add new refresh handler
+  const handleRefresh = () => {
+    fetchDashboardData();
+  };
+  
+  // Add Firebase data fetching on component mount
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -278,8 +281,12 @@ const Dashboard = () => {
             <span className="text-sm text-gray-500">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
-            <button className="p-2 bg-white text-indigo-600 rounded-full hover:bg-indigo-50 border border-gray-200 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button 
+              className="p-2 bg-white text-indigo-600 rounded-full hover:bg-indigo-50 border border-gray-200 shadow-sm"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -327,7 +334,7 @@ const Dashboard = () => {
             <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
               <button 
-                onClick={() => window.location.reload()}
+                onClick={handleRefresh}
                 className="mt-2 text-sm text-red-700 hover:text-red-600 font-medium focus:outline-none"
               >
                 Try Again
