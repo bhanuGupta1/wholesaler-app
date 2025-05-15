@@ -29,7 +29,8 @@ const Layout = ({ children }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+
       <div className={`sticky top-0 z-40 transition-shadow duration-300 ${scrolled ? 'shadow-md' : ''}`}>
         <Navbar />
         <button 
