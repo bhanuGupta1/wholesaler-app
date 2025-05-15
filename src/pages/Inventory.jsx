@@ -45,7 +45,17 @@ const Inventory = () => {
 //
 ///
 //import { useMemo } from 'react';
-
+//
+const filterBySearch = (products, searchTerm) => {
+  if (!searchTerm) return products;
+  const lowerSearch = searchTerm.toLowerCase();
+  return products.filter(product =>
+    product.name.toLowerCase().includes(lowerSearch) ||
+    product.sku?.toLowerCase().includes(lowerSearch) ||
+    product.description?.toLowerCase().includes(lowerSearch)
+  );
+};
+//
 //const filteredProducts = useMemo(() => {
   let result = [...products];
 
