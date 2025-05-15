@@ -202,7 +202,8 @@ const filterBySearch = (products, searchTerm) => {
   };
 
   // Handler for add new product
-  const handleAddProduct = () => {
+  const handleAddProduct = () => 
+    {
     setCurrentProduct(null);
     setShowModal(true);
   };
