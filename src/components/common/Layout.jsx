@@ -3,12 +3,15 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
+
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();   // ⬅️ Add this inside your component (near other hooks)
   
   const isActive = (path) => location.pathname === path;
 
@@ -33,11 +36,11 @@ const Layout = ({ children }) => {
 
       <div className={`sticky top-0 z-40 transition-shadow duration-300 ${scrolled ? 'shadow-md' : ''}`}>
         <Navbar />
-        <button 
-  onClick={() => document.documentElement.classList.toggle('dark')}
+       <button 
+  onClick={toggleDarkMode}
   className="text-sm text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
 >
-  Toggle Dark Mode
+  {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
 </button>
 
       </div>
