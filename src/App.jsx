@@ -1,48 +1,32 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
-import Layout from './components/common/Layout';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Inventory from './pages/Inventory';
-import Orders from './pages/Orders';
-import CreateOrder from './pages/CreateOrder';
+import Login from './pages/Login'; // Make sure this component exists
+import Dashboard from './pages/Dashboard'; // Make sure this component exists
+import Layout from './components/Layout'; // Make sure this component exists
+import ProtectedRoute from './components/ProtectedRoute'; // Make sure this component exists
 
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
               <Layout>
                 <Dashboard />
               </Layout>
-            } />
-            <Route path="/login" element={
-              <Layout>
-                <Login />
-              </Layout>
-            } />
-            <Route path="/inventory" element={
-              <Layout>
-                <Inventory />
-              </Layout>
-            } />
-            <Route path="/orders" element={
-              <Layout>
-                <Orders />
-              </Layout>
-            } />
-            <Route path="/create-order" element={
-              <Layout>
-                <CreateOrder />
-              </Layout>
-            } />
-          </Routes>
-        </Router>
-      </ThemeProvider>
+            </ProtectedRoute>
+          } 
+        />
+        {/* Add a default route */}
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+        {/* Add a catch-all route */}
+        <Route path="*" element={<div>Page Not Found</div>} />
+      </Routes>
     </AuthProvider>
   );
 }
