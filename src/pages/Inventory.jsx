@@ -289,6 +289,34 @@ const filterBySearch = (products, searchTerm) => {
   </div>
 </div>
 ////
+const toggleStockAdjustment1 = (productId, initialAdjustment = 0) => {
+  setProducts(prevProducts => {
+    const productExists = prevProducts.some(p => p.id === productId);
+    
+    if (!productExists) {
+      console.warn(`Product with ID ${productId} not found`);
+      return prevProducts;
+    }
+    
+    return prevProducts.map(product => 
+      product.id === productId
+        ? { 
+            ...product, 
+            isAdjusting: !product.isAdjusting, 
+            stockAdjustment: product.isAdjusting ? 0 : initialAdjustment 
+          }
+        : product
+    );
+  });
+  
+  // Optional: Notify about the adjustment mode change
+  const targetProduct = products.find(p => p.id === productId);
+  if (targetProduct) {
+    const action = targetProduct.isAdjusting ? 'cancelled' : 'started';
+    setNotification(`Stock adjustment ${action} for ${targetProduct.name}`);
+  }
+};
+//
   // Function to toggle stock adjustment inputs
   const toggleStockAdjustment = (productId) => {
     setProducts(prevProducts => prevProducts.map(product => 
