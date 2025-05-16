@@ -3,7 +3,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 
-// Basic ProductCard Component
+// Basic ProductCard Component with Image
 const ProductCard = ({ product, darkMode }) => (
   <div className={`border rounded-lg p-4 shadow ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
     <div className="h-32 bg-gray-100 flex items-center justify-center rounded mb-4 overflow-hidden">
@@ -62,6 +62,23 @@ const GuestDashboard = () => {
       <h1 className="text-3xl font-bold mb-8">Welcome to Wholesaler</h1>
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-500">{error}</div>}
+      {/* Category Filter UI */}
+      <div className="mb-6 flex items-center gap-4">
+        <label htmlFor="category-filter" className="font-medium">Category:</label>
+        <select
+          id="category-filter"
+          className={`rounded-md px-3 py-2 border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+          value=""
+          disabled
+        >
+          <option value="">All</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+        <span className="text-sm text-gray-400">(coming soon)</span>
+      </div>
+      {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map(product => (
           <ProductCard key={product.id} product={product} darkMode={darkMode} />
