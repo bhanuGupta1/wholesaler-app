@@ -8,11 +8,12 @@ import Login from './pages/Login';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import CreateOrder from './pages/CreateOrder';
-
+import { FeedbackProvider } from './context/FeedbackContext';
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <FeedbackProvider>
         <Router>
           <Routes>
             <Route path="/" element={
@@ -43,6 +44,7 @@ function App() {
 
           </Routes>
         </Router>
+        </FeedbackProvider>
       </ThemeProvider>
     </AuthProvider>
     
