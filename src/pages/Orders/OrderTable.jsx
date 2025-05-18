@@ -1,5 +1,5 @@
 import React from 'react';
-import { format } from 'date-fns';
+import { format } from 'date-fns'; //Importing date formatting function from date-fns
 
 const OrderTable = ({ orders }) => {
   if (orders.length === 0) {
@@ -72,4 +72,3 @@ const OrderTable = ({ orders }) => {
   );
 };
 
-export default OrderTable;
