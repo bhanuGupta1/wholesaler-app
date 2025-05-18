@@ -79,5 +79,19 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+// Update src/routes.jsx
+import Feedback from './pages/Feedback';
+
+// ...existing routes...
+<Route 
+  path="/feedback" 
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <Feedback />
+      </Layout>
+    </ProtectedRoute>
+  } 
+/>
 
 export default AppRoutes;
