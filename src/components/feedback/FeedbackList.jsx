@@ -1,7 +1,8 @@
 // src/pages/Feedback.jsx
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import Feedback from './pages/Feedback';
+
+
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -19,16 +20,6 @@ const Feedback = () => {
       </div>
     </div>
   );
-};
-<Route 
-  path="/feedback" 
-  element={
-    <ProtectedRoute>
-      <Layout>
-        <Feedback />
-      </Layout>
-    </ProtectedRoute>
-  } 
-/>
+}
 
 export default Feedback;
