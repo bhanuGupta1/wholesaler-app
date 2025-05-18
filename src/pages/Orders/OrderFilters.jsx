@@ -1,6 +1,8 @@
 import React from 'react';
 
+// Reusable filter component for order status, date, and customer name
 const OrderFilters = ({ filters, onFilterChange }) => {
+  // Update filters on input/select change
   const handleChange = (e) => {
     const { name, value } = e.target;
     onFilterChange({
@@ -11,6 +13,7 @@ const OrderFilters = ({ filters, onFilterChange }) => {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4">
+      {/* Status Dropdown */}
       <div className="flex items-center">
         <label htmlFor="status" className="mr-2 text-sm font-medium text-gray-700">Status:</label>
         <select
@@ -28,6 +31,7 @@ const OrderFilters = ({ filters, onFilterChange }) => {
         </select>
       </div>
 
+      {/* Date Filter */}
       <div className="flex items-center">
         <label htmlFor="date" className="mr-2 text-sm font-medium text-gray-700">Date:</label>
         <select
@@ -45,6 +49,7 @@ const OrderFilters = ({ filters, onFilterChange }) => {
         </select>
       </div>
 
+      {/* Customer Search Input */}
       <div className="flex items-center">
         <label htmlFor="customer" className="mr-2 text-sm font-medium text-gray-700">Customer:</label>
         <input
@@ -58,6 +63,7 @@ const OrderFilters = ({ filters, onFilterChange }) => {
         />
       </div>
 
+      {/* Export Button */}
       <div className="ml-auto">
         <button
           type="button"
