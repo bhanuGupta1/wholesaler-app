@@ -45,6 +45,23 @@ const handlePrint = () => {
     ))}
   </tbody>
 </table>
+<div className="flex justify-end">
+  <div className="w-64">
+    <div className="flex justify-between py-2 border-t">
+      <span className="font-medium">Subtotal:</span>
+      <span>${items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+    </div>
+    <div className="flex justify-between py-2">
+      <span className="font-medium">Tax:</span>
+      <span>$0.00</span>
+    </div>
+    <div className="flex justify-between py-2 font-bold text-lg border-t">
+      <span>Total:</span>
+      <span>${items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+    </div>
+  </div>
+</div>
+
 </div>;
 
 };
