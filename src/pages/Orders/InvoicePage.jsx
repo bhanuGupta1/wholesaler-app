@@ -1,53 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
 
-const InvoicePage = () => {
-  const { id } = useParams();
-  const [order, setOrder] = useState(null);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+const invoiceRef = useRef(null);
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const orderRef = doc(db, 'orders', id);
-        const orderSnap = await getDoc(orderRef);
+const handlePrint = () => {
+  const printContents = invoiceRef.current.innerHTML;
+  const originalContents = document.body.innerHTML;
 
-        if (orderSnap.exists()) {
-          setOrder({
-            id: orderSnap.id,
-            ...orderSnap.data()
-          });
-
-          const itemsRef = collection(db, 'orderItems');
-          const q = query(itemsRef, where('orderId', '==', id));
-          const itemsSnap = await getDocs(q);
-
-          const orderItems = [];
-          itemsSnap.forEach(doc => {
-            orderItems.push({
-              id: doc.id,
-              ...doc.data()
-            });
-          });
-
-          setItems(orderItems);
-        } else {
-          console.error("Order not found");
-        }
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [id]);
-
-  return <div></div>;
+  document.body.innerHTML = printContents;
+  window.print();
+  document.body.innerHTML = originalContents;
+  window.location.reload();
+   return <div className="mb-6 flex justify-between items-center">
+  <Link to={`/orders/${id}`} className="text-indigo-600 hover:text-indigo-900">
+    ← Back to Order
+  </Link>
+  <button
+    onClick={handlePrint}
+    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+  >
+    Print Invoice
+  </button>
+</div>;
 };
-
-export default InvoicePage;
