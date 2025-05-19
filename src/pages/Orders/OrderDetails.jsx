@@ -7,38 +7,34 @@ import { format } from 'date-fns';
 /**
  * OrderDetails Component
  * 
- * Displays detailed information about a specific order.
- * 
- * Features:
- * - Shows order information (ID, date, status, total)
- * - Shows customer information
- * - Shows all items in the order with prices and quantities
- * - Navigation back to orders list
- * - Loading state handling
+ * This component displays detailed information about a specific order,
+ * including customer info, items in the order, and total price.
  */
 const OrderDetails = () => {
-  const { id } = useParams();
-  const [order, setOrder] = useState(null);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
+  const { id } = useParams(); // Get order ID from route params
+  const [order, setOrder] = useState(null); // State to store order details
+  const [items, setItems] = useState([]);   // State to store order items
+  const [loading, setLoading] = useState(true); // Loading indicator
+
   useEffect(() => {
+    // Async function to fetch order details and associated items
     const fetchOrderDetails = async () => {
       try {
         const orderRef = doc(db, 'orders', id);
         const orderSnap = await getDoc(orderRef);
-        
+
         if (orderSnap.exists()) {
+          // Set the order state with fetched data
           setOrder({
             id: orderSnap.id,
             ...orderSnap.data()
           });
-          
-          // Fetch order items
+
+          // Fetch items associated with the order
           const itemsRef = collection(db, 'orderItems');
           const q = query(itemsRef, where('orderId', '==', id));
           const itemsSnap = await getDocs(q);
-          
+
           const orderItems = [];
           itemsSnap.forEach(doc => {
             orderItems.push({
@@ -46,21 +42,22 @@ const OrderDetails = () => {
               ...doc.data()
             });
           });
-          
-          setItems(orderItems);
+
+          setItems(orderItems); // Update item list in state
         } else {
           console.error("Order not found");
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading spinner
       }
     };
-    
+
     fetchOrderDetails();
-  }, [id]);
-  
+  }, [id]); // Dependency: refetch when order ID changes
+
+  // Show loading spinner while data is being fetched
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -68,7 +65,8 @@ const OrderDetails = () => {
       </div>
     );
   }
-  
+
+  // Show message if no order is found
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -81,10 +79,12 @@ const OrderDetails = () => {
       </div>
     );
   }
-  
+
+  // Main UI
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white shadow rounded-lg overflow-hidden">
+        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{order.orderId || `Order #${id.substring(0, 5)}`}</h1>
@@ -93,8 +93,10 @@ const OrderDetails = () => {
             </Link>
           </div>
         </div>
-        
+
+        {/* Order Info & Customer Info */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Order Info */}
           <div>
             <h2 className="text-lg font-medium mb-4">Order Information</h2>
             <div className="space-y-3">
@@ -119,7 +121,8 @@ const OrderDetails = () => {
               </div>
             </div>
           </div>
-          
+
+          {/* Customer Info */}
           <div>
             <h2 className="text-lg font-medium mb-4">Customer Information</h2>
             <div className="space-y-3">
@@ -138,7 +141,8 @@ const OrderDetails = () => {
             </div>
           </div>
         </div>
-        
+
+        {/* Order Items Table */}
         <div className="px-6 py-4 border-t border-gray-200">
           <h2 className="text-lg font-medium mb-4">Order Items</h2>
           <div className="overflow-x-auto">
@@ -180,7 +184,8 @@ const OrderDetails = () => {
             </table>
           </div>
         </div>
-        
+
+        {/* Action Section */}
         <div className="p-6 border-t border-gray-200">
           <div className="flex justify-end">
             <Link
