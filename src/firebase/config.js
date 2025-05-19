@@ -1,4 +1,4 @@
-// src/firebase/config.js
+//This is the file for database configuration.
 
 // Import required Firebase SDKs
 import { initializeApp } from 'firebase/app';
