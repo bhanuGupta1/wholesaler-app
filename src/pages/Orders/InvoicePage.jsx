@@ -23,6 +23,7 @@ const InvoicePage = () => {
   const [loading, setLoading] = useState(true);
   const invoiceRef = useRef(null);
   
+  // Fetch order and its items when component mounts
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -62,6 +63,7 @@ const InvoicePage = () => {
     fetchOrderDetails();
   }, [id]);
   
+   // Print invoice content
   const handlePrint = () => {
     const printContents = invoiceRef.current.innerHTML;
     const originalContents = document.body.innerHTML;
@@ -80,6 +82,7 @@ const InvoicePage = () => {
     );
   }
   
+   // Handle case where order is not found
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -121,6 +124,7 @@ const InvoicePage = () => {
           </div>
         </div>
         
+          {/* Billing and Invoice Info */}
         <div className="grid grid-cols-2 gap-8 mb-8">
           <div>
             <h3 className="text-gray-500 font-medium mb-2">Bill To:</h3>
@@ -176,6 +180,7 @@ const InvoicePage = () => {
           </tbody>
         </table>
         
+          {/* Here is the summary of the order. */}
         <div className="flex justify-end">
           <div className="w-64">
             <div className="flex justify-between py-2 border-t">
