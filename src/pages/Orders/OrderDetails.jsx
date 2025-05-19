@@ -8,13 +8,13 @@ import { format } from 'date-fns';
  * OrderDetails Component
  * 
  * This component displays detailed information about a specific order,
- * including customer info, items in the order, and total price.
+ * including customer info, items in the order, and total price. 
  */
 const OrderDetails = () => {
   const { id } = useParams(); // Get order ID from route params
   const [order, setOrder] = useState(null); // State to store order details
   const [items, setItems] = useState([]);   // State to store order items
-  const [loading, setLoading] = useState(true); // Loading indicator
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     // Async function to fetch order details and associated items
@@ -55,9 +55,9 @@ const OrderDetails = () => {
     };
 
     fetchOrderDetails();
-  }, [id]); // Dependency: refetch when order ID changes
+  }, [id]);
 
-  // Show loading spinner while data is being fetched
+  // When data is fetched show loading spinner.
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -80,7 +80,7 @@ const OrderDetails = () => {
     );
   }
 
-  // Main UI
+  // THis is my main UI for styling and designing.
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -94,7 +94,7 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Order Info & Customer Info */}
+        {/* Here I put Order Info & Customer Info */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Order Info */}
           <div>
@@ -185,7 +185,7 @@ const OrderDetails = () => {
           </div>
         </div>
 
-        {/* Action Section */}
+       
         <div className="p-6 border-t border-gray-200">
           <div className="flex justify-end">
             <Link
