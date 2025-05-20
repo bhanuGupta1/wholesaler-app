@@ -10,6 +10,9 @@ import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import CreateOrder from './pages/CreateOrder';
 import Login from './pages/Login';
+import Feedback from './pages/Feedback';
+import ProductFeedback from './pages/ProductFeedback';
+
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -89,6 +92,20 @@ import Feedback from './pages/Feedback';
     <ProtectedRoute>
       <Layout>
         <Feedback />
+      </Layout>
+    </ProtectedRoute>
+  } 
+/>
+// Update src/routes.jsx
+import ProductFeedback from './pages/ProductFeedback';
+
+// ...existing routes...
+<Route 
+  path="/products/:productId/feedback" 
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <ProductFeedback />
       </Layout>
     </ProtectedRoute>
   } 
