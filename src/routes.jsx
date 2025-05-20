@@ -110,5 +110,19 @@ import ProductFeedback from './pages/ProductFeedback';
     </ProtectedRoute>
   } 
 />
+// Update src/routes.jsx
+import FeedbackAnalytics from './pages/FeedbackAnalytics';
+
+// ...existing routes...
+<Route 
+  path="/feedback/analytics" 
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <FeedbackAnalytics />
+      </Layout>
+    </ProtectedRoute>
+  } 
+/>
 
 export default AppRoutes;
