@@ -15,7 +15,7 @@ const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Orders = lazy(() => import('./pages/Orders/OrdersPage'));
+const Orders = lazy(() => import('./pages/Orders'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
 const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
