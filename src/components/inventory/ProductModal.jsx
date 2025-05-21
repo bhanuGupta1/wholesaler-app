@@ -1,8 +1,9 @@
 // src/components/inventory/ProductModal.jsx
 import { useState, useEffect } from 'react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../firebase/config';
+import { db } from '../../firebase/config';
+import ImageUploader from '../common/ImageUploader'; // Import the unified ImageUploader
+import { uploadProductImage } from '../../services/imageService'; // Import the image service
 
 const ProductModal = ({ product, onClose, categories, darkMode }) => {
   const isEditing = !!product;
@@ -20,10 +21,7 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [uploadingImage, setUploadingImage] = useState(false);
-
+  
   useEffect(() => {
     if (product) {
       setFormData({
@@ -38,10 +36,6 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
         supplier: product.supplier || '',
         reorderPoint: product.reorderPoint || ''
       });
-      
-      if (product.imageUrl) {
-        setImagePreview(product.imageUrl);
-      }
     }
   }, [product]);
 
@@ -83,43 +77,12 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
       }));
     }
   };
-  
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Preview the image
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-    
-    setImageFile(file);
-  };
-  
-  const uploadImage = async () => {
-    if (!imageFile) return formData.imageUrl;
-    
-    try {
-      setUploadingImage(true);
-      
-      // Create a reference to the file in Firebase Storage
-      const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
-      
-      // Upload the file
-      await uploadBytes(storageRef, imageFile);
-      
-      // Get the download URL
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      setUploadingImage(false);
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      setUploadingImage(false);
-      throw error;
-    }
+
+  const handleImageUploaded = (imageUrl) => {
+    setFormData(prev => ({
+      ...prev,
+      imageUrl
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -134,12 +97,6 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
     try {
       setLoading(true);
       
-      // Upload image if a new one was selected
-      let imageUrl = formData.imageUrl;
-      if (imageFile) {
-        imageUrl = await uploadImage();
-      }
-      
       // Format data for Firestore
       const productData = {
         name: formData.name,
@@ -148,7 +105,7 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
         price: Number(formData.price),
         stock: Number(formData.stock),
         description: formData.description,
-        imageUrl,
+        imageUrl: formData.imageUrl,
         costPrice: formData.costPrice ? Number(formData.costPrice) : null,
         supplier: formData.supplier,
         reorderPoint: formData.reorderPoint ? Number(formData.reorderPoint) : null,
@@ -327,57 +284,22 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
                 {errors.stock && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.stock}</p>}
               </div>
 
-              {/* Image Upload Section */}
+              {/* Image Upload Section - Using our unified ImageUploader */}
               <div>
-                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                   Product Image
                 </label>
-                <div className="mt-1 flex items-center space-x-4">
-                  <div className={`flex-shrink-0 h-20 w-20 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-md flex items-center justify-center`}>
-                    {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-md" />
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id="image-upload"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className={`inline-flex items-center px-3 py-1 ${
-                        darkMode 
-                          ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
-                          : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700'
-                      } border rounded-md text-sm font-medium cursor-pointer`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-                      </svg>
-                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
-                    </label>
-                    {imagePreview && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview('');
-                          setImageFile(null);
-                          setFormData(prev => ({ ...prev, imageUrl: '' }));
-                        }}
-                        className={`mt-2 text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-500'}`}
-                      >
-                        Remove Image
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <ImageUploader 
+                  initialImage={formData.imageUrl}
+                  onImageUploaded={handleImageUploaded}
+                  folder="product-images"
+                  itemId={isEditing ? product.id : null}
+                  maxSizeMB={2}
+                  aspectRatio={[1, 1]} 
+                  darkMode={darkMode}
+                  showPreview={true}
+                  autoUpload={true} // Auto-upload images when selected
+                />
               </div>
             </div>
             
@@ -482,20 +404,20 @@ const ProductModal = ({ product, onClose, categories, darkMode }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || uploadingImage}
+              disabled={loading}
               className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
-                loading || uploadingImage 
+                loading 
                 ? `${darkMode ? 'bg-indigo-500 opacity-70' : 'bg-indigo-400'}`
                 : `${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'}`
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
             >
-              {loading || uploadingImage ? (
+              {loading ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {uploadingImage ? 'Uploading...' : 'Saving...'}
+                  Saving...
                 </>
               ) : (
                 'Save Product'
