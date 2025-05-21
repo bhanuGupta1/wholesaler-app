@@ -14,11 +14,11 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
 const Inventory = lazy(() => import('./pages/Inventory'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Orders = lazy(() => import('./pages/Orders/OrdersPage'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
 const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
-const OrderTable = lazy(() => import('./pages/Orders/OrderTable'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -51,6 +51,27 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return children;
+};
+
+// Semi-protected route that shows guest or authenticated content based on user status
+const FlexibleRoute = ({ children, guestContent }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  return user ? children : guestContent;
 };
 
 function App() {
@@ -212,45 +233,95 @@ function App() {
                 )
               } />
               
-              {/* Protected routes */}
+              {/* Inventory route - accessible by all users, including guests */}
               <Route path="/inventory" element={
-                <ProtectedRoute>
-                  <Layout>
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={<Inventory />}
+                  >
                     <Inventory />
-                  </Layout>
-                </ProtectedRoute>
+                  </FlexibleRoute>
+                </Layout>
               } />
               
+              {/* Product Detail route - accessible by all users, including guests */}
+              <Route path="/inventory/:id" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={<ProductDetail />}
+                  >
+                    <ProductDetail />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
+              {/* Orders routes - mixed access */}
               <Route path="/orders" element={
-                <ProtectedRoute>
-                  <Layout>
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Orders</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to view and manage orders. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
                     <Orders />
-                  </Layout>
-                </ProtectedRoute>
+                  </FlexibleRoute>
+                </Layout>
               } />
               
               <Route path="/orders/:id" element={
-                <ProtectedRoute>
-                  <Layout>
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Order Details</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to view order details. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
                     <OrderDetails />
-                  </Layout>
-                </ProtectedRoute>
+                  </FlexibleRoute>
+                </Layout>
               } />
               
               <Route path="/generate-invoice/:id" element={
-                <ProtectedRoute>
-                  <Layout>
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Generate Invoice</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to generate invoices. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
                     <InvoicePage />
-                  </Layout>
-                </ProtectedRoute>
+                  </FlexibleRoute>
+                </Layout>
               } />
               
               <Route path="/create-order" element={
-                <ProtectedRoute>
-                  <Layout>
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Create Order</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to create orders. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
                     <CreateOrder />
-                  </Layout>
-                </ProtectedRoute>
+                  </FlexibleRoute>
+                </Layout>
               } />
               
               {/* Fallback route */}
