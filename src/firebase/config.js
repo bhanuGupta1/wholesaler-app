@@ -1,28 +1,26 @@
-// src/firebase/config.js
-// Import required Firebase SDKs
+// src/firebase/config.js - Firebase configuration with environment variables
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage'; // Add this import
 
-// Firebase configuration using environment variables
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  // In production, use environment variables
+  // For demo/development, you can use these demo values
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-demo-api-key",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "your-messaging-sender-id",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "your-app-id"
 };
 
-// Initialize the Firebase app with the above config
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize and export Firebase services (Firestore, Auth, and Storage)
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app); // Add this line
+// Initialize services
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Export the Firebase app instance
+export { db, auth };
 export default app;

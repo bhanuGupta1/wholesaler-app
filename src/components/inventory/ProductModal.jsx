@@ -1,9 +1,10 @@
 // src/components/inventory/ProductModal.jsx
 import { useState, useEffect } from 'react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../../firebase/config';
 
-const ProductModal = ({ product, onClose, categories }) => {
+const ProductModal = ({ product, onClose, categories, darkMode }) => {
   const isEditing = !!product;
   const [formData, setFormData] = useState({
     name: '',
@@ -19,6 +20,9 @@ const ProductModal = ({ product, onClose, categories }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -34,6 +38,10 @@ const ProductModal = ({ product, onClose, categories }) => {
         supplier: product.supplier || '',
         reorderPoint: product.reorderPoint || ''
       });
+      
+      if (product.imageUrl) {
+        setImagePreview(product.imageUrl);
+      }
     }
   }, [product]);
 
@@ -75,6 +83,44 @@ const ProductModal = ({ product, onClose, categories }) => {
       }));
     }
   };
+  
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Preview the image
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+    
+    setImageFile(file);
+  };
+  
+  const uploadImage = async () => {
+    if (!imageFile) return formData.imageUrl;
+    
+    try {
+      setUploadingImage(true);
+      
+      // Create a reference to the file in Firebase Storage
+      const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
+      
+      // Upload the file
+      await uploadBytes(storageRef, imageFile);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      setUploadingImage(false);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploadingImage(false);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,6 +134,12 @@ const ProductModal = ({ product, onClose, categories }) => {
     try {
       setLoading(true);
       
+      // Upload image if a new one was selected
+      let imageUrl = formData.imageUrl;
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      }
+      
       // Format data for Firestore
       const productData = {
         name: formData.name,
@@ -96,7 +148,7 @@ const ProductModal = ({ product, onClose, categories }) => {
         price: Number(formData.price),
         stock: Number(formData.stock),
         description: formData.description,
-        imageUrl: formData.imageUrl,
+        imageUrl,
         costPrice: formData.costPrice ? Number(formData.costPrice) : null,
         supplier: formData.supplier,
         reorderPoint: formData.reorderPoint ? Number(formData.reorderPoint) : null,
@@ -125,17 +177,17 @@ const ProductModal = ({ product, onClose, categories }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-      <div className="relative bg-white rounded-lg shadow-xl mx-auto max-w-2xl w-full">
+      <div className={`relative ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-900'} rounded-lg shadow-xl mx-auto max-w-2xl w-full`}>
         {/* Header */}
-        <div className="bg-gray-50 py-4 px-6 rounded-t-lg border-b">
+        <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} py-4 px-6 rounded-t-lg border-b`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
               {isEditing ? 'Edit Product' : 'Add New Product'}
             </h3>
             <button
               type="button"
               onClick={() => onClose(false)}
-              className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-500'} focus:outline-none`}
             >
               <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -147,15 +199,15 @@ const ProductModal = ({ product, onClose, categories }) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
           {errors.submit && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
+            <div className={`mb-4 ${darkMode ? 'bg-red-900/30 border-red-800' : 'bg-red-50 border-red-400'} border-l-4 p-4 rounded-md`}>
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-red-400' : 'text-red-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">{errors.submit}</p>
+                  <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-700'}`}>{errors.submit}</p>
                 </div>
               </div>
             </div>
@@ -165,7 +217,7 @@ const ProductModal = ({ product, onClose, categories }) => {
             {/* Basic Information */}
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Product Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -175,15 +227,17 @@ const ProductModal = ({ product, onClose, categories }) => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    errors.name 
+                      ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                      : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                   }`}
                   placeholder="Enter product name"
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                {errors.name && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.name}</p>}
               </div>
               
               <div>
-                <label htmlFor="sku" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="sku" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   SKU
                 </label>
                 <input
@@ -192,13 +246,15 @@ const ProductModal = ({ product, onClose, categories }) => {
                   id="sku"
                   value={formData.sku}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
+                    darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
                   placeholder="Enter SKU (optional)"
                 />
               </div>
               
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="category" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -207,7 +263,9 @@ const ProductModal = ({ product, onClose, categories }) => {
                   value={formData.category}
                   onChange={handleChange}
                   className={`mt-1 block w-full pl-3 pr-10 py-2 text-base shadow-sm sm:text-sm rounded-md ${
-                    errors.category ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    errors.category 
+                      ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                      : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                   }`}
                 >
                   <option value="">Select a category</option>
@@ -217,16 +275,16 @@ const ProductModal = ({ product, onClose, categories }) => {
                     </option>
                   ))}
                 </select>
-                {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+                {errors.category && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.category}</p>}
               </div>
               
               <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="price" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Selling Price <span className="text-red-500">*</span>
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                    <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} sm:text-sm`}>$</span>
                   </div>
                   <input
                     type="number"
@@ -237,16 +295,18 @@ const ProductModal = ({ product, onClose, categories }) => {
                     step="0.01"
                     min="0"
                     className={`block w-full pl-7 pr-12 sm:text-sm rounded-md ${
-                      errors.price ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                      errors.price 
+                        ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                        : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                     }`}
                     placeholder="0.00"
                   />
                 </div>
-                {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+                {errors.price && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.price}</p>}
               </div>
               
               <div>
-                <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="stock" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Stock Quantity <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -258,23 +318,78 @@ const ProductModal = ({ product, onClose, categories }) => {
                   min="0"
                   step="1"
                   className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.stock ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    errors.stock 
+                      ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                      : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                   }`}
                   placeholder="0"
                 />
-                {errors.stock && <p className="mt-1 text-sm text-red-600">{errors.stock}</p>}
+                {errors.stock && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.stock}</p>}
+              </div>
+
+              {/* Image Upload Section */}
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Product Image
+                </label>
+                <div className="mt-1 flex items-center space-x-4">
+                  <div className={`flex-shrink-0 h-20 w-20 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-md flex items-center justify-center`}>
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="h-20 w-20 object-cover rounded-md" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="image-upload"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className={`inline-flex items-center px-3 py-1 ${
+                        darkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-200'
+                          : 'bg-white hover:bg-gray-50 border-gray-300 text-gray-700'
+                      } border rounded-md text-sm font-medium cursor-pointer`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                      </svg>
+                      {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                    </label>
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview('');
+                          setImageFile(null);
+                          setFormData(prev => ({ ...prev, imageUrl: '' }));
+                        }}
+                        className={`mt-2 text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-500'}`}
+                      >
+                        Remove Image
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             
             {/* Additional Information */}
             <div className="space-y-4">
               <div>
-                <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="costPrice" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Cost Price
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                    <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} sm:text-sm`}>$</span>
                   </div>
                   <input
                     type="number"
@@ -285,16 +400,18 @@ const ProductModal = ({ product, onClose, categories }) => {
                     step="0.01"
                     min="0"
                     className={`block w-full pl-7 pr-12 sm:text-sm rounded-md ${
-                      errors.costPrice ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                      errors.costPrice 
+                        ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                        : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                     }`}
                     placeholder="0.00"
                   />
                 </div>
-                {errors.costPrice && <p className="mt-1 text-sm text-red-600">{errors.costPrice}</p>}
+                {errors.costPrice && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.costPrice}</p>}
               </div>
               
               <div>
-                <label htmlFor="supplier" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="supplier" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Supplier
                 </label>
                 <input
@@ -303,13 +420,15 @@ const ProductModal = ({ product, onClose, categories }) => {
                   id="supplier"
                   value={formData.supplier}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
+                    darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
                   placeholder="Enter supplier name (optional)"
                 />
               </div>
               
               <div>
-                <label htmlFor="reorderPoint" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="reorderPoint" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Reorder Point
                 </label>
                 <input
@@ -321,40 +440,29 @@ const ProductModal = ({ product, onClose, categories }) => {
                   min="0"
                   step="1"
                   className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
-                    errors.reorderPoint ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                    errors.reorderPoint 
+                      ? `${darkMode ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500'}`
+                      : `${darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'}`
                   }`}
                   placeholder="0"
                 />
-                {errors.reorderPoint && <p className="mt-1 text-sm text-red-600">{errors.reorderPoint}</p>}
-                <p className="mt-1 text-xs text-gray-500">Minimum inventory level before reordering</p>
+                {errors.reorderPoint && <p className={`mt-1 text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{errors.reorderPoint}</p>}
+                <p className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Minimum inventory level before reordering</p>
               </div>
               
               <div>
-                <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
-                  Image URL
-                </label>
-                <input
-                  type="text"
-                  name="imageUrl"
-                  id="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter image URL (optional)"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="description" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Description
                 </label>
                 <textarea
                   id="description"
                   name="description"
-                  rows="3"
+                  rows="5"
                   value={formData.description}
                   onChange={handleChange}
-                  className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  className={`mt-1 block w-full shadow-sm sm:text-sm rounded-md ${
+                    darkMode ? 'border-gray-600 bg-gray-700 focus:ring-indigo-500 focus:border-indigo-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
                   placeholder="Enter product description (optional)"
                 ></textarea>
               </div>
@@ -366,22 +474,28 @@ const ProductModal = ({ product, onClose, categories }) => {
             <button
               type="button"
               onClick={() => onClose(false)}
-              className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className={`inline-flex justify-center py-2 px-4 border ${
+                darkMode ? 'border-gray-600 text-gray-300 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+              } shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading || uploadingImage}
+              className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
+                loading || uploadingImage 
+                ? `${darkMode ? 'bg-indigo-500 opacity-70' : 'bg-indigo-400'}`
+                : `${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'}`
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
             >
-              {loading ? (
+              {loading || uploadingImage ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Saving...
+                  {uploadingImage ? 'Uploading...' : 'Saving...'}
                 </>
               ) : (
                 'Save Product'

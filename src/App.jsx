@@ -1,38 +1,98 @@
-// src/App.jsx - Updated with DashboardSelector
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// src/App.jsx
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/common/Layout';
-import DashboardSelector from './components/DashboardSelector';
 import Login from './pages/Login';
-import Inventory from './pages/Inventory';
-import Orders from './pages/Orders';
-import CreateOrder from './pages/CreateOrder';
+import { auth } from './firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 import { seedFirebaseData } from './utils/seedFirebase';
-import { generateFakerData } from './utils/fakerData'; // Optional: Import if you want to use faker
+
+// Lazy-loaded components for better performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
+const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Orders = lazy(() => import('./pages/Orders/OrdersPage'));
+const CreateOrder = lazy(() => import('./pages/CreateOrder'));
+const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
+const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
+const OrderTable = lazy(() => import('./pages/Orders/OrderTable'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+    <p className="mt-4 text-gray-600">Loading...</p>
+  </div>
+);
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  return children;
+};
 
 function App() {
-  const [isSeeding, setIsSeeding] = useState(true);
-  const [seedStatus, setSeedStatus] = useState('Checking database...');
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedStatus, setSeedStatus] = useState('');
   const [seedError, setSeedError] = useState(null);
   const [showSeedOption, setShowSeedOption] = useState(false);
+  const [userRole, setUserRole] = useState('guest'); // Default to guest
   
-  // Check if seeding is needed on app start
+  // Check if seeding is needed and determine user role on app start
   useEffect(() => {
     async function checkDatabase() {
       try {
         // First just check if data exists (forceReseed = false)
         const result = await seedFirebaseData(false);
-        setIsSeeding(false);
+        
         // If empty database, show option to seed
         if (!result) {
           setShowSeedOption(true);
         }
+        
+        // Set up auth state listener to determine role
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            // In a real app, you would check the user's role in Firestore
+            // For demo purposes, using email to determine role
+            if (user.email?.includes('admin')) {
+              setUserRole('admin');
+            } else if (user.email?.includes('manager')) {
+              setUserRole('manager');
+            } else {
+              setUserRole('user');
+            }
+          } else {
+            setUserRole('guest');
+          }
+        });
+        
+        return () => unsubscribe();
       } catch (error) {
         console.error('Error checking database:', error);
         setSeedError(error.message);
-        setIsSeeding(false);
       }
     }
 
@@ -45,20 +105,17 @@ function App() {
       setIsSeeding(true);
       setSeedStatus('Creating sample data...');
       
-      // You can use either your original seeding or the faker data
-      // Option 1: Original seeding
-      await seedFirebaseData(true); // Force reseed
-      
-      // Option 2: Use faker data (uncomment if you want to use faker)
-      // await generateFakerData({
-      //   productsCount: 25,
-      //   ordersCount: 30,
-      //   activitiesCount: 20,
-      //   clearExisting: true
-      // });
+      // Force reseed of the database
+      await seedFirebaseData(true);
       
       setIsSeeding(false);
+      setSeedStatus('Data successfully created!');
       setShowSeedOption(false);
+      
+      // Refresh after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error('Error seeding data:', error);
       setSeedError(error.message);
@@ -130,38 +187,77 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <div className="dark:bg-gray-900 dark:text-white">
         <Router>
-          <Routes>
-            <Route path="/" element={
-              <Layout>
-                {/* Replace Dashboard with DashboardSelector */}
-                <DashboardSelector />
-              </Layout>
-            } />
-            <Route path="/login" element={
-              <Layout>
-                <Login />
-              </Layout>
-            } />
-            <Route path="/inventory" element={
-              <Layout>
-                <Inventory />
-              </Layout>
-            } />
-            <Route path="/orders" element={
-              <Layout>
-                <Orders />
-              </Layout>
-            } />
-            <Route path="/create-order" element={
-              <Layout>
-                <CreateOrder />
-              </Layout>
-            } />
-          </Routes>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              {/* Public route - Login */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Different dashboard based on user role */}
+              <Route path="/" element={
+                userRole === 'guest' ? (
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
+                ) : (
+                  <ProtectedRoute>
+                    <Layout>
+                      {userRole === 'admin' || userRole === 'manager' ? (
+                        <EnhancedDashboard />
+                      ) : (
+                        <Dashboard />
+                      )}
+                    </Layout>
+                  </ProtectedRoute>
+                )
+              } />
+              
+              {/* Protected routes */}
+              <Route path="/inventory" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Inventory />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/orders" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Orders />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/orders/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <OrderDetails />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/generate-invoice/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <InvoicePage />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/create-order" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CreateOrder />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Fallback route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </Router>
-        </div>
       </ThemeProvider>
     </AuthProvider>
   );
