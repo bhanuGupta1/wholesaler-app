@@ -293,7 +293,7 @@ const Orders = () => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 md:mb-0`}>Orders</h1>
         
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-3">
           {!isGuest && (
             <Link 
               to="/create-order"
@@ -305,6 +305,87 @@ const Orders = () => {
               New Order
             </Link>
           )}
+        </div>
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-md p-4 mb-6 border`}>
+        <h2 className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>Order Management</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {/* Invoice Page */}
+          <Link
+            to="/invoice"
+            className={`flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md ${
+              darkMode 
+                ? 'text-blue-400 bg-blue-900/20 hover:bg-blue-900/30 border-blue-800' 
+                : 'text-blue-700 bg-blue-50 hover:bg-blue-100 border-blue-200'
+            } transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Invoice
+          </Link>
+
+          {/* Order Details */}
+          <Link
+            to="/order-details"
+            className={`flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md ${
+              darkMode 
+                ? 'text-green-400 bg-green-900/20 hover:bg-green-900/30 border-green-800' 
+                : 'text-green-700 bg-green-50 hover:bg-green-100 border-green-200'
+            } transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Order Details
+          </Link>
+
+          {/* Order Filters */}
+          <Link
+            to="/order-filters"
+            className={`flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md ${
+              darkMode 
+                ? 'text-purple-400 bg-purple-900/20 hover:bg-purple-900/30 border-purple-800' 
+                : 'text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-200'
+            } transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+          </Link>
+
+          {/* Orders Page */}
+          <Link
+            to="/orders-page"
+            className={`flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md ${
+              darkMode 
+                ? 'text-yellow-400 bg-yellow-900/20 hover:bg-yellow-900/30 border-yellow-800' 
+                : 'text-yellow-700 bg-yellow-50 hover:bg-yellow-100 border-yellow-200'
+            } transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Orders Page
+          </Link>
+
+          {/* Order Table */}
+          <Link
+            to="/order-table"
+            className={`flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md ${
+              darkMode 
+                ? 'text-indigo-400 bg-indigo-900/20 hover:bg-indigo-900/30 border-indigo-800' 
+                : 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200'
+            } transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Order Table
+          </Link>
         </div>
       </div>
 

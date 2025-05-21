@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - Updated with new order routes
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -19,6 +19,11 @@ const Orders = lazy(() => import('./pages/Orders'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
 const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
+
+// New order management components
+const OrderFilters = lazy(() => import('./pages/Orders/OrderFilters'));
+const OrdersPage = lazy(() => import('./pages/Orders/OrdersPage'));
+const OrderTable = lazy(() => import('./pages/Orders/OrderTable'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -290,6 +295,24 @@ function App() {
                 </Layout>
               } />
               
+              {/* Invoice page route */}
+              <Route path="/invoice" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Invoice Management</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to manage invoices. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <InvoicePage />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
               <Route path="/generate-invoice/:id" element={
                 <Layout>
                   <FlexibleRoute 
@@ -303,6 +326,75 @@ function App() {
                     }
                   >
                     <InvoicePage />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
+              {/* New order management routes */}
+              <Route path="/order-details" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Order Details</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to view order details. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <OrderDetails />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
+              <Route path="/order-filters" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Order Filters</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to access advanced filters. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <OrderFilters />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
+              <Route path="/orders-page" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Orders Overview</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to view the orders overview. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <OrdersPage />
+                  </FlexibleRoute>
+                </Layout>
+              } />
+              
+              <Route path="/order-table" element={
+                <Layout>
+                  <FlexibleRoute 
+                    guestContent={
+                      <div className="container mx-auto px-4 py-8">
+                        <h1 className="text-2xl font-bold mb-6">Order Table</h1>
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+                          <p>You need to be logged in to access the order table. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <OrderTable />
                   </FlexibleRoute>
                 </Layout>
               } />
