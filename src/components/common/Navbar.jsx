@@ -1,12 +1,16 @@
-// src/components/common/Navbar.jsx
+// src/components/common/Navbar.jsx - Enhanced with dark mode support and user state
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from './ThemeToggle';
 
-const Navbar = () => {
+const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { darkMode } = useTheme();
+  
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -28,17 +32,21 @@ const Navbar = () => {
   }, []);
   
   // Handle sign out
-  const handleSignOut = () => {
-    logout();
-    setProfileDropdownOpen(false);
-    setMobileMenuOpen(false);
-    navigate('/login');
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setProfileDropdownOpen(false);
+      setMobileMenuOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
   
   return (
-    <div className="bg-gradient-to-r from-indigo-700 to-indigo-600">
+    <div className={`${darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-indigo-700 to-indigo-600'}`}>
       {/* Top Bar with Search */}
-      <div className="bg-indigo-800 py-2 px-4 text-indigo-100">
+      <div className={`${darkMode ? 'bg-gray-900' : 'bg-indigo-800'} py-2 px-4 text-indigo-100`}>
         <div className="container mx-auto flex items-center justify-between text-sm">
           <p className="hidden md:block">Wholesaler | Premium Inventory Management</p>
           <div className="flex items-center space-x-3">
@@ -69,7 +77,7 @@ const Navbar = () => {
               <input 
                 type="text" 
                 placeholder="Search products, orders, or customers..." 
-                className="w-full py-2 pl-4 pr-10 rounded-lg border-0 focus:ring-2 focus:ring-indigo-400 text-gray-800"
+                className={`w-full py-2 pl-4 pr-10 rounded-lg border-0 focus:ring-2 focus:ring-indigo-400 ${darkMode ? 'bg-gray-700 text-white placeholder-gray-400' : 'bg-white text-gray-800 placeholder-gray-500'}`}
               />
               <button className="absolute right-0 top-0 bottom-0 px-3 bg-indigo-500 text-white rounded-r-lg hover:bg-indigo-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,7 +119,7 @@ const Navbar = () => {
             <div className="h-6 w-px bg-indigo-300"></div>
             <Link 
               to="/create-order" 
-              className="bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium shadow-md transition-colors flex items-center"
+              className={`bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium shadow-md transition-colors flex items-center`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -119,69 +127,87 @@ const Navbar = () => {
               New Order
             </Link>
             
-            {/* User Profile Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button 
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center space-x-2 focus:outline-none group"
-                aria-expanded={profileDropdownOpen}
-                aria-haspopup="true"
-              >
-                <div className="h-10 w-10 rounded-full bg-white p-0.5 shadow-md overflow-hidden group-hover:ring-2 ring-white transition-all">
-                  <div className="bg-indigo-200 h-full w-full rounded-full flex items-center justify-center text-indigo-800 font-bold text-lg">
-                    U
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              
-              {profileDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-white rounded-lg shadow-xl py-2 z-50 transform transition-all duration-150 origin-top-right ring-1 ring-black ring-opacity-5">
-                  <div className="px-4 py-3 border-b">
-                    <p className="text-sm text-gray-500">Signed in as</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">user@example.com</p>
-                  </div>
-                  <div className="py-1">
-                    <Link 
-                      to="/profile" 
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Your Profile
-                    </Link>
-                    <Link 
-                      to="/settings" 
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Settings
-                    </Link>
-                  </div>
-                  <div className="py-1 border-t">
-                    <button 
-                      onClick={handleSignOut}
-                      className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-              )}
+            {/* Dark mode toggle */}
+            <div className="flex items-center">
+              <ThemeToggle />
             </div>
+            
+            {/* User Profile Dropdown */}
+            {user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center space-x-2 focus:outline-none group"
+                  aria-expanded={profileDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="h-10 w-10 rounded-full bg-white p-0.5 shadow-md overflow-hidden group-hover:ring-2 ring-white transition-all">
+                    <div className="bg-indigo-200 h-full w-full rounded-full flex items-center justify-center text-indigo-800 font-bold text-lg">
+                      {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                
+                {profileDropdownOpen && (
+                  <div className={`absolute right-0 mt-3 w-64 ${darkMode ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-black ring-opacity-5'} rounded-lg shadow-xl py-2 z-50 transform transition-all duration-150 origin-top-right`}>
+                    <div className={`px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Signed in as</p>
+                      <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>{user.email}</p>
+                    </div>
+                    <div className="py-1">
+                      <Link 
+                        to="/profile" 
+                        className={`flex items-center px-4 py-2 text-sm ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Your Profile
+                      </Link>
+                      <Link 
+                        to="/settings" 
+                        className={`flex items-center px-4 py-2 text-sm ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Settings
+                      </Link>
+                    </div>
+                    <div className={`py-1 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <button 
+                        onClick={handleSignOut}
+                        className={`flex w-full items-center px-4 py-2 text-sm ${darkMode ? 'text-gray-300 hover:bg-red-900/30 hover:text-red-300' : 'text-gray-700 hover:bg-red-50 hover:text-red-700'}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link 
+                to="/login" 
+                className="bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium shadow-md transition-colors flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Sign In
+              </Link>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
+            <ThemeToggle className="mr-2" />
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-white focus:outline-none"
@@ -206,7 +232,7 @@ const Navbar = () => {
               <input 
                 type="text" 
                 placeholder="Search..." 
-                className="w-full py-2 pl-4 pr-10 rounded-lg border-0 focus:ring-2 focus:ring-indigo-400 text-gray-800"
+                className={`w-full py-2 pl-4 pr-10 rounded-lg border-0 focus:ring-2 focus:ring-indigo-400 ${darkMode ? 'bg-gray-700 text-white placeholder-gray-400' : 'bg-white text-gray-800 placeholder-gray-500'}`}
               />
               <button className="absolute right-0 top-0 bottom-0 px-3 bg-indigo-500 text-white rounded-r-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,69 +246,79 @@ const Navbar = () => {
       
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="bg-indigo-800 md:hidden">
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-indigo-800'} md:hidden`}>
           <div className="py-3 px-4 space-y-1">
             <Link
               to="/"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
+              className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Dashboard
             </Link>
             <Link
               to="/inventory"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
+              className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Inventory
             </Link>
             <Link
               to="/orders"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
+              className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Orders
             </Link>
             <Link
               to="/create-order"
-              className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
+              className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               New Order
             </Link>
-            <div className="pt-4 pb-3 border-t border-indigo-700">
-              <div className="flex items-center px-3">
-                <div className="h-10 w-10 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-800 font-bold">
-                  U
+            {user ? (
+              <div className={`pt-4 pb-3 border-t ${darkMode ? 'border-gray-700' : 'border-indigo-700'}`}>
+                <div className="flex items-center px-3">
+                  <div className={`h-10 w-10 rounded-full ${darkMode ? 'bg-gray-600 text-white' : 'bg-indigo-200 text-indigo-800'} flex items-center justify-center font-bold`}>
+                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-base font-medium text-white">{user.displayName || "User"}</div>
+                    <div className="text-sm font-medium text-indigo-300">{user.email}</div>
+                  </div>
                 </div>
-                <div className="ml-3">
-                  <div className="text-base font-medium text-white">User</div>
-                  <div className="text-sm font-medium text-indigo-300">user@example.com</div>
+                <div className="mt-3 space-y-1 px-2">
+                  <Link
+                    to="/profile"
+                    className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Your Profile
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
+                  >
+                    Sign out
+                  </button>
                 </div>
               </div>
-              <div className="mt-3 space-y-1 px-2">
-                <Link
-                  to="/profile"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Your Profile
-                </Link>
-                <Link
-                  to="/settings"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Settings
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-700"
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
+            ) : (
+              <Link
+                to="/login"
+                className={`block px-3 py-2 mt-2 rounded-md text-base font-medium ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-indigo-600'} hover:opacity-90`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}

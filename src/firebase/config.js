@@ -1,27 +1,28 @@
-//This is the file for database configuration.
-
-// Import required Firebase SDKs
+// src/firebase/config.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
+import { getAnalytics } from 'firebase/analytics';
 
-// Firebase configuration using environment variables
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyAt2UcbVJaISAQ_RdFz94GjZKr3J8uDi1M",
+  authDomain: "wholesaler-app-ac31b.firebaseapp.com",
+  projectId: "wholesaler-app-ac31b",
+  storageBucket: "wholesaler-app-ac31b.firebasestorage.app",
+  messagingSenderId: "890188536922",
+  appId: "1:890188536922:web:1c76630ad0009f3e820c63",
+  measurementId: "G-B1283LT09L"
 };
 
-// Initialize the Firebase app with the above config
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize and export Firebase services (Firestore and Auth)
+// Initialize Firebase services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
+export const analytics = getAnalytics(app);
 
-// Export the Firebase app instance (optional but useful in some contexts)
 export default app;
