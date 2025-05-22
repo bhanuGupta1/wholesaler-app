@@ -1,11 +1,18 @@
-// src/pages/Login.jsx
+// src/pages/Login.jsx - Enhanced Login Page
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import ThemeToggle from '../components/common/ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, error: authError } = useAuth();
+  const location = useLocation();
+  const { login, error: authError, loading: authLoading } = useAuth();
+  const { darkMode } = useTheme();
+  
+  // Get redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || "/";
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -15,6 +22,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,7 +45,7 @@ const Login = () => {
     
     try {
       await login(credentials.email, credentials.password, rememberMe);
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Failed to login. Please check your credentials.');
@@ -46,10 +54,35 @@ const Login = () => {
     }
   };
 
+  // Helper function to quick-fill credentials for demo accounts
+  const useTestAccount = (role) => {
+    let email = '';
+    let password = 'password123';
+
+    switch(role) {
+      case 'admin':
+        email = 'admin@wholesaler.com';
+        break;
+      case 'manager': 
+        email = 'manager@wholesaler.com';
+        break;
+      case 'user':
+        email = 'user@wholesaler.com';
+        break;
+      default:
+        email = 'user@wholesaler.com';
+    }
+
+    setCredentials({
+      email,
+      password
+    });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className={`min-h-screen flex flex-col md:flex-row ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Left Panel - Brand information */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white p-12 flex-col justify-between">
+      <div className={`hidden md:flex md:w-1/2 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white p-12 flex-col justify-between`}>
         <div>
           <div className="flex items-center mb-8">
             <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center text-indigo-600">
@@ -111,33 +144,87 @@ const Login = () => {
       </div>
       
       {/* Right Panel - Login Form */}
-      <div className="flex flex-col justify-center items-center p-6 md:p-12 w-full md:w-1/2">
+      <div className={`flex flex-col justify-center items-center p-6 md:p-12 w-full md:w-1/2 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+        
         <div className="w-full max-w-md">
           <div className="md:hidden flex items-center justify-center mb-8">
-            <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+            <div className={`h-10 w-10 ${darkMode ? 'bg-indigo-500' : 'bg-indigo-600'} rounded-lg flex items-center justify-center text-white`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7h-4v4h4V7zm1-2a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V5a2 2 0 012-2h12z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold ml-3 text-gray-900">Wholesaler</h1>
+            <h1 className={`text-2xl font-bold ml-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Wholesaler</h1>
           </div>
           
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-            <p className="text-gray-600">Please sign in to your account</p>
+            <h2 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Welcome back</h2>
+            <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Please sign in to your account</p>
+          </div>
+          
+          {/* Demo accounts section */}
+          <div className={`mb-6 ${darkMode ? 'bg-gray-800' : 'bg-indigo-50'} rounded-lg p-4`}>
+            <div className="flex justify-between items-center">
+              <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-indigo-700'} font-medium`}>
+                Demo Application
+              </p>
+              <button 
+                onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+                className={`text-xs ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
+              >
+                {showDemoAccounts ? 'Hide Accounts' : 'Show Test Accounts'}
+              </button>
+            </div>
+            
+            {showDemoAccounts && (
+              <div className="mt-3 space-y-2">
+                <button 
+                  onClick={() => useTestAccount('admin')}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
+                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                  }`}
+                >
+                  Admin: admin@wholesaler.com / password123
+                </button>
+                <button 
+                  onClick={() => useTestAccount('manager')}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
+                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                  }`}
+                >
+                  Manager: manager@wholesaler.com / password123
+                </button>
+                <button 
+                  onClick={() => useTestAccount('user')}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
+                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                  }`}
+                >
+                  User: user@wholesaler.com / password123
+                </button>
+              </div>
+            )}
           </div>
           
           {(error || authError) && (
-            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+            <div className={`mb-6 ${darkMode ? 'bg-red-900 border-red-800' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded-md`}>
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-red-400' : 'text-red-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">
+                  <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
                     {error || authError}
                   </p>
                 </div>
@@ -147,10 +234,10 @@ const Login = () => {
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">Email address</label>
+              <label htmlFor="email-address" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Email address</label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
@@ -163,17 +250,17 @@ const Login = () => {
                   required
                   value={credentials.email}
                   onChange={handleChange}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 sm:text-sm border-gray-300 rounded-md"
+                  className={`${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 sm:text-sm rounded-md`}
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Password</label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -185,7 +272,7 @@ const Login = () => {
                   required
                   value={credentials.password}
                   onChange={handleChange}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 sm:text-sm border-gray-300 rounded-md"
+                  className={`${darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 sm:text-sm rounded-md`}
                   placeholder="••••••••"
                 />
               </div>
@@ -199,15 +286,15 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className={`h-4 w-4 text-indigo-600 focus:ring-indigo-500 ${darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300'} rounded`}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="remember-me" className={`ml-2 block text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <Link to="/forgot-password" className={`font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
                   Forgot your password?
                 </Link>
               </div>
@@ -216,10 +303,10 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                disabled={loading || authLoading}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${(loading || authLoading) ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                {loading ? (
+                {(loading || authLoading) ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -237,10 +324,10 @@ const Login = () => {
           <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className={`w-full border-t ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
+                <span className={`px-2 ${darkMode ? 'bg-gray-900 text-gray-400' : 'bg-white text-gray-500'}`}>
                   Or continue with
                 </span>
               </div>
@@ -250,7 +337,7 @@ const Login = () => {
               <div>
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
                   onClick={() => {
                     // Handle Google login
                     console.log('Google login clicked');
@@ -264,7 +351,7 @@ const Login = () => {
               <div>
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
                   onClick={() => {
                     // Handle Facebook login
                     console.log('Facebook login clicked');
@@ -279,9 +366,9 @@ const Login = () => {
           </div>
           
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/signup" className={`font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
                 Sign up
               </Link>
             </p>

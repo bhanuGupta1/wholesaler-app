@@ -1,4 +1,4 @@
-// src/hooks/useAuth.js
+// src/hooks/useAuth.js - Custom hook to access authentication
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -6,16 +6,10 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
   
   if (context === null) {
-    console.error("useAuth must be used within an AuthProvider");
-    // Return a default value to prevent errors
-    return { 
-      user: null, 
-      loading: false, 
-      error: "Auth context not found", 
-      login: () => {}, 
-      logout: () => {} 
-    };
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   
   return context;
 };
+
+export default useAuth;
