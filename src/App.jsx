@@ -11,6 +11,8 @@ import { seedFirebaseData } from './utils/seedFirebase';
 
 // Lazy-loaded components for better performance
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const BusinessDashboard = lazy(() => import('./pages/BusinessDashboard'));
 const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
@@ -126,11 +128,11 @@ const DashboardRouter = () => {
     case 'admin':
       return <AdminDashboard />;
     case 'manager':
-      return <EnhancedDashboard />; // Managers get the enhanced dashboard
+      return <ManagerDashboard />; // Simple manager dashboard
     case 'business':
       return <BusinessDashboard />;
     case 'user':
-      return <EnhancedDashboard />; // Regular users get enhanced dashboard
+      return <UserDashboard />; // Simple user dashboard
     case 'guest':
     default:
       return <GuestDashboard />;
@@ -254,15 +256,16 @@ function App() {
         <Router>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
-              {/* Public Routes - No authentication required */}
-              <Route path="/home" element={
+              {/* Home Route - Default landing page for everyone */}
+              <Route path="/" element={
                 <PublicRoute>
                   <Layout>
                     <Home />
                   </Layout>
                 </PublicRoute>
               } />
-              
+
+              {/* Public Routes - No authentication required */}
               <Route path="/login" element={<Login />} />
               
               <Route path="/register" element={
@@ -288,13 +291,7 @@ function App() {
                 </PublicRoute>
               } />
 
-              {/* Main Dashboard Route - Role-based */}
-              <Route path="/" element={
-                <Layout>
-                  <DashboardRouter />
-                </Layout>
-              } />
-
+              {/* Dashboard Route - Role-based for authenticated users */}
               <Route path="/dashboard" element={
                 <Layout>
                   <DashboardRouter />
@@ -321,13 +318,22 @@ function App() {
               <Route path="/manager-dashboard" element={
                 <ProtectedRoute requiredRole="manager">
                   <Layout>
-                    <EnhancedDashboard />
+                    <ManagerDashboard />
                   </Layout>
                 </ProtectedRoute>
               } />
 
               <Route path="/user-dashboard" element={
                 <ProtectedRoute requiredRole="user">
+                  <Layout>
+                    <UserDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              {/* Enhanced Dashboard Routes for Advanced Users */}
+              <Route path="/enhanced-dashboard" element={
+                <ProtectedRoute>
                   <Layout>
                     <EnhancedDashboard />
                   </Layout>
@@ -397,7 +403,7 @@ function App() {
                 </ProtectedRoute>
               } />
               
-              {/* Fallback route */}
+              {/* Fallback route - redirect to home instead of dashboard */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
