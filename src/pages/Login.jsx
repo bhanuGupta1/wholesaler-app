@@ -1,4 +1,4 @@
-// src/pages/Login.jsx - Enhanced Login Page with Business Account
+// src/pages/Login.jsx - Enhanced Login Page
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -65,9 +65,6 @@ const Login = () => {
         break;
       case 'manager': 
         email = 'manager@wholesaler.com';
-        break;
-      case 'business':
-        email = 'business@wholesaler.com';
         break;
       case 'user':
         email = 'user@wholesaler.com';
@@ -203,16 +200,6 @@ const Login = () => {
                   }`}
                 >
                   Manager: manager@wholesaler.com / password123
-                </button>
-                <button 
-                  onClick={() => useTestAccount('business')}
-                  className={`w-full text-left px-3 py-2 rounded text-sm ${
-                    darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
-                  }`}
-                >
-                  Business: business@wholesaler.com / password123
                 </button>
                 <button 
                   onClick={() => useTestAccount('user')}
@@ -381,7 +368,7 @@ const Login = () => {
           <div className="mt-8 text-center">
             <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Don't have an account?{' '}
-              <Link to="/register" className={`font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
+              <Link to="/signup" className={`font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
                 Sign up
               </Link>
             </p>
