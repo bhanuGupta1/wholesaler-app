@@ -353,6 +353,23 @@ function App() {
                 </Layout>
               } />
 
+              {/* Products/Browse route - Main products page for everyone */}
+              <Route path="/products" element={
+                <PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              <Route path="/browse" element={
+                <PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
+                </PublicRoute>
+              } />
+
               {/* Shopping routes - accessible by all */}
               <Route path="/cart" element={
                 <PublicRoute>
@@ -370,7 +387,7 @@ function App() {
                 </PublicRoute>
               } />
               
-              {/* Orders routes - Protected */}
+              {/* Orders routes - Protected (Login required) */}
               <Route path="/orders" element={
                 <ProtectedRoute>
                   <Layout>
