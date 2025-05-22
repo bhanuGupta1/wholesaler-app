@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with new order routes
+// src/App.jsx
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -10,20 +10,23 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { seedFirebaseData } from './utils/seedFirebase';
 
 // Lazy-loaded components for better performance
-const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const BusinessDashboard = lazy(() => import('./pages/BusinessDashboard'));
 const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
+const Home = lazy(() => import('./pages/Home'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ProductCatalog = lazy(() => import('./pages/ProductCatalog'));
 const Orders = lazy(() => import('./pages/Orders'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
 const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
-
-// New order management components
-const OrderFilters = lazy(() => import('./pages/Orders/OrderFilters'));
-const OrdersPage = lazy(() => import('./pages/Orders/OrdersPage'));
-const OrderTable = lazy(() => import('./pages/Orders/OrderTable'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Registration = lazy(() => import('./pages/Registration'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -34,13 +37,30 @@ const LoadingFallback = () => (
 );
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requiredRole = null }) => {
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      
+      if (currentUser) {
+        // Determine user role based on email or you can fetch from Firestore
+        if (currentUser.email?.includes('admin')) {
+          setUserRole('admin');
+        } else if (currentUser.email?.includes('manager')) {
+          setUserRole('manager');
+        } else if (currentUser.email?.includes('business')) {
+          setUserRole('business');
+        } else {
+          setUserRole('user');
+        }
+      } else {
+        setUserRole(null);
+      }
+      
       setLoading(false);
     });
 
@@ -55,17 +75,44 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
+  // Check role-based access
+  if (requiredRole && userRole !== requiredRole) {
+    return <Navigate to="/dashboard" />;
+  }
+
   return children;
 };
 
-// Semi-protected route that shows guest or authenticated content based on user status
-const FlexibleRoute = ({ children, guestContent }) => {
+// Public Route that doesn't require authentication
+const PublicRoute = ({ children }) => {
+  return children;
+};
+
+// Role-based Dashboard Router
+const DashboardRouter = () => {
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState('guest');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      
+      if (currentUser) {
+        // Determine user role based on email
+        if (currentUser.email?.includes('admin')) {
+          setUserRole('admin');
+        } else if (currentUser.email?.includes('manager')) {
+          setUserRole('manager');
+        } else if (currentUser.email?.includes('business')) {
+          setUserRole('business');
+        } else {
+          setUserRole('user');
+        }
+      } else {
+        setUserRole('guest');
+      }
+      
       setLoading(false);
     });
 
@@ -76,7 +123,20 @@ const FlexibleRoute = ({ children, guestContent }) => {
     return <LoadingFallback />;
   }
 
-  return user ? children : guestContent;
+  // Return appropriate dashboard based on user role
+  switch (userRole) {
+    case 'admin':
+      return <AdminDashboard />;
+    case 'manager':
+      return <ManagerDashboard />; // Simple manager dashboard
+    case 'business':
+      return <BusinessDashboard />;
+    case 'user':
+      return <UserDashboard />; // Simple user dashboard
+    case 'guest':
+    default:
+      return <GuestDashboard />;
+  }
 };
 
 function App() {
@@ -84,9 +144,8 @@ function App() {
   const [seedStatus, setSeedStatus] = useState('');
   const [seedError, setSeedError] = useState(null);
   const [showSeedOption, setShowSeedOption] = useState(false);
-  const [userRole, setUserRole] = useState('guest'); // Default to guest
   
-  // Check if seeding is needed and determine user role on app start
+  // Check if seeding is needed on app start
   useEffect(() => {
     async function checkDatabase() {
       try {
@@ -97,25 +156,6 @@ function App() {
         if (!result) {
           setShowSeedOption(true);
         }
-        
-        // Set up auth state listener to determine role
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            // In a real app, you would check the user's role in Firestore
-            // For demo purposes, using email to determine role
-            if (user.email?.includes('admin')) {
-              setUserRole('admin');
-            } else if (user.email?.includes('manager')) {
-              setUserRole('manager');
-            } else {
-              setUserRole('user');
-            }
-          } else {
-            setUserRole('guest');
-          }
-        });
-        
-        return () => unsubscribe();
       } catch (error) {
         console.error('Error checking database:', error);
         setSeedError(error.message);
@@ -216,207 +256,171 @@ function App() {
         <Router>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
-              {/* Public route - Login */}
+              {/* Home Route - Default landing page for everyone */}
+              <Route path="/" element={
+                <PublicRoute>
+                  <Layout>
+                    <Home />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              {/* Public Routes - No authentication required */}
               <Route path="/login" element={<Login />} />
               
-              {/* Different dashboard based on user role */}
-              <Route path="/" element={
-                userRole === 'guest' ? (
+              <Route path="/register" element={
+                <PublicRoute>
+                  <Registration />
+                </PublicRoute>
+              } />
+
+              {/* Guest accessible routes */}
+              <Route path="/guest-dashboard" element={
+                <PublicRoute>
                   <Layout>
                     <GuestDashboard />
                   </Layout>
-                ) : (
-                  <ProtectedRoute>
-                    <Layout>
-                      {userRole === 'admin' || userRole === 'manager' ? (
-                        <EnhancedDashboard />
-                      ) : (
-                        <Dashboard />
-                      )}
-                    </Layout>
-                  </ProtectedRoute>
-                )
+                </PublicRoute>
               } />
-              
-              {/* Inventory route - accessible by all users, including guests */}
+
+              <Route path="/catalog" element={
+                <PublicRoute>
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              {/* Dashboard Route - Role-based for authenticated users */}
+              <Route path="/dashboard" element={
+                <Layout>
+                  <DashboardRouter />
+                </Layout>
+              } />
+
+              {/* Role-specific dashboard routes */}
+              <Route path="/admin-dashboard" element={
+                <ProtectedRoute requiredRole="admin">
+                  <Layout>
+                    <AdminDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/business-dashboard" element={
+                <ProtectedRoute requiredRole="business">
+                  <Layout>
+                    <BusinessDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/manager-dashboard" element={
+                <ProtectedRoute requiredRole="manager">
+                  <Layout>
+                    <ManagerDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/user-dashboard" element={
+                <ProtectedRoute requiredRole="user">
+                  <Layout>
+                    <UserDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              {/* Enhanced Dashboard Routes for Advanced Users */}
+              <Route path="/enhanced-dashboard" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EnhancedDashboard />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+
+              {/* Inventory routes - accessible by all authenticated users and guests */}
               <Route path="/inventory" element={
                 <Layout>
-                  <FlexibleRoute 
-                    guestContent={<Inventory />}
-                  >
-                    <Inventory />
-                  </FlexibleRoute>
+                  <Inventory />
                 </Layout>
               } />
               
-              {/* Product Detail route - accessible by all users, including guests */}
               <Route path="/inventory/:id" element={
                 <Layout>
-                  <FlexibleRoute 
-                    guestContent={<ProductDetail />}
-                  >
-                    <ProductDetail />
-                  </FlexibleRoute>
+                  <ProductDetail />
                 </Layout>
               } />
+
+              {/* Products/Browse route - Main products page for everyone */}
+              <Route path="/products" element={
+                <PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              <Route path="/browse" element={
+                <PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              {/* Shopping routes - accessible by all */}
+              <Route path="/cart" element={
+                <PublicRoute>
+                  <Layout>
+                    <Cart />
+                  </Layout>
+                </PublicRoute>
+              } />
+
+              <Route path="/checkout" element={
+                <PublicRoute>
+                  <Layout>
+                    <Checkout />
+                  </Layout>
+                </PublicRoute>
+              } />
               
-              {/* Orders routes - mixed access */}
+              {/* Orders routes - Protected (Login required) */}
               <Route path="/orders" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Orders</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to view and manage orders. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
+                <ProtectedRoute>
+                  <Layout>
                     <Orders />
-                  </FlexibleRoute>
-                </Layout>
+                  </Layout>
+                </ProtectedRoute>
               } />
               
               <Route path="/orders/:id" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Order Details</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to view order details. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
+                <ProtectedRoute>
+                  <Layout>
                     <OrderDetails />
-                  </FlexibleRoute>
-                </Layout>
-              } />
-              
-              {/* Invoice page route */}
-              <Route path="/invoice" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Invoice Management</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to manage invoices. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <InvoicePage />
-                  </FlexibleRoute>
-                </Layout>
+                  </Layout>
+                </ProtectedRoute>
               } />
               
               <Route path="/generate-invoice/:id" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Generate Invoice</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to generate invoices. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
+                <ProtectedRoute>
+                  <Layout>
                     <InvoicePage />
-                  </FlexibleRoute>
-                </Layout>
-              } />
-              
-              {/* New order management routes */}
-              <Route path="/order-details" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Order Details</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to view order details. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <OrderDetails />
-                  </FlexibleRoute>
-                </Layout>
-              } />
-              
-              <Route path="/order-filters" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Order Filters</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to access advanced filters. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <OrderFilters />
-                  </FlexibleRoute>
-                </Layout>
-              } />
-              
-              <Route path="/orders-page" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Orders Overview</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to view the orders overview. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <OrdersPage />
-                  </FlexibleRoute>
-                </Layout>
-              } />
-              
-              <Route path="/order-table" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Order Table</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to access the order table. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <OrderTable />
-                  </FlexibleRoute>
-                </Layout>
+                  </Layout>
+                </ProtectedRoute>
               } />
               
               <Route path="/create-order" element={
-                <Layout>
-                  <FlexibleRoute 
-                    guestContent={
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-bold mb-6">Create Order</h1>
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-                          <p>You need to be logged in to create orders. <a href="/login" className="underline font-medium">Sign in</a> to continue.</p>
-                        </div>
-                      </div>
-                    }
-                  >
+                <ProtectedRoute>
+                  <Layout>
                     <CreateOrder />
-                  </FlexibleRoute>
-                </Layout>
+                  </Layout>
+                </ProtectedRoute>
               } />
               
-              {/* Fallback route */}
+              {/* Fallback route - redirect to home instead of dashboard */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
