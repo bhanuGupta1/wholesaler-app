@@ -10,6 +10,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { seedFirebaseData } from './utils/seedFirebase';
 
 // Lazy-loaded components for better performance
+const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
