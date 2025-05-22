@@ -13,6 +13,7 @@ import { seedFirebaseData } from './utils/seedFirebase';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const BusinessDashboard = lazy(() => import('./pages/BusinessDashboard'));
 const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
@@ -230,7 +231,7 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       {userRole === 'admin' || userRole === 'manager' ? (
-                        <AdminDashboard />
+                        <BusinessDashboard />
                       ) : (
                         <Dashboard />
                       )}
