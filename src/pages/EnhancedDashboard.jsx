@@ -5,7 +5,6 @@ import { collection, getDocs, query, where, orderBy, limit, doc, getDoc, onSnaps
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/common/ThemeToggle';
-import { seedFirebaseData } from '../utils/seedFirebase';
 import { motion, AnimatePresence } from 'framer-motion'; // You'll need to install this
 
 // Lazy-loaded components for better performance
