@@ -78,3 +78,38 @@ const CreateOrder = () => {
             ))}
           </div>
         )}
+                {/* Cart Section */}
+        {cart.length > 0 && (
+          <div className={`mt-10 p-6 rounded-lg shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+            <ul>
+              {cart.map(item => (
+                <li key={item.id} className="flex justify-between py-2 border-b border-gray-300">
+                  <span>{item.name}</span>
+                  <span>${item.price.toFixed(2)}</span>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="text-red-500"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 flex justify-between font-bold">
+              <span>Total:</span>
+              <span>${calculateTotal()}</span>
+            </div>
+            <button
+              onClick={goToPayment}
+              className="mt-4 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+            >
+              Proceed to Payment
+            </button>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+};
+
