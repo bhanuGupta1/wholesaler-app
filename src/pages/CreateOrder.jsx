@@ -112,4 +112,5 @@ const CreateOrder = () => {
     </Layout>
   );
 };
+export default CreateOrder;
 
