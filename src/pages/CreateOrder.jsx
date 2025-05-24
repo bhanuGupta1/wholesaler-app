@@ -1,11 +1,6 @@
-// src/pages/CreateOrder.jsx
-const CreateOrder = () => {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Create New Order</h1>
-        <p>This page will be implemented by Paras.</p>
-      </div>
-    );
-  };
-  
-  export default CreateOrder;
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { ProductCard } from './GuestDashboard'; // Reuse ProductCard
+import ThemeToggle from '../components/common/ThemeToggle';
