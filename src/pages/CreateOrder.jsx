@@ -217,4 +217,39 @@ const CreateOrder = () => {
           subtotal: product.price * product.quantity
         });
       }
+// Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // Update order status to completed (in real app, this would be after payment confirmation)
+      await updateDoc(doc(db, 'orders', orderRef.id), {
+        status: 'processing',
+        paymentStatus: 'completed',
+        updatedAt: new Date()
+      });
+
+      setSubmitting(false);
+      
+      // Redirect to order confirmation
+      navigate(`/orders/${orderRef.id}`, { 
+        state: { message: 'Order placed successfully!' }
+      });
+
+    } catch (err) {
+      console.error('Error creating order:', err);
+      setError('Failed to create order. Please try again.');
+      setSubmitting(false);
+    }
+  };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const pricing = calculatePricing();
