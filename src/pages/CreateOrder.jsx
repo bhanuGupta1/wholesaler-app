@@ -1,9 +1,12 @@
+// src/pages/CreateOrder.jsx - Complete Order Creation Page
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, addDoc, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { createOrderWithStockUpdate } from '../firebase/orderService';
+
 const CreateOrder = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -136,7 +139,8 @@ const CreateOrder = () => {
       [name]: value
     }));
   };
-   // Validate customer info
+
+  // Validate customer info
   const validateCustomerInfo = () => {
     const required = ['name', 'email', 'phone', 'address', 'city'];
     return required.every(field => customerInfo[field].trim() !== '');
@@ -217,7 +221,8 @@ const CreateOrder = () => {
           subtotal: product.price * product.quantity
         });
       }
-// Simulate payment processing
+
+      // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Update order status to completed (in real app, this would be after payment confirmation)
@@ -253,6 +258,7 @@ const CreateOrder = () => {
   }
 
   const pricing = calculatePricing();
+
   return (
     <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       <div className="max-w-6xl mx-auto">
