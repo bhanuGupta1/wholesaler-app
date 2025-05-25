@@ -253,3 +253,407 @@ const CreateOrder = () => {
   }
 
   const pricing = calculatePricing();
+  return (
+    <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Create New Order
+          </h1>
+          <p className={`mt-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {userRole === 'business' && 'Business Account - 15% Bulk Discount Applied'}
+            {userRole === 'customer' && 'Customer Account - 10% Tax Applied'}
+            {userRole === 'admin' && 'Admin Account - No Additional Charges'}
+          </p>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center">
+            {[1, 2, 3].map((stepNum) => (
+              <div key={stepNum} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  step >= stepNum 
+                    ? 'bg-indigo-600 text-white' 
+                    : darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {stepNum}
+                </div>
+                <span className={`ml-2 text-sm ${
+                  step >= stepNum 
+                    ? darkMode ? 'text-white' : 'text-gray-900'
+                    : darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {stepNum === 1 && 'Select Products'}
+                  {stepNum === 2 && 'Customer Info'}
+                  {stepNum === 3 && 'Review & Pay'}
+                </span>
+                {stepNum < 3 && (
+                  <div className={`w-12 h-0.5 mx-4 ${
+                    step > stepNum 
+                      ? 'bg-indigo-600' 
+                      : darkMode ? 'bg-gray-700' : 'bg-gray-300'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className={`mb-6 p-4 rounded-md ${darkMode ? 'bg-red-900/30 border-red-800' : 'bg-red-50 border-red-400'} border-l-4`}>
+            <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-700'}`}>{error}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Step 1: Product Selection */}
+            {step === 1 && (
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+                <h2 className="text-xl font-semibold mb-6">Select Products</h2>
+                
+                {products.length === 0 ? (
+                  <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                    No products available for order.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {products.map(product => (
+                      <ProductCard 
+                        key={product.id}
+                        product={product}
+                        onAddToOrder={addProductToOrder}
+                        darkMode={darkMode}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setStep(2)}
+                    disabled={selectedProducts.length === 0}
+                    className={`px-6 py-2 rounded-md font-medium ${
+                      selectedProducts.length === 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
+                  >
+                    Continue to Customer Info
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Customer Information */}
+            {step === 2 && (
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+                <h2 className="text-xl font-semibold mb-6">Customer Information</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={customerInfo.name}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={customerInfo.email}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={customerInfo.phone}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      Zip Code
+                    </label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      value={customerInfo.zipCode}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      Address *
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={customerInfo.address}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={customerInfo.city}
+                      onChange={handleCustomerInfoChange}
+                      className={`w-full px-3 py-2 border rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-between">
+                  <button
+                    onClick={() => setStep(1)}
+                    className={`px-6 py-2 border rounded-md font-medium ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    Back to Products
+                  </button>
+                  <button
+                    onClick={() => setStep(3)}
+                    disabled={!validateCustomerInfo()}
+                    className={`px-6 py-2 rounded-md font-medium ${
+                      !validateCustomerInfo()
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
+                  >
+                    Review Order
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Review & Payment */}
+            {step === 3 && (
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+                <h2 className="text-xl font-semibold mb-6">Review & Payment</h2>
+                
+                {/* Order Items */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-4">Order Items</h3>
+                  <div className="space-y-3">
+                    {selectedProducts.map(product => (
+                      <div key={product.id} className={`flex justify-between items-center p-3 rounded-md ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            ${product.price.toFixed(2)} × {product.quantity}
+                          </p>
+                        </div>
+                        <p className="font-medium">
+                          ${(product.price * product.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Customer Info Summary */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-4">Shipping Information</h3>
+                  <div className={`p-3 rounded-md ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <p className="font-medium">{customerInfo.name}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{customerInfo.email}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>{customerInfo.phone}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                      {customerInfo.address}, {customerInfo.city} {customerInfo.zipCode}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <button
+                    onClick={() => setStep(2)}
+                    className={`px-6 py-2 border rounded-md font-medium ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    Back to Customer Info
+                  </button>
+                  <button
+                    onClick={submitOrder}
+                    disabled={submitting}
+                    className={`px-6 py-2 rounded-md font-medium text-white ${
+                      submitting 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                  >
+                    {submitting ? 'Processing...' : `Place Order - $${pricing.total.toFixed(2)}`}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Order Summary Sidebar */}
+          <div className="lg:col-span-1">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6 sticky top-4`}>
+              <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+              
+              {selectedProducts.length === 0 ? (
+                <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                  No products selected
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Selected Products */}
+                  <div className="space-y-2">
+                    {selectedProducts.map(product => (
+                      <div key={product.id} className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{product.name}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <button
+                              onClick={() => updateProductQuantity(product.id, product.quantity - 1)}
+                              className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm"
+                            >
+                              -
+                            </button>
+                            <span className="text-sm">{product.quantity}</span>
+                            <button
+                              onClick={() => updateProductQuantity(product.id, product.quantity + 1)}
+                              className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-sm"
+                            >
+                              +
+                            </button>
+                            <button
+                              onClick={() => removeProductFromOrder(product.id)}
+                              className="text-red-500 text-sm ml-2"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm font-medium">
+                          ${(product.price * product.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pricing Breakdown */}
+                  <div className={`pt-4 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>${pricing.subtotal.toFixed(2)}</span>
+                      </div>
+                      
+                      {pricing.discount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Business Discount (15%):</span>
+                          <span>-${pricing.discount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {pricing.tax > 0 && (
+                        <div className="flex justify-between">
+                          <span>Tax (10%):</span>
+                          <span>${pricing.tax.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      <div className={`flex justify-between font-semibold text-lg pt-2 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                        <span>Total:</span>
+                        <span>${pricing.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Product Card Component
+const ProductCard = ({ product, onAddToOrder, darkMode }) => {
+  const [quantity, setQuantity] = useState(1);
+
+  return (
+    <div className={`border rounded-lg p-4 ${darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-white'}`}>
+      <div className="flex items-center space-x-4">
+        {/* Product Image */}
+        <div className={`w-16 h-16 ${darkMode ? 'bg-gray-600' : 'bg-gray-100'} rounded-md flex items-center justify-center`}>
+          {product.imageUrl ? (
+            <img 
+              src={product.imageUrl} 
+              alt={product.name}
+              className="w-16 h-16 object-cover rounded-md"
+            />
+          ) : (
+            <span className="text-2xl">📦</span>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="flex-1">
+          <h3 className="font-medium">{product.name}</h3>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            ${product.price.toFixed(2)} • Stock: {product.stock}
+          </p>
+          
+          {/* Quantity and Add Button */}
+          <div className="flex items-center space-x-2 mt-2">
+            <input
+              type="number"
+              min="1"
+              max={product.stock}
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1)))}
+              className={`w-16 px-2 py-1 border rounded text-sm ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
+            />
+            <button
+              onClick={() => onAddToOrder(product, quantity)}
+              className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateOrder;
