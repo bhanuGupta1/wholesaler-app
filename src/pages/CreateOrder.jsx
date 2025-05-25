@@ -169,7 +169,7 @@ const CreateOrder = () => {
 
       const pricing = calculatePricing();
       
-      // Create order document
+      // Prepare order data for the enhanced service
       const orderData = {
         customerName: customerInfo.name,
         customerEmail: customerInfo.email,
@@ -194,54 +194,29 @@ const CreateOrder = () => {
         tax: pricing.tax,
         total: pricing.total,
         status: 'pending',
-        paymentStatus: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        paymentStatus: 'pending'
       };
 
-      // Add order to Firestore
-      const orderRef = await addDoc(collection(db, 'orders'), orderData);
-
-      // Update product stock
-      for (const product of selectedProducts) {
-        const productRef = doc(db, 'products', product.id);
-        await updateDoc(productRef, {
-          stock: increment(-product.quantity),
-          updatedAt: new Date()
-        });
-      }
-
-      // Create order items subcollection
-      for (const product of selectedProducts) {
-        await addDoc(collection(db, 'orders', orderRef.id, 'orderItems'), {
-          productId: product.id,
-          productName: product.name,
-          price: product.price,
-          quantity: product.quantity,
-          subtotal: product.price * product.quantity
-        });
-      }
+      // Create order using enhanced service (handles stock update automatically)
+      const orderId = await createOrderWithStockUpdate(orderData);
 
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Update order status to completed (in real app, this would be after payment confirmation)
-      await updateDoc(doc(db, 'orders', orderRef.id), {
-        status: 'processing',
-        paymentStatus: 'completed',
-        updatedAt: new Date()
-      });
+      // Simulate successful payment - update order status
+      // In a real app, this would be handled by payment webhook
+      await updateOrderStatus(orderId, 'processing', 'completed');
 
       setSubmitting(false);
       
       // Redirect to order confirmation
-      navigate(`/orders/${orderRef.id}`, { 
+      navigate(`/orders/${orderId}`, { 
         state: { message: 'Order placed successfully!' }
       });
 
     } catch (err) {
       console.error('Error creating order:', err);
-      setError('Failed to create order. Please try again.');
+      setError(err.message || 'Failed to create order. Please try again.');
       setSubmitting(false);
     }
   };
