@@ -1,4 +1,4 @@
-// This is src/firebase/orderService.js file.
+// src/firebase/orderService.js - CORRECTED VERSION
 import { 
   collection, 
   doc, 
@@ -17,28 +17,40 @@ import { db } from './config';
 
 const ORDERS_COLLECTION = 'orders';
 
-// Here I Create a new order with items subcollection
+// Create a new order with items stored in the main document
 export const createOrder = async (orderData) => {
   try {
     // Extract items from order data
     const { items, ...orderDetails } = orderData;
     
-    // Create order document 
-    const orderRef = await addDoc(collection(db, ORDERS_COLLECTION), {
+    // Calculate totals from items
+    const totalAmount = items ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
+    const itemCount = items ? items.length : 0;
+    
+    // Create order document with all necessary fields
+    const orderDocData = {
       ...orderDetails,
+      items: items || [],           // Store items directly in order document
+      totalAmount: totalAmount,     // Calculated total
+      itemCount: itemCount,         // Number of items
+      total: totalAmount,           // Also store as 'total' for compatibility
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: orderDetails.status || 'pending'
-    });
+    };
     
-    // Add items to subcollection in the order collection.
+    // Create the main order document
+    const orderRef = await addDoc(collection(db, ORDERS_COLLECTION), orderDocData);
+    
+    // ALSO create items in subcollection for complex queries (optional)
     if (items && items.length > 0) {
       for (const item of items) {
         await addDoc(collection(db, ORDERS_COLLECTION, orderRef.id, 'orderItems'), {
           productId: item.productId,
           productName: item.productName,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          total: item.price * item.quantity
         });
       }
     }
@@ -50,43 +62,34 @@ export const createOrder = async (orderData) => {
   }
 };
 
-// here I will get all the order items
+// Get order with items from the main document
 export const getOrderWithItems = async (orderId) => {
   try {
-    // Here i will get order document
+    // Get order document
     const orderDoc = await getDoc(doc(db, ORDERS_COLLECTION, orderId));
     
     if (!orderDoc.exists()) {
       throw new Error(`Order with ID ${orderId} not found`);
     }
     
-    // Here I will get order from the customer.
-    const itemsQuery = query(
-      collection(db, ORDERS_COLLECTION, orderId, 'orderItems')
-    );
+    const orderData = orderDoc.data();
     
-    const itemsSnapshot = await getDocs(itemsQuery);
-    const items = [];
-    
-    itemsSnapshot.forEach((doc) => {
-      items.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    
-    // Here I will return all the data as single.
+    // Return order data with items from the main document
     return {
       id: orderDoc.id,
-      ...orderDoc.data(),
-      items
+      ...orderData,
+      items: orderData.items || [],
+      // Ensure we have totals
+      totalAmount: orderData.totalAmount || orderData.total || 0,
+      total: orderData.total || orderData.totalAmount || 0
     };
   } catch (error) {
     console.error('Error getting order with items:', error);
     throw error;
   }
 };
-// Here I will update order by firebase database.
+
+// Update order
 export const updateOrder = async (orderId, orderData) => {
   try {
     await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
@@ -99,7 +102,7 @@ export const updateOrder = async (orderId, orderData) => {
   }
 };
 
-// here i am will update order status.
+// Update order status
 export const updateOrderStatus = async (orderId, status) => {
   try {
     await updateDoc(doc(db, ORDERS_COLLECTION, orderId), {
@@ -112,13 +115,13 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 };
 
-// Here I will pagination and filtering to get a order.
+// Get orders with pagination and filtering
 export const getOrders = async (options = {}) => {
   try {
     let ordersQuery = collection(db, ORDERS_COLLECTION);
     const constraints = [];
     
-    // Here I have applied filtering.
+    // Apply filtering
     if (options.status && options.status !== 'all') {
       constraints.push(where('status', '==', options.status));
     }
@@ -127,15 +130,15 @@ export const getOrders = async (options = {}) => {
       constraints.push(where('customerEmail', '==', options.customerEmail));
     }
     
-    // Then apply sorting
+    // Apply sorting
     constraints.push(orderBy('createdAt', 'desc'));
     
-    // After that apply pagination
+    // Apply pagination
     if (options.limit) {
       constraints.push(limit(options.limit));
     }
     
-    // Then run query 
+    // Build and execute query
     if (constraints.length > 0) {
       ordersQuery = query(ordersQuery, ...constraints);
     }
@@ -144,9 +147,13 @@ export const getOrders = async (options = {}) => {
     
     const orders = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
       orders.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Ensure compatibility with both totalAmount and total fields
+        totalAmount: data.totalAmount || data.total || 0,
+        total: data.total || data.totalAmount || 0
       });
     });
     
@@ -157,7 +164,7 @@ export const getOrders = async (options = {}) => {
   }
 };
 
-// Here I get recent orders
+// Get recent orders
 export const getRecentOrders = async (count = 5) => {
   return getOrders({ limit: count });
 };
