@@ -136,4 +136,85 @@ const CreateOrder = () => {
       [name]: value
     }));
   };
+   // Validate customer info
+  const validateCustomerInfo = () => {
+    const required = ['name', 'email', 'phone', 'address', 'city'];
+    return required.every(field => customerInfo[field].trim() !== '');
+  };
+
+  // Submit order
+  const submitOrder = async () => {
+    if (!user) {
+      setError('Please sign in to place an order');
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      setError('Please select at least one product');
+      return;
+    }
+
+    if (!validateCustomerInfo()) {
+      setError('Please fill in all required customer information');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError('');
+
+      const pricing = calculatePricing();
+      
+      // Create order document
+      const orderData = {
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone,
+        shippingAddress: {
+          address: customerInfo.address,
+          city: customerInfo.city,
+          zipCode: customerInfo.zipCode
+        },
+        userId: user.uid,
+        userRole: userRole,
+        items: selectedProducts.map(product => ({
+          productId: product.id,
+          productName: product.name,
+          price: product.price,
+          quantity: product.quantity,
+          subtotal: product.price * product.quantity
+        })),
+        itemCount: selectedProducts.reduce((sum, p) => sum + p.quantity, 0),
+        subtotal: pricing.subtotal,
+        discount: pricing.discount,
+        tax: pricing.tax,
+        total: pricing.total,
+        status: 'pending',
+        paymentStatus: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Add order to Firestore
+      const orderRef = await addDoc(collection(db, 'orders'), orderData);
+
+      // Update product stock
+      for (const product of selectedProducts) {
+        const productRef = doc(db, 'products', product.id);
+        await updateDoc(productRef, {
+          stock: increment(-product.quantity),
+          updatedAt: new Date()
+        });
+      }
+
+      // Create order items subcollection
+      for (const product of selectedProducts) {
+        await addDoc(collection(db, 'orders', orderRef.id, 'orderItems'), {
+          productId: product.id,
+          productName: product.name,
+          price: product.price,
+          quantity: product.quantity,
+          subtotal: product.price * product.quantity
+        });
+      }
 
