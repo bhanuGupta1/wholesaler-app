@@ -1,4 +1,4 @@
-// src/pages/CreateOrder.jsx to create create order page.
+// src/pages/CreateOrder.jsx - Enhanced with Payment Details
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
@@ -23,6 +23,28 @@ const CreateOrder = () => {
     city: '',
     zipCode: ''
   });
+
+  // Enhanced payment information state
+  const [paymentInfo, setPaymentInfo] = useState({
+    paymentMethod: 'credit_card', // 'credit_card' or 'bank_account'
+    // Credit Card Details
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    cardHolderName: '',
+    // Bank Account Details
+    accountNumber: '',
+    routingNumber: '',
+    accountHolderName: '',
+    bankName: '',
+    accountType: 'checking', // 'checking' or 'savings'
+    // Billing Address
+    billingAddressSame: true,
+    billingAddress: '',
+    billingCity: '',
+    billingZipCode: ''
+  });
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -141,10 +163,59 @@ const CreateOrder = () => {
     }));
   };
 
+  // Handle payment info changes
+  const handlePaymentInfoChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setPaymentInfo(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Format card number (add spaces every 4 digits)
+  const formatCardNumber = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = matches && matches[0] || '';
+    const parts = [];
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    if (parts.length) {
+      return parts.join(' ');
+    } else {
+      return v;
+    }
+  };
+
+  // Format expiry date (MM/YY)
+  const formatExpiryDate = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + (v.length > 2 ? '/' + v.substring(2, 4) : '');
+    }
+    return v;
+  };
+
   // Validate customer info
   const validateCustomerInfo = () => {
     const required = ['name', 'email', 'phone', 'address', 'city'];
     return required.every(field => customerInfo[field].trim() !== '');
+  };
+
+  // Validate payment info
+  const validatePaymentInfo = () => {
+    if (paymentInfo.paymentMethod === 'credit_card') {
+      return paymentInfo.cardNumber.replace(/\s/g, '').length >= 13 &&
+             paymentInfo.expiryDate.length === 5 &&
+             paymentInfo.cvv.length >= 3 &&
+             paymentInfo.cardHolderName.trim() !== '';
+    } else {
+      return paymentInfo.accountNumber.trim() !== '' &&
+             paymentInfo.routingNumber.trim() !== '' &&
+             paymentInfo.accountHolderName.trim() !== '' &&
+             paymentInfo.bankName.trim() !== '';
+    }
   };
 
   // Submit order
@@ -164,12 +235,28 @@ const CreateOrder = () => {
       return;
     }
 
+    if (!validatePaymentInfo()) {
+      setError('Please fill in all required payment information');
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError('');
 
       const pricing = calculatePricing();
       
+      // Prepare billing address
+      const billingAddress = paymentInfo.billingAddressSame ? {
+        address: customerInfo.address,
+        city: customerInfo.city,
+        zipCode: customerInfo.zipCode
+      } : {
+        address: paymentInfo.billingAddress,
+        city: paymentInfo.billingCity,
+        zipCode: paymentInfo.billingZipCode
+      };
+
       const orderData = {
         customerName: customerInfo.name,
         customerEmail: customerInfo.email,
@@ -178,6 +265,22 @@ const CreateOrder = () => {
           address: customerInfo.address,
           city: customerInfo.city,
           zipCode: customerInfo.zipCode
+        },
+        billingAddress,
+        paymentInfo: {
+          paymentMethod: paymentInfo.paymentMethod,
+          // Note: In production, never store raw payment details!
+          // This is for demo purposes only. Use payment processors like Stripe.
+          ...(paymentInfo.paymentMethod === 'credit_card' ? {
+            cardLastFour: paymentInfo.cardNumber.slice(-4),
+            cardHolderName: paymentInfo.cardHolderName,
+            expiryDate: paymentInfo.expiryDate
+          } : {
+            accountLastFour: paymentInfo.accountNumber.slice(-4),
+            accountHolderName: paymentInfo.accountHolderName,
+            bankName: paymentInfo.bankName,
+            accountType: paymentInfo.accountType
+          })
         },
         userId: user.uid,
         userRole: userRole,
@@ -252,7 +355,7 @@ const CreateOrder = () => {
           <div className="flex items-center justify-center">
             {[
               { num: 1, label: 'Select Products', icon: '🛍️' },
-              { num: 2, label: 'Customer Info', icon: '📋' },
+              { num: 2, label: 'Customer & Payment Info', icon: '📋' },
               { num: 3, label: 'Review & Pay', icon: '💳' }
             ].map((stepInfo, index) => (
               <div key={stepInfo.num} className="flex items-center">
@@ -339,96 +442,384 @@ const CreateOrder = () => {
               </div>
             )}
 
-            {/* Step 2: Customer Information */}
+            {/* Step 2: Customer Information & Payment Details */}
             {step === 2 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
-                <h2 className="text-xl font-semibold mb-6 flex items-center">
-                  <span className="mr-2">📋</span>
-                  Customer Information
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Full Name *
+              <div className="space-y-6">
+                {/* Customer Information */}
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+                  <h2 className="text-xl font-semibold mb-6 flex items-center">
+                    <span className="mr-2">📋</span>
+                    Customer Information
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={customerInfo.name}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={customerInfo.email}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Phone *
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={customerInfo.phone}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={customerInfo.city}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Address *
+                      </label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={customerInfo.address}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Zip Code
+                      </label>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={customerInfo.zipCode}
+                        onChange={handleCustomerInfoChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+                  <h2 className="text-xl font-semibold mb-6 flex items-center">
+                    <span className="mr-2">💳</span>
+                    Payment Information
+                  </h2>
+
+                  {/* Payment Method Selection */}
+                  <div className="mb-6">
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-3`}>
+                      Payment Method *
                     </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={customerInfo.name}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                      required
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <label className={`flex items-center p-4 border rounded-lg cursor-pointer ${
+                        paymentInfo.paymentMethod === 'credit_card'
+                          ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
+                          : darkMode ? 'border-gray-600' : 'border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="credit_card"
+                          checked={paymentInfo.paymentMethod === 'credit_card'}
+                          onChange={handlePaymentInfoChange}
+                          className="mr-3"
+                        />
+                        <div>
+                          <div className="font-medium">💳 Credit Card</div>
+                          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Visa, MasterCard, etc.
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className={`flex items-center p-4 border rounded-lg cursor-pointer ${
+                        paymentInfo.paymentMethod === 'bank_account'
+                          ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
+                          : darkMode ? 'border-gray-600' : 'border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="bank_account"
+                          checked={paymentInfo.paymentMethod === 'bank_account'}
+                          onChange={handlePaymentInfoChange}
+                          className="mr-3"
+                        />
+                        <div>
+                          <div className="font-medium">🏦 Bank Account</div>
+                          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Direct bank transfer
+                          </div>
+                        </div>
+                      </label>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={customerInfo.email}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                      required
-                    />
-                  </div>
+                  {/* Credit Card Fields */}
+                  {paymentInfo.paymentMethod === 'credit_card' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Card Holder Name *
+                        </label>
+                        <input
+                          type="text"
+                          name="cardHolderName"
+                          value={paymentInfo.cardHolderName}
+                          onChange={handlePaymentInfoChange}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="John Doe"
+                          required
+                        />
+                      </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Phone *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={customerInfo.phone}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                      required
-                    />
-                  </div>
+                      <div className="md:col-span-2">
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Card Number *
+                        </label>
+                        <input
+                          type="text"
+                          name="cardNumber"
+                          value={paymentInfo.cardNumber}
+                          onChange={(e) => {
+                            const formatted = formatCardNumber(e.target.value);
+                            setPaymentInfo(prev => ({ ...prev, cardNumber: formatted }));
+                          }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="1234 5678 9012 3456"
+                          maxLength="19"
+                          required
+                        />
+                      </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={customerInfo.city}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                      required
-                    />
-                  </div>
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Expiry Date *
+                        </label>
+                        <input
+                          type="text"
+                          name="expiryDate"
+                          value={paymentInfo.expiryDate}
+                          onChange={(e) => {
+                            const formatted = formatExpiryDate(e.target.value);
+                            setPaymentInfo(prev => ({ ...prev, expiryDate: formatted }));
+                          }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="MM/YY"
+                          maxLength="5"
+                          required
+                        />
+                      </div>
 
-                  <div className="md:col-span-2">
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Address *
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={customerInfo.address}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                      required
-                    />
-                  </div>
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          CVV *
+                        </label>
+                        <input
+                          type="text"
+                          name="cvv"
+                          value={paymentInfo.cvv}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setPaymentInfo(prev => ({ ...prev, cvv: value }));
+                          }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="123"
+                          maxLength="4"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Zip Code
-                    </label>
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={customerInfo.zipCode}
-                      onChange={handleCustomerInfoChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
-                    />
+                  {/* Bank Account Fields */}
+                  {paymentInfo.paymentMethod === 'bank_account' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Account Holder Name *
+                        </label>
+                        <input
+                          type="text"
+                          name="accountHolderName"
+                          value={paymentInfo.accountHolderName}
+                          onChange={handlePaymentInfoChange}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="John Doe"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Bank Name *
+                        </label>
+                        <input
+                          type="text"
+                          name="bankName"
+                          value={paymentInfo.bankName}
+                          onChange={handlePaymentInfoChange}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="Chase Bank"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Account Type *
+                        </label>
+                        <select
+                          name="accountType"
+                          value={paymentInfo.accountType}
+                          onChange={handlePaymentInfoChange}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          required
+                        >
+                          <option value="checking">Checking</option>
+                          <option value="savings">Savings</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Account Number *
+                        </label>
+                        <input
+                          type="text"
+                          name="accountNumber"
+                          value={paymentInfo.accountNumber}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setPaymentInfo(prev => ({ ...prev, accountNumber: value }));
+                          }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="123456789"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                          Routing Number *
+                        </label>
+                        <input
+                          type="text"
+                          name="routingNumber"
+                          value={paymentInfo.routingNumber}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setPaymentInfo(prev => ({ ...prev, routingNumber: value }));
+                          }}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                          placeholder="021000021"
+                          maxLength="9"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Billing Address */}
+                  <div className="mt-8">
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="checkbox"
+                        name="billingAddressSame"
+                        checked={paymentInfo.billingAddressSame}
+                        onChange={handlePaymentInfoChange}
+                        className="mr-3"
+                      />
+                      <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Billing address is the same as shipping address
+                      </label>
+                    </div>
+
+                    {!paymentInfo.billingAddressSame && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2">
+                          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                            Billing Address *
+                          </label>
+                          <input
+                            type="text"
+                            name="billingAddress"
+                            value={paymentInfo.billingAddress}
+                            onChange={handlePaymentInfoChange}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                            required={!paymentInfo.billingAddressSame}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                            City *
+                          </label>
+                          <input
+                            type="text"
+                            name="billingCity"
+                            value={paymentInfo.billingCity}
+                            onChange={handlePaymentInfoChange}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                            required={!paymentInfo.billingAddressSame}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                            Zip Code *
+                          </label>
+                          <input
+                            type="text"
+                            name="billingZipCode"
+                            value={paymentInfo.billingZipCode}
+                            onChange={handlePaymentInfoChange}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+                            required={!paymentInfo.billingAddressSame}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -438,8 +829,8 @@ const CreateOrder = () => {
             {step === 3 && (
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
                 <h2 className="text-xl font-semibold mb-6 flex items-center">
-                  <span className="mr-2">💳</span>
-                  Review & Payment
+                  <span className="mr-2">✅</span>
+                  Review & Confirm Order
                 </h2>
                 
                 {/* Order Items */}
@@ -490,6 +881,34 @@ const CreateOrder = () => {
                         </p>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Payment Info Summary */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium mb-4">Payment Information</h3>
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    {paymentInfo.paymentMethod === 'credit_card' ? (
+                      <div>
+                        <p className="font-medium">💳 Credit Card</p>
+                        <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          •••• •••• •••• {paymentInfo.cardNumber.slice(-4)}
+                        </p>
+                        <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          {paymentInfo.cardHolderName}
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-medium">🏦 Bank Account</p>
+                        <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          {paymentInfo.bankName} - •••••{paymentInfo.accountNumber.slice(-4)}
+                        </p>
+                        <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          {paymentInfo.accountHolderName}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -602,9 +1021,9 @@ const CreateOrder = () => {
                   <div className="space-y-3">
                     <button
                       onClick={() => setStep(3)}
-                      disabled={!validateCustomerInfo()}
+                      disabled={!validateCustomerInfo() || !validatePaymentInfo()}
                       className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                        !validateCustomerInfo()
+                        !validateCustomerInfo() || !validatePaymentInfo()
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-indigo-600 text-white hover:bg-indigo-700'
                       }`}
@@ -652,6 +1071,21 @@ const CreateOrder = () => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Security Notice */}
+              <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border text-xs`}>
+                <div className="flex items-start">
+                  <span className="mr-2">🔒</span>
+                  <div>
+                    <p className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+                      Secure Payment
+                    </p>
+                    <p className={`${darkMode ? 'text-blue-300' : 'text-blue-600'} mt-1`}>
+                      Your payment information is encrypted and secure.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
