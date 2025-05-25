@@ -1,4 +1,4 @@
-// src/pages/CreateOrder.jsx - Enhanced Design with Improved UX
+// src/pages/CreateOrder.jsx to create create order page.
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
@@ -12,7 +12,7 @@ const CreateOrder = () => {
   const { user } = useAuth();
   const { darkMode } = useTheme();
   
-  // State management
+  // State management using different stats
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [customerInfo, setCustomerInfo] = useState({
