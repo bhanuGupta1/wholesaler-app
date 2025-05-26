@@ -1,4 +1,4 @@
-// src/firebase/orderService.js - Enhanced Order Service
+// src/firebase/orderService.js - Fixed Order Service
 import { 
   collection, 
   doc, 
@@ -44,12 +44,15 @@ export const createOrderWithStockUpdate = async (orderData) => {
       }
     }
     
-    // Create order document
+    // Create order document with both createdAt and dateCreated for compatibility
     const orderRef = doc(collection(db, ORDERS_COLLECTION));
+    const timestamp = serverTimestamp();
+    
     batch.set(orderRef, {
       ...orderDetails,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: timestamp,
+      dateCreated: timestamp, // Added for compatibility with OrderDetails component
+      updatedAt: timestamp,
       status: orderDetails.status || 'pending',
       paymentStatus: orderDetails.paymentStatus || 'pending'
     });
@@ -59,7 +62,7 @@ export const createOrderWithStockUpdate = async (orderData) => {
       const productRef = doc(db, PRODUCTS_COLLECTION, item.productId);
       batch.update(productRef, {
         stock: increment(-item.quantity),
-        updatedAt: serverTimestamp()
+        updatedAt: timestamp
       });
     }
     
@@ -85,7 +88,7 @@ export const createOrderWithStockUpdate = async (orderData) => {
   }
 };
 
-// Get order with items
+// FIXED: Get order with items
 export const getOrderWithItems = async (orderId) => {
   try {
     // Get order document
@@ -94,6 +97,8 @@ export const getOrderWithItems = async (orderId) => {
     if (!orderDoc.exists()) {
       throw new Error(`Order with ID ${orderId} not found`);
     }
+    
+    const orderData = orderDoc.data(); // FIXED: Get the actual data
     
     // Get order items from subcollection
     const itemsQuery = query(
@@ -110,12 +115,12 @@ export const getOrderWithItems = async (orderId) => {
       });
     });
     
-    // Return combined data
+    // Return combined data with proper field mapping
     return {
       id: orderDoc.id,
       ...orderData,
-      items: orderData.items || [],
-      // Ensure we have totals
+      items: items, // FIXED: Use the actual items fetched
+      // Ensure we have totals with proper field names
       totalAmount: orderData.totalAmount || orderData.total || 0,
       total: orderData.total || orderData.totalAmount || 0
     };
