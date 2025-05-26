@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -110,6 +109,9 @@ const Home = () => {
                 <Link to="/products" className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 flex items-center">
                   🛒 Browse Products
                 </Link>
+                <Link to="/cart" className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 flex items-center">
+                  🛍️ Shopping Cart
+                </Link>
                 {dashboardInfo && (
                   <Link 
                     to={dashboardInfo.route} 
@@ -128,10 +130,16 @@ const Home = () => {
                 <Link to="/products" className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 flex items-center">
                   🛒 Browse Products
                 </Link>
+                <Link to="/cart" className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 flex items-center">
+                  🛍️ Shopping Cart
+                </Link>
+                <Link to="/guest-dashboard" className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 flex items-center">
+                  👁️ Guest View
+                </Link>
                 <Link to="/login" className="border border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 flex items-center">
                   🔑 Sign In
                 </Link>
-                <Link to="/register" className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 flex items-center">
+                <Link to="/register" className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 flex items-center">
                   ✨ Get Started Free
                 </Link>
               </>
@@ -175,6 +183,40 @@ const Home = () => {
                   <div className="text-4xl mb-3">🛍️</div>
                   <h3 className="text-lg font-semibold mb-2">Shopping Cart</h3>
                   <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Review your cart items</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shopping Section for Non-Authenticated Users */}
+      {!user && (
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-50'} py-16`}>
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Start Shopping</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Link to="/products" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+                <div className="text-center">
+                  <div className="text-4xl mb-3">🛒</div>
+                  <h3 className="text-lg font-semibold mb-2">Browse Products</h3>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Explore our product catalog</p>
+                </div>
+              </Link>
+              
+              <Link to="/cart" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+                <div className="text-center">
+                  <div className="text-4xl mb-3">🛍️</div>
+                  <h3 className="text-lg font-semibold mb-2">Shopping Cart</h3>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>View your selected items</p>
+                </div>
+              </Link>
+              
+              <Link to="/guest-dashboard" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+                <div className="text-center">
+                  <div className="text-4xl mb-3">👁️</div>
+                  <h3 className="text-lg font-semibold mb-2">Guest View</h3>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Browse as a guest user</p>
                 </div>
               </Link>
             </div>
@@ -276,6 +318,9 @@ const Home = () => {
             <div className="flex flex-wrap gap-4 justify-center">
               <Link to="/products" className="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700">
                 Start Shopping
+              </Link>
+              <Link to="/cart" className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700">
+                View Cart
               </Link>
               {dashboardInfo && (
                 <Link to={dashboardInfo.route} className={`text-white px-8 py-3 rounded-lg ${dashboardInfo.color}`}>

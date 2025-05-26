@@ -1,14 +1,13 @@
-// src/App.jsx - Fixed to stop automatic data generation
+// src/App.jsx - Updated with proper ProductCatalog routing
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CartProvider } from './context/CartContext';
 import Layout from './components/common/Layout';
 import Login from './pages/Login';
 import { auth } from './firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { CartProvider } from './context/CartContext';
-// REMOVED: import { seedFirebaseData } from './utils/seedFirebase';
 
 // Lazy-loaded components for better performance
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
@@ -28,19 +27,6 @@ const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Registration = lazy(() => import('./pages/Registration'));
-
-
-
-<AuthProvider>
-  <ThemeProvider>
-    <CartProvider>
-      <Router>
-        {/* routes */}
-      </Router>
-    </CartProvider>
-  </ThemeProvider>
-</AuthProvider>
-
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -154,216 +140,184 @@ const DashboardRouter = () => {
 };
 
 function App() {
-  // REMOVED ALL SEEDING STATE:
-  // const [isSeeding, setIsSeeding] = useState(false);
-  // const [seedStatus, setSeedStatus] = useState('');
-  // const [seedError, setSeedError] = useState(null);
-  // const [showSeedOption, setShowSeedOption] = useState(false);
-  
-  // REMOVED DATABASE CHECKING LOGIC:
-  // useEffect(() => {
-  //   async function checkDatabase() {
-  //     try {
-  //       // First just check if data exists (forceReseed = false)
-  //       const result = await seedFirebaseData(false);
-  //       
-  //       // If empty database, show option to seed
-  //       if (!result) {
-  //         setShowSeedOption(true);
-  //       }
-  //     } catch (error) {
-  //       console.error('Error checking database:', error);
-  //       setSeedError(error.message);
-  //     }
-  //   }
-  //
-  //   checkDatabase();
-  // }, []);
-
-  // REMOVED SEEDING FUNCTIONS:
-  // const handleSeedData = async () => { ... }
-
-  // REMOVED ALL SEEDING UI SCREENS:
-  // if (isSeeding) { ... }
-  // if (showSeedOption) { ... }
-  // if (seedError) { ... }
-
   // Main application render - No seeding logic
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              {/* Home Route - Default landing page for everyone */}
-              <Route path="/" element={
-                <PublicRoute>
-                  <Layout>
-                    <Home />
-                  </Layout>
-                </PublicRoute>
-              } />
+        <CartProvider>
+          <Router>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                {/* Home Route - Default landing page for everyone */}
+                <Route path="/" element={
+                  <PublicRoute>
+                    <Layout>
+                      <Home />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              {/* Public Routes - No authentication required */}
-              <Route path="/login" element={<Login />} />
-              
-              <Route path="/register" element={
-                <PublicRoute>
-                  <Registration />
-                </PublicRoute>
-              } />
+                {/* Public Routes - No authentication required */}
+                <Route path="/login" element={<Login />} />
+                
+                <Route path="/register" element={
+                  <PublicRoute>
+                    <Registration />
+                  </PublicRoute>
+                } />
 
-              {/* Guest accessible routes */}
-              <Route path="/guest-dashboard" element={
-                <PublicRoute>
-                  <Layout>
-                    <GuestDashboard />
-                  </Layout>
-                </PublicRoute>
-              } />
+                {/* Guest accessible routes */}
+                <Route path="/guest-dashboard" element={
+                  <PublicRoute>
+                    <Layout>
+                      <GuestDashboard />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              <Route path="/catalog" element={
-                <PublicRoute>
-                  <Layout>
-                    <ProductCatalog />
-                  </Layout>
-                </PublicRoute>
-              } />
+                <Route path="/catalog" element={
+                  <PublicRoute>
+                    <Layout>
+                      <ProductCatalog />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              {/* Dashboard Route - Role-based for authenticated users */}
-              <Route path="/dashboard" element={
-                <Layout>
-                  <DashboardRouter />
-                </Layout>
-              } />
+                {/* Dashboard Route - Role-based for authenticated users */}
+                <Route path="/dashboard" element={
+                  <Layout>
+                    <DashboardRouter />
+                  </Layout>
+                } />
 
-              {/* Role-specific dashboard routes */}
-              <Route path="/admin-dashboard" element={
-                <ProtectedRoute requiredRole="admin">
-                  <Layout>
-                    <AdminDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+                {/* Role-specific dashboard routes */}
+                <Route path="/admin-dashboard" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <AdminDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/business-dashboard" element={
-                <ProtectedRoute requiredRole="business">
-                  <Layout>
-                    <BusinessDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+                <Route path="/business-dashboard" element={
+                  <ProtectedRoute requiredRole="business">
+                    <Layout>
+                      <BusinessDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/manager-dashboard" element={
-                <ProtectedRoute requiredRole="manager">
-                  <Layout>
-                    <ManagerDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+                <Route path="/manager-dashboard" element={
+                  <ProtectedRoute requiredRole="manager">
+                    <Layout>
+                      <ManagerDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-              <Route path="/user-dashboard" element={
-                <ProtectedRoute requiredRole="user">
-                  <Layout>
-                    <UserDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+                <Route path="/user-dashboard" element={
+                  <ProtectedRoute requiredRole="user">
+                    <Layout>
+                      <UserDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-              {/* Enhanced Dashboard Routes for Advanced Users */}
-              <Route path="/enhanced-dashboard" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EnhancedDashboard />
-                  </Layout>
-                </ProtectedRoute>
-              } />
+                {/* Enhanced Dashboard Routes for Advanced Users */}
+                <Route path="/enhanced-dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <EnhancedDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-              {/* Inventory routes - accessible by all authenticated users and guests */}
-              <Route path="/inventory" element={
-                <Layout>
-                  <Inventory />
-                </Layout>
-              } />
-              
-              <Route path="/inventory/:id" element={
-                <Layout>
-                  <ProductDetail />
-                </Layout>
-              } />
+                {/* Inventory routes - accessible by all authenticated users and guests */}
+                <Route path="/inventory" element={
+                  <Layout>
+                    <Inventory />
+                  </Layout>
+                } />
+                
+                <Route path="/inventory/:id" element={
+                  <Layout>
+                    <ProductDetail />
+                  </Layout>
+                } />
 
-              {/* Products/Browse route - Main products page for everyone */}
-              <Route path="/products" element={
-                <PublicRoute>
-                  <Layout>
-                    <GuestDashboard />
-                  </Layout>
-                </PublicRoute>
-              } />
+                {/* Products/Browse routes - Main product catalog for everyone */}
+                <Route path="/products" element={
+                  <PublicRoute>
+                    <Layout>
+                      <ProductCatalog />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              <Route path="/browse" element={
-                <PublicRoute>
-                  <Layout>
-                    <GuestDashboard />
-                  </Layout>
-                </PublicRoute>
-              } />
+                <Route path="/browse" element={
+                  <PublicRoute>
+                    <Layout>
+                      <ProductCatalog />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              {/* Shopping routes - accessible by all */}
-              <Route path="/cart" element={
-                <PublicRoute>
-                  <Layout>
-                    <Cart />
-                  </Layout>
-                </PublicRoute>
-              } />
+                {/* Shopping routes - accessible by all */}
+                <Route path="/cart" element={
+                  <PublicRoute>
+                    <Layout>
+                      <Cart />
+                    </Layout>
+                  </PublicRoute>
+                } />
 
-              <Route path="/checkout" element={
-                <PublicRoute>
-                  <Layout>
-                    <Checkout />
-                  </Layout>
-                </PublicRoute>
-              } />
-              
-              {/* Orders routes - Protected (Login required) */}
-              <Route path="/orders" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Orders />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/orders/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <OrderDetails />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/generate-invoice/:id" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <InvoicePage />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/create-order" element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CreateOrder />
-                  </Layout>
-                </ProtectedRoute>
-              } />
-              
-              {/* Fallback route - redirect to home instead of dashboard */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </Router>
+                <Route path="/checkout" element={
+                  <PublicRoute>
+                    <Layout>
+                      <Checkout />
+                    </Layout>
+                  </PublicRoute>
+                } />
+                
+                {/* Orders routes - Protected (Login required) */}
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Orders />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/orders/:id" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <OrderDetails />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/generate-invoice/:id" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <InvoicePage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/create-order" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <CreateOrder />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Fallback route - redirect to home instead of dashboard */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </CartProvider>
       </ThemeProvider>
     </AuthProvider>
   );
