@@ -7,6 +7,7 @@ import Layout from './components/common/Layout';
 import Login from './pages/Login';
 import { auth } from './firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { CartProvider } from './context/CartContext';
 // REMOVED: import { seedFirebaseData } from './utils/seedFirebase';
 
 // Lazy-loaded components for better performance
@@ -27,6 +28,19 @@ const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Registration = lazy(() => import('./pages/Registration'));
+
+
+
+<AuthProvider>
+  <ThemeProvider>
+    <CartProvider>
+      <Router>
+        {/* routes */}
+      </Router>
+    </CartProvider>
+  </ThemeProvider>
+</AuthProvider>
+
 
 // Loading fallback component
 const LoadingFallback = () => (
