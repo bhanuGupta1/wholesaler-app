@@ -1,121 +1,78 @@
-// src/pages/Cart.jsx - Complete shopping cart like Costco
-import { useState, useEffect } from 'react';
+// src/pages/Cart.jsx
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart } = useCart();
-  const { user } = useAuth();
   const { darkMode } = useTheme();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  
-  const [membershipType, setMembershipType] = useState('basic');
-  const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  const [showMembershipInfo, setShowMembershipInfo] = useState(false);
+  const [updatingQuantity, setUpdatingQuantity] = useState(null);
 
-  // Determine membership type based on user email
-  useEffect(() => {
-    if (user?.email?.includes('business')) {
-      setMembershipType('business');
-    } else if (user?.email?.includes('executive')) {
-      setMembershipType('executive');
-    } else if (user) {
-      setMembershipType('gold');
-    } else {
-      setMembershipType('basic');
-    }
-  }, [user]);
-
-  const getBulkPrice = (product, quantity) => {
-    const basePrice = product.price;
-    if (quantity >= 50) return basePrice * 0.8; // 20% off for 50+
-    if (quantity >= 20) return basePrice * 0.9; // 10% off for 20+
-    if (quantity >= 10) return basePrice * 0.95; // 5% off for 10+
-    return basePrice;
-  };
-
-  const getMembershipDiscount = () => {
-    switch (membershipType) {
-      case 'business': return 0.15; // 15% business discount
-      case 'executive': return 0.12; // 12% executive discount
-      case 'gold': return 0.05; // 5% gold member discount
-      default: return 0;
-    }
-  };
-
-  const applyPromoCode = () => {
-    const validCodes = {
-      'SAVE10': 0.10,
-      'WELCOME15': 0.15,
-      'BULK20': 0.20,
-      'NEWCUSTOMER': 0.25
-    };
-    
-    if (validCodes[promoCode.toUpperCase()]) {
-      setPromoDiscount(validCodes[promoCode.toUpperCase()]);
-    } else {
-      alert('Invalid promo code');
-    }
-  };
-
+  // Update quantity in cart
   const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(productId);
-    } else {
-      // Update cart logic would go here
-      // For now, we'll just use the existing cart state
-    }
-  };
-
-  const calculatePricing = () => {
-    let subtotal = 0;
-    let bulkSavings = 0;
+    setUpdatingQuantity(productId);
     
-    cart.forEach(item => {
-      const regularPrice = item.price * item.quantity;
-      const bulkPrice = getBulkPrice(item, item.quantity) * item.quantity;
-      subtotal += bulkPrice;
-      bulkSavings += (regularPrice - bulkPrice);
-    });
-
-    const membershipDiscount = subtotal * getMembershipDiscount();
-    const promoDiscountAmount = subtotal * promoDiscount;
-    const tax = (subtotal - membershipDiscount - promoDiscountAmount) * 0.08; // 8% tax
-    const shipping = subtotal > 100 ? 0 : 15.99; // Free shipping over $100
-    const total = subtotal - membershipDiscount - promoDiscountAmount + tax + shipping;
-
-    return {
-      subtotal,
-      bulkSavings,
-      membershipDiscount,
-      promoDiscountAmount,
-      tax,
-      shipping,
-      total
-    };
+    // Simulate loading for better UX
+    setTimeout(() => {
+      if (newQuantity <= 0) {
+        removeFromCart(productId);
+      } else {
+        // Update quantity logic would go here
+        // For now, we'll just remove the loading state
+      }
+      setUpdatingQuantity(null);
+    }, 300);
   };
 
-  const pricing = calculatePricing();
+  // Calculate totals
+  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.1; // 10% tax
+  const shipping = cart.length > 0 ? (subtotal > 100 ? 0 : 15) : 0; // Free shipping over $100
+  const total = subtotal + tax + shipping;
+
+  // Get user role for discount calculation
+  const getUserRole = () => {
+    if (!user) return 'guest';
+    if (user.email?.includes('business')) return 'business';
+    return 'customer';
+  };
+
+  const userRole = getUserRole();
+  const discount = userRole === 'business' ? subtotal * 0.15 : 0; // 15% business discount
+  const finalTotal = total - discount;
 
   if (cart.length === 0) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="container mx-auto px-4 py-8">
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-8 text-center`}>
+          <h1 className={`text-3xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Shopping Cart</h1>
+          
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-md p-12 text-center border`}>
             <div className="text-6xl mb-4">🛒</div>
-            <h2 className="text-2xl font-bold mb-4">Your cart is empty</h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
-              Start shopping to add items to your cart
+            <h2 className={`text-2xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Your cart is empty
+            </h2>
+            <p className={`mb-8 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Looks like you haven't added any products to your cart yet.
             </p>
-            <Link
-              to="/products"
-              className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700"
-            >
-              Continue Shopping
-            </Link>
+            <div className="space-y-4 md:space-y-0 md:space-x-4 md:flex md:justify-center">
+              <Link
+                to="/catalog"
+                className={`inline-block px-8 py-3 rounded-lg font-medium text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} transition-colors`}
+              >
+                Browse Products
+              </Link>
+              <Link
+                to="/"
+                className={`inline-block px-8 py-3 rounded-lg font-medium border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} transition-colors`}
+              >
+                Go Home
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -125,18 +82,30 @@ const Cart = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Shopping Cart</h1>
-          <div className="flex items-center space-x-4">
-            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {cart.reduce((sum, item) => sum + item.quantity, 0)} items
-            </span>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+          <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 md:mb-0`}>
+            Shopping Cart ({cart.length} {cart.length === 1 ? 'item' : 'items'})
+          </h1>
+          
+          <div className="flex space-x-4">
+            <Link
+              to="/catalog"
+              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${darkMode ? 'text-indigo-400 bg-indigo-900/20 hover:bg-indigo-900/30' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Continue Shopping
+            </Link>
+            
             <button
               onClick={clearCart}
-              className={`px-4 py-2 border rounded-lg ${
-                darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${darkMode ? 'text-red-400 bg-red-900/20 hover:bg-red-900/30' : 'text-red-700 bg-red-100 hover:bg-red-200'}`}
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
               Clear Cart
             </button>
           </div>
@@ -144,169 +113,156 @@ const Cart = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cart.map(item => (
-              <CartItem
-                key={item.id}
-                item={item}
-                darkMode={darkMode}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
-                getBulkPrice={getBulkPrice}
-              />
-            ))}
+          <div className="lg:col-span-2">
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-md border overflow-hidden`}>
+              <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Cart Items
+                </h2>
+              </div>
+              
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {cart.map((item) => (
+                  <CartItem
+                    key={item.id}
+                    item={item}
+                    onUpdateQuantity={updateQuantity}
+                    onRemove={() => removeFromCart(item.id)}
+                    isUpdating={updatingQuantity === item.id}
+                    darkMode={darkMode}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6 sticky top-4`}>
-              {/* Membership Info */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">Membership Level</span>
-                  <button
-                    onClick={() => setShowMembershipInfo(!showMembershipInfo)}
-                    className={`text-sm ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}
-                  >
-                    {membershipType.charAt(0).toUpperCase() + membershipType.slice(1)}
-                  </button>
-                </div>
-                
-                {showMembershipInfo && (
-                  <div className={`p-3 rounded text-sm ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <div className="space-y-1">
-                      <div>Basic: 0% discount</div>
-                      <div>Gold: 5% discount</div>
-                      <div>Executive: 12% discount</div>
-                      <div>Business: 15% discount</div>
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-md border sticky top-4`}>
+              <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Order Summary
+                </h2>
+              </div>
+              
+              <div className="p-6">
+                {/* User Role Badge */}
+                {user && (
+                  <div className="mb-4">
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium text-center ${
+                      userRole === 'business' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                    }`}>
+                      {userRole === 'business' ? '🏢 Business Account' : '👤 Customer Account'}
                     </div>
-                    {!user && (
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Subtotal:</span>
+                    <span className={darkMode ? 'text-white' : 'text-gray-900'}>${subtotal.toFixed(2)}</span>
+                  </div>
+                  
+                  {discount > 0 && (
+                    <div className="flex justify-between text-green-600 dark:text-green-400">
+                      <span>Business Discount (15%):</span>
+                      <span>-${discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Tax (10%):</span>
+                    <span className={darkMode ? 'text-white' : 'text-gray-900'}>${tax.toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Shipping:</span>
+                    <span className={darkMode ? 'text-white' : 'text-gray-900'}>
+                      {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                  
+                  {shipping > 0 && (
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Free shipping on orders over $100
+                    </div>
+                  )}
+                  
+                  <div className={`flex justify-between font-bold text-lg pt-3 border-t ${darkMode ? 'border-gray-600 text-white' : 'border-gray-200 text-gray-900'}`}>
+                    <span>Total:</span>
+                    <span>${finalTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Checkout Buttons */}
+                <div className="mt-6 space-y-3">
+                  {user ? (
+                    <button
+                      onClick={() => navigate('/checkout')}
+                      className={`w-full py-3 px-4 rounded-lg font-medium text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} transition-colors`}
+                    >
+                      Proceed to Checkout
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => navigate('/login', { state: { from: { pathname: '/checkout' } } })}
+                        className={`w-full py-3 px-4 rounded-lg font-medium text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} transition-colors`}
+                      >
+                        Sign In to Checkout
+                      </button>
                       <Link
                         to="/register"
-                        className="inline-block mt-2 text-indigo-600 text-sm hover:underline"
+                        className={`block w-full py-3 px-4 rounded-lg font-medium text-center border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} transition-colors`}
                       >
-                        Sign up for membership benefits
+                        Create Account
                       </Link>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Promo Code */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Promo Code</label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter code"
-                    className={`flex-1 px-3 py-2 border rounded-lg ${
-                      darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                    }`}
-                  />
-                  <button
-                    onClick={applyPromoCode}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    Apply
-                  </button>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  Try: SAVE10, WELCOME15, BULK20, NEWCUSTOMER
-                </div>
-              </div>
-
-              {/* Price Breakdown */}
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>${pricing.subtotal.toFixed(2)}</span>
-                </div>
-
-                {pricing.bulkSavings > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Bulk Savings:</span>
-                    <span>-${pricing.bulkSavings.toFixed(2)}</span>
-                  </div>
-                )}
-
-                {pricing.membershipDiscount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Membership Discount ({(getMembershipDiscount() * 100).toFixed(0)}%):</span>
-                    <span>-${pricing.membershipDiscount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                {pricing.promoDiscountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Promo Discount:</span>
-                    <span>-${pricing.promoDiscountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between">
-                  <span>Tax (8%):</span>
-                  <span>${pricing.tax.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Shipping:</span>
-                  <span>
-                    {pricing.shipping === 0 ? (
-                      <span className="text-green-600">FREE</span>
-                    ) : (
-                      `$${pricing.shipping.toFixed(2)}`
-                    )}
-                  </span>
-                </div>
-
-                <hr className={`${darkMode ? 'border-gray-600' : 'border-gray-200'}`} />
-
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total:</span>
-                  <span>${pricing.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Total Savings Summary */}
-              {(pricing.bulkSavings + pricing.membershipDiscount + pricing.promoDiscountAmount) > 0 && (
-                <div className={`p-3 rounded mb-6 ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
-                  <div className="text-green-600 font-medium">
-                    You saved: ${(pricing.bulkSavings + pricing.membershipDiscount + pricing.promoDiscountAmount).toFixed(2)}
-                  </div>
-                </div>
-              )}
-
-              {/* Checkout Button */}
-              <button
-                onClick={() => navigate('/checkout')}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 mb-4"
-              >
-                Proceed to Checkout
-              </button>
-
-              <Link
-                to="/products"
-                className={`block text-center py-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'} hover:underline`}
-              >
-                Continue Shopping
-              </Link>
-
-              {/* Shipping Info */}
-              <div className={`mt-6 p-3 rounded text-sm ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
-                <div className="flex items-center">
-                  <span className="mr-2">🚚</span>
-                  <div>
-                    <div className="font-medium">Free Shipping</div>
-                    <div className={`${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-                      On orders over $100
                     </div>
+                  )}
+                  
+                  <Link
+                    to="/catalog"
+                    className={`block w-full py-2 px-4 rounded-lg font-medium text-center border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} transition-colors`}
+                  >
+                    Continue Shopping
+                  </Link>
+                </div>
+
+                {/* Security Badge */}
+                <div className={`mt-6 p-3 rounded-lg ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border text-xs`}>
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 ${darkMode ? 'text-green-400' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span className={darkMode ? 'text-green-400' : 'text-green-700'}>
+                      Secure checkout with SSL encryption
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Continue Shopping Suggestion */}
+        <div className={`mt-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow-md p-6 border`}>
+          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            You might also like
+          </h3>
+          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+            Discover more products that complement your current selection
+          </p>
+          <Link
+            to="/catalog"
+            className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${darkMode ? 'text-indigo-400 bg-indigo-900/20 hover:bg-indigo-900/30' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'}`}
+          >
+            Browse More Products
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
       </div>
     </div>
@@ -314,7 +270,7 @@ const Cart = () => {
 };
 
 // Cart Item Component
-const CartItem = ({ item, darkMode, onUpdateQuantity, onRemove, getBulkPrice }) => {
+const CartItem = ({ item, onUpdateQuantity, onRemove, isUpdating, darkMode }) => {
   const [quantity, setQuantity] = useState(item.quantity);
 
   const handleQuantityChange = (newQuantity) => {
@@ -322,104 +278,95 @@ const CartItem = ({ item, darkMode, onUpdateQuantity, onRemove, getBulkPrice }) 
     onUpdateQuantity(item.id, newQuantity);
   };
 
-  const bulkPrice = getBulkPrice(item, quantity);
-  const savings = (item.price - bulkPrice) * quantity;
-
   return (
-    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
+    <div className={`p-6 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
       <div className="flex items-center space-x-4">
         {/* Product Image */}
-        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-cover rounded-lg" />
-          ) : (
-            <span className="text-2xl">📦</span>
-          )}
-        </div>
-
-        {/* Product Details */}
-        <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-1">{item.name}</h3>
-          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-            {item.category}
-          </p>
-          
-          <div className="flex items-center space-x-4">
-            <div>
-              <span className="text-lg font-bold text-indigo-600">
-                ${bulkPrice.toFixed(2)}
-              </span>
-              {bulkPrice < item.price && (
-                <span className={`ml-2 text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                  ${item.price.toFixed(2)}
-                </span>
-              )}
-            </div>
-            
-            {savings > 0 && (
-              <span className="text-sm text-green-600 font-medium">
-                Save ${savings.toFixed(2)}
-              </span>
+        <Link to={`/inventory/${item.id}`} className="flex-shrink-0">
+          <div className={`h-20 w-20 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg overflow-hidden`}>
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <svg className="w-8 h-8" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
+                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
             )}
           </div>
+        </Link>
+
+        {/* Product Details */}
+        <div className="flex-1 min-w-0">
+          <Link to={`/inventory/${item.id}`}>
+            <h3 className={`font-semibold text-lg hover:text-indigo-600 dark:hover:text-indigo-400 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {item.name}
+            </h3>
+          </Link>
+          {item.category && (
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {item.category}
+            </p>
+          )}
+          <p className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            ${item.price.toFixed(2)} each
+          </p>
         </div>
 
         {/* Quantity Controls */}
         <div className="flex items-center space-x-3">
-          <div className="flex items-center border rounded-lg">
+          <div className="flex items-center border rounded-md">
             <button
-              onClick={() => handleQuantityChange(quantity - 1)}
-              className={`px-3 py-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded-l-lg`}
+              onClick={() => handleQuantityChange(Math.max(1, quantity - 1))}
+              disabled={isUpdating || quantity <= 1}
+              className={`p-2 ${darkMode ? 'text-gray-300 hover:text-white hover:bg-gray-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              −
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
             </button>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 0)}
-              className={`w-16 px-2 py-2 text-center border-l border-r ${
-                darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-              }`}
-              min="0"
-            />
+            
+            <span className={`px-4 py-2 min-w-[3rem] text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {isUpdating ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mx-auto"></div>
+              ) : (
+                quantity
+              )}
+            </span>
+            
             <button
               onClick={() => handleQuantityChange(quantity + 1)}
-              className={`px-3 py-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded-r-lg`}
+              disabled={isUpdating}
+              className={`p-2 ${darkMode ? 'text-gray-300 hover:text-white hover:bg-gray-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              +
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
             </button>
           </div>
 
-          <div className="text-right">
-            <div className="font-bold text-lg">
-              ${(bulkPrice * quantity).toFixed(2)}
-            </div>
-            <button
-              onClick={() => onRemove(item.id)}
-              className="text-red-500 hover:text-red-700 text-sm"
-            >
-              Remove
-            </button>
+          {/* Item Total */}
+          <div className="text-right min-w-[4rem]">
+            <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              ${(item.price * quantity).toFixed(2)}
+            </p>
           </div>
+
+          {/* Remove Button */}
+          <button
+            onClick={onRemove}
+            className={`p-2 ${darkMode ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' : 'text-red-600 hover:text-red-700 hover:bg-red-50'} rounded-md transition-colors`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
-
-      {/* Bulk Pricing Info */}
-      {quantity >= 10 && (
-        <div className={`mt-4 p-3 rounded text-sm ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
-          <div className="flex items-center">
-            <span className="mr-2">💰</span>
-            <div>
-              <div className="font-medium text-green-600">Bulk Pricing Applied!</div>
-              <div className={`${darkMode ? 'text-green-300' : 'text-green-600'}`}>
-                {quantity >= 50 ? '20% off for 50+ items' :
-                 quantity >= 20 ? '10% off for 20+ items' :
-                 '5% off for 10+ items'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
