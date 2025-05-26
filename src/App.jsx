@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with proper ProductCatalog routing
+// src/App.jsx - Updated with proper ProductDetails routing
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -19,6 +19,7 @@ const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
 const Home = lazy(() => import('./pages/Home'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ProductDetails = lazy(() => import('./pages/ProductDetails')); // Add this import
 const ProductCatalog = lazy(() => import('./pages/ProductCatalog'));
 const Orders = lazy(() => import('./pages/Orders'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
@@ -250,6 +251,15 @@ function App() {
                   <PublicRoute>
                     <Layout>
                       <ProductCatalog />
+                    </Layout>
+                  </PublicRoute>
+                } />
+
+                {/* ADD THIS ROUTE - Product Details Page */}
+                <Route path="/products/:id" element={
+                  <PublicRoute>
+                    <Layout>
+                      <ProductDetails />
                     </Layout>
                   </PublicRoute>
                 } />
