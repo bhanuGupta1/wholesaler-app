@@ -29,6 +29,15 @@ export const createOrderWithStockUpdate = async (orderData) => {
     // Extract items from order data
     const { items, ...orderDetails } = orderData;
     
+    // Calculate subtotal from items
+    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    // Calculate 10% tax
+    const taxAmount = subtotal * 0.10;
+    
+    // Calculate final total (subtotal + tax)
+    const finalTotal = subtotal + taxAmount;
+    
     // Validate stock availability before creating order
     for (const item of items) {
       const productRef = doc(db, PRODUCTS_COLLECTION, item.productId);
@@ -50,6 +59,10 @@ export const createOrderWithStockUpdate = async (orderData) => {
     
     batch.set(orderRef, {
       ...orderDetails,
+      subtotal: subtotal,
+      taxAmount: taxAmount,
+      totalAmount: finalTotal,
+      total: finalTotal, // Keep both for compatibility
       createdAt: timestamp,
       dateCreated: timestamp, // Added for compatibility with OrderDetails component
       updatedAt: timestamp,
