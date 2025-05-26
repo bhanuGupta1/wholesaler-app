@@ -1,8 +1,9 @@
-// src/pages/GuestDashboard.jsx
+// src/pages/GuestDashboard.jsx - Updated with product detail links
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
+import { Link } from 'react-router-dom'; // Add this import
 import ThemeToggle from '../components/common/ThemeToggle';
 
 // ProductCard Component with hover effects and theme support
@@ -11,21 +12,31 @@ const ProductCard = ({ product, darkMode }) => {
     <div className={`border rounded-lg p-4 shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
       darkMode ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'
     }`}>
-      <div className={`h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} flex items-center justify-center rounded-md mb-4 overflow-hidden`}>
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="object-cover h-full w-full"
-          />
-        ) : (
-          // SVG placeholder
-          <svg className="w-16 h-16" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
-            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        )}
-      </div>
-      <h3 className={`font-bold text-lg mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{product.name}</h3>
+      {/* Make the image clickable to product details */}
+      <Link to={`/products/${product.id}`} className="block">
+        <div className={`h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} flex items-center justify-center rounded-md mb-4 overflow-hidden`}>
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="object-cover h-full w-full hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            // SVG placeholder
+            <svg className="w-16 h-16" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          )}
+        </div>
+      </Link>
+
+      {/* Make the product name clickable to product details */}
+      <Link to={`/products/${product.id}`}>
+        <h3 className={`font-bold text-lg mb-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {product.name}
+        </h3>
+      </Link>
+      
       <p className={`text-sm mb-2 line-clamp-2 h-10 overflow-hidden ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
         {product.description || 'No description available'}
       </p>
@@ -47,20 +58,34 @@ const ProductCard = ({ product, darkMode }) => {
               : 'Out of Stock'}
         </span>
       </div>
-      <button 
-        className={`mt-4 w-full py-2 px-4 rounded font-medium ${
-          product.stock > 0 
-            ? darkMode 
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            : darkMode 
-              ? 'bg-gray-600 cursor-not-allowed text-gray-300' 
-              : 'bg-gray-300 cursor-not-allowed text-gray-500'
-        }`}
-        disabled={product.stock <= 0}
-      >
-        {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-      </button>
+      <div className="flex space-x-2 mt-4">
+        {/* View Details Button */}
+        <Link 
+          to={`/products/${product.id}`}
+          className={`flex-1 py-2 px-4 rounded font-medium text-center border transition-colors ${
+            darkMode 
+              ? 'border-indigo-500 text-indigo-400 hover:bg-indigo-500 hover:text-white' 
+              : 'border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white'
+          }`}
+        >
+          View Details
+        </Link>
+        {/* Add to Cart Button */}
+        <button 
+          className={`flex-1 py-2 px-4 rounded font-medium ${
+            product.stock > 0 
+              ? darkMode 
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              : darkMode 
+                ? 'bg-gray-600 cursor-not-allowed text-gray-300' 
+                : 'bg-gray-300 cursor-not-allowed text-gray-500'
+          }`}
+          disabled={product.stock <= 0}
+        >
+          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+        </button>
+      </div>
     </div>
   );
 };
@@ -73,24 +98,30 @@ const FeaturedProduct = ({ product, darkMode }) => {
     <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 rounded-lg overflow-hidden border ${
       darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
     } shadow-lg p-6 mb-10`}>
-      <div className={`h-80 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg overflow-hidden flex items-center justify-center`}>
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-        ) : (
-          <svg className="w-24 h-24" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
-            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        )}
-      </div>
+      {/* Make the featured product image clickable */}
+      <Link to={`/products/${product.id}`} className="block">
+        <div className={`h-80 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg overflow-hidden flex items-center justify-center hover:scale-105 transition-transform duration-300`}>
+          {product.imageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+          ) : (
+            <svg className="w-24 h-24" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          )}
+        </div>
+      </Link>
       <div className="flex flex-col justify-center">
         <div className={`px-3 py-1 rounded-full text-sm font-medium w-fit mb-2 ${
           darkMode ? 'bg-indigo-900/30 text-indigo-400' : 'bg-indigo-100 text-indigo-700'
         }`}>
           Featured Product
         </div>
-        <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          {product.name}
-        </h2>
+        {/* Make the featured product title clickable */}
+        <Link to={`/products/${product.id}`}>
+          <h2 className={`text-2xl font-bold mb-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            {product.name}
+          </h2>
+        </Link>
         <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
           {product.description || 'No description available'}
         </p>
@@ -127,15 +158,17 @@ const FeaturedProduct = ({ product, darkMode }) => {
           >
             {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
           </button>
-          <button 
-            className={`py-2 px-6 rounded-lg font-medium ${
+          {/* View Details Button for Featured Product */}
+          <Link 
+            to={`/products/${product.id}`}
+            className={`py-2 px-6 rounded-lg font-medium transition-colors ${
               darkMode
                 ? 'bg-gray-700 hover:bg-gray-600 text-white'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
             }`}
           >
-            Learn More
-          </button>
+            View Details
+          </Link>
         </div>
       </div>
     </div>
