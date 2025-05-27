@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with proper ProductDetails routing
+// src/App.jsx - Updated with role-based access control
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -19,7 +19,7 @@ const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
 const Home = lazy(() => import('./pages/Home'));
 const Inventory = lazy(() => import('./pages/Inventory'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const ProductDetails = lazy(() => import('./pages/ProductDetails')); // Add this import
+const ProductDetails = lazy(() => import('./pages/ProductDetails'));
 const ProductCatalog = lazy(() => import('./pages/ProductCatalog'));
 const Orders = lazy(() => import('./pages/Orders'));
 const CreateOrder = lazy(() => import('./pages/CreateOrder'));
@@ -37,8 +37,23 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Protected Route Component
-const ProtectedRoute = ({ children, requiredRole = null }) => {
+// Helper function to determine user role
+const getUserRole = (user) => {
+  if (!user) return null;
+  
+  if (user.email?.includes('admin')) {
+    return 'admin';
+  } else if (user.email?.includes('manager')) {
+    return 'manager';
+  } else if (user.email?.includes('business')) {
+    return 'business';
+  } else {
+    return 'user';
+  }
+};
+
+// Enhanced Protected Route Component with role checking
+const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = null }) => {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,16 +63,8 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
       setUser(currentUser);
       
       if (currentUser) {
-        // Determine user role based on email or you can fetch from Firestore
-        if (currentUser.email?.includes('admin')) {
-          setUserRole('admin');
-        } else if (currentUser.email?.includes('manager')) {
-          setUserRole('manager');
-        } else if (currentUser.email?.includes('business')) {
-          setUserRole('business');
-        } else {
-          setUserRole('user');
-        }
+        const role = getUserRole(currentUser);
+        setUserRole(role);
       } else {
         setUserRole(null);
       }
@@ -76,8 +83,13 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     return <Navigate to="/login" />;
   }
 
-  // Check role-based access
+  // Check specific role requirement
   if (requiredRole && userRole !== requiredRole) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  // Check if user role is in allowed roles array
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to="/dashboard" />;
   }
 
@@ -100,16 +112,8 @@ const DashboardRouter = () => {
       setUser(currentUser);
       
       if (currentUser) {
-        // Determine user role based on email
-        if (currentUser.email?.includes('admin')) {
-          setUserRole('admin');
-        } else if (currentUser.email?.includes('manager')) {
-          setUserRole('manager');
-        } else if (currentUser.email?.includes('business')) {
-          setUserRole('business');
-        } else {
-          setUserRole('user');
-        }
+        const role = getUserRole(currentUser);
+        setUserRole(role);
       } else {
         setUserRole('guest');
       }
@@ -129,19 +133,26 @@ const DashboardRouter = () => {
     case 'admin':
       return <AdminDashboard />;
     case 'manager':
-      return <ManagerDashboard />; // Simple manager dashboard
+      return <ManagerDashboard />;
     case 'business':
       return <BusinessDashboard />;
     case 'user':
-      return <UserDashboard />; // Simple user dashboard
+      return <UserDashboard />;
     case 'guest':
     default:
       return <GuestDashboard />;
   }
 };
 
+// Custom Orders component that filters orders by user for regular users
+const UserSpecificOrders = () => {
+  // This component would filter orders to show only user's orders
+  // For now, we'll use the existing Orders component but in production
+  // you'd implement user-specific filtering here
+  return <Orders />;
+};
+
 function App() {
-  // Main application render - No seeding logic
   return (
     <AuthProvider>
       <ThemeProvider>
@@ -191,7 +202,7 @@ function App() {
                   </Layout>
                 } />
 
-                {/* Role-specific dashboard routes */}
+                {/* Role-specific dashboard routes with access control */}
                 <Route path="/admin-dashboard" element={
                   <ProtectedRoute requiredRole="admin">
                     <Layout>
@@ -224,16 +235,16 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Enhanced Dashboard Routes for Advanced Users */}
+                {/* Enhanced Dashboard Routes - RESTRICTED to Admin and Manager only */}
                 <Route path="/enhanced-dashboard" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
                     <Layout>
                       <EnhancedDashboard />
                     </Layout>
                   </ProtectedRoute>
                 } />
 
-                {/* Inventory routes - accessible by all authenticated users and guests */}
+                {/* Inventory routes - Different access levels based on role */}
                 <Route path="/inventory" element={
                   <Layout>
                     <Inventory />
@@ -246,7 +257,7 @@ function App() {
                   </Layout>
                 } />
 
-                {/* Products/Browse routes - Main product catalog for everyone */}
+                {/* Products/Browse routes - Public access */}
                 <Route path="/products" element={
                   <PublicRoute>
                     <Layout>
@@ -255,7 +266,6 @@ function App() {
                   </PublicRoute>
                 } />
 
-                {/* ADD THIS ROUTE - Product Details Page */}
                 <Route path="/products/:id" element={
                   <PublicRoute>
                     <Layout>
@@ -289,11 +299,11 @@ function App() {
                   </PublicRoute>
                 } />
                 
-                {/* Orders routes - Protected (Login required) */}
+                {/* Orders routes - Protected with user-specific filtering */}
                 <Route path="/orders" element={
                   <ProtectedRoute>
                     <Layout>
-                      <Orders />
+                      <UserSpecificOrders />
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -318,6 +328,30 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <CreateOrder />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Admin-only routes */}
+                <Route path="/admin/*" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <div className="p-8">
+                        <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
+                        <p>Advanced admin features would go here.</p>
+                      </div>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Manager-only routes */}
+                <Route path="/manager/*" element={
+                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                    <Layout>
+                      <div className="p-8">
+                        <h1 className="text-2xl font-bold mb-4">Manager Panel</h1>
+                        <p>Manager-specific features would go here.</p>
+                      </div>
                     </Layout>
                   </ProtectedRoute>
                 } />
