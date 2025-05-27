@@ -1,5 +1,6 @@
-// src/pages/Inventory.jsx - Simplified Version
+// src/pages/Inventory.jsx - Updated with product detail links
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Add this import
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
@@ -77,7 +78,15 @@ const Inventory = () => {
 
   return (
     <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-      <h1 className="text-3xl font-bold mb-8">Inventory</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Inventory</h1>
+        <Link 
+          to="/catalog"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+        >
+          Browse Catalog
+        </Link>
+      </div>
       
       {products.length === 0 ? (
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow p-8 text-center`}>
@@ -113,19 +122,28 @@ const Inventory = () => {
                 <tr key={product.id} className={darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center">
-                        {product.imageUrl ? (
-                          <img 
-                            src={product.imageUrl} 
-                            alt={product.name} 
-                            className="h-10 w-10 rounded-md object-cover" 
-                          />
-                        ) : (
-                          <span className="text-gray-400">📦</span>
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium">{product.name}</div>
+                      {/* Make the image clickable to product details */}
+                      <Link to={`/products/${product.id}`} className="flex-shrink-0 mr-4">
+                        <div className="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center hover:scale-105 transition-transform">
+                          {product.imageUrl ? (
+                            <img 
+                              src={product.imageUrl} 
+                              alt={product.name} 
+                              className="h-10 w-10 rounded-md object-cover" 
+                            />
+                          ) : (
+                            <span className="text-gray-400">📦</span>
+                          )}
+                        </div>
+                      </Link>
+                      <div>
+                        {/* Make the product name clickable to product details */}
+                        <Link 
+                          to={`/products/${product.id}`}
+                          className="text-sm font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                          {product.name}
+                        </Link>
                         <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           SKU: {product.sku || 'N/A'}
                         </div>
@@ -142,23 +160,23 @@ const Inventory = () => {
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         product.stock <= 5 
-                          ? 'bg-red-100 text-red-800' 
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' 
                           : product.stock <= 20 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-green-100 text-green-800'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' 
+                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                       }`}>
                         {product.stock || 0}
                       </span>
                       <div className="flex space-x-1">
                         <button
                           onClick={() => updateStock(product.id, Math.max(0, (product.stock || 0) - 1))}
-                          className="text-red-600 hover:text-red-800 text-sm"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
                         >
                           -
                         </button>
                         <button
                           onClick={() => updateStock(product.id, (product.stock || 0) + 1)}
-                          className="text-green-600 hover:text-green-800 text-sm"
+                          className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-medium"
                         >
                           +
                         </button>
@@ -166,12 +184,31 @@ const Inventory = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right text-sm">
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center justify-end space-x-2">
+                      {/* View Details Button */}
+                      <Link
+                        to={`/products/${product.id}`}
+                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                      >
+                        View
+                      </Link>
+                      <span className={`${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+                      {/* Edit Button (for inventory management) */}
+                      <Link
+                        to={`/inventory/${product.id}`}
+                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                      >
+                        Edit
+                      </Link>
+                      <span className={`${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
