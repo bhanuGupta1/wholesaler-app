@@ -1,4 +1,4 @@
-// src/firebase/orderService.js - Enhanced Order Service
+// src/firebase/orderService.js - Fixed Order Service
 import { 
   collection, 
   doc, 
@@ -29,6 +29,15 @@ export const createOrderWithStockUpdate = async (orderData) => {
     // Extract items from order data
     const { items, ...orderDetails } = orderData;
     
+    // Calculate subtotal from items
+    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    // Calculate 10% tax
+    const taxAmount = subtotal * 0.10;
+    
+    // Calculate final total (subtotal + tax)
+    const finalTotal = subtotal + taxAmount;
+    
     // Validate stock availability before creating order
     for (const item of items) {
       const productRef = doc(db, PRODUCTS_COLLECTION, item.productId);
@@ -44,12 +53,19 @@ export const createOrderWithStockUpdate = async (orderData) => {
       }
     }
     
-    // Create order document
+    // Create order document with both createdAt and dateCreated for compatibility
     const orderRef = doc(collection(db, ORDERS_COLLECTION));
+    const timestamp = serverTimestamp();
+    
     batch.set(orderRef, {
       ...orderDetails,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      subtotal: subtotal,
+      taxAmount: taxAmount,
+      totalAmount: finalTotal,
+      total: finalTotal, // Keep both for compatibility
+      createdAt: timestamp,
+      dateCreated: timestamp, // Added for compatibility with OrderDetails component
+      updatedAt: timestamp,
       status: orderDetails.status || 'pending',
       paymentStatus: orderDetails.paymentStatus || 'pending'
     });
@@ -59,7 +75,7 @@ export const createOrderWithStockUpdate = async (orderData) => {
       const productRef = doc(db, PRODUCTS_COLLECTION, item.productId);
       batch.update(productRef, {
         stock: increment(-item.quantity),
-        updatedAt: serverTimestamp()
+        updatedAt: timestamp
       });
     }
     
@@ -85,7 +101,7 @@ export const createOrderWithStockUpdate = async (orderData) => {
   }
 };
 
-// Get order with items
+// FIXED: Get order with items
 export const getOrderWithItems = async (orderId) => {
   try {
     // Get order document
@@ -94,6 +110,8 @@ export const getOrderWithItems = async (orderId) => {
     if (!orderDoc.exists()) {
       throw new Error(`Order with ID ${orderId} not found`);
     }
+    
+    const orderData = orderDoc.data(); // FIXED: Get the actual data
     
     // Get order items from subcollection
     const itemsQuery = query(
@@ -110,12 +128,12 @@ export const getOrderWithItems = async (orderId) => {
       });
     });
     
-    // Return combined data
+    // Return combined data with proper field mapping
     return {
       id: orderDoc.id,
       ...orderData,
-      items: orderData.items || [],
-      // Ensure we have totals
+      items: items, // FIXED: Use the actual items fetched
+      // Ensure we have totals with proper field names
       totalAmount: orderData.totalAmount || orderData.total || 0,
       total: orderData.total || orderData.totalAmount || 0
     };
