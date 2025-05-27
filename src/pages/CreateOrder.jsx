@@ -1,16 +1,19 @@
-// src/pages/CreateOrder.jsx - Enhanced with Payment Details
+// src/pages/CreateOrder.jsx - Enhanced with Cart Integration
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { useCart } from '../context/CartContext';
 import { createOrderWithStockUpdate } from '../firebase/orderService';
 
 const CreateOrder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { darkMode } = useTheme();
+  const { cart, clearCart } = useCart();
   
   // State management using different stats
   const [products, setProducts] = useState([]);
@@ -50,6 +53,21 @@ const CreateOrder = () => {
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [orderSource, setOrderSource] = useState('direct'); // 'direct' or 'cart'
+
+  // Check if coming from cart
+  useEffect(() => {
+    if (location.state?.fromCart && cart.length > 0) {
+      setOrderSource('cart');
+      // Convert cart items to selected products format
+      const cartProducts = cart.map(item => ({
+        ...item,
+        quantity: item.quantity
+      }));
+      setSelectedProducts(cartProducts);
+      setStep(2); // Skip product selection since we have cart items
+    }
+  }, [location.state, cart]);
 
   // User role detection
   const getUserRole = () => {
@@ -123,7 +141,7 @@ const CreateOrder = () => {
       return;
     }
 
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId) || selectedProducts.find(p => p.id === productId);
     const updated = selectedProducts.map(p => 
       p.id === productId 
         ? { ...p, quantity: Math.min(newQuantity, product.stock) }
@@ -218,6 +236,26 @@ const CreateOrder = () => {
     }
   };
 
+  // Import from cart
+  const importFromCart = () => {
+    if (cart.length > 0) {
+      const cartProducts = cart.map(item => ({
+        ...item,
+        quantity: item.quantity
+      }));
+      setSelectedProducts(cartProducts);
+      setOrderSource('cart');
+      setStep(2); // Skip to customer info since products are selected
+    }
+  };
+
+  // Clear selection and go back to direct mode
+  const clearSelection = () => {
+    setSelectedProducts([]);
+    setOrderSource('direct');
+    setStep(1);
+  };
+
   // Submit order
   const submitOrder = async () => {
     if (!user) {
@@ -284,6 +322,7 @@ const CreateOrder = () => {
         },
         userId: user.uid,
         userRole: userRole,
+        orderSource: orderSource, // Track how the order was created
         items: selectedProducts.map(product => ({
           productId: product.id,
           productName: product.name,
@@ -301,6 +340,12 @@ const CreateOrder = () => {
       };
 
       const orderId = await createOrderWithStockUpdate(orderData);
+      
+      // Clear cart if order was created from cart
+      if (orderSource === 'cart') {
+        clearCart();
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       setSubmitting(false);
@@ -332,9 +377,38 @@ const CreateOrder = () => {
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Create New Order
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Create New Order
+            </h1>
+            
+            {/* Order Source Indicator */}
+            <div className="flex items-center space-x-4">
+              {cart.length > 0 && orderSource === 'direct' && (
+                <button
+                  onClick={importFromCart}
+                  className={`px-4 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-colors ${darkMode ? 'border-indigo-400 text-indigo-400 hover:bg-indigo-400 hover:text-gray-900' : ''}`}
+                >
+                  Import from Cart ({cart.length} items)
+                </button>
+              )}
+              
+              {orderSource === 'cart' && (
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'}`}>
+                    🛒 From Cart
+                  </span>
+                  <button
+                    onClick={clearSelection}
+                    className={`px-3 py-1 text-sm border rounded ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    Start Fresh
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
           <div className="flex items-center mt-2">
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               userRole === 'business' 
@@ -366,6 +440,11 @@ const CreateOrder = () => {
                 }`}>
                   <span className="mr-2">{stepInfo.icon}</span>
                   <span className="font-medium">{stepInfo.label}</span>
+                  {stepInfo.num === 1 && orderSource === 'cart' && (
+                    <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                      From Cart
+                    </span>
+                  )}
                 </div>
                 {index < 2 && (
                   <div className={`w-8 h-0.5 mx-2 ${
@@ -395,6 +474,28 @@ const CreateOrder = () => {
             {/* Step 1: Product Selection */}
             {step === 1 && (
               <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
+                {/* Cart Import Notice */}
+                {cart.length > 0 && orderSource === 'direct' && (
+                  <div className={`mb-6 p-4 rounded-lg border ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className={`font-medium ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
+                          Items in Cart
+                        </h3>
+                        <p className={`text-sm ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>
+                          You have {cart.length} item(s) in your cart. Import them to create an order quickly.
+                        </p>
+                      </div>
+                      <button
+                        onClick={importFromCart}
+                        className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                      >
+                        Import Cart
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Search Bar */}
                 <div className="mb-6">
                   <div className="relative">
@@ -833,6 +934,15 @@ const CreateOrder = () => {
                   Review & Confirm Order
                 </h2>
                 
+                {/* Order Source Badge */}
+                {orderSource === 'cart' && (
+                  <div className="mb-6">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'}`}>
+                      🛒 Order created from cart items
+                    </span>
+                  </div>
+                )}
+                
                 {/* Order Items */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium mb-4">Order Items</h3>
@@ -921,6 +1031,11 @@ const CreateOrder = () => {
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <span className="mr-2">🛒</span>
                 Order Summary
+                {orderSource === 'cart' && (
+                  <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                    Cart
+                  </span>
+                )}
               </h3>
               
               {selectedProducts.length === 0 ? (
@@ -929,6 +1044,14 @@ const CreateOrder = () => {
                   <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     No products selected
                   </p>
+                  {cart.length > 0 && orderSource === 'direct' && (
+                    <button
+                      onClick={importFromCart}
+                      className="mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      Import {cart.length} items from cart
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1070,6 +1193,16 @@ const CreateOrder = () => {
                       ← Back to Customer Info
                     </button>
                   </div>
+                )}
+
+                {/* Add link back to cart if items were imported */}
+                {orderSource === 'cart' && step === 1 && (
+                  <button
+                    onClick={() => navigate('/cart')}
+                    className={`w-full py-2 px-4 rounded-lg font-medium border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    ← Back to Cart
+                  </button>
                 )}
               </div>
 
