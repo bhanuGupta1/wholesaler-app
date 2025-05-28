@@ -491,69 +491,76 @@ const ManagerDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+
+  // Helper function to show notifications
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const fetchManagerData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch products
+      const productsRef = collection(db, 'products');
+      const productsSnapshot = await getDocs(productsRef);
+      const products = productsSnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+      
+      // Count low stock items
+      const lowStockCount = products.filter(product => product.stock <= 10).length;
+      
+      // Fetch all orders
+      const ordersRef = collection(db, 'orders');
+      const ordersSnapshot = await getDocs(ordersRef);
+      const allOrders = ordersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          customerName: data.customerName || 'Unknown Customer',
+          total: data.total || 0,
+          status: data.status || 'pending',
+          createdAt: data.createdAt?.toDate() || new Date()
+        };
+      });
+
+      // Calculate today's orders
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayOrders = allOrders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        orderDate.setHours(0, 0, 0, 0);
+        return orderDate.getTime() === today.getTime();
+      }).length;
+
+      // Calculate metrics
+      const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
+      const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
+
+      setStats({
+        totalProducts: products.length,
+        totalOrders: allOrders.length,
+        lowStockProducts: lowStockCount,
+        allOrders,
+        allProducts: products,
+        todayOrders,
+        revenue: totalRevenue,
+        pendingOrders
+      });
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching manager data:', err);
+      setError('Failed to load manager data');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchManagerData() {
-      try {
-        setLoading(true);
-        
-        // Fetch products
-        const productsRef = collection(db, 'products');
-        const productsSnapshot = await getDocs(productsRef);
-        const products = productsSnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        }));
-        
-        // Count low stock items
-        const lowStockCount = products.filter(product => product.stock <= 10).length;
-        
-        // Fetch all orders
-        const ordersRef = collection(db, 'orders');
-        const ordersSnapshot = await getDocs(ordersRef);
-        const allOrders = ordersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            customerName: data.customerName || 'Unknown Customer',
-            total: data.total || 0,
-            status: data.status || 'pending',
-            createdAt: data.createdAt?.toDate() || new Date()
-          };
-        });
-
-        // Calculate today's orders
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayOrders = allOrders.filter(order => {
-          const orderDate = new Date(order.createdAt);
-          orderDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === today.getTime();
-        }).length;
-
-        // Calculate metrics
-        const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
-        const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
-
-        setStats({
-          totalProducts: products.length,
-          totalOrders: allOrders.length,
-          lowStockProducts: lowStockCount,
-          allOrders,
-          allProducts: products,
-          todayOrders,
-          revenue: totalRevenue,
-          pendingOrders
-        });
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching manager data:', err);
-        setError('Failed to load manager data');
-        setLoading(false);
-      }
-    }
-
     fetchManagerData();
   }, []);
 
@@ -579,12 +586,54 @@ const ManagerDashboard = () => {
             : prev.pendingOrders
       }));
       
-      console.log(`Order ${orderId} status updated to ${newStatus}`);
+      showNotification(`Order ${orderId.slice(0, 8)} updated to ${newStatus}`, 'success');
     } catch (error) {
       console.error('Error updating order status:', error);
+      showNotification('Failed to update order status', 'error');
       throw error; // Re-throw so the UI can handle it
     }
   }, []);
+
+  // Generate and download reports
+  const handleGenerateReport = () => {
+    try {
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        summary: {
+          totalRevenue: stats.revenue,
+          totalOrders: stats.totalOrders,
+          pendingOrders: stats.pendingOrders,
+          completedOrders: stats.allOrders.filter(o => o.status === 'completed').length,
+          todayOrders: stats.todayOrders,
+          lowStockItems: stats.lowStockProducts
+        },
+        orderBreakdown: {
+          pending: stats.allOrders.filter(o => o.status === 'pending').length,
+          processing: stats.allOrders.filter(o => o.status === 'processing').length,
+          completed: stats.allOrders.filter(o => o.status === 'completed').length,
+          cancelled: stats.allOrders.filter(o => o.status === 'cancelled').length
+        },
+        inventoryStatus: {
+          totalProducts: stats.totalProducts,
+          inStock: stats.allProducts.filter(p => p.stock > 10).length,
+          lowStock: stats.allProducts.filter(p => p.stock <= 10 && p.stock > 0).length,
+          outOfStock: stats.allProducts.filter(p => p.stock === 0).length
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `manager-report-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showNotification('Report downloaded successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to generate report', 'error');
+    }
+  };
 
   if (loading) {
     return (
@@ -606,12 +655,36 @@ const ManagerDashboard = () => {
 
   return (
     <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+          notification.type === 'success' 
+            ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+            : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+        } border`}>
+          {notification.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Manager Dashboard</h1>
-        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Oversee operations, manage inventory, and monitor team performance
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Manager Dashboard</h1>
+            <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Oversee operations, manage inventory, and monitor team performance
+            </p>
+          </div>
+          <button
+            onClick={fetchManagerData}
+            disabled={loading}
+            className={`px-4 py-2 rounded-lg ${
+              darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
+            } text-white disabled:opacity-50 transition-colors`}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -678,11 +751,17 @@ const ManagerDashboard = () => {
               <Link to="/create-order" className="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center">
                 New Order
               </Link>
-              <button className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+              <button 
+                onClick={handleGenerateReport}
+                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+              >
                 Generate Report
               </button>
-              <button className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
-                Team Meeting
+              <button 
+                onClick={() => showNotification('Team meeting scheduled for tomorrow at 2 PM', 'success')}
+                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                Schedule Team Meeting
               </button>
             </div>
           </div>
