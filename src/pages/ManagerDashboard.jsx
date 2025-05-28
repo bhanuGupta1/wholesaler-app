@@ -1,4 +1,4 @@
-// src/pages/ManagerDashboard.jsx - Updated to remove demo data
+// src/pages/ManagerDashboard.jsx - Fixed order status updates to actually save to Firebase
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, updateDoc, doc } from 'firebase/firestore';
@@ -167,9 +167,10 @@ const InventoryOverview = ({ products, darkMode }) => {
   );
 };
 
-// Order Processing Component  
+// Order Processing Component with real Firebase updates
 const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus }) => {
   const [statusFilter, setStatusFilter] = useState('pending');
+  const [updating, setUpdating] = useState(null); // Track which order is being updated
   
   const filteredOrders = useMemo(() => {
     if (statusFilter === 'all') return orders;
@@ -181,6 +182,20 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus }) => {
     processing: orders.filter(o => o.status === 'processing').length,
     completed: orders.filter(o => o.status === 'completed').length,
     cancelled: orders.filter(o => o.status === 'cancelled').length
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    if (updating === orderId) return; // Prevent double-clicks
+    
+    setUpdating(orderId);
+    try {
+      await onUpdateOrderStatus(orderId, newStatus);
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      // You could add a toast notification here later
+    } finally {
+      setUpdating(null);
+    }
   };
 
   return (
@@ -253,16 +268,20 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus }) => {
                   <div className="flex items-center space-x-2">
                     <select
                       value={order.status}
-                      onChange={(e) => onUpdateOrderStatus(order.id, e.target.value)}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      disabled={updating === order.id}
                       className={`text-xs rounded-md ${
                         darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-                      } border focus:ring-indigo-500 focus:border-indigo-500`}
+                      } border focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50`}
                     >
                       <option value="pending">Pending</option>
                       <option value="processing">Processing</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
+                    {updating === order.id && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-indigo-500"></div>
+                    )}
                     <Link 
                       to={`/orders/${order.id}`}
                       className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
@@ -538,9 +557,16 @@ const ManagerDashboard = () => {
     fetchManagerData();
   }, []);
 
+  // Fixed: Now actually updates Firebase instead of just local state
   const handleUpdateOrderStatus = useCallback(async (orderId, newStatus) => {
     try {
-      // In real app: await updateDoc(doc(db, 'orders', orderId), { status: newStatus });
+      // Actually update Firebase
+      await updateDoc(doc(db, 'orders', orderId), { 
+        status: newStatus,
+        updatedAt: new Date()
+      });
+      
+      // Then update local state to reflect the change immediately
       setStats(prev => ({
         ...prev,
         allOrders: prev.allOrders.map(order => 
@@ -552,8 +578,11 @@ const ManagerDashboard = () => {
             ? prev.pendingOrders - 1 
             : prev.pendingOrders
       }));
+      
+      console.log(`Order ${orderId} status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating order status:', error);
+      throw error; // Re-throw so the UI can handle it
     }
   }, []);
 
