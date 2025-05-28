@@ -1,12 +1,11 @@
-// src/components/UserSpecificOrders.jsx - Orders component that filters by user role
+// src/components/UserSpecificOrders.jsx - Updated to remove demo data
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db, auth } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase/config';
 
 // Helper function to determine user role
 const getUserRole = (user) => {
@@ -68,11 +67,9 @@ const UserSpecificOrders = () => {
           case 'user':
           default:
             // Regular users see ONLY their own orders
-            // In a real app, you'd filter by user ID: where('userId', '==', user.uid)
-            // For demo purposes, we'll filter by email or customer name
             ordersQuery = query(
               ordersRef, 
-              // where('userEmail', '==', user.email), // In production
+              where('userId', '==', user.uid),
               orderBy('createdAt', 'desc')
             );
             break;
@@ -84,50 +81,18 @@ const UserSpecificOrders = () => {
           return {
             id: doc.id,
             customerName: data.customerName || 'Unknown Customer',
-            userEmail: data.userEmail || 'demo@user.com',
+            userEmail: data.userEmail || user.email,
+            userId: data.userId || user.uid,
             total: data.total || 0,
             status: data.status || 'pending',
             items: data.items || [],
             itemCount: data.itemCount || 0,
-            createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
+            createdAt: data.createdAt?.toDate() || new Date()
           };
         });
 
         // Filter orders based on user role
-        if (userRole === 'user') {
-          // For regular users, only show their orders
-          // In production, this filtering would happen in the database query
-          fetchedOrders = fetchedOrders.filter(order => {
-            // Demo logic: match by customer name or email
-            const userName = user.displayName || user.email?.split('@')[0] || '';
-            return order.customerName.toLowerCase().includes(userName.toLowerCase()) ||
-                   order.userEmail === user.email;
-          });
-
-          // If no matching orders found, create demo data for the user
-          if (fetchedOrders.length === 0) {
-            fetchedOrders = [
-              {
-                id: `user-demo-${user.uid || 'demo'}`,
-                customerName: user.displayName || user.email?.split('@')[0] || 'You',
-                userEmail: user.email,
-                total: 299.99,
-                status: 'completed',
-                itemCount: 3,
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-              },
-              {
-                id: `user-demo-2-${user.uid || 'demo'}`,
-                customerName: user.displayName || user.email?.split('@')[0] || 'You',
-                userEmail: user.email,
-                total: 149.50,
-                status: 'pending',
-                itemCount: 2,
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-              }
-            ];
-          }
-        } else if (userRole === 'business') {
+        if (userRole === 'business') {
           // Business users see aggregated data without personal details
           fetchedOrders = fetchedOrders.map(order => ({
             ...order,
