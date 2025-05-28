@@ -1,36 +1,70 @@
-// src/pages/AdminDashboard.jsx - Fully functional admin dashboard
+// src/pages/AdminDashboard.jsx - Fully functional admin dashboard with real data charts
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 
-// Simple chart component for admin analytics
-const SimpleBarChart = ({ data, title, description, color, darkMode }) => {
+// Enhanced chart component with real data visualization
+const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar' }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="mb-6">
+        <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{title}</h3>
+        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>No data available</p>
+      </div>
+    );
+  }
+
   const max = Math.max(...data.map(item => item.value));
+  const total = data.reduce((sum, item) => sum + item.value, 0);
   
   return (
     <div className="mb-6">
       <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{title}</h3>
       {description && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>{description}</p>}
-      <div className="space-y-2">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center">
-            <span className={`text-xs w-16 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
-            <div className="flex-1 ml-2">
-              <div className={`h-4 rounded-full bg-${color}-${darkMode ? '900/30' : '100'} overflow-hidden`}>
-                <div 
-                  className={`h-4 rounded-full bg-${color}-${darkMode ? '500' : '600'}`} 
-                  style={{ width: `${(item.value / max) * 100}%` }}
-                ></div>
+      
+      {type === 'pie' ? (
+        // Pie chart representation
+        <div className="space-y-2">
+          {data.map((item, index) => {
+            const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
+            return (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className={`w-3 h-3 rounded-full bg-${color}-${500 + (index * 100)} mr-2`}></div>
+                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {item.value} ({percentage}%)
+                  </span>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      ) : (
+        // Bar chart representation
+        <div className="space-y-2">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center">
+              <span className={`text-xs w-16 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
+              <div className="flex-1 ml-2">
+                <div className={`h-4 rounded-full bg-${color}-${darkMode ? '900/30' : '100'} overflow-hidden`}>
+                  <div 
+                    className={`h-4 rounded-full bg-${color}-${darkMode ? '500' : '600'} transition-all duration-500`} 
+                    style={{ width: `${max > 0 ? (item.value / max) * 100 : 0}%` }}
+                  ></div>
+                </div>
+              </div>
+              <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {typeof item.value === 'number' && item.value > 1000 ? `$${(item.value/1000).toFixed(1)}k` : item.value}
+              </span>
             </div>
-            <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {item.value}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -625,35 +659,93 @@ const AdminAnalytics = ({ stats, darkMode }) => {
   const [analyticsData, setAnalyticsData] = useState({
     revenueData: [],
     userData: [],
-    orderTrends: []
+    orderStatusData: [],
+    userGrowthData: [],
+    platformMetrics: {}
   });
 
   useEffect(() => {
     // Generate real analytics from actual data
     const generateAnalytics = () => {
-      // Revenue data from orders
-      const monthlyRevenue = [];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      const currentRevenue = stats.totalRevenue;
+      // Real revenue data from actual orders over last 7 days
+      const last7Days = [];
+      const today = new Date();
       
-      months.forEach((month, index) => {
-        const variation = 0.7 + (Math.random() * 0.6); // 70-130% variation
-        const value = Math.round((currentRevenue / 6) * variation);
-        monthlyRevenue.push({ name: month, value });
-      });
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        const dayOrders = stats.allOrders.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate.toDateString() === date.toDateString();
+        });
+        
+        const dayRevenue = dayOrders.reduce((sum, order) => sum + order.total, 0);
+        
+        last7Days.push({
+          name: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          value: Math.round(dayRevenue),
+          orders: dayOrders.length
+        });
+      }
 
-      // User distribution by role
+      // Real user distribution by role from actual data
       const userData = [
         { name: 'Admin', value: stats.users.filter(u => u.role === 'admin').length },
         { name: 'Manager', value: stats.users.filter(u => u.role === 'manager').length },
         { name: 'Business', value: stats.users.filter(u => u.role === 'business').length },
-        { name: 'User', value: stats.users.filter(u => u.role === 'user').length },
-      ];
+        { name: 'User', value: stats.users.filter(u => u.role === 'user' || !u.role).length },
+      ].filter(item => item.value > 0);
+
+      // Real order status distribution
+      const orderStatusData = [
+        { name: 'Completed', value: stats.allOrders.filter(o => o.status === 'completed').length },
+        { name: 'Pending', value: stats.allOrders.filter(o => o.status === 'pending').length },
+        { name: 'Processing', value: stats.allOrders.filter(o => o.status === 'processing').length },
+        { name: 'Cancelled', value: stats.allOrders.filter(o => o.status === 'cancelled').length },
+      ].filter(item => item.value > 0);
+
+      // User growth over time (last 30 days)
+      const userGrowthData = [];
+      for (let i = 29; i >= 0; i -= 7) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        const weekUsers = stats.users.filter(user => {
+          const userDate = new Date(user.createdAt);
+          return userDate <= date;
+        });
+        
+        userGrowthData.push({
+          name: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          value: weekUsers.length
+        });
+      }
+
+      // Platform performance metrics
+      const totalRevenue = stats.allOrders.reduce((sum, order) => sum + order.total, 0);
+      const completedOrders = stats.allOrders.filter(o => o.status === 'completed').length;
+      const averageOrderValue = stats.totalOrders > 0 ? totalRevenue / stats.totalOrders : 0;
+      const completionRate = stats.totalOrders > 0 ? (completedOrders / stats.totalOrders) * 100 : 0;
+      const activeUsers = stats.users.filter(u => u.active !== false).length;
+      const userGrowthRate = stats.users.length > 0 ? ((stats.users.length - userGrowthData[0]?.value || 0) / (userGrowthData[0]?.value || 1)) * 100 : 0;
+
+      const platformMetrics = {
+        totalRevenue,
+        averageOrderValue,
+        completionRate,
+        activeUsers,
+        userGrowthRate,
+        dailyAvgRevenue: totalRevenue / 30,
+        ordersPerDay: stats.totalOrders / 30
+      };
 
       setAnalyticsData({
-        revenueData: monthlyRevenue,
+        revenueData: last7Days,
         userData,
-        orderTrends: []
+        orderStatusData,
+        userGrowthData,
+        platformMetrics
       });
     };
 
@@ -663,11 +755,27 @@ const AdminAnalytics = ({ stats, darkMode }) => {
   const exportAnalytics = () => {
     const data = {
       generatedAt: new Date().toISOString(),
-      totalUsers: stats.totalUsers,
-      totalOrders: stats.totalOrders,
-      totalRevenue: stats.totalRevenue,
-      revenueByMonth: analyticsData.revenueData,
-      usersByRole: analyticsData.userData
+      summary: {
+        totalUsers: stats.totalUsers,
+        totalOrders: stats.totalOrders,
+        totalRevenue: stats.totalRevenue,
+        platformMetrics: analyticsData.platformMetrics
+      },
+      charts: {
+        revenueByDay: analyticsData.revenueData,
+        usersByRole: analyticsData.userData,
+        ordersByStatus: analyticsData.orderStatusData,
+        userGrowth: analyticsData.userGrowthData
+      },
+      insights: {
+        avgOrderValue: analyticsData.platformMetrics.averageOrderValue,
+        completionRate: analyticsData.platformMetrics.completionRate,
+        userGrowthRate: analyticsData.platformMetrics.userGrowthRate,
+        dailyMetrics: {
+          avgRevenue: analyticsData.platformMetrics.dailyAvgRevenue,
+          avgOrders: analyticsData.platformMetrics.ordersPerDay
+        }
+      }
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -692,36 +800,93 @@ const AdminAnalytics = ({ stats, darkMode }) => {
       </div>
       
       <div className="p-6">
-        <SimpleBarChart 
-          title="Monthly Revenue" 
-          description="Platform revenue over the last 6 months" 
+        {/* Real KPI Cards */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Daily Avg Revenue</div>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+              ${Math.round(analyticsData.platformMetrics.dailyAvgRevenue || 0)}
+            </div>
+            <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+              Based on total revenue
+            </div>
+          </div>
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Order Completion</div>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              {analyticsData.platformMetrics.completionRate?.toFixed(1) || 0}%
+            </div>
+            <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+              {stats.allOrders.filter(o => o.status === 'completed').length} of {stats.totalOrders} orders
+            </div>
+          </div>
+        </div>
+        
+        <RealDataChart 
+          title="7-Day Revenue Trend" 
+          description={`Total revenue: $${analyticsData.revenueData.reduce((sum, day) => sum + day.value, 0)}`}
           data={analyticsData.revenueData} 
           color="indigo" 
           darkMode={darkMode} 
         />
         
-        <SimpleBarChart 
-          title="User Distribution" 
-          description="Users by role across the platform" 
+        <RealDataChart 
+          title="User Distribution by Role" 
+          description="Current platform user breakdown" 
           data={analyticsData.userData} 
           color="green" 
-          darkMode={darkMode} 
+          darkMode={darkMode}
+          type="pie"
         />
 
+        <RealDataChart 
+          title="Order Status Distribution" 
+          description="Current order processing status" 
+          data={analyticsData.orderStatusData} 
+          color="blue" 
+          darkMode={darkMode}
+          type="pie"
+        />
+
+        {/* Platform insights */}
+        <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-100'} border`}>
+          <div className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
+            📊 Platform Insights
+          </div>
+          <div className={`text-xs ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
+            <div>• Best revenue day: {analyticsData.revenueData.reduce((best, day) => day.value > best.value ? day : best, analyticsData.revenueData[0] || {name: 'N/A', value: 0})?.name}</div>
+            <div>• Most common role: {analyticsData.userData.reduce((best, role) => role.value > best.value ? role : best, analyticsData.userData[0] || {name: 'N/A', value: 0})?.name}</div>
+            <div>• Avg order value: ${analyticsData.platformMetrics.averageOrderValue?.toFixed(2) || '0.00'}</div>
+            <div>• User growth: {analyticsData.platformMetrics.userGrowthRate >= 0 ? '+' : ''}{analyticsData.platformMetrics.userGrowthRate?.toFixed(1) || 0}% this month</div>
+          </div>
+        </div>
+
         {/* Real-time stats */}
-        <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-          <h3 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Real-time Stats</h3>
+        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <h3 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Real-time Platform Stats</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Avg Order Value:</span>
-              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                ${stats.totalOrders > 0 ? (stats.totalRevenue / stats.totalOrders).toFixed(2) : '0.00'}
-              </span>
-            </div>
             <div>
               <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Active Users:</span>
               <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                {stats.users.filter(u => u.active !== false).length}
+                {analyticsData.platformMetrics.activeUsers || 0}
+              </span>
+            </div>
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Daily Orders:</span>
+              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                {Math.round(analyticsData.platformMetrics.ordersPerDay || 0)}
+              </span>
+            </div>
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Success Rate:</span>
+              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                {analyticsData.platformMetrics.completionRate?.toFixed(1) || 0}%
+              </span>
+            </div>
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Revenue/User:</span>
+              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                ${stats.totalUsers > 0 ? (stats.totalRevenue / stats.totalUsers).toFixed(2) : '0.00'}
               </span>
             </div>
           </div>
@@ -1103,7 +1268,7 @@ const AdminDashboard = () => {
       <div className="mb-8">
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Admin Dashboard</h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Manage users, monitor system health, and oversee platform operations
+          Manage users, monitor system health, and oversee platform operations with real-time analytics
         </p>
       </div>
 
@@ -1160,7 +1325,7 @@ const AdminDashboard = () => {
           {/* System Health */}
           <SystemHealthMonitor darkMode={darkMode} />
           
-          {/* Admin Analytics */}
+          {/* Admin Analytics with Real Data */}
           <AdminAnalytics stats={stats} darkMode={darkMode} />
           
           {/* Quick Admin Actions */}
