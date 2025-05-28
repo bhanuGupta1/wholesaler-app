@@ -104,29 +104,7 @@ const UserSpecificOrders = () => {
                    order.userEmail === user.email;
           });
 
-          // If no matching orders found, create demo data for the user
-          if (fetchedOrders.length === 0) {
-            fetchedOrders = [
-              {
-                id: `user-demo-${user.uid || 'demo'}`,
-                customerName: user.displayName || user.email?.split('@')[0] || 'You',
-                userEmail: user.email,
-                total: 299.99,
-                status: 'completed',
-                itemCount: 3,
-                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-              },
-              {
-                id: `user-demo-2-${user.uid || 'demo'}`,
-                customerName: user.displayName || user.email?.split('@')[0] || 'You',
-                userEmail: user.email,
-                total: 149.50,
-                status: 'pending',
-                itemCount: 2,
-                createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-              }
-            ];
-          }
+          
         } else if (userRole === 'business') {
           // Business users see aggregated data without personal details
           fetchedOrders = fetchedOrders.map(order => ({

@@ -53,30 +53,7 @@ const UserDashboard = () => {
           order.customerName.toLowerCase().includes(user.email?.split('@')[0].toLowerCase() || 'user')
         ).slice(0, 10); // Limit to 10 orders for demo
 
-        // If no user-specific orders found, create some demo data for the user
-        if (userOrders.length === 0) {
-          const demoOrders = [
-            {
-              id: 'demo-1',
-              customerName: user.displayName || user.email?.split('@')[0] || 'You',
-              total: 299.99,
-              status: 'completed',
-              itemCount: 3,
-              createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-              userEmail: user.email
-            },
-            {
-              id: 'demo-2',
-              customerName: user.displayName || user.email?.split('@')[0] || 'You',
-              total: 149.50,
-              status: 'pending',
-              itemCount: 2,
-              createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-              userEmail: user.email
-            }
-          ];
-          userOrders.push(...demoOrders);
-        }
+        
 
         // Calculate user statistics
         const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
