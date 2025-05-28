@@ -112,27 +112,30 @@ const Registration = () => {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
       
+      const isApproved = formData.accountType === 'user' ? true : false;
+      const businessType = formData.accountType === 'business' ? 'buyer' : null;
       // Create user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        displayName: `${formData.firstName} ${formData.lastName}`,
-        accountType: formData.accountType,
-        businessName: formData.businessName || null,
-        phoneNumber: formData.phoneNumber || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isActive: true,
-        emailVerified: user.emailVerified,
-        // Add default settings
-        preferences: {
-          notifications: true,
-          marketing: false,
-          theme: darkMode ? 'dark' : 'light'
-        }
-      });
+  uid: user.uid,
+  firstName: formData.firstName,
+  lastName: formData.lastName,
+  email: formData.email,
+  displayName: `${formData.firstName} ${formData.lastName}`,
+  accountType: formData.accountType,
+  businessName: formData.businessName || null,
+  phoneNumber: formData.phoneNumber || null,
+  approved: isApproved,
+  businessType: businessType, // default buyer until changed
+  isActive: true,
+  emailVerified: user.emailVerified,
+  preferences: {
+    notifications: true,
+    marketing: false,
+    theme: darkMode ? 'dark' : 'light'
+  },
+  createdAt: new Date(),
+  updatedAt: new Date()
+});
       
       // Navigate to dashboard
       navigate(from, { replace: true });
