@@ -1,4 +1,4 @@
-// src/pages/UserDashboard.jsx - Updated to remove demo data and show user-specific data
+// src/pages/UserDashboard.jsx - Fixed to handle missing userId in orders
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
@@ -382,42 +382,119 @@ const UserDashboard = () => {
       try {
         setLoading(true);
         
-        // Fetch user's orders
-        const ordersRef = collection(db, 'orders');
-        const userOrdersQuery = query(
-          ordersRef, 
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        );
+        let userOrders = [];
         
-        const ordersSnapshot = await getDocs(userOrdersQuery);
-        const userOrders = ordersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            customerName: data.customerName || user.displayName || 'You',
-            total: data.total || 0,
-            status: data.status || 'pending',
-            itemCount: data.itemCount || 0,
-            createdAt: data.createdAt?.toDate() || new Date()
-          };
-        });
+        // Try multiple approaches to find user's orders
+        try {
+          // Approach 1: Try to find orders by userId if field exists
+          if (user.uid) {
+            const ordersRef = collection(db, 'orders');
+            const userOrdersQuery = query(
+              ordersRef, 
+              where('userId', '==', user.uid),
+              orderBy('createdAt', 'desc')
+            );
+            
+            const ordersSnapshot = await getDocs(userOrdersQuery);
+            userOrders = ordersSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                customerName: data.customerName || user.displayName || 'You',
+                total: data.total || 0,
+                status: data.status || 'pending',
+                itemCount: data.itemCount || 0,
+                createdAt: data.createdAt?.toDate() || new Date()
+              };
+            });
+          }
+        } catch (userIdError) {
+          console.log('userId field not found or query failed, trying email approach:', userIdError.message);
+        }
 
-        // Calculate user stats
+        // Approach 2: If no orders found by userId, try by email
+        if (userOrders.length === 0 && user.email) {
+          try {
+            const ordersRef = collection(db, 'orders');
+            const emailOrdersQuery = query(
+              ordersRef, 
+              where('userEmail', '==', user.email),
+              orderBy('createdAt', 'desc')
+            );
+            
+            const ordersSnapshot = await getDocs(emailOrdersQuery);
+            userOrders = ordersSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                customerName: data.customerName || user.displayName || 'You',
+                total: data.total || 0,
+                status: data.status || 'pending',
+                itemCount: data.itemCount || 0,
+                createdAt: data.createdAt?.toDate() || new Date()
+              };
+            });
+          } catch (emailError) {
+            console.log('userEmail field not found or query failed, trying fallback approach:', emailError.message);
+          }
+        }
+
+        // Approach 3: If still no orders, fetch all orders and filter client-side
+        if (userOrders.length === 0) {
+          try {
+            const ordersRef = collection(db, 'orders');
+            const allOrdersQuery = query(ordersRef, orderBy('createdAt', 'desc'));
+            const ordersSnapshot = await getDocs(allOrdersQuery);
+            
+            const allOrders = ordersSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                customerName: data.customerName || 'Unknown Customer',
+                userEmail: data.userEmail || '',
+                total: data.total || 0,
+                status: data.status || 'pending',
+                itemCount: data.itemCount || 0,
+                createdAt: data.createdAt?.toDate() || new Date()
+              };
+            });
+
+            // Filter orders that might belong to this user
+            const userName = user.displayName || user.email?.split('@')[0] || '';
+            userOrders = allOrders.filter(order => {
+              return (
+                order.userEmail === user.email ||
+                order.customerName.toLowerCase().includes(userName.toLowerCase())
+              );
+            });
+          } catch (fallbackError) {
+            console.log('Fallback approach failed:', fallbackError.message);
+          }
+        }
+
+        
+
+        // Calculate user stats from orders
         const totalOrders = userOrders.length;
-        const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
+        const totalSpent = userOrders.reduce((sum, order) => sum + (order.total || 0), 0);
         const avgOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
         const completedOrders = userOrders.filter(order => order.status === 'completed').length;
         const pendingOrders = userOrders.filter(order => order.status === 'pending').length;
 
         // Fetch featured products (general products, not user-specific)
-        const productsRef = collection(db, 'products');
-        const featuredProductsQuery = query(productsRef, limit(6));
-        const productsSnapshot = await getDocs(featuredProductsQuery);
-        const featuredProducts = productsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        let featuredProducts = [];
+        try {
+          const productsRef = collection(db, 'products');
+          const featuredProductsQuery = query(productsRef, limit(6));
+          const productsSnapshot = await getDocs(featuredProductsQuery);
+          featuredProducts = productsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        } catch (productsError) {
+          console.log('Failed to load featured products:', productsError.message);
+          // Continue without featured products
+        }
 
         setStats({
           totalOrders,
@@ -453,6 +530,12 @@ const UserDashboard = () => {
       <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
         <div className="text-center py-12">
           <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
