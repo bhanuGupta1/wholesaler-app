@@ -876,4 +876,4 @@ const Inventory = () => {
   );
 };
 
-export default Inventory;
+export default Inventory; /// Update the whole inventory 
