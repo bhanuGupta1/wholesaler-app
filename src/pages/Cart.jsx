@@ -1,4 +1,4 @@
-// src/pages/Cart.jsx
+// src/pages/Cart.jsx - Enhanced with CreateOrder Integration
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 
 const Cart = () => {
-  const { cart, removeFromCart, clearCart } = useCart();
+  const { cart, removeFromCart, clearCart, updateQuantity } = useCart();
   const { darkMode } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -23,6 +23,16 @@ const Cart = () => {
       navigate('/login', { state: { from: { pathname: '/checkout' } } });
     } else {
       navigate('/checkout');
+    }
+  };
+
+  // New function to go to CreateOrder with cart items
+  const handleCreateOrder = () => {
+    if (!user) {
+      // Redirect to login with return path to CreateOrder
+      navigate('/login', { state: { from: { pathname: '/create-order', state: { fromCart: true } } } });
+    } else {
+      navigate('/create-order', { state: { fromCart: true } });
     }
   };
 
@@ -104,6 +114,7 @@ const Cart = () => {
                       key={item.id} 
                       item={item} 
                       onRemove={removeFromCart}
+                      onUpdateQuantity={updateQuantity}
                       darkMode={darkMode}
                     />
                   ))}
@@ -147,18 +158,41 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleCheckout}
-                  className="w-full mt-6 py-3 px-4 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                >
-                  {user ? 'Proceed to Checkout' : 'Sign In to Checkout'}
-                </button>
+                {/* Checkout Options */}
+                <div className="mt-6 space-y-3">
+                  {/* Primary Checkout Button */}
+                  <button
+                    onClick={handleCheckout}
+                    className="w-full py-3 px-4 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  >
+                    {user ? 'Quick Checkout' : 'Sign In to Checkout'}
+                  </button>
 
-                {!user && (
-                  <p className={`mt-3 text-xs text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    You'll be redirected to sign in before checkout
-                  </p>
-                )}
+                  {/* Alternative: Create Order Button */}
+                  <button
+                    onClick={handleCreateOrder}
+                    className={`w-full py-3 px-4 border-2 border-indigo-600 text-indigo-600 text-base font-medium rounded-lg hover:bg-indigo-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${darkMode ? 'hover:border-indigo-500' : ''}`}
+                  >
+                    {user ? 'Advanced Order' : 'Sign In for Advanced Order'}
+                  </button>
+
+                  {!user && (
+                    <p className={`text-xs text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      You'll be redirected to sign in before proceeding
+                    </p>
+                  )}
+                </div>
+
+                {/* Checkout Options Explanation */}
+                <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} text-xs`}>
+                  <h4 className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                    Checkout Options:
+                  </h4>
+                  <ul className={`space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <li>• <strong>Quick Checkout:</strong> Fast, streamlined process</li>
+                    <li>• <strong>Advanced Order:</strong> More options & business features</li>
+                  </ul>
+                </div>
 
                 {/* Security Notice */}
                 <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border text-xs`}>
@@ -214,15 +248,16 @@ const Cart = () => {
   );
 };
 
-// Cart Item Component
-const CartItem = ({ item, onRemove, darkMode }) => {
-  const { updateQuantity } = useCart();
+// Enhanced Cart Item Component
+const CartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
   const [quantity, setQuantity] = useState(item.quantity);
 
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= item.stock) {
       setQuantity(newQuantity);
-      updateQuantity(item.id, newQuantity);
+      if (onUpdateQuantity) {
+        onUpdateQuantity(item.id, newQuantity);
+      }
     }
   };
 
@@ -267,6 +302,13 @@ const CartItem = ({ item, onRemove, darkMode }) => {
               {item.stock} available
             </span>
           </div>
+          
+          {/* Add stock warning if quantity is close to stock limit */}
+          {quantity >= item.stock * 0.8 && (
+            <p className={`text-xs mt-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+              ⚠️ Limited stock available
+            </p>
+          )}
         </div>
 
         {/* Quantity Controls */}
