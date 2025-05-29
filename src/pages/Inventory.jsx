@@ -88,7 +88,17 @@ const filteredAndSortedProducts = useMemo(() => {
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
+ return filtered;
+  }, [products, searchTerm, categoryFilter, stockFilter, sortBy, sortDirection]);
+  // ===== END NEW =====
 
+  // ===== NEW: Pagination =====
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedProducts, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
 
   // Delete product
   const handleDelete = async (id) => {
@@ -96,6 +106,13 @@ const filteredAndSortedProducts = useMemo(() => {
       try {
         await deleteDoc(doc(db, 'products', id));
         setProducts(products.filter(p => p.id !== id));
+        // ===== NEW: Remove from selection if selected =====
+        setSelectedProducts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
+        // ===== END NEW =====
       } catch (err) {
         alert('Failed to delete product');
       }
