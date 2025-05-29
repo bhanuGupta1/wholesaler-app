@@ -46,6 +46,50 @@ const Inventory = () => {
     fetchProducts();
   }, []);
 
+  // 
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+    return uniqueCategories.sort();
+  }, [products]);
+  // 
+
+const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (product.sku || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+      
+      let matchesStock = true;
+      if (stockFilter === 'in-stock') {
+        matchesStock = product.stock > 10;
+      } else if (stockFilter === 'low-stock') {
+        matchesStock = product.stock > 0 && product.stock <= 10;
+      } else if (stockFilter === 'out-of-stock') {
+        matchesStock = product.stock === 0;
+      }
+      
+      return matchesSearch && matchesCategory && matchesStock;
+    });
+  // Sort products
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+      
+      if (sortBy === 'price' || sortBy === 'stock') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      } else {
+        aValue = String(aValue || '').toLowerCase();
+        bValue = String(bValue || '').toLowerCase();
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+
   // Delete product
   const handleDelete = async (id) => {
     if (window.confirm('Delete this product?')) {
