@@ -20,8 +20,16 @@ const ProtectedRoute = ({ children }) => {
   
   // If no user is authenticated, redirect to the login page
   if (!currentUser) {
-    return <Navigate to="/login" />;
-  }
+  return <Navigate to="/login" />;
+}
+
+if (!currentUser.approved && currentUser.accountType !== 'user') {
+  return (
+    <div className="h-screen flex items-center justify-center text-center text-lg">
+      Your account is pending admin approval.
+    </div>
+  );
+}
   
   // If the user is authenticated, render the protected child components
   return children;
