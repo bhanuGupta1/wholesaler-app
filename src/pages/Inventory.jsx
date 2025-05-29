@@ -130,7 +130,91 @@ const filteredAndSortedProducts = useMemo(() => {
       alert('Failed to update stock');
     }
   };
+ // ===== NEW: Bulk operations =====
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedProducts(new Set(paginatedProducts.map(p => p.id)));
+    } else {
+      setSelectedProducts(new Set());
+    }
+  };
 
+  const handleSelectProduct = (productId, checked) => {
+    setSelectedProducts(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(productId);
+      } else {
+        newSet.delete(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.size === 0) return;
+    
+    if (window.confirm(`Delete ${selectedProducts.size} selected products?`)) {
+      try {
+        const batch = writeBatch(db);
+        selectedProducts.forEach(productId => {
+          batch.delete(doc(db, 'products', productId));
+        });
+        await batch.commit();
+        
+        setProducts(products.filter(p => !selectedProducts.has(p.id)));
+        setSelectedProducts(new Set());
+        setShowBulkActions(false);
+      } catch (err) {
+        alert('Failed to delete products');
+      }
+    }
+  };
+
+  const handleBulkStockUpdate = async () => {
+    if (selectedProducts.size === 0 || !bulkStockValue) return;
+    
+    try {
+      const batch = writeBatch(db);
+      const stockValue = parseInt(bulkStockValue);
+      
+      selectedProducts.forEach(productId => {
+        batch.update(doc(db, 'products', productId), { stock: stockValue });
+      });
+      await batch.commit();
+      
+      setProducts(products.map(p => 
+        selectedProducts.has(p.id) ? { ...p, stock: stockValue } : p
+      ));
+      setSelectedProducts(new Set());
+      setShowBulkActions(false);
+      setBulkStockValue('');
+    } catch (err) {
+      alert('Failed to update stock');
+    }
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Name', 'SKU', 'Category', 'Price', 'Stock'],
+      ...filteredAndSortedProducts.map(p => [
+        p.name,
+        p.sku || '',
+        p.category || '',
+        p.price || 0,
+        p.stock || 0
+      ])
+    ].map(row => row.join(',')).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+  // ===== END NEW =====
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
