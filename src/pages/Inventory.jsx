@@ -11,6 +11,18 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+ const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [stockFilter, setStockFilter] = useState('all'); // all, in-stock, low-stock, out-of-stock
+  const [sortBy, setSortBy] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkStockValue, setBulkStockValue] = useState('');
+
+
   // Fetch products from Firestore
   useEffect(() => {
     const fetchProducts = async () => {
