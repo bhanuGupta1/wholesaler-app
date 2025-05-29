@@ -634,6 +634,7 @@ const Inventory = () => {
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className="rounded"
                     />
+                    
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Product
