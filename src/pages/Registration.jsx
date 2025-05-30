@@ -12,7 +12,7 @@ const Registration = () => {
   const location = useLocation();
   const { darkMode } = useTheme();
   
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/home";
   
   const [formData, setFormData] = useState({
     firstName: '',
