@@ -1,15 +1,17 @@
-// src/pages/AddProduct.jsx - Enhanced add product page with ImageUploader and bulk pricing
+// src/pages/AddProduct.jsx - Enhanced add product page with clean access control
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
+import { useAccessControl } from '../hooks/useAccessControl';
 import ImageUploader from '../components/common/ImageUploader';
 
 const AddProduct = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
+  const { canManageProducts, userAccessLevel } = useAccessControl();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -38,6 +40,46 @@ const AddProduct = () => {
     'Tools & Hardware',
     'Other'
   ];
+
+  // Clean access control check
+  if (!canManageProducts) {
+    return (
+      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+        <div className={`max-w-md mx-auto text-center p-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg`}>
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Access Denied
+          </h2>
+          <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            You need seller, manager, or admin permissions to add products.
+          </p>
+          <div className={`p-3 rounded-lg mb-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Current access level: <span className="font-medium">{userAccessLevel}</span>
+            </p>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/catalog')}
+              className="block w-full py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Browse Products
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className={`block w-full py-2 px-4 border rounded-lg transition-colors ${
+                darkMode 
+                  ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -130,22 +172,6 @@ const AddProduct = () => {
     navigate('/inventory');
   };
 
-  // Add this helper
-const isSeller = user?.accountType === 'business' && user?.businessType === 'seller';
-const isManager = user?.accountType === 'manager';
-const isAdmin = user?.accountType === 'admin';
-
-const canAddProduct = isSeller || isManager || isAdmin;
-
-if (!canAddProduct) {
-  return (
-    <div className="p-6 text-center text-lg text-red-500">
-      You don't have permission to add products.
-    </div>
-  );
-}
-
-
   return (
     <div className={`container mx-auto px-4 py-8 max-w-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
       {/* Header */}
@@ -156,6 +182,12 @@ if (!canAddProduct) {
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Add a new product to your inventory
         </p>
+        {/* Show user access level */}
+        <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+          darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
+        }`}>
+          ✅ {userAccessLevel} Access
+        </div>
       </div>
 
       {/* Success Message */}
