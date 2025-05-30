@@ -1,4 +1,4 @@
-// src/pages/Registration.jsx - Complete Registration Page
+// src/pages/Registration.jsx - Enhanced with proper approval system
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -12,8 +12,7 @@ const Registration = () => {
   const location = useLocation();
   const { darkMode } = useTheme();
   
-  // Get redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/home";
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -23,7 +22,8 @@ const Registration = () => {
     confirmPassword: '',
     businessName: '',
     phoneNumber: '',
-    accountType: 'user' // user, business, manager
+    accountType: 'user', // user, business, manager
+    businessType: 'buyer' // buyer, seller (only for business accounts)
   });
   
   const [error, setError] = useState('');
@@ -31,8 +31,8 @@ const Registration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -41,7 +41,6 @@ const Registration = () => {
     }));
   };
 
-  // Validate form data
   const validateForm = () => {
     if (!formData.firstName.trim()) {
       setError('First name is required');
@@ -73,8 +72,8 @@ const Registration = () => {
       return false;
     }
     
-    if (formData.accountType === 'business' && !formData.businessName.trim()) {
-      setError('Business name is required for business accounts');
+    if ((formData.accountType === 'business' || formData.accountType === 'manager') && !formData.businessName.trim()) {
+      setError('Business name is required for business and manager accounts');
       return false;
     }
     
@@ -86,7 +85,30 @@ const Registration = () => {
     return true;
   };
 
-  // Handle form submission
+  const getAccountStatus = (accountType) => {
+    switch (accountType) {
+      case 'user':
+        return {
+          approved: true,
+          status: 'active',
+          requiresApproval: false
+        };
+      case 'business':
+      case 'manager':
+        return {
+          approved: false,
+          status: 'pending_approval',
+          requiresApproval: true
+        };
+      default:
+        return {
+          approved: false,
+          status: 'pending_approval',
+          requiresApproval: true
+        };
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -111,6 +133,9 @@ const Registration = () => {
       await updateProfile(user, {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
+
+      // Get account status based on account type
+      const accountStatus = getAccountStatus(formData.accountType);
       
       // Create user document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
@@ -120,27 +145,49 @@ const Registration = () => {
         email: formData.email,
         displayName: `${formData.firstName} ${formData.lastName}`,
         accountType: formData.accountType,
+        businessType: formData.accountType === 'business' ? formData.businessType : null,
         businessName: formData.businessName || null,
         phoneNumber: formData.phoneNumber || null,
+        
+        // Approval system
+        approved: accountStatus.approved,
+        status: accountStatus.status,
+        requiresApproval: accountStatus.requiresApproval,
+        
+        // Permissions - will be set by admin during approval
+        permissions: {
+          canCreateOrders: formData.accountType === 'user',
+          canManageInventory: false,
+          canViewAllOrders: false,
+          canApproveUsers: false,
+          canManageUsers: false
+        },
+        
+        // Metadata
         createdAt: new Date(),
         updatedAt: new Date(),
-        isActive: true,
+        isActive: accountStatus.approved,
         emailVerified: user.emailVerified,
-        // Add default settings
+        lastLogin: new Date(),
+        
+        // User preferences
         preferences: {
           notifications: true,
           marketing: false,
           theme: darkMode ? 'dark' : 'light'
         }
       });
-      
-      // Navigate to dashboard
-      navigate(from, { replace: true });
+
+      if (accountStatus.requiresApproval) {
+        setRegistrationSuccess(true);
+      } else {
+        // Regular user can proceed immediately
+        navigate(from, { replace: true });
+      }
       
     } catch (error) {
       console.error('Registration error:', error);
       
-      // Handle specific Firebase auth errors
       switch (error.code) {
         case 'auth/email-already-in-use':
           setError('An account with this email already exists. Please sign in instead.');
@@ -159,7 +206,6 @@ const Registration = () => {
     }
   };
 
-  // Quick-fill demo account
   const fillDemoAccount = (type) => {
     const demoAccounts = {
       user: {
@@ -170,33 +216,90 @@ const Registration = () => {
         confirmPassword: 'password123',
         accountType: 'user',
         businessName: '',
-        phoneNumber: '+1-555-0123'
+        phoneNumber: '+1-555-0123',
+        businessType: 'buyer'
       },
-      business: {
+      business_buyer: {
         firstName: 'Jane',
         lastName: 'Smith',
-        email: 'business@wholesaler.com',
+        email: 'buyer@wholesaler.com',
         password: 'password123',
         confirmPassword: 'password123',
         accountType: 'business',
-        businessName: 'Smith Electronics Ltd',
+        businessType: 'buyer',
+        businessName: 'Smith Retail Store',
         phoneNumber: '+1-555-0456'
       },
-      manager: {
+      business_seller: {
         firstName: 'Mike',
         lastName: 'Johnson',
+        email: 'seller@wholesaler.com',
+        password: 'password123',
+        confirmPassword: 'password123',
+        accountType: 'business',
+        businessType: 'seller',
+        businessName: 'Johnson Supply Co',
+        phoneNumber: '+1-555-0789'
+      },
+      manager: {
+        firstName: 'Sarah',
+        lastName: 'Wilson',
         email: 'manager@wholesaler.com',
         password: 'password123',
         confirmPassword: 'password123',
         accountType: 'manager',
-        businessName: 'Johnson Supply Co',
-        phoneNumber: '+1-555-0789'
+        businessName: 'Wilson Management LLC',
+        phoneNumber: '+1-555-0321',
+        businessType: 'buyer'
       }
     };
     
     setFormData(demoAccounts[type]);
     setAcceptTerms(true);
   };
+
+  // Success screen for pending approval
+  if (registrationSuccess) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`max-w-md w-full mx-4 p-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg text-center`}>
+          <div className="text-6xl mb-4">✅</div>
+          <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Registration Successful!
+          </h2>
+          <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Your {formData.accountType} account has been created and is pending admin approval. 
+            You'll receive an email notification once your account is approved.
+          </p>
+          <div className={`p-4 rounded-lg mb-6 ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
+            <h3 className={`font-medium mb-2 ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+              What happens next?
+            </h3>
+            <ul className={`text-sm text-left space-y-1 ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+              <li>• Admin will review your application</li>
+              <li>• You'll get email notification of approval</li>
+              <li>• Once approved, you can sign in normally</li>
+              <li>• Approval typically takes 1-2 business days</li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            <Link 
+              to="/login"
+              className={`block w-full py-3 px-4 ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white rounded-lg transition-colors`}
+            >
+              Go to Login
+            </Link>
+            <Link 
+              to="/"
+              className={`block w-full py-3 px-4 border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} rounded-lg transition-colors`}
+            >
+              Continue as Guest
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen flex flex-col md:flex-row ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -226,8 +329,8 @@ const Registration = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">Wholesale Pricing</h3>
-                <p className="text-indigo-100 text-sm mt-1">Access competitive wholesale prices on thousands of products.</p>
+                <h3 className="text-lg font-semibold">Multiple Account Types</h3>
+                <p className="text-indigo-100 text-sm mt-1">Choose from User, Business (Buyer/Seller), or Manager accounts</p>
               </div>
             </div>
             
@@ -238,8 +341,8 @@ const Registration = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">Business Tools</h3>
-                <p className="text-indigo-100 text-sm mt-1">Manage inventory, orders, and analytics all in one place.</p>
+                <h3 className="text-lg font-semibold">Secure Approval Process</h3>
+                <p className="text-indigo-100 text-sm mt-1">Business accounts are verified by admin for security</p>
               </div>
             </div>
             
@@ -250,8 +353,8 @@ const Registration = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">24/7 Support</h3>
-                <p className="text-indigo-100 text-sm mt-1">Get help when you need it with our dedicated support team.</p>
+                <h3 className="text-lg font-semibold">Role-Based Permissions</h3>
+                <p className="text-indigo-100 text-sm mt-1">Customized features based on your account type and business needs</p>
               </div>
             </div>
           </div>
@@ -289,7 +392,7 @@ const Registration = () => {
             <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-indigo-700'} font-medium mb-3`}>
               Quick Demo Registration
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => fillDemoAccount('user')}
                 className={`text-xs px-2 py-1 rounded ${
@@ -298,17 +401,27 @@ const Registration = () => {
                     : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
                 }`}
               >
-                User Account
+                Regular User
               </button>
               <button 
-                onClick={() => fillDemoAccount('business')}
+                onClick={() => fillDemoAccount('business_buyer')}
                 className={`text-xs px-2 py-1 rounded ${
                   darkMode 
                     ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
                     : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
                 }`}
               >
-                Business Account
+                Business Buyer
+              </button>
+              <button 
+                onClick={() => fillDemoAccount('business_seller')}
+                className={`text-xs px-2 py-1 rounded ${
+                  darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
+                    : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                }`}
+              >
+                Business Seller
               </button>
               <button 
                 onClick={() => fillDemoAccount('manager')}
@@ -318,7 +431,7 @@ const Registration = () => {
                     : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
                 }`}
               >
-                Manager Account
+                Manager
               </button>
             </div>
           </div>
@@ -412,11 +525,41 @@ const Registration = () => {
                   darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
                 }`}
               >
-                <option value="user">Individual User</option>
-                <option value="business">Business Account</option>
-                <option value="manager">Manager Account</option>
+                <option value="user">Regular User (Immediate Access)</option>
+                <option value="business">Business Account (Requires Approval)</option>
+                <option value="manager">Manager Account (Requires Approval)</option>
               </select>
+              {formData.accountType !== 'user' && (
+                <p className={`text-xs mt-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                  ⚠️ This account type requires admin approval before you can access the system
+                </p>
+              )}
             </div>
+
+            {/* Business Type (only for business accounts) */}
+            {formData.accountType === 'business' && (
+              <div>
+                <label htmlFor="businessType" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Business Type</label>
+                <select
+                  id="businessType"
+                  name="businessType"
+                  value={formData.businessType}
+                  onChange={handleChange}
+                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+                    darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="buyer">Buyer (Purchase Products)</option>
+                  <option value="seller">Seller (Sell Products)</option>
+                </select>
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {formData.businessType === 'buyer' 
+                    ? 'You will be able to browse and purchase products from sellers'
+                    : 'You will be able to list and sell products to buyers'
+                  }
+                </p>
+              </div>
+            )}
 
             {/* Business Name (conditional) */}
             {(formData.accountType === 'business' || formData.accountType === 'manager') && (
@@ -577,53 +720,6 @@ const Registration = () => {
               </button>
             </div>
           </form>
-          
-          {/* Social Login Options */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className={`w-full border-t ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className={`px-2 ${darkMode ? 'bg-gray-900 text-gray-400' : 'bg-white text-gray-500'}`}>
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div>
-                <button
-                  type="button"
-                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
-                  onClick={() => {
-                    // Handle Google signup
-                    console.log('Google signup clicked');
-                  }}
-                >
-                  <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                  </svg>
-                  <span className="ml-2">Google</span>
-                </button>
-              </div>
-              <div>
-                <button
-                  type="button"
-                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
-                  onClick={() => {
-                    // Handle Facebook signup
-                    console.log('Facebook signup clicked');
-                  }}
-                >
-                  <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"></path>
-                  </svg>
-                  <span className="ml-2">Facebook</span>
-                </button>
-              </div>
-            </div>
-          </div>
           
           {/* Sign In Link */}
           <div className="mt-8 text-center">
