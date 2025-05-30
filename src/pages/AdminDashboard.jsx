@@ -221,6 +221,7 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
       setLoading(false);
     }
   };
+<Link to="/admin/pending-approvals">User Approvals</Link>
 
   const handleBulkAction = async (action) => {
     if (selectedUsers.length === 0) {
