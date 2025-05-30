@@ -12,7 +12,7 @@ const Login = () => {
   const { darkMode } = useTheme();
   
   // Get redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/dashboard";
+  const from = location.state?.from?.pathname || "/";
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -40,7 +40,7 @@ const Login = () => {
       } else if (approvalStatus && !approvalStatus.canAccess) {
         // User logged in but not approved - they'll see the approval status screen
         // The EnhancedProtectedRoute will handle this
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
       }
     }
   }, [user, approvalStatus, loginAttempted, navigate, from]);
