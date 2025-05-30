@@ -1,10 +1,11 @@
-// src/pages/AddProduct.jsx - Simple add product page for admin and manager
+// src/pages/AddProduct.jsx - Enhanced add product page with ImageUploader and bulk pricing
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
+import ImageUploader from '../components/common/ImageUploader';
 
 const AddProduct = () => {
   const { darkMode } = useTheme();
@@ -71,18 +72,29 @@ const AddProduct = () => {
     setError(null);
 
     try {
-      // Prepare product data
+      // Prepare product data with bulk pricing
+      const basePrice = parseFloat(formData.price);
+
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim() || '',
-        price: parseFloat(formData.price),
+        price: basePrice,
         stock: parseInt(formData.stock),
         category: formData.category,
         imageUrl: formData.imageUrl.trim() || '',
         createdAt: serverTimestamp(),
+        lastUpdated: serverTimestamp(),
         createdBy: user.uid,
         createdByEmail: user.email,
-        lastUpdated: serverTimestamp()
+        businessId: user.uid,
+        businessName: user.businessName || '',
+        isApproved: ['admin', 'manager'].includes(user.accountType), // seller requires approval if needed
+        status: 'active',
+        bulkPricing: {
+          '10': +(basePrice * 0.9).toFixed(2),
+          '50': +(basePrice * 0.85).toFixed(2),
+          '100': +(basePrice * 0.8).toFixed(2)
+        }
       };
 
       // Add to Firestore
@@ -117,6 +129,15 @@ const AddProduct = () => {
   const handleCancel = () => {
     navigate('/inventory');
   };
+
+  // Role-based access control
+  if (!['admin', 'manager'].includes(user?.accountType) && user?.businessType !== 'seller') {
+    return (
+      <div className="p-6 text-center text-lg text-red-500">
+        You don't have permission to add products.
+      </div>
+    );
+  }
 
   return (
     <div className={`container mx-auto px-4 py-8 max-w-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -268,23 +289,16 @@ const AddProduct = () => {
             </select>
           </div>
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div>
-            <label htmlFor="imageUrl" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              Image URL (optional)
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Product Image
             </label>
-            <input
-              type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } focus:ring-indigo-500 focus:border-indigo-500`}
-              placeholder="https://example.com/image.jpg"
+            <ImageUploader
+              existingUrl={formData.imageUrl}
+              onUploadSuccess={(url) =>
+                setFormData(prev => ({ ...prev, imageUrl: url }))
+              }
             />
           </div>
 
@@ -327,10 +341,10 @@ const AddProduct = () => {
           </svg>
           <div>
             <h3 className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
-              Adding Products
+              Adding Products with Bulk Pricing
             </h3>
             <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
-              Products you add will be immediately available in the inventory and can be included in orders. Make sure to set accurate pricing and stock levels.
+              Products you add will include automatic bulk pricing tiers (10+ units: 10% off, 50+ units: 15% off, 100+ units: 20% off) and will be immediately available in the inventory for orders.
             </p>
           </div>
         </div>
