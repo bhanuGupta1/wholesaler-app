@@ -1,7 +1,7 @@
-// src/pages/AddProduct.jsx - Enhanced add product page with clean access control
-import { useState } from 'react';
+// src/pages/AddProduct.jsx - Enhanced add product page with clean access control and delete functionality
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -11,7 +11,7 @@ import ImageUploader from '../components/common/ImageUploader';
 const AddProduct = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
-  const { canManageProducts, userAccessLevel } = useAccessControl();
+  const { canManageProducts, userAccessLevel, isAdmin, isManager } = useAccessControl();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -26,6 +26,12 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [recentProducts, setRecentProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [deletingProducts, setDeletingProducts] = useState(new Set());
+
+  // Check if user can delete products (only admin and manager)
+  const canDeleteProducts = isAdmin || isManager;
 
   const categories = [
     'Electronics',
@@ -40,6 +46,83 @@ const AddProduct = () => {
     'Tools & Hardware',
     'Other'
   ];
+
+  // Fetch recent products on component mount (for all users who can manage products)
+  useEffect(() => {
+    if (canManageProducts) {
+      fetchRecentProducts();
+    }
+  }, [canManageProducts]);
+
+  const fetchRecentProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const productsRef = collection(db, 'products');
+      let q;
+      
+      if (isAdmin || isManager) {
+        // Admin and Manager can see all recent products
+        q = query(productsRef, orderBy('createdAt', 'desc'), limit(5));
+      } else {
+        // Sellers can only see products they created
+        q = query(
+          productsRef, 
+          where('createdBy', '==', user.uid),
+          orderBy('createdAt', 'desc'), 
+          limit(5)
+        );
+      }
+      
+      const snapshot = await getDocs(q);
+      const products = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date()
+      }));
+      
+      setRecentProducts(products);
+    } catch (err) {
+      console.error('Error fetching recent products:', err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (!canDeleteProducts) {
+      setError('You do not have permission to delete products');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${productName}"? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    setDeletingProducts(prev => new Set(prev).add(productId));
+
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+      
+      // Remove from local state
+      setRecentProducts(prev => prev.filter(product => product.id !== productId));
+      
+      // Show success message
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+      
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      setError('Failed to delete product. Please try again.');
+    } finally {
+      setDeletingProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
 
   // Clean access control check
   if (!canManageProducts) {
@@ -159,6 +242,11 @@ const AddProduct = () => {
       setTimeout(() => {
         navigate('/inventory');
       }, 2000);
+
+      // Refresh recent products list for all users who can manage products
+      if (canManageProducts) {
+        fetchRecentProducts();
+      }
 
     } catch (err) {
       console.error('Error adding product:', err);
@@ -388,6 +476,170 @@ const AddProduct = () => {
           </div>
         </div>
       </div>
+
+      {/* Recently Added Products Section - For all users who can manage products */}
+      {canManageProducts && (
+        <div className={`mt-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border`}>
+          <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+            <div>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Recently Added Products
+              </h3>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {isAdmin || isManager ? 'All recent products (Admin/Manager View)' : 'Your recent products (Seller View)'}
+              </p>
+            </div>
+            {recentProducts.length > 0 && canDeleteProducts && (
+              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
+              }`}>
+                🗑️ Delete Access
+              </div>
+            )}
+            {recentProducts.length > 0 && !canDeleteProducts && (
+              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+              }`}>
+                👁️ View Only
+              </div>
+            )}
+          </div>
+
+          <div className="p-6">
+            {loadingProducts ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                <span className={`ml-3 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading recent products...</span>
+              </div>
+            ) : recentProducts.length === 0 ? (
+              <div className="text-center py-8">
+                <div className={`text-4xl mb-3 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>📦</div>
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  No recent products to display
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentProducts.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className={`flex items-center justify-between p-4 rounded-lg border ${
+                      darkMode ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center overflow-hidden`}>
+                        {product.imageUrl ? (
+                          <img 
+                            src={product.imageUrl} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl">📦</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {product.name}
+                        </h4>
+                        <div className="flex items-center space-x-4 mt-1">
+                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            ${product.price?.toFixed(2)} • Stock: {product.stock}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {product.category}
+                          </span>
+                        </div>
+                        <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+                          Added {product.createdAt.toLocaleDateString()} at {product.createdAt.toLocaleTimeString()}
+                          {(isAdmin || isManager) && product.createdBy !== user.uid && (
+                            <span className={`ml-2 px-1 py-0.5 rounded text-xs ${
+                              darkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              by {product.createdByEmail || 'other user'}
+                            </span>
+                          )}
+                          {product.createdBy === user.uid && (
+                            <span className={`ml-2 px-1 py-0.5 rounded text-xs ${
+                              darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-700'
+                            }`}>
+                              by you
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => navigate(`/products/${product.id}`)}
+                        className={`px-3 py-1 text-sm rounded-md ${
+                          darkMode ? 'text-blue-400 hover:bg-blue-900/20' : 'text-blue-600 hover:bg-blue-50'
+                        } transition-colors`}
+                      >
+                        View
+                      </button>
+                      
+                      {/* Only show delete button for admin and manager */}
+                      {canDeleteProducts && (
+                        <button
+                          onClick={() => handleDeleteProduct(product.id, product.name)}
+                          disabled={deletingProducts.has(product.id)}
+                          className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                            deletingProducts.has(product.id)
+                              ? 'opacity-50 cursor-not-allowed bg-gray-400 text-white'
+                              : darkMode 
+                                ? 'text-red-400 hover:bg-red-900/20 border border-red-800'
+                                : 'text-red-600 hover:bg-red-50 border border-red-200'
+                          }`}
+                        >
+                          {deletingProducts.has(product.id) ? (
+                            <div className="flex items-center">
+                              <div className="animate-spin rounded-full h-3 w-3 border-t border-b border-white mr-1"></div>
+                              Deleting...
+                            </div>
+                          ) : (
+                            '🗑️ Delete'
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Permission Notice */}
+            <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border`}>
+              <div className="flex items-start">
+                <svg className={`h-5 w-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'} mt-0.5 mr-2`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <h4 className={`text-sm font-medium ${darkMode ? 'text-yellow-300' : 'text-yellow-800'} mb-1`}>
+                    🔐 Access Level Notice
+                  </h4>
+                  <p className={`text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
+                    {canDeleteProducts ? (
+                      <>
+                        <strong>Admin/Manager Access:</strong> You can view all products and delete any product. Deleted products cannot be recovered.
+                      </>
+                    ) : (
+                      <>
+                        <strong>Seller Access:</strong> You can only view products you created. Only Administrators and Managers can delete products.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
