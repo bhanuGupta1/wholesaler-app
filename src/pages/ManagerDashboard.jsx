@@ -727,6 +727,145 @@ const InventoryOverview = ({ products, darkMode }) => {
   );
 };
 
+// Enhanced Quick Actions Component with improved styling and additional features
+const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
+  const [hoverIndex, setHoverIndex] = useState(null);
+  
+  const actions = [
+    {
+      id: 'add-product',
+      to: '/add-product',
+      name: 'Add Product',
+      description: 'List new products',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      ),
+      color: 'indigo'
+    },
+    {
+      id: 'new-order',
+      to: '/create-order',
+      name: 'New Order',
+      description: 'Create customer order',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      ),
+      color: 'blue'
+    },
+    {
+      id: 'manage-inventory',
+      to: '/inventory',
+      name: 'Manage Inventory',
+      description: 'View all products',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+        </svg>
+      ),
+      color: 'green'
+    },
+    {
+      id: 'pending-orders',
+      to: '/orders',
+      name: 'Process Orders',
+      description: 'Manage orders',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      color: 'purple'
+    },
+    {
+      id: 'user-management',
+      to: '/admin/users',
+      name: 'Manage Users',
+      description: 'User approvals',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1a1.5 1.5 0 01-1.5 1.5H9c-.83 0-1.5-.672-1.5-1.5 0-.829.67-1.5 1.5-1.5h12c.83 0 1.5.671 1.5 1.5z" />
+        </svg>
+      ),
+      color: 'orange'
+    },
+    {
+      id: 'generate-report',
+      action: onGenerateReport,
+      name: 'Generate Report',
+      description: 'Download analytics',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      color: 'pink'
+    }
+  ];
+  
+  return (
+    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Manager Actions</h2>
+        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Quick access to key functions</p>
+      </div>
+      <div className="p-5 grid grid-cols-2 gap-4">
+        {actions.map((action, index) => {
+          const isButton = action.action && !action.to;
+          const Component = isButton ? 'button' : Link;
+          const props = isButton 
+            ? { onClick: action.action }
+            : { to: action.to };
+
+          return (
+            <Component 
+              key={action.id}
+              {...props}
+              className={`flex flex-col items-center p-4 rounded-xl 
+                hover:bg-${action.color}-${darkMode ? '900/20' : '50'} 
+                transition-all duration-300 transform ${hoverIndex === index ? 'scale-105' : 'scale-100'}
+                group border ${darkMode ? 
+                  `border-gray-700 hover:border-${action.color}-800` : 
+                  `border-gray-100 hover:border-${action.color}-100`}`}
+              onMouseEnter={() => setHoverIndex(index)}
+              onMouseLeave={() => setHoverIndex(null)}
+            >
+              <div className={`h-12 w-12 rounded-full ${darkMode ? 
+                `bg-${action.color}-900/30` : 
+                `bg-${action.color}-100`} 
+                flex items-center justify-center mb-3 
+                ${darkMode ? 
+                  `group-hover:bg-${action.color}-900/50` : 
+                  `group-hover:bg-${action.color}-200`} 
+                transition-colors`}
+              >
+                <span className={`${darkMode ? 
+                  `text-${action.color}-400` : 
+                  `text-${action.color}-600`}`}
+                >
+                  {action.icon}
+                </span>
+              </div>
+              <span className={`text-sm font-medium text-center ${darkMode ? 
+                `text-gray-200 group-hover:text-${action.color}-400` : 
+                `text-gray-800 group-hover:text-${action.color}-700`}`}
+              >
+                {action.name}
+              </span>
+              <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1 text-center`}>
+                {action.description}
+              </span>
+            </Component>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const ManagerDashboard = () => {
   const { darkMode } = useTheme();
   const [stats, setStats] = useState({
@@ -961,6 +1100,10 @@ const ManagerDashboard = () => {
     }
   };
 
+  const handleScheduleMeeting = () => {
+    showNotification('Team meeting scheduled for tomorrow at 2 PM', 'success');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -1067,35 +1210,12 @@ const ManagerDashboard = () => {
           {/* Business Performance with Real Data */}
           <BusinessPerformance stats={stats} darkMode={darkMode} />
           
-          {/* Manager Actions */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
-            </div>
-            <div className="p-6 space-y-3">
-              <Link to="/inventory" className="block w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors text-center">
-                Manage Inventory
-              </Link>
-              <Link to="/orders" className="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-center">
-                Process Orders
-              </Link>
-              <Link to="/create-order" className="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center">
-                New Order
-              </Link>
-              <button 
-                onClick={handleGenerateReport}
-                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Generate Report
-              </button>
-              <button 
-                onClick={() => showNotification('Team meeting scheduled for tomorrow at 2 PM', 'success')}
-                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                Schedule Team Meeting
-              </button>
-            </div>
-          </div>
+          {/* Enhanced Manager Actions */}
+          <QuickActions 
+            darkMode={darkMode}
+            onGenerateReport={handleGenerateReport}
+            onScheduleMeeting={handleScheduleMeeting}
+          />
         </div>
       </div>
     </div>
