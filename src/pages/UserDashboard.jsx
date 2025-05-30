@@ -57,16 +57,12 @@ const UserDashboard = () => {
               userEmail: data.userEmail
             };
           });
-          
-          console.log(`Found ${userOrders.length} orders by userId`);
         } catch (userIdError) {
-          console.log('Error querying by userId:', userIdError);
           userOrders = [];
         }
 
         // If no orders found by userId, try filtering by userEmail as fallback
         if (userOrders.length === 0 && user.email) {
-          console.log('No orders found by userId, trying userEmail filter...');
           try {
             const emailOrdersQuery = query(
               ordersRef, 
@@ -89,17 +85,13 @@ const UserDashboard = () => {
                 userEmail: data.userEmail
               };
             });
-            
-            console.log(`Found ${userOrders.length} orders by userEmail`);
           } catch (emailError) {
-            console.log('Error querying by userEmail:', emailError);
             userOrders = [];
           }
         }
 
         // If still no orders found, try getting all orders and filter client-side (as last resort)
         if (userOrders.length === 0) {
-          console.log('No orders found by direct queries, trying client-side filter...');
           try {
             const allOrdersSnapshot = await getDocs(ordersRef);
             const allOrders = allOrdersSnapshot.docs.map(doc => {
@@ -123,10 +115,7 @@ const UserDashboard = () => {
               order.userEmail === user.email ||
               (order.customerName && order.customerName.toLowerCase().includes(user.email?.split('@')[0]?.toLowerCase() || ''))
             );
-            
-            console.log(`Found ${userOrders.length} orders after client-side filtering from ${allOrders.length} total orders`);
           } catch (allOrdersError) {
-            console.log('Error getting all orders:', allOrdersError);
             // This is fine - just means no orders collection exists or no permissions
             userOrders = [];
           }
@@ -152,7 +141,6 @@ const UserDashboard = () => {
       } catch (err) {
         console.error('Error fetching user data:', err);
         // Don't show error for empty results - just show empty state
-        console.log('Showing empty state instead of error');
         setUserStats({
           myOrders: [],
           totalOrders: 0,
@@ -218,10 +206,6 @@ const UserDashboard = () => {
         </h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Here's an overview of your shopping activity
-        </p>
-        {/* User ID indicator (helpful for debugging) */}
-        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-          Account ID: {user.uid}
         </p>
       </div>
 
@@ -364,18 +348,6 @@ const UserDashboard = () => {
                   >
                     Browse Products
                   </Link>
-                  
-                  {/* Debug info for empty orders */}
-                  <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-200'} border text-left`}>
-                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>
-                      <strong>Debug Info:</strong>
-                    </p>
-                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      • User ID: {user?.uid}<br/>
-                      • Email: {user?.email}<br/>
-                      • Searching for orders with userId = "{user?.uid}" or userEmail = "{user?.email}"
-                    </p>
-                  </div>
                 </div>
               )}
             </div>
