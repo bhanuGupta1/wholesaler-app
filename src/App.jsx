@@ -174,7 +174,7 @@ function App() {
 
                 {/* Inventory routes - Admin, Manager, and Sellers can manage inventory */}
                 <Route path="/inventory" element={
-                  <ProtectedRoute requiredPermission="canManageInventory">
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                     <Layout>
                       <Inventory />
                     </Layout>
@@ -182,7 +182,7 @@ function App() {
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute requiredPermission="canManageInventory">
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                     <Layout>
                       <ProductDetail />
                     </Layout>
@@ -191,7 +191,7 @@ function App() {
 
                 {/* Add Product route - Admin, Manager, and Sellers can add products */}
                 <Route path="/add-product" element={
-                  <ProtectedRoute requiredPermission="canManageInventory">
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                     <Layout>
                       <AddProduct />
                     </Layout>
@@ -258,6 +258,16 @@ function App() {
                                   <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inventory Control</h3>
                                     <p className="text-gray-600 dark:text-gray-400">Manage products and stock</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/add-product" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">➕</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add Product</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">List new products</p>
                                   </div>
                                 </div>
                               </Link>
@@ -381,13 +391,13 @@ function App() {
                         
                         {/* Seller-specific routes */}
                         <Route path="products" element={
-                          <ProtectedRoute requiredPermission="canManageInventory">
+                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                             <Inventory />
                           </ProtectedRoute>
                         } />
                         
                         <Route path="add-product" element={
-                          <ProtectedRoute requiredPermission="canManageInventory">
+                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                             <AddProduct />
                           </ProtectedRoute>
                         } />
