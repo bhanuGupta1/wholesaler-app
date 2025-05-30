@@ -1,9 +1,12 @@
-// src/pages/AdminDashboard.jsx - Fully functional admin dashboard with real data charts
+// src/pages/AdminDashboard.jsx - Admin dashboard with routing
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
+
+// Import all the components from the original file
+// (RealDataChart, SystemHealthMonitor, UserManagement, AllOrdersManagement, AdminAnalytics components remain the same)
 
 // Enhanced chart component with real data visualization
 const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar' }) => {
@@ -221,7 +224,6 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
       setLoading(false);
     }
   };
-<Link to="/admin/pending-approvals">User Approvals</Link>
 
   const handleBulkAction = async (action) => {
     if (selectedUsers.length === 0) {
@@ -273,6 +275,12 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
         <div className="flex justify-between items-center mb-4">
           <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
           <div className="flex gap-3">
+            <Link 
+              to="/admin/pending-approvals"
+              className={`px-3 py-1 rounded-md text-sm ${darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white transition-colors`}
+            >
+              Pending Approvals
+            </Link>
             <input
               type="text"
               placeholder="Search users..."
@@ -897,8 +905,369 @@ const AdminAnalytics = ({ stats, darkMode }) => {
   );
 };
 
+// Pending Approvals component
+const PendingApprovals = ({ darkMode }) => {
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch pending user approvals
+    const fetchPendingApprovals = async () => {
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('status', '==', 'pending'));
+        const snapshot = await getDocs(q);
+        
+        const pending = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        setPendingUsers(pending);
+      } catch (error) {
+        console.log('No pending approvals found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingApprovals();
+  }, []);
+
+  const handleApproval = async (userId, approved) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        status: approved ? 'active' : 'rejected',
+        active: approved,
+        approvedAt: new Date(),
+        approvedBy: 'admin' // In real app, get current admin ID
+      });
+      
+      setPendingUsers(prev => prev.filter(user => user.id !== userId));
+    } catch (error) {
+      console.error('Error processing approval:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Pending User Approvals</h2>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+          Review and approve new user registrations
+        </p>
+      </div>
+      
+      {pendingUsers.length === 0 ? (
+        <div className="p-12 text-center">
+          <div className="text-4xl mb-4">✅</div>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No pending approvals at this time
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {pendingUsers.map((user) => (
+            <div key={user.id} className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                    {user.displayName || 'No name provided'}
+                  </h3>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+                    Requested role: <span className="font-medium">{user.requestedRole || 'user'}</span>
+                  </p>
+                  {user.businessName && (
+                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+                      Business: {user.businessName}
+                    </p>
+                  )}
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+                    Applied: {new Date(user.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleApproval(user.id, true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleApproval(user.id, false)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Settings component
+const AdminSettings = ({ darkMode }) => {
+  const [settings, setSettings] = useState({
+    maintenanceMode: false,
+    registrationEnabled: true,
+    orderingEnabled: true,
+    emailNotifications: true,
+    lowStockThreshold: 10,
+    maxOrdersPerDay: 100,
+    defaultUserRole: 'user'
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSettingChange = (key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      // Save to Firestore
+      await setDoc(doc(db, 'settings', 'global'), settings);
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>System Settings</h2>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+          Configure global system settings
+        </p>
+      </div>
+      
+      <div className="p-6 space-y-6">
+        {/* Feature Toggles */}
+        <div>
+          <h3 className={`font-medium mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Feature Toggles</h3>
+          <div className="space-y-3">
+            <label className="flex items-center justify-between">
+              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Maintenance Mode</span>
+              <input
+                type="checkbox"
+                checked={settings.maintenanceMode}
+                onChange={(e) => handleSettingChange('maintenanceMode', e.target.checked)}
+                className="form-checkbox"
+              />
+            </label>
+            <label className="flex items-center justify-between">
+              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Registration Enabled</span>
+              <input
+                type="checkbox"
+                checked={settings.registrationEnabled}
+                onChange={(e) => handleSettingChange('registrationEnabled', e.target.checked)}
+                className="form-checkbox"
+              />
+            </label>
+            <label className="flex items-center justify-between">
+              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Ordering Enabled</span>
+              <input
+                type="checkbox"
+                checked={settings.orderingEnabled}
+                onChange={(e) => handleSettingChange('orderingEnabled', e.target.checked)}
+                className="form-checkbox"
+              />
+            </label>
+            <label className="flex items-center justify-between">
+              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Email Notifications</span>
+              <input
+                type="checkbox"
+                checked={settings.emailNotifications}
+                onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
+                className="form-checkbox"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* System Limits */}
+        <div>
+          <h3 className={`font-medium mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>System Limits</h3>
+          <div className="space-y-3">
+            <div>
+              <label className={`block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Low Stock Threshold
+              </label>
+              <input
+                type="number"
+                value={settings.lowStockThreshold}
+                onChange={(e) => handleSettingChange('lowStockThreshold', parseInt(e.target.value))}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border`}
+              />
+            </div>
+            <div>
+              <label className={`block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Max Orders Per Day
+              </label>
+              <input
+                type="number"
+                value={settings.maxOrdersPerDay}
+                onChange={(e) => handleSettingChange('maxOrdersPerDay', parseInt(e.target.value))}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border`}
+              />
+            </div>
+            <div>
+              <label className={`block mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Default User Role
+              </label>
+              <select
+                value={settings.defaultUserRole}
+                onChange={(e) => handleSettingChange('defaultUserRole', e.target.value)}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border`}
+              >
+                <option value="user">User</option>
+                <option value="business">Business</option>
+                <option value="pending">Pending Approval</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={saveSettings}
+          disabled={saving}
+          className={`w-full py-2 px-4 rounded-lg ${
+            darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'
+          } text-white font-medium disabled:opacity-50`}
+        >
+          {saving ? 'Saving...' : 'Save Settings'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Admin Overview (default view)
+const AdminOverview = ({ stats, darkMode, notification, handleDeleteUser, handleUpdateUserRole, refreshUsers, handleBulkUserAction, handleBulkOrderAction, handleSystemBackup, handleSendNotifications }) => {
+  return (
+    <>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+          { title: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'blue' },
+          { title: 'Total Orders', value: stats.totalOrders, icon: '📋', color: 'green' },
+          { title: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: '💰', color: 'indigo' },
+          { title: 'Pending Orders', value: stats.pendingOrders, icon: '⏳', color: 'yellow' }
+        ].map((stat, index) => (
+          <div key={index} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
+                  {stat.title}
+                </p>
+                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
+                  {stat.value}
+                </p>
+              </div>
+              <div className={`text-3xl p-3 rounded-full bg-${stat.color}-${darkMode ? '900/30' : '100'}`}>
+                {stat.icon}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - 2/3 width */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* User Management */}
+          <UserManagement 
+            users={stats.users} 
+            darkMode={darkMode} 
+            onDeleteUser={handleDeleteUser}
+            onUpdateUserRole={handleUpdateUserRole}
+            onRefreshUsers={refreshUsers}
+            onBulkAction={handleBulkUserAction}
+          />
+          
+          {/* All Orders Management */}
+          <AllOrdersManagement 
+            orders={stats.allOrders} 
+            darkMode={darkMode}
+            onBulkOrderAction={handleBulkOrderAction}
+          />
+        </div>
+
+        {/* Right Column - 1/3 width */}
+        <div className="space-y-8">
+          {/* System Health */}
+          <SystemHealthMonitor darkMode={darkMode} />
+          
+          {/* Admin Analytics with Real Data */}
+          <AdminAnalytics stats={stats} darkMode={darkMode} />
+          
+          {/* Quick Admin Actions */}
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
+            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
+              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
+            </div>
+            <div className="p-6 space-y-3">
+              <button 
+                onClick={refreshUsers}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Refresh User Data
+              </button>
+              <button 
+                onClick={handleSystemBackup}
+                className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                System Backup
+              </button>
+              <button 
+                onClick={handleSendNotifications}
+                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                Send Notifications
+              </button>
+              <Link to="/inventory" className="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-center">
+                Manage Inventory
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Main Admin Dashboard component with routing
 const AdminDashboard = () => {
   const { darkMode } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
@@ -1228,6 +1597,16 @@ const AdminDashboard = () => {
     }
   };
 
+  // Navigation items for admin sections
+  const navItems = [
+    { path: '/admin', label: 'Overview', icon: '📊' },
+    { path: '/admin/users', label: 'Users', icon: '👥' },
+    { path: '/admin/orders', label: 'Orders', icon: '📋' },
+    { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+    { path: '/admin/pending-approvals', label: 'Approvals', icon: '✅' },
+    { path: '/admin/settings', label: 'Settings', icon: '⚙️' }
+  ];
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -1265,45 +1644,54 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header with Navigation */}
       <div className="mb-8">
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Admin Dashboard</h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Manage users, monitor system health, and oversee platform operations with real-time analytics
+          Manage users, monitor system health, and oversee platform operations
         </p>
+        
+        {/* Navigation tabs */}
+        <div className="mt-6 flex space-x-1 overflow-x-auto">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap transition-colors ${
+                location.pathname === item.path
+                  ? darkMode 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-indigo-600 text-white'
+                  : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { title: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'blue' },
-          { title: 'Total Orders', value: stats.totalOrders, icon: '📋', color: 'green' },
-          { title: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: '💰', color: 'indigo' },
-          { title: 'Pending Orders', value: stats.pendingOrders, icon: '⏳', color: 'yellow' }
-        ].map((stat, index) => (
-          <div key={index} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                  {stat.title}
-                </p>
-                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                  {stat.value}
-                </p>
-              </div>
-              <div className={`text-3xl p-3 rounded-full bg-${stat.color}-${darkMode ? '900/30' : '100'}`}>
-                {stat.icon}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* User Management */}
+      {/* Routing */}
+      <Routes>
+        <Route path="/" element={
+          <AdminOverview 
+            stats={stats}
+            darkMode={darkMode}
+            notification={notification}
+            handleDeleteUser={handleDeleteUser}
+            handleUpdateUserRole={handleUpdateUserRole}
+            refreshUsers={refreshUsers}
+            handleBulkUserAction={handleBulkUserAction}
+            handleBulkOrderAction={handleBulkOrderAction}
+            handleSystemBackup={handleSystemBackup}
+            handleSendNotifications={handleSendNotifications}
+          />
+        } />
+        
+        <Route path="/users" element={
           <UserManagement 
             users={stats.users} 
             darkMode={darkMode} 
@@ -1312,54 +1700,28 @@ const AdminDashboard = () => {
             onRefreshUsers={refreshUsers}
             onBulkAction={handleBulkUserAction}
           />
-          
-          {/* All Orders Management */}
+        } />
+        
+        <Route path="/orders" element={
           <AllOrdersManagement 
             orders={stats.allOrders} 
             darkMode={darkMode}
             onBulkOrderAction={handleBulkOrderAction}
           />
-        </div>
-
-        {/* Right Column - 1/3 width */}
-        <div className="space-y-8">
-          {/* System Health */}
-          <SystemHealthMonitor darkMode={darkMode} />
-          
-          {/* Admin Analytics with Real Data */}
+        } />
+        
+        <Route path="/analytics" element={
           <AdminAnalytics stats={stats} darkMode={darkMode} />
-          
-          {/* Quick Admin Actions */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
-            </div>
-            <div className="p-6 space-y-3">
-              <button 
-                onClick={refreshUsers}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Refresh User Data
-              </button>
-              <button 
-                onClick={handleSystemBackup}
-                className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                System Backup
-              </button>
-              <button 
-                onClick={handleSendNotifications}
-                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                Send Notifications
-              </button>
-              <Link to="/inventory" className="block w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-center">
-                Manage Inventory
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+        } />
+        
+        <Route path="/pending-approvals" element={
+          <PendingApprovals darkMode={darkMode} />
+        } />
+        
+        <Route path="/settings" element={
+          <AdminSettings darkMode={darkMode} />
+        } />
+      </Routes>
     </div>
   );
 };
