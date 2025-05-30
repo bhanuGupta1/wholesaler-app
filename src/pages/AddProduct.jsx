@@ -130,61 +130,21 @@ const AddProduct = () => {
     navigate('/inventory');
   };
 
-  // Role-based access control - Updated to be more flexible
-  const getUserRole = (user) => {
-    if (!user) return null;
-    
-    if (user.email?.includes('admin')) return 'admin';
-    if (user.email?.includes('manager')) return 'manager';
-    if (user.email?.includes('business')) return 'business';
-    return 'user';
-  };
+  // Add this helper
+const isSeller = user?.accountType === 'business' && user?.businessType === 'seller';
+const isManager = user?.accountType === 'manager';
+const isAdmin = user?.accountType === 'admin';
 
-  const userRole = getUserRole(user);
-  const isBusinessSeller = user?.businessType === 'seller';
-  const canAddProducts = userRole === 'admin' || userRole === 'manager' || (userRole === 'business' && isBusinessSeller);
+const canAddProduct = isSeller || isManager || isAdmin;
 
-  if (!canAddProducts) {
-    return (
-      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
-          <p className="text-lg text-gray-500 mb-6">
-            You don't have permission to add products.
-          </p>
-          <div className={`max-w-md mx-auto p-4 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
-            <h3 className={`font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-2`}>
-              Who can add products?
-            </h3>
-            <ul className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
-              <li>• Administrators</li>
-              <li>• Managers</li>
-              <li>• Business users with seller accounts</li>
-            </ul>
-          </div>
-          <div className="mt-6 space-x-4">
-            <Link 
-              to="/products" 
-              className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-            >
-              Browse Products
-            </Link>
-            {userRole === 'business' && !isBusinessSeller && (
-              <Link 
-                to="/business-dashboard" 
-                className={`inline-block px-4 py-2 border rounded-lg ${
-                  darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Upgrade to Seller
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+if (!canAddProduct) {
+  return (
+    <div className="p-6 text-center text-lg text-red-500">
+      You don't have permission to add products.
+    </div>
+  );
+}
+
 
   return (
     <div className={`container mx-auto px-4 py-8 max-w-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
