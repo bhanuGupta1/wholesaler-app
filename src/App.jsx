@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with enhanced approval system and admin routes
+// src/App.jsx - Simplified without DashboardRouter and EnhancedDashboard
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -8,11 +8,8 @@ import Layout from './components/common/Layout';
 import Login from './pages/Login';
 import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import { auth } from './firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
 
 // Lazy-loaded components for better performance
-const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -44,64 +41,6 @@ const LoadingFallback = () => (
     <p className="mt-4 text-gray-600">Loading...</p>
   </div>
 );
-
-// Helper function to determine user role
-const getUserRole = (user) => {
-  if (!user) return null;
-  
-  if (user.email?.includes('admin')) {
-    return 'admin';
-  } else if (user.email?.includes('manager')) {
-    return 'manager';
-  } else if (user.email?.includes('business')) {
-    return 'business';
-  } else {
-    return 'user';
-  }
-};
-
-// Role-based Dashboard Router
-const DashboardRouter = () => {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState('guest');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const role = getUserRole(currentUser);
-        setUserRole(role);
-      } else {
-        setUserRole('guest');
-      }
-      
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
-  // Return appropriate dashboard based on user role
-  switch (userRole) {
-    case 'admin':
-      return <AdminDashboard />;
-    case 'manager':
-      return <ManagerDashboard />;
-    case 'business':
-      return <BusinessDashboard />;
-    case 'user':
-      return <UserDashboard />;
-    case 'guest':
-    default:
-      return <GuestDashboard />;
-  }
-};
 
 function App() {
   return (
@@ -166,15 +105,6 @@ function App() {
                   </Layout>
                 } />
 
-                {/* Dashboard Route - Role-based for authenticated users */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <DashboardRouter />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
                 {/* Role-specific dashboard routes with access control */}
                 <Route path="/admin-dashboard" element={
                   <ProtectedRoute requiredRole="admin">
@@ -204,15 +134,6 @@ function App() {
                   <ProtectedRoute requiredRole="user">
                     <Layout>
                       <UserDashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                {/* Enhanced Dashboard Routes - RESTRICTED to Admin and Manager only */}
-                <Route path="/enhanced-dashboard" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                    <Layout>
-                      <EnhancedDashboard />
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -323,7 +244,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* Fallback route - redirect to home instead of dashboard */}
+                {/* Fallback route - redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
