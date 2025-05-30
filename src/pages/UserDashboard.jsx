@@ -1,4 +1,4 @@
-// src/pages/UserDashboard.jsx - Simple dashboard for regular users
+// src/pages/UserDashboard.jsx - Fixed to show only user's actual orders
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
@@ -21,64 +21,70 @@ const UserDashboard = () => {
 
   useEffect(() => {
     async function fetchUserData() {
-      if (!user?.email) return;
+      if (!user?.uid) {
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
+        setError(null);
         
-        // Fetch only user's orders - this is key for user privacy
+        // Fetch only user's orders using proper Firebase query
         const ordersRef = collection(db, 'orders');
         
-        // In real app, you'd filter by user ID or email
-        // For demo purposes, we'll get all orders but in production you'd use:
-        // const userOrdersQuery = query(ordersRef, where('userEmail', '==', user.email), orderBy('createdAt', 'desc'));
-        const ordersSnapshot = await getDocs(ordersRef);
-        const allOrders = ordersSnapshot.docs.map(doc => {
+        // Primary filter: by userId
+        let userOrdersQuery = query(
+          ordersRef, 
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(50) // Reasonable limit for user orders
+        );
+        
+        let ordersSnapshot = await getDocs(userOrdersQuery);
+        let userOrders = ordersSnapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
-            customerName: data.customerName || 'Unknown Customer',
+            customerName: data.customerName || user.displayName || 'You',
             total: data.total || 0,
             status: data.status || 'pending',
             items: data.items || [],
-            itemCount: data.itemCount || 0,
+            itemCount: data.itemCount || (data.items ? data.items.length : 0),
             createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-            userEmail: data.userEmail || 'demo@user.com' // In real app, this would be properly set
+            userId: data.userId,
+            userEmail: data.userEmail
           };
         });
 
-        // Filter orders to show only user's orders (simulate user-specific data)
-        // In production, this filtering would happen in the database query
-        const userOrders = allOrders.filter(order => 
-          order.customerName.toLowerCase().includes(user.email?.split('@')[0].toLowerCase() || 'user')
-        ).slice(0, 10); // Limit to 10 orders for demo
-
-        // If no user-specific orders found, create some demo data for the user
-        if (userOrders.length === 0) {
-          const demoOrders = [
-            {
-              id: 'demo-1',
-              customerName: user.displayName || user.email?.split('@')[0] || 'You',
-              total: 299.99,
-              status: 'completed',
-              itemCount: 3,
-              createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-              userEmail: user.email
-            },
-            {
-              id: 'demo-2',
-              customerName: user.displayName || user.email?.split('@')[0] || 'You',
-              total: 149.50,
-              status: 'pending',
-              itemCount: 2,
-              createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-              userEmail: user.email
-            }
-          ];
-          userOrders.push(...demoOrders);
+        // If no orders found by userId, try filtering by userEmail as fallback
+        if (userOrders.length === 0 && user.email) {
+          console.log('No orders found by userId, trying userEmail filter...');
+          userOrdersQuery = query(
+            ordersRef, 
+            where('userEmail', '==', user.email),
+            orderBy('createdAt', 'desc'),
+            limit(50)
+          );
+          
+          ordersSnapshot = await getDocs(userOrdersQuery);
+          userOrders = ordersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              customerName: data.customerName || user.displayName || 'You',
+              total: data.total || 0,
+              status: data.status || 'pending',
+              items: data.items || [],
+              itemCount: data.itemCount || (data.items ? data.items.length : 0),
+              createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+              userId: data.userId,
+              userEmail: data.userEmail
+            };
+          });
         }
 
-        // Calculate user statistics
+        // Calculate user statistics from real orders only
         const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
         const pendingOrders = userOrders.filter(order => order.status === 'pending').length;
         const completedOrders = userOrders.filter(order => order.status === 'completed').length;
@@ -94,7 +100,7 @@ const UserDashboard = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching user data:', err);
-        setError('Failed to load your data');
+        setError('Failed to load your orders. Please try again.');
         setLoading(false);
       }
     }
@@ -115,6 +121,30 @@ const UserDashboard = () => {
       <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
         <div className="text-center py-12">
           <p className="text-red-500">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+        <div className="text-center py-12">
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Please log in to view your dashboard.
+          </p>
+          <Link 
+            to="/login" 
+            className="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Log In
+          </Link>
         </div>
       </div>
     );
@@ -129,6 +159,10 @@ const UserDashboard = () => {
         </h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Here's an overview of your shopping activity
+        </p>
+        {/* User ID indicator (helpful for debugging) */}
+        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          Account ID: {user.uid}
         </p>
       </div>
 
@@ -206,12 +240,14 @@ const UserDashboard = () => {
           <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
             <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
               <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>My Recent Orders</h2>
-              <Link 
-                to="/orders" 
-                className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
-              >
-                View All →
-              </Link>
+              {userStats.totalOrders > 5 && (
+                <Link 
+                  to="/orders" 
+                  className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
+                >
+                  View All ({userStats.totalOrders}) →
+                </Link>
+              )}
             </div>
             
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -229,7 +265,9 @@ const UserDashboard = () => {
                               ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
                               : order.status === 'pending' 
                                 ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                                : darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+                                : order.status === 'processing'
+                                  ? darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+                                  : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
                           }`}>
                             {order.status}
                           </span>
@@ -259,7 +297,7 @@ const UserDashboard = () => {
                     No orders yet
                   </h3>
                   <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-                    Start shopping to see your orders here
+                    You haven't placed any orders yet. Start shopping to see your orders here!
                   </p>
                   <Link 
                     to="/products"
@@ -267,6 +305,18 @@ const UserDashboard = () => {
                   >
                     Browse Products
                   </Link>
+                  
+                  {/* Debug info for empty orders */}
+                  <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-200'} border text-left`}>
+                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>
+                      <strong>Debug Info:</strong>
+                    </p>
+                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      • User ID: {user?.uid}<br/>
+                      • Email: {user?.email}<br/>
+                      • Searching for orders with userId = "{user?.uid}" or userEmail = "{user?.email}"
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -321,7 +371,7 @@ const UserDashboard = () => {
                   </div>
                   <div className="ml-3">
                     <div className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                      {user?.displayName || 'User'}
+                      {user?.displayName || user?.email?.split('@')[0] || 'User'}
                     </div>
                     <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       {user?.email}
