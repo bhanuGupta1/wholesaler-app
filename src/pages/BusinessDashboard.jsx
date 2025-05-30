@@ -38,7 +38,7 @@ const SimpleBarChart = ({ data, title, description, color, darkMode }) => {
   );
 };
 
-// Seller Features Component (only for sellers)
+// Enhanced SellerFeatures component with Add Product link
 const SellerFeatures = ({ stats, darkMode }) => (
   <div className="space-y-6">
     {/* Seller Metrics */}
@@ -108,15 +108,23 @@ const SellerFeatures = ({ stats, darkMode }) => (
       </div>
     </div>
 
-    {/* Seller Actions */}
+    {/* Seller Actions - Enhanced with Add Product */}
     <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg border p-6`}>
       <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4`}>Seller Actions</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/inventory" className="flex items-center p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <div className="text-2xl mr-3">📦</div>
           <div>
             <h3 className="font-medium">Manage Inventory</h3>
-            <p className="text-sm opacity-90">Add, edit, and track products</p>
+            <p className="text-sm opacity-90">View and edit products</p>
+          </div>
+        </Link>
+        
+        <Link to="/add-product" className="flex items-center p-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          <div className="text-2xl mr-3">➕</div>
+          <div>
+            <h3 className="font-medium">Add Product</h3>
+            <p className="text-sm opacity-90">List new products</p>
           </div>
         </Link>
         
