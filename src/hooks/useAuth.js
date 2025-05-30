@@ -1,4 +1,4 @@
-// src/hooks/useAuth.js - Custom hook to access authentication
+// src/hooks/useAuth.js - Custom hook to access authentication context
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -12,4 +12,5 @@ export const useAuth = () => {
   return context;
 };
 
+// Also export as default for flexibility
 export default useAuth;
