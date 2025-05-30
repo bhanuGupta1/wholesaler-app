@@ -1,4 +1,4 @@
-// src/pages/Registration.jsx - Complete Registration Page
+// src/pages/Registration.jsx - Fixed Registration Page with Approval System
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -31,6 +31,20 @@ const Registration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+
+  // Determine user status based on account type (NEW)
+  const getUserStatus = (accountType) => {
+    switch (accountType) {
+      case 'user':
+        return 'approved'; // Regular users are auto-approved
+      case 'business':
+      case 'manager':
+      case 'admin':
+        return 'pending'; // Business roles require approval
+      default:
+        return 'pending';
+    }
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -112,7 +126,7 @@ const Registration = () => {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
       
-      // Create user document in Firestore
+      // FIXED: Create user document with both old and new fields for backward compatibility
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         firstName: formData.firstName,
@@ -120,13 +134,28 @@ const Registration = () => {
         email: formData.email,
         displayName: `${formData.firstName} ${formData.lastName}`,
         accountType: formData.accountType,
+        businessType: formData.accountType === 'business' ? 'buyer' : null,
         businessName: formData.businessName || null,
         phoneNumber: formData.phoneNumber || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        
+        // NEW STATUS SYSTEM (for new users)
+        status: getUserStatus(formData.accountType),
+        
+        // BACKWARD COMPATIBILITY (maintain old structure)
+        approved: formData.accountType === 'user' ? true : false,
+        
+        // ADDITIONAL STATUS FIELDS (for future use)
+        approvedBy: null,
+        approvedAt: null,
+        rejectedReason: null,
+        
+        // SYSTEM FIELDS
         isActive: true,
         emailVerified: user.emailVerified,
-        // Add default settings
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        
+        // USER PREFERENCES
         preferences: {
           notifications: true,
           marketing: false,
@@ -134,8 +163,17 @@ const Registration = () => {
         }
       });
       
-      // Navigate to dashboard
-      navigate(from, { replace: true });
+      // Show different messages based on account type
+      if (formData.accountType !== 'user') {
+        setError(''); // Clear any errors
+        // Don't navigate immediately - let them see the success message
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        // Regular users navigate immediately
+        navigate(from, { replace: true });
+      }
       
     } catch (error) {
       console.error('Registration error:', error);
@@ -323,6 +361,24 @@ const Registration = () => {
             </div>
           </div>
           
+          {/* Success message for business/manager accounts */}
+          {loading && formData.accountType !== 'user' && (
+            <div className={`mb-6 ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-500'} border-l-4 p-4 rounded-md`}>
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className={`text-sm ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
+                    Your {formData.accountType} account will be reviewed by our admin team. You'll receive an email once approved.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {error && (
             <div className={`mb-6 ${darkMode ? 'bg-red-900 border-red-800' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded-md`}>
               <div className="flex">
@@ -416,6 +472,11 @@ const Registration = () => {
                 <option value="business">Business Account</option>
                 <option value="manager">Manager Account</option>
               </select>
+              {formData.accountType !== 'user' && (
+                <p className={`mt-1 text-xs ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                  ⚠️ {formData.accountType === 'business' ? 'Business' : 'Manager'} accounts require admin approval before access is granted.
+                </p>
+              )}
             </div>
 
             {/* Business Name (conditional) */}

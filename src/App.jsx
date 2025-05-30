@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with role-based access control
+// src/App.jsx - Fixed with Enhanced Approval System
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -6,8 +6,13 @@ import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import Layout from './components/common/Layout';
 import Login from './pages/Login';
+import ProtectedRoute from './components/common/ProtectedRoute'; // Our enhanced version
 import { auth } from './firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+
+// Admin Components
+import UserManagement from './pages/admin/UserManagement';
+import ApprovalSystemTest from './components/test/ApprovalSystemTest'; // Temporary
 
 // Lazy-loaded components for better performance
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
@@ -50,50 +55,6 @@ const getUserRole = (user) => {
   } else {
     return 'user';
   }
-};
-
-// Enhanced Protected Route Component with role checking
-const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = null }) => {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const role = getUserRole(currentUser);
-        setUserRole(role);
-      } else {
-        setUserRole(null);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  // Check specific role requirement
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  // Check if user role is in allowed roles array
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  return children;
 };
 
 // Public Route that doesn't require authentication
@@ -178,6 +139,13 @@ function App() {
                   </PublicRoute>
                 } />
 
+                {/* Temporary test route - remove after testing */}
+                <Route path="/test-approval" element={
+                  <Layout>
+                    <ApprovalSystemTest />
+                  </Layout>
+                } />
+
                 {/* Guest accessible routes */}
                 <Route path="/guest-dashboard" element={
                   <PublicRoute>
@@ -200,6 +168,23 @@ function App() {
                   <Layout>
                     <DashboardRouter />
                   </Layout>
+                } />
+
+                {/* Admin Routes */}
+                <Route path="/admin/users" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <UserManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/admin/pending-approvals" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <UserManagement />
+                    </Layout>
+                  </ProtectedRoute>
                 } />
 
                 {/* Role-specific dashboard routes with access control */}
@@ -246,15 +231,19 @@ function App() {
 
                 {/* Inventory routes - Different access levels based on role */}
                 <Route path="/inventory" element={
-                  <Layout>
-                    <Inventory />
-                  </Layout>
+                  <ProtectedRoute>
+                    <Layout>
+                      <Inventory />
+                    </Layout>
+                  </ProtectedRoute>
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <Layout>
-                    <ProductDetail />
-                  </Layout>
+                  <ProtectedRoute>
+                    <Layout>
+                      <ProductDetail />
+                    </Layout>
+                  </ProtectedRoute>
                 } />
 
                 {/* Products/Browse routes - Public access */}
@@ -339,6 +328,11 @@ function App() {
                       <div className="p-8">
                         <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
                         <p>Advanced admin features would go here.</p>
+                        <div className="mt-4">
+                          <a href="/admin/users" className="text-indigo-600 hover:text-indigo-800 underline">
+                            Manage Users
+                          </a>
+                        </div>
                       </div>
                     </Layout>
                   </ProtectedRoute>

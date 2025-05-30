@@ -32,13 +32,19 @@ export const AuthProvider = ({ children }) => {
           const userDoc = await getDoc(userRef);
           
           if (userDoc.exists()) {
-            // Combine Firebase auth user with Firestore user data
-            setUser({
-              ...currentUser,
-              ...userDoc.data()
-            });
-            setUserRole(userDoc.data().role || 'user');
-          } else {
+  const userData = userDoc.data();
+  
+  if (!userData.approved && userData.accountType !== 'user') {
+    // Block access for unapproved users
+    setUser(null);
+    setUserRole('guest');
+    setLoading(false);
+    return;
+  }
+
+  setUser({ ...currentUser, ...userData });
+  setUserRole(userData.role || 'user');
+} else {
             // If Firestore record doesn't exist, create one
             await setDoc(userRef, {
               email: currentUser.email,
