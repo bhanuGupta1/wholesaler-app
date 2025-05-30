@@ -1,4 +1,4 @@
-// src/App.jsx - Fixed with Enhanced Approval System
+// src/App.jsx - Updated with enhanced approval system and admin routes
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -6,13 +6,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import Layout from './components/common/Layout';
 import Login from './pages/Login';
-import ProtectedRoute from './components/common/ProtectedRoute'; // Our enhanced version
+import Registration from './pages/Registration';
+import ProtectedRoute from './components/common/ProtectedRoute';
 import { auth } from './firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-
-// Admin Components
-import UserManagement from './pages/admin/UserManagement';
-import ApprovalSystemTest from './components/test/ApprovalSystemTest'; // Temporary
 
 // Lazy-loaded components for better performance
 const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
@@ -32,7 +29,13 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
-const Registration = lazy(() => import('./pages/Registration'));
+
+// Admin components
+const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
+const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
+
+// User-specific components
+const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -55,11 +58,6 @@ const getUserRole = (user) => {
   } else {
     return 'user';
   }
-};
-
-// Public Route that doesn't require authentication
-const PublicRoute = ({ children }) => {
-  return children;
 };
 
 // Role-based Dashboard Router
@@ -105,14 +103,6 @@ const DashboardRouter = () => {
   }
 };
 
-// Custom Orders component that filters orders by user for regular users
-const UserSpecificOrders = () => {
-  // This component would filter orders to show only user's orders
-  // For now, we'll use the existing Orders component but in production
-  // you'd implement user-specific filtering here
-  return <Orders />;
-};
-
 function App() {
   return (
     <AuthProvider>
@@ -121,68 +111,66 @@ function App() {
           <Router>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                {/* Home Route - Default landing page for everyone */}
-                <Route path="/" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Home />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Registration />} />
                 
-                <Route path="/register" element={
-                  <PublicRoute>
-                    <Registration />
-                  </PublicRoute>
-                } />
-
-                {/* Temporary test route - remove after testing */}
-                <Route path="/test-approval" element={
+                {/* Home Route - Default landing page for everyone */}
+                <Route path="/" element={
                   <Layout>
-                    <ApprovalSystemTest />
+                    <Home />
                   </Layout>
                 } />
 
                 {/* Guest accessible routes */}
                 <Route path="/guest-dashboard" element={
-                  <PublicRoute>
-                    <Layout>
-                      <GuestDashboard />
-                    </Layout>
-                  </PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
                 } />
 
                 <Route path="/catalog" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
+                } />
+
+                <Route path="/products" element={
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
+                } />
+
+                <Route path="/products/:id" element={
+                  <Layout>
+                    <ProductDetails />
+                  </Layout>
+                } />
+
+                <Route path="/browse" element={
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
+                } />
+
+                {/* Shopping routes - accessible by all */}
+                <Route path="/cart" element={
+                  <Layout>
+                    <Cart />
+                  </Layout>
+                } />
+
+                <Route path="/checkout" element={
+                  <Layout>
+                    <Checkout />
+                  </Layout>
                 } />
 
                 {/* Dashboard Route - Role-based for authenticated users */}
                 <Route path="/dashboard" element={
-                  <Layout>
-                    <DashboardRouter />
-                  </Layout>
-                } />
-
-                {/* Admin Routes */}
-                <Route path="/admin/users" element={
-                  <ProtectedRoute requiredRole="admin">
+                  <ProtectedRoute>
                     <Layout>
-                      <UserManagement />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                <Route path="/admin/pending-approvals" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <Layout>
-                      <UserManagement />
+                      <DashboardRouter />
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -229,9 +217,36 @@ function App() {
                   </ProtectedRoute>
                 } />
 
+                {/* Admin Routes - Admin access only */}
+                <Route path="/admin/*" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <Routes>
+                        <Route index element={<AdminPanel />} />
+                        <Route path="users" element={<UserApprovalDashboard />} />
+                        <Route path="approvals" element={<UserApprovalDashboard />} />
+                        <Route path="pending-approvals" element={<UserApprovalDashboard />} />
+                        <Route path="*" element={<Navigate to="/admin" replace />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* User Management - Admin and Manager access */}
+                <Route path="/user-management" element={
+                  <ProtectedRoute 
+                    allowedRoles={['admin', 'manager']} 
+                    requiredPermission="canApproveUsers"
+                  >
+                    <Layout>
+                      <UserApprovalDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
                 {/* Inventory routes - Different access levels based on role */}
                 <Route path="/inventory" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="canManageInventory">
                     <Layout>
                       <Inventory />
                     </Layout>
@@ -239,53 +254,11 @@ function App() {
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="canManageInventory">
                     <Layout>
                       <ProductDetail />
                     </Layout>
                   </ProtectedRoute>
-                } />
-
-                {/* Products/Browse routes - Public access */}
-                <Route path="/products" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/products/:id" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductDetails />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/browse" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                {/* Shopping routes - accessible by all */}
-                <Route path="/cart" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Cart />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/checkout" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Checkout />
-                    </Layout>
-                  </PublicRoute>
                 } />
                 
                 {/* Orders routes - Protected with user-specific filtering */}
@@ -314,26 +287,9 @@ function App() {
                 } />
                 
                 <Route path="/create-order" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="canCreateOrders">
                     <Layout>
                       <CreateOrder />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                {/* Admin-only routes */}
-                <Route path="/admin/*" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <Layout>
-                      <div className="p-8">
-                        <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-                        <p>Advanced admin features would go here.</p>
-                        <div className="mt-4">
-                          <a href="/admin/users" className="text-indigo-600 hover:text-indigo-800 underline">
-                            Manage Users
-                          </a>
-                        </div>
-                      </div>
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -345,6 +301,23 @@ function App() {
                       <div className="p-8">
                         <h1 className="text-2xl font-bold mb-4">Manager Panel</h1>
                         <p>Manager-specific features would go here.</p>
+                        <div className="mt-6 space-y-2">
+                          <a href="/admin/users" className="block text-indigo-600 hover:text-indigo-800">Manage Users</a>
+                          <a href="/inventory" className="block text-indigo-600 hover:text-indigo-800">Manage Inventory</a>
+                          <a href="/orders" className="block text-indigo-600 hover:text-indigo-800">View All Orders</a>
+                        </div>
+                      </div>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Business-specific routes */}
+                <Route path="/business/*" element={
+                  <ProtectedRoute requiredRole="business">
+                    <Layout>
+                      <div className="p-8">
+                        <h1 className="text-2xl font-bold mb-4">Business Panel</h1>
+                        <p>Business-specific features based on buyer/seller type would go here.</p>
                       </div>
                     </Layout>
                   </ProtectedRoute>
