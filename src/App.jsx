@@ -1,6 +1,12 @@
-// src/App.jsx - Enhanced with AddProduct and role-based access control
+// src/App.jsx - Enhanced with AddProduct, comprehensive nested routing, and role-based access control
+// Key Features:
+// • AddProduct route with ImageUploader integration and bulk pricing
+// • Enhanced Business Panel with buyer/seller differentiation and nested routing
+// • Comprehensive Manager Panel with analytics, reports, and settings
+// • Role-based access control with permission-based routing
+// • Support for seller upgrade workflow and business account types
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
@@ -225,40 +231,232 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Manager-only routes */}
+                {/* Manager-only routes - Enhanced with nested routing */}
                 <Route path="/manager/*" element={
                   <ProtectedRoute allowedRoles={['admin', 'manager']}>
-                    <Layout>
-                      <div className="p-8">
-                        <h1 className="text-2xl font-bold mb-4">Manager Panel</h1>
-                        <p>Manager-specific features would go here.</p>
-                        <div className="mt-6 space-y-2">
-                          <a href="/admin/users" className="block text-indigo-600 hover:text-indigo-800">Manage Users</a>
-                          <a href="/inventory" className="block text-indigo-600 hover:text-indigo-800">Manage Inventory</a>
-                          <a href="/add-product" className="block text-indigo-600 hover:text-indigo-800">Add New Product</a>
-                          <a href="/orders" className="block text-indigo-600 hover:text-indigo-800">View All Orders</a>
-                        </div>
-                      </div>
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                {/* Business-specific routes */}
-                <Route path="/business/*" element={
-                  <ProtectedRoute requiredRole="business">
                     <Layout>
                       <Routes>
                         <Route index element={
                           <div className="p-8">
-                            <h1 className="text-2xl font-bold mb-4">Business Panel</h1>
-                            <p>Business-specific features based on buyer/seller type would go here.</p>
-                            <div className="mt-6 space-y-2">
-                              <a href="/inventory" className="block text-indigo-600 hover:text-indigo-800">My Products</a>
-                              <a href="/add-product" className="block text-indigo-600 hover:text-indigo-800">Add Product</a>
-                              <a href="/orders" className="block text-indigo-600 hover:text-indigo-800">My Orders</a>
+                            <h1 className="text-2xl font-bold mb-4">Manager Panel</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">Comprehensive management tools and analytics for operations oversight.</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <Link to="/manager/users" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">👥</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">User Management</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">Manage users and approvals</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/manager/inventory" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">📦</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inventory Control</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">Manage products and stock</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/manager/orders" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">📋</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Processing</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">View and process orders</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/manager/analytics" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">📊</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Analytics</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">Performance metrics</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/manager/reports" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">📈</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reports</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">Generate detailed reports</p>
+                                  </div>
+                                </div>
+                              </Link>
+                              
+                              <Link to="/manager/settings" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">⚙️</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">System configuration</p>
+                                  </div>
+                                </div>
+                              </Link>
                             </div>
                           </div>
                         } />
+                        
+                        <Route path="users" element={<UserApprovalDashboard />} />
+                        <Route path="inventory" element={<Inventory />} />
+                        <Route path="orders" element={<UserSpecificOrders />} />
+                        
+                        <Route path="analytics" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Manager Analytics</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">Comprehensive analytics and performance metrics.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Team Performance</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Monitor team productivity and efficiency</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">System Health</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Platform performance metrics</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Revenue Trends</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Financial performance analysis</p>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
+                        <Route path="reports" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Manager Reports</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">Generate and download detailed reports.</p>
+                            <div className="space-y-4">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Monthly Summary Report</h3>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Comprehensive monthly business overview</p>
+                                <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Generate Report</button>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Inventory Report</h3>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Stock levels and inventory analysis</p>
+                                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Generate Report</button>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
+                        <Route path="settings" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Manager Settings</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">System configuration and preferences.</p>
+                            <div className="space-y-4">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">System Configuration</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Configure system-wide settings</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">User Permissions</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Manage user roles and permissions</p>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
+                        <Route path="*" element={<Navigate to="/manager" replace />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Business-specific routes - Enhanced with nested routing */}
+                <Route path="/business/*" element={
+                  <ProtectedRoute requiredRole="business">
+                    <Layout>
+                      <Routes>
+                        <Route index element={<BusinessDashboard />} />
+                        
+                        {/* Seller-specific routes */}
+                        <Route path="products" element={
+                          <ProtectedRoute requiredPermission="canManageInventory">
+                            <Inventory />
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="add-product" element={
+                          <ProtectedRoute requiredPermission="canManageInventory">
+                            <AddProduct />
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="orders" element={
+                          <UserSpecificOrders />
+                        } />
+                        
+                        <Route path="analytics" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Business Analytics</h1>
+                            <p>Detailed analytics and performance metrics would go here.</p>
+                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Sales Overview</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Monthly sales performance</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Customer Insights</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Customer behavior analysis</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Product Performance</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Top selling products</p>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
+                        <Route path="settings" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Business Settings</h1>
+                            <p>Business account settings and preferences would go here.</p>
+                            <div className="mt-6 space-y-4">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Account Information</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Update your business details</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Payment Settings</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Manage payment methods and billing</p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">Notifications</h3>
+                                <p className="text-gray-600 dark:text-gray-400">Configure notification preferences</p>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
+                        <Route path="help" element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Help & Support</h1>
+                            <p>Business support resources and documentation.</p>
+                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">📚 Getting Started Guide</h3>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Learn how to use the platform effectively</p>
+                                <button className="text-indigo-600 hover:text-indigo-800 font-medium">Read Guide →</button>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h3 className="text-lg font-semibold mb-2">💬 Contact Support</h3>
+                                <p className="text-gray-600 dark:text-gray-400 mb-4">Get help from our support team</p>
+                                <button className="text-indigo-600 hover:text-indigo-800 font-medium">Contact Us →</button>
+                              </div>
+                            </div>
+                          </div>
+                        } />
+                        
                         <Route path="*" element={<Navigate to="/business" replace />} />
                       </Routes>
                     </Layout>
