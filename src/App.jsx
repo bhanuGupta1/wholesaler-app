@@ -1,4 +1,4 @@
-// src/App.jsx - Updated with role-based access control
+// src/App.jsx - Enhanced with AddProduct and role-based access control
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -6,11 +6,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import Layout from './components/common/Layout';
 import Login from './pages/Login';
-import { auth } from './firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
+import Registration from './pages/Registration';
+import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Lazy-loaded components for better performance
-const EnhancedDashboard = lazy(() => import('./pages/EnhancedDashboard'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -28,7 +27,13 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
-const Registration = lazy(() => import('./pages/Registration'));
+
+// Admin components
+const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
+const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
+
+// User-specific components
+const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -38,121 +43,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Helper function to determine user role
-const getUserRole = (user) => {
-  if (!user) return null;
-  
-  if (user.email?.includes('admin')) {
-    return 'admin';
-  } else if (user.email?.includes('manager')) {
-    return 'manager';
-  } else if (user.email?.includes('business')) {
-    return 'business';
-  } else {
-    return 'user';
-  }
-};
-
-// Enhanced Protected Route Component with role checking
-const ProtectedRoute = ({ children, requiredRole = null, allowedRoles = null }) => {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const role = getUserRole(currentUser);
-        setUserRole(role);
-      } else {
-        setUserRole(null);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  // Check specific role requirement
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  // Check if user role is in allowed roles array
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  return children;
-};
-
-// Public Route that doesn't require authentication
-const PublicRoute = ({ children }) => {
-  return children;
-};
-
-// Role-based Dashboard Router
-const DashboardRouter = () => {
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState('guest');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const role = getUserRole(currentUser);
-        setUserRole(role);
-      } else {
-        setUserRole('guest');
-      }
-      
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
-  // Return appropriate dashboard based on user role
-  switch (userRole) {
-    case 'admin':
-      return <AdminDashboard />;
-    case 'manager':
-      return <ManagerDashboard />;
-    case 'business':
-      return <BusinessDashboard />;
-    case 'user':
-      return <UserDashboard />;
-    case 'guest':
-    default:
-      return <GuestDashboard />;
-  }
-};
-
-// Custom Orders component that filters orders by user for regular users
-const UserSpecificOrders = () => {
-  // This component would filter orders to show only user's orders
-  // For now, we'll use the existing Orders component but in production
-  // you'd implement user-specific filtering here
-  return <Orders />;
-};
-
 function App() {
   return (
     <AuthProvider>
@@ -161,45 +51,58 @@ function App() {
           <Router>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
-                {/* Home Route - Default landing page for everyone */}
-                <Route path="/" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Home />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Registration />} />
                 
-                <Route path="/register" element={
-                  <PublicRoute>
-                    <Registration />
-                  </PublicRoute>
+                {/* Home Route - Default landing page for everyone */}
+                <Route path="/" element={
+                  <Layout>
+                    <Home />
+                  </Layout>
                 } />
 
                 {/* Guest accessible routes */}
                 <Route path="/guest-dashboard" element={
-                  <PublicRoute>
-                    <Layout>
-                      <GuestDashboard />
-                    </Layout>
-                  </PublicRoute>
+                  <Layout>
+                    <GuestDashboard />
+                  </Layout>
                 } />
 
                 <Route path="/catalog" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
                 } />
 
-                {/* Dashboard Route - Role-based for authenticated users */}
-                <Route path="/dashboard" element={
+                <Route path="/products" element={
                   <Layout>
-                    <DashboardRouter />
+                    <ProductCatalog />
+                  </Layout>
+                } />
+
+                <Route path="/products/:id" element={
+                  <Layout>
+                    <ProductDetails />
+                  </Layout>
+                } />
+
+                <Route path="/browse" element={
+                  <Layout>
+                    <ProductCatalog />
+                  </Layout>
+                } />
+
+                {/* Shopping routes - accessible by all */}
+                <Route path="/cart" element={
+                  <Layout>
+                    <Cart />
+                  </Layout>
+                } />
+
+                <Route path="/checkout" element={
+                  <Layout>
+                    <Checkout />
                   </Layout>
                 } />
 
@@ -236,18 +139,36 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Enhanced Dashboard Routes - RESTRICTED to Admin and Manager only */}
-                <Route path="/enhanced-dashboard" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                {/* Admin Routes - Admin access only */}
+                <Route path="/admin/*" element={
+                  <ProtectedRoute requiredRole="admin">
                     <Layout>
-                      <EnhancedDashboard />
+                      <Routes>
+                        <Route index element={<AdminPanel />} />
+                        <Route path="users" element={<UserApprovalDashboard />} />
+                        <Route path="approvals" element={<UserApprovalDashboard />} />
+                        <Route path="pending-approvals" element={<UserApprovalDashboard />} />
+                        <Route path="*" element={<Navigate to="/admin" replace />} />
+                      </Routes>
                     </Layout>
                   </ProtectedRoute>
                 } />
 
-                {/* Inventory routes - RESTRICTED to Admin and Manager only */}
+                {/* User Management - Admin and Manager access */}
+                <Route path="/user-management" element={
+                  <ProtectedRoute 
+                    allowedRoles={['admin', 'manager']} 
+                    requiredPermission="canApproveUsers"
+                  >
+                    <Layout>
+                      <UserApprovalDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Inventory routes - Admin, Manager, and Sellers can manage inventory */}
                 <Route path="/inventory" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute requiredPermission="canManageInventory">
                     <Layout>
                       <Inventory />
                     </Layout>
@@ -255,75 +176,33 @@ function App() {
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute requiredPermission="canManageInventory">
                     <Layout>
                       <ProductDetail />
                     </Layout>
                   </ProtectedRoute>
                 } />
 
-                {/* Add Product route - RESTRICTED to Admin and Manager only */}
+                {/* Add Product route - Admin, Manager, and Sellers can add products */}
                 <Route path="/add-product" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute requiredPermission="canManageInventory">
                     <Layout>
                       <AddProduct />
                     </Layout>
                   </ProtectedRoute>
                 } />
-
-                {/* Products/Browse routes - Public access */}
-                <Route path="/products" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/products/:id" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductDetails />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/browse" element={
-                  <PublicRoute>
-                    <Layout>
-                      <ProductCatalog />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                {/* Shopping routes - accessible by all */}
-                <Route path="/cart" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Cart />
-                    </Layout>
-                  </PublicRoute>
-                } />
-
-                <Route path="/checkout" element={
-                  <PublicRoute>
-                    <Layout>
-                      <Checkout />
-                    </Layout>
-                  </PublicRoute>
-                } />
                 
-                {/* Orders routes - RESTRICTED to Admin and Manager only */}
+                {/* Orders routes - Protected with user-specific filtering */}
                 <Route path="/orders" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute>
                     <Layout>
-                      <Orders />
+                      <UserSpecificOrders />
                     </Layout>
                   </ProtectedRoute>
                 } />
                 
                 <Route path="/orders/:id" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute>
                     <Layout>
                       <OrderDetails />
                     </Layout>
@@ -331,7 +210,7 @@ function App() {
                 } />
                 
                 <Route path="/generate-invoice/:id" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute>
                     <Layout>
                       <InvoicePage />
                     </Layout>
@@ -339,21 +218,9 @@ function App() {
                 } />
                 
                 <Route path="/create-order" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                  <ProtectedRoute requiredPermission="canCreateOrders">
                     <Layout>
                       <CreateOrder />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-
-                {/* Admin-only routes */}
-                <Route path="/admin/*" element={
-                  <ProtectedRoute requiredRole="admin">
-                    <Layout>
-                      <div className="p-8">
-                        <h1 className="text-2xl font-bold mb-4">Admin Panel</h1>
-                        <p>Advanced admin features would go here.</p>
-                      </div>
                     </Layout>
                   </ProtectedRoute>
                 } />
@@ -365,12 +232,40 @@ function App() {
                       <div className="p-8">
                         <h1 className="text-2xl font-bold mb-4">Manager Panel</h1>
                         <p>Manager-specific features would go here.</p>
+                        <div className="mt-6 space-y-2">
+                          <a href="/admin/users" className="block text-indigo-600 hover:text-indigo-800">Manage Users</a>
+                          <a href="/inventory" className="block text-indigo-600 hover:text-indigo-800">Manage Inventory</a>
+                          <a href="/add-product" className="block text-indigo-600 hover:text-indigo-800">Add New Product</a>
+                          <a href="/orders" className="block text-indigo-600 hover:text-indigo-800">View All Orders</a>
+                        </div>
                       </div>
                     </Layout>
                   </ProtectedRoute>
                 } />
+
+                {/* Business-specific routes */}
+                <Route path="/business/*" element={
+                  <ProtectedRoute requiredRole="business">
+                    <Layout>
+                      <Routes>
+                        <Route index element={
+                          <div className="p-8">
+                            <h1 className="text-2xl font-bold mb-4">Business Panel</h1>
+                            <p>Business-specific features based on buyer/seller type would go here.</p>
+                            <div className="mt-6 space-y-2">
+                              <a href="/inventory" className="block text-indigo-600 hover:text-indigo-800">My Products</a>
+                              <a href="/add-product" className="block text-indigo-600 hover:text-indigo-800">Add Product</a>
+                              <a href="/orders" className="block text-indigo-600 hover:text-indigo-800">My Orders</a>
+                            </div>
+                          </div>
+                        } />
+                        <Route path="*" element={<Navigate to="/business" replace />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
                 
-                {/* Fallback route - redirect to home instead of dashboard */}
+                {/* Fallback route - redirect to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
