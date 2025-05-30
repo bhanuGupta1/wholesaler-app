@@ -1,5 +1,5 @@
-// src/pages/Login.jsx - Enhanced Login Page with Business Account
-import { useState } from 'react';
+// src/pages/Login.jsx - Enhanced with approval status handling
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from '../components/common/ThemeToggle';
@@ -8,11 +8,11 @@ import { useTheme } from '../context/ThemeContext';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, error: authError, loading: authLoading } = useAuth();
+  const { login, error: authError, loading: authLoading, user, approvalStatus, clearError } = useAuth();
   const { darkMode } = useTheme();
   
   // Get redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || "/dashboard";
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -23,6 +23,27 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
+
+  // Clear errors when component mounts or when user types
+  useEffect(() => {
+    clearError();
+    setError('');
+  }, [credentials.email, credentials.password, clearError]);
+
+  // Handle successful login or approval status
+  useEffect(() => {
+    if (user && loginAttempted) {
+      if (user.canAccess) {
+        // User is approved and can access
+        navigate(from, { replace: true });
+      } else if (approvalStatus && !approvalStatus.canAccess) {
+        // User logged in but not approved - they'll see the approval status screen
+        // The EnhancedProtectedRoute will handle this
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, approvalStatus, loginAttempted, navigate, from]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,13 +63,15 @@ const Login = () => {
     
     setLoading(true);
     setError('');
+    setLoginAttempted(true);
     
     try {
       await login(credentials.email, credentials.password, rememberMe);
-      navigate(from, { replace: true });
+      // Navigation will be handled by useEffect above
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Failed to login. Please check your credentials.');
+      setLoginAttempted(false);
     } finally {
       setLoading(false);
     }
@@ -66,8 +89,11 @@ const Login = () => {
       case 'manager': 
         email = 'manager@wholesaler.com';
         break;
-      case 'business':
-        email = 'business@wholesaler.com';
+      case 'business_buyer':
+        email = 'buyer@wholesaler.com';
+        break;
+      case 'business_seller':
+        email = 'seller@wholesaler.com';
         break;
       case 'user':
         email = 'user@wholesaler.com';
@@ -97,9 +123,9 @@ const Login = () => {
             <h1 className="text-2xl font-bold ml-3">Wholesaler</h1>
           </div>
           
-          <h2 className="text-4xl font-bold mb-6">Premium Inventory Management</h2>
+          <h2 className="text-4xl font-bold mb-6">Welcome Back</h2>
           <p className="text-indigo-100 mb-8">
-            The complete solution for managing your wholesale inventory and customer orders in real-time.
+            Sign in to access your wholesale dashboard and manage your business operations.
           </p>
           
           <div className="space-y-6">
@@ -110,8 +136,8 @@ const Login = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">Real-time Inventory Tracking</h3>
-                <p className="text-indigo-100 text-sm mt-1">Keep track of your stock levels in real-time with automatic updates.</p>
+                <h3 className="text-lg font-semibold">Secure Access</h3>
+                <p className="text-indigo-100 text-sm mt-1">Role-based authentication with admin approval system</p>
               </div>
             </div>
             
@@ -122,8 +148,8 @@ const Login = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">Seamless Order Management</h3>
-                <p className="text-indigo-100 text-sm mt-1">Create and process orders with automatic stock adjustments.</p>
+                <h3 className="text-lg font-semibold">Multi-Role Support</h3>
+                <p className="text-indigo-100 text-sm mt-1">Different dashboards for users, businesses, managers, and admins</p>
               </div>
             </div>
             
@@ -134,8 +160,8 @@ const Login = () => {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold">Comprehensive Analytics</h3>
-                <p className="text-indigo-100 text-sm mt-1">Gain insights into your business with detailed reports and analytics.</p>
+                <h3 className="text-lg font-semibold">Business Types</h3>
+                <p className="text-indigo-100 text-sm mt-1">Support for both buyers and sellers with customized features</p>
               </div>
             </div>
           </div>
@@ -188,46 +214,57 @@ const Login = () => {
                   onClick={() => useTestAccount('admin')}
                   className={`w-full text-left px-3 py-2 rounded text-sm ${
                     darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-red-300' 
+                      : 'bg-red-100 hover:bg-red-200 text-red-700'
                   }`}
                 >
-                  Admin: admin@wholesaler.com / password123
+                  🔴 Admin: admin@wholesaler.com / password123
                 </button>
                 <button 
                   onClick={() => useTestAccount('manager')}
                   className={`w-full text-left px-3 py-2 rounded text-sm ${
                     darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-purple-300' 
+                      : 'bg-purple-100 hover:bg-purple-200 text-purple-700'
                   }`}
                 >
-                  Manager: manager@wholesaler.com / password123
+                  🟣 Manager: manager@wholesaler.com / password123
                 </button>
                 <button 
-                  onClick={() => useTestAccount('business')}
+                  onClick={() => useTestAccount('business_buyer')}
                   className={`w-full text-left px-3 py-2 rounded text-sm ${
                     darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-blue-300' 
+                      : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
                   }`}
                 >
-                  Business: business@wholesaler.com / password123
+                  🔵 Business Buyer: buyer@wholesaler.com / password123
+                </button>
+                <button 
+                  onClick={() => useTestAccount('business_seller')}
+                  className={`w-full text-left px-3 py-2 rounded text-sm ${
+                    darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-orange-300' 
+                      : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
+                  }`}
+                >
+                  🟠 Business Seller: seller@wholesaler.com / password123
                 </button>
                 <button 
                   onClick={() => useTestAccount('user')}
                   className={`w-full text-left px-3 py-2 rounded text-sm ${
                     darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 text-indigo-300' 
-                      : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+                      ? 'bg-gray-700 hover:bg-gray-600 text-green-300' 
+                      : 'bg-green-100 hover:bg-green-200 text-green-700'
                   }`}
                 >
-                  User: user@wholesaler.com / password123
+                  🟢 Regular User: user@wholesaler.com / password123
                 </button>
               </div>
             )}
           </div>
           
+          {/* Error Display */}
           {(error || authError) && (
             <div className={`mb-6 ${darkMode ? 'bg-red-900 border-red-800' : 'bg-red-50 border-red-500'} border-l-4 p-4 rounded-md`}>
               <div className="flex">
@@ -239,6 +276,27 @@ const Login = () => {
                 <div className="ml-3">
                   <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
                     {error || authError}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Approval Status Info */}
+          {approvalStatus && !approvalStatus.canAccess && user && (
+            <div className={`mb-6 ${darkMode ? 'bg-yellow-900 border-yellow-800' : 'bg-yellow-50 border-yellow-500'} border-l-4 p-4 rounded-md`}>
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className={`h-5 w-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-400'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className={`text-sm font-medium ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Account Status: {approvalStatus.status?.replace('_', ' ').toUpperCase()}
+                  </h3>
+                  <p className={`text-sm mt-1 ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
+                    {approvalStatus.message || 'Your account requires admin approval.'}
                   </p>
                 </div>
               </div>
@@ -334,56 +392,16 @@ const Login = () => {
             </div>
           </form>
           
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className={`w-full border-t ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className={`px-2 ${darkMode ? 'bg-gray-900 text-gray-400' : 'bg-white text-gray-500'}`}>
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div>
-                <button
-                  type="button"
-                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
-                  onClick={() => {
-                    // Handle Google login
-                    console.log('Google login clicked');
-                  }}
-                >
-                  <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                  </svg>
-                </button>
-              </div>
-              <div>
-                <button
-                  type="button"
-                  className={`w-full inline-flex justify-center py-2 px-4 border ${darkMode ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'} rounded-md shadow-sm text-sm font-medium`}
-                  onClick={() => {
-                    // Handle Facebook login
-                    console.log('Facebook login clicked');
-                  }}
-                >
-                  <svg className="h-5 w-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          
+          {/* Sign Up Link */}
           <div className="mt-8 text-center">
             <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Don't have an account?{' '}
               <Link to="/register" className={`font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-500'}`}>
-                Sign up
+                Create one here
               </Link>
+            </p>
+            <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Business and manager accounts require admin approval
             </p>
           </div>
         </div>
