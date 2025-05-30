@@ -1,3 +1,4 @@
+// src/pages/Home.jsx - Updated with role-based dashboard content
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -7,29 +8,11 @@ import { auth } from '../firebase/config';
 
 const Home = () => {
   const { darkMode } = useTheme();
-  const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
-        // Determine user role based on email
-        if (currentUser.email?.includes('admin')) {
-          setUserRole('admin');
-        } else if (currentUser.email?.includes('manager')) {
-          setUserRole('manager');
-        } else if (currentUser.email?.includes('business')) {
-          setUserRole('business');
-        } else {
-          setUserRole('user');
-        }
-      } else {
-        setUserRole(null);
-      }
-      
       setLoading(false);
     });
 
@@ -38,7 +21,11 @@ const Home = () => {
 
   // Get role-specific dashboard info
   const getDashboardInfo = () => {
-    switch (userRole) {
+    if (!user) return null;
+    
+    const { accountType, businessType } = user;
+
+    switch (accountType) {
       case 'admin':
         return {
           title: 'Admin Dashboard',
@@ -56,20 +43,30 @@ const Home = () => {
           color: 'bg-purple-600 hover:bg-purple-700'
         };
       case 'business':
-        return {
-          title: 'Business Dashboard',
-          description: 'Track revenue, growth, and business analytics',
-          route: '/business-dashboard',
-          icon: '💼',
-          color: 'bg-blue-600 hover:bg-blue-700'
-        };
+        if (businessType === 'seller') {
+          return {
+            title: 'Seller Dashboard',
+            description: 'Manage products, inventory, and track sales performance',
+            route: '/business-dashboard',
+            icon: '🏪',
+            color: 'bg-green-600 hover:bg-green-700'
+          };
+        } else {
+          return {
+            title: 'Buyer Dashboard',
+            description: 'Browse products, manage orders, and track purchases',
+            route: '/business-dashboard',
+            icon: '🛒',
+            color: 'bg-blue-600 hover:bg-blue-700'
+          };
+        }
       case 'user':
         return {
           title: 'User Dashboard',
           description: 'Manage your orders and view your activity',
           route: '/user-dashboard',
           icon: '👤',
-          color: 'bg-green-600 hover:bg-green-700'
+          color: 'bg-indigo-600 hover:bg-indigo-700'
         };
       default:
         return null;
@@ -120,9 +117,6 @@ const Home = () => {
                     {dashboardInfo.icon} {dashboardInfo.title}
                   </Link>
                 )}
-                <Link to="/enhanced-dashboard" className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 flex items-center">
-                  ✨ Enhanced Dashboard
-                </Link>
               </>
             ) : (
               // Guest User Buttons
@@ -162,19 +156,29 @@ const Home = () => {
                 </div>
               </Link>
               
-              <Link to="/create-order" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
-                <div className="text-center">
-                  <div className="text-4xl mb-3">➕</div>
-                  <h3 className="text-lg font-semibold mb-2">New Order</h3>
-                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create a new order quickly</p>
-                </div>
-              </Link>
+              {user.accountType === 'business' && user.businessType === 'seller' ? (
+                <Link to="/inventory" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+                  <div className="text-center">
+                    <div className="text-4xl mb-3">📦</div>
+                    <h3 className="text-lg font-semibold mb-2">My Inventory</h3>
+                    <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Manage your products</p>
+                  </div>
+                </Link>
+              ) : (
+                <Link to="/create-order" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+                  <div className="text-center">
+                    <div className="text-4xl mb-3">➕</div>
+                    <h3 className="text-lg font-semibold mb-2">New Order</h3>
+                    <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create a new order quickly</p>
+                  </div>
+                </Link>
+              )}
               
-              <Link to="/inventory" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
+              <Link to="/products" className={`${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105`}>
                 <div className="text-center">
-                  <div className="text-4xl mb-3">📦</div>
-                  <h3 className="text-lg font-semibold mb-2">Inventory</h3>
-                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Manage your inventory</p>
+                  <div className="text-4xl mb-3">🛒</div>
+                  <h3 className="text-lg font-semibold mb-2">Browse Products</h3>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Explore our catalog</p>
                 </div>
               </Link>
               
@@ -295,12 +299,6 @@ const Home = () => {
                     className={`inline-block px-6 py-3 rounded-lg font-medium text-white text-center ${dashboardInfo.color}`}
                   >
                     Go to Dashboard
-                  </Link>
-                  <Link 
-                    to="/enhanced-dashboard"
-                    className={`inline-block px-6 py-3 rounded-lg font-medium text-center border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    Try Enhanced View
                   </Link>
                 </div>
               </div>
