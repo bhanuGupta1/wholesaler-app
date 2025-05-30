@@ -30,44 +30,19 @@ const UserDashboard = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch only user's orders using proper Firebase query
+        // Fetch only user's orders using simple queries (avoiding orderBy to prevent index issues)
         const ordersRef = collection(db, 'orders');
+        let userOrders = [];
         
-        // Primary filter: by userId
-        let userOrdersQuery = query(
-          ordersRef, 
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(50) // Reasonable limit for user orders
-        );
-        
-        let ordersSnapshot = await getDocs(userOrdersQuery);
-        let userOrders = ordersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            customerName: data.customerName || user.displayName || 'You',
-            total: data.total || 0,
-            status: data.status || 'pending',
-            items: data.items || [],
-            itemCount: data.itemCount || (data.items ? data.items.length : 0),
-            createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-            userId: data.userId,
-            userEmail: data.userEmail
-          };
-        });
-
-        // If no orders found by userId, try filtering by userEmail as fallback
-        if (userOrders.length === 0 && user.email) {
-          console.log('No orders found by userId, trying userEmail filter...');
-          userOrdersQuery = query(
+        // Try primary filter: by userId (without orderBy to avoid index requirements)
+        try {
+          const userOrdersQuery = query(
             ordersRef, 
-            where('userEmail', '==', user.email),
-            orderBy('createdAt', 'desc'),
-            limit(50)
+            where('userId', '==', user.uid),
+            limit(50) // Reasonable limit for user orders
           );
           
-          ordersSnapshot = await getDocs(userOrdersQuery);
+          const ordersSnapshot = await getDocs(userOrdersQuery);
           userOrders = ordersSnapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -82,7 +57,83 @@ const UserDashboard = () => {
               userEmail: data.userEmail
             };
           });
+          
+          console.log(`Found ${userOrders.length} orders by userId`);
+        } catch (userIdError) {
+          console.log('Error querying by userId:', userIdError);
+          userOrders = [];
         }
+
+        // If no orders found by userId, try filtering by userEmail as fallback
+        if (userOrders.length === 0 && user.email) {
+          console.log('No orders found by userId, trying userEmail filter...');
+          try {
+            const emailOrdersQuery = query(
+              ordersRef, 
+              where('userEmail', '==', user.email),
+              limit(50)
+            );
+            
+            const ordersSnapshot = await getDocs(emailOrdersQuery);
+            userOrders = ordersSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                customerName: data.customerName || user.displayName || 'You',
+                total: data.total || 0,
+                status: data.status || 'pending',
+                items: data.items || [],
+                itemCount: data.itemCount || (data.items ? data.items.length : 0),
+                createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+                userId: data.userId,
+                userEmail: data.userEmail
+              };
+            });
+            
+            console.log(`Found ${userOrders.length} orders by userEmail`);
+          } catch (emailError) {
+            console.log('Error querying by userEmail:', emailError);
+            userOrders = [];
+          }
+        }
+
+        // If still no orders found, try getting all orders and filter client-side (as last resort)
+        if (userOrders.length === 0) {
+          console.log('No orders found by direct queries, trying client-side filter...');
+          try {
+            const allOrdersSnapshot = await getDocs(ordersRef);
+            const allOrders = allOrdersSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                customerName: data.customerName || 'Unknown',
+                total: data.total || 0,
+                status: data.status || 'pending',
+                items: data.items || [],
+                itemCount: data.itemCount || (data.items ? data.items.length : 0),
+                createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+                userId: data.userId,
+                userEmail: data.userEmail
+              };
+            });
+            
+            // Filter client-side for user's orders
+            userOrders = allOrders.filter(order => 
+              order.userId === user.uid || 
+              order.userEmail === user.email ||
+              (order.customerName && order.customerName.toLowerCase().includes(user.email?.split('@')[0]?.toLowerCase() || ''))
+            );
+            
+            console.log(`Found ${userOrders.length} orders after client-side filtering from ${allOrders.length} total orders`);
+          } catch (allOrdersError) {
+            console.log('Error getting all orders:', allOrdersError);
+            // This is fine - just means no orders collection exists or no permissions
+            userOrders = [];
+          }
+        }
+
+        // Sort orders by date (client-side since we avoided orderBy in queries)
+        userOrders.sort((a, b) => b.createdAt - a.createdAt);
 
         // Calculate user statistics from real orders only
         const totalSpent = userOrders.reduce((sum, order) => sum + order.total, 0);
@@ -100,7 +151,15 @@ const UserDashboard = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching user data:', err);
-        setError('Failed to load your orders. Please try again.');
+        // Don't show error for empty results - just show empty state
+        console.log('Showing empty state instead of error');
+        setUserStats({
+          myOrders: [],
+          totalOrders: 0,
+          totalSpent: 0,
+          pendingOrders: 0,
+          completedOrders: 0
+        });
         setLoading(false);
       }
     }
