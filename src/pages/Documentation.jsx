@@ -11,6 +11,12 @@ const Documentation = () => {
       <p className="text-gray-600">Welcome to the WholesaleHub documentation.</p>
     </div>
   </div>
+  <h2 className="text-2xl font-semibold text-gray-800 mb-4">Getting Started</h2>
+<div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+  <h3 className="font-semibold text-gray-800 mb-2">1. Create Your Account</h3>
+  <p className="text-gray-600">Sign up for a free account to access our marketplace.</p>
+</div>
+
 </div>
     </div>
   );
