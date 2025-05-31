@@ -10,6 +10,12 @@ const AboutUs = () => {
           <p className="text-gray-600">
             Welcome to WholesaleHub, your trusted partner in wholesale commerce.
           </p>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Our Mission</h2>
+<p className="text-gray-600 mb-6">
+  To simplify wholesale trading by providing a comprehensive platform that 
+  enables businesses to discover, connect, and trade with confidence.
+</p>
+
         </div>
       </div>
     </div>
