@@ -1,20 +1,25 @@
 // AboutUs.jsx
 import React from 'react';
 
+// AboutUs Component - Describes the company's mission, offerings, and contact details
 const AboutUs = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-8">
+          
+          {/* Title Section */}
           <h1 className="text-4xl font-bold text-gray-800 mb-6">About Us</h1>
           
           <div className="prose prose-lg max-w-none">
+            {/* Introduction Section */}
             <p className="text-gray-600 mb-6">
               Welcome to WholesaleHub, your trusted partner in wholesale commerce. 
               We are a leading wholesale marketplace connecting businesses with quality 
               suppliers and manufacturers worldwide.
             </p>
             
+            {/* Company Mission */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Our Mission</h2>
             <p className="text-gray-600 mb-6">
               To simplify wholesale trading by providing a comprehensive platform that 
@@ -22,6 +27,7 @@ const AboutUs = () => {
               believe in fostering long-term partnerships between buyers and sellers.
             </p>
             
+            {/* Features and Benefits */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">What We Offer</h2>
             <ul className="text-gray-600 mb-6 space-y-2">
               <li>• Extensive product catalog from verified suppliers</li>
@@ -31,6 +37,7 @@ const AboutUs = () => {
               <li>• Competitive pricing and bulk order discounts</li>
             </ul>
             
+            {/* Contact Details */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Information</h2>
             <div className="text-gray-600">
               <p><strong>Email:</strong> info@wholesalehub.com</p>
