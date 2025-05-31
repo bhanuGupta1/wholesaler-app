@@ -16,6 +16,11 @@ const Documentation = () => {
   <h3 className="font-semibold text-gray-800 mb-2">1. Create Your Account</h3>
   <p className="text-gray-600">Sign up for a free account to access our marketplace.</p>
 </div>
+<h2 className="text-2xl font-semibold text-gray-800 mb-4">Frequently Asked Questions</h2>
+<div className="border-b border-gray-200 pb-4">
+  <h3 className="font-semibold text-gray-800 mb-2">What is the minimum order quantity?</h3>
+  <p className="text-gray-600">Minimum order quantities vary by supplier.</p>
+</div>
 
 </div>
     </div>
