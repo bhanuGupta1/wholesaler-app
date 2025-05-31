@@ -24,6 +24,10 @@ const PrivacyPolicy = () => {
   We implement appropriate security measures to protect your personal information 
   against unauthorized access.
 </p>
+<h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Us</h2>
+<p className="text-gray-600">
+  If you have any questions, please contact us at privacy@wholesalehub.com.
+</p>
 
 
         </div>
