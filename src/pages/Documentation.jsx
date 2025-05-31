@@ -1,18 +1,23 @@
+// Documentation.jsx
 import React from 'react';
 
+// Documentation Component - Provides guides and resources for the WholesaleHub platform
 const Documentation = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-8">
+          {/* Page Title */}
           <h1 className="text-4xl font-bold text-gray-800 mb-6">Documentation</h1>
           
           <div className="prose prose-lg max-w-none">
+            {/* Introduction */}
             <p className="text-gray-600 mb-8">
               Welcome to the WholesaleHub documentation. Here you'll find guides and 
               resources to help you make the most of our wholesale marketplace platform.
             </p>
             
+            {/* Getting Started Section */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Getting Started</h2>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
               <h3 className="font-semibold text-gray-800 mb-2">1. Create Your Account</h3>
@@ -38,6 +43,7 @@ const Documentation = () => {
               </p>
             </div>
             
+            {/* Key Features Section */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Key Features</h2>
             <ul className="text-gray-600 mb-6 space-y-3">
               <li><strong>Product Search:</strong> Advanced search with filters for category, price, location, and more</li>
@@ -47,6 +53,7 @@ const Documentation = () => {
               <li><strong>Payment Protection:</strong> Secure payment processing with buyer protection</li>
             </ul>
             
+            {/* FAQ Section */}
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Frequently Asked Questions</h2>
             
             <div className="space-y-4">
@@ -75,6 +82,7 @@ const Documentation = () => {
               </div>
             </div>
             
+            {/* Support Contact Information */}
             <div className="mt-8 p-6 bg-gray-100 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2">Need Help?</h3>
               <p className="text-gray-600">
