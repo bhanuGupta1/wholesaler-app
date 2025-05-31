@@ -15,6 +15,12 @@ const AboutUs = () => {
   To simplify wholesale trading by providing a comprehensive platform that 
   enables businesses to discover, connect, and trade with confidence.
 </p>
+<h2 className="text-2xl font-semibold text-gray-800 mb-4">What We Offer</h2>
+<ul className="text-gray-600 mb-6 space-y-2">
+  <li>• Extensive product catalog from verified suppliers</li>
+  <li>• Secure payment processing and transaction management</li>
+  <li>• Quality assurance and supplier verification</li>
+</ul>
 
         </div>
       </div>
