@@ -1,4 +1,4 @@
-// src/utils/accessControl.js - Updated to use Firestore permissions
+// src/utils/accessControl.js - Reusable access control utilities
 
 /**
  * Check if user can manage products (add, edit, delete)
@@ -7,7 +7,12 @@
  */
 export const canManageProducts = (user) => {
   if (!user) return false;
-  return user.permissions?.canManageInventory === true;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
+  
+  return isAdmin || isManager || isSeller;
 };
 
 /**
@@ -17,7 +22,11 @@ export const canManageProducts = (user) => {
  */
 export const canViewAllOrders = (user) => {
   if (!user) return false;
-  return user.permissions?.canViewAllOrders === true;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
@@ -26,8 +35,7 @@ export const canViewAllOrders = (user) => {
  * @returns {boolean}
  */
 export const canManageInventory = (user) => {
-  if (!user) return false;
-  return user.permissions?.canManageInventory === true;
+  return canManageProducts(user); // Same permissions as product management
 };
 
 /**
@@ -37,17 +45,11 @@ export const canManageInventory = (user) => {
  */
 export const canApproveUsers = (user) => {
   if (!user) return false;
-  return user.permissions?.canApproveUsers === true;
-};
-
-/**
- * Check if user can manage users
- * @param {Object} user - User object from auth context
- * @returns {boolean}
- */
-export const canManageUsers = (user) => {
-  if (!user) return false;
-  return user.permissions?.canManageUsers === true;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
@@ -57,8 +59,8 @@ export const canManageUsers = (user) => {
  */
 export const canAccessAdminPanel = (user) => {
   if (!user) return false;
-  // Admin panel access typically for admins or users with manage users permission
-  return user.accountType === 'admin' || user.permissions?.canManageUsers === true;
+  
+  return user.accountType === 'admin';
 };
 
 /**
@@ -68,11 +70,11 @@ export const canAccessAdminPanel = (user) => {
  */
 export const canAccessManagerPanel = (user) => {
   if (!user) return false;
-  // Manager panel for admins, managers, or users with inventory/user management permissions
-  return user.accountType === 'admin' || 
-         user.accountType === 'manager' || 
-         user.permissions?.canManageInventory === true ||
-         user.permissions?.canManageUsers === true;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
@@ -82,7 +84,9 @@ export const canAccessManagerPanel = (user) => {
  */
 export const canCreateOrders = (user) => {
   if (!user) return false;
-  return user.permissions?.canCreateOrders === true;
+  
+  // All authenticated users can create orders
+  return true;
 };
 
 /**
@@ -132,45 +136,26 @@ export const getAvailableNavItems = (user) => {
   ];
 
   if (user) {
-    // Orders - check canCreateOrders permission
-    if (canCreateOrders(user)) {
-      navItems.push(
-        { name: 'Orders', path: '/orders', icon: '📦', available: true },
-        { name: 'Create Order', path: '/create-order', icon: '➕', available: true }
-      );
-    } else {
-      // Still show orders but read-only
-      navItems.push(
-        { name: 'My Orders', path: '/orders', icon: '📦', available: true }
-      );
-    }
+    navItems.push(
+      { name: 'Orders', path: '/orders', icon: '📦', available: canCreateOrders(user) }
+    );
 
-    // Inventory management - check canManageInventory permission
-    if (canManageInventory(user)) {
+    if (canManageProducts(user)) {
       navItems.push(
         { name: 'Inventory', path: '/inventory', icon: '📊', available: true },
         { name: 'Add Product', path: '/add-product', icon: '➕', available: true }
       );
     }
 
-    // Manager panel - check manager access
     if (canAccessManagerPanel(user)) {
       navItems.push(
         { name: 'Manager Panel', path: '/manager', icon: '👔', available: true }
       );
     }
 
-    // Admin panel - check admin access
     if (canAccessAdminPanel(user)) {
       navItems.push(
         { name: 'Admin Panel', path: '/admin', icon: '⚙️', available: true }
-      );
-    }
-
-    // User management - check canApproveUsers or canManageUsers
-    if (canApproveUsers(user) || canManageUsers(user)) {
-      navItems.push(
-        { name: 'User Management', path: '/admin/users', icon: '👥', available: true }
       );
     }
   }
@@ -182,11 +167,10 @@ export const getAvailableNavItems = (user) => {
  * Permission constants for easy reference
  */
 export const PERMISSIONS = {
-  MANAGE_PRODUCTS: 'canManageInventory',
+  MANAGE_PRODUCTS: 'canManageProducts',
   VIEW_ALL_ORDERS: 'canViewAllOrders',
   MANAGE_INVENTORY: 'canManageInventory',
   APPROVE_USERS: 'canApproveUsers',
-  MANAGE_USERS: 'canManageUsers',
   ACCESS_ADMIN_PANEL: 'canAccessAdminPanel',
   ACCESS_MANAGER_PANEL: 'canAccessManagerPanel',
   CREATE_ORDERS: 'canCreateOrders',
@@ -194,30 +178,27 @@ export const PERMISSIONS = {
 };
 
 /**
- * Check permission by name using Firestore permissions
+ * Check permission by name
  * @param {Object} user - User object from auth context
  * @param {string} permission - Permission constant
  * @returns {boolean}
  */
 export const hasPermission = (user, permission) => {
-  if (!user || !user.permissions) return false;
-  
   switch (permission) {
     case PERMISSIONS.MANAGE_PRODUCTS:
-    case PERMISSIONS.MANAGE_INVENTORY:
-      return user.permissions.canManageInventory === true;
+      return canManageProducts(user);
     case PERMISSIONS.VIEW_ALL_ORDERS:
-      return user.permissions.canViewAllOrders === true;
+      return canViewAllOrders(user);
+    case PERMISSIONS.MANAGE_INVENTORY:
+      return canManageInventory(user);
     case PERMISSIONS.APPROVE_USERS:
-      return user.permissions.canApproveUsers === true;
-    case PERMISSIONS.MANAGE_USERS:
-      return user.permissions.canManageUsers === true;
-    case PERMISSIONS.CREATE_ORDERS:
-      return user.permissions.canCreateOrders === true;
+      return canApproveUsers(user);
     case PERMISSIONS.ACCESS_ADMIN_PANEL:
       return canAccessAdminPanel(user);
     case PERMISSIONS.ACCESS_MANAGER_PANEL:
       return canAccessManagerPanel(user);
+    case PERMISSIONS.CREATE_ORDERS:
+      return canCreateOrders(user);
     case PERMISSIONS.MANAGE_BUSINESS_SETTINGS:
       return canManageBusinessSettings(user);
     default:
@@ -225,37 +206,11 @@ export const hasPermission = (user, permission) => {
   }
 };
 
-/**
- * Get permission summary for debugging
- * @param {Object} user - User object from auth context
- * @returns {Object} Permission summary
- */
-export const getPermissionSummary = (user) => {
-  if (!user) return { role: 'guest', permissions: {} };
-  
-  return {
-    role: user.accountType || 'user',
-    businessType: user.businessType || null,
-    permissions: user.permissions || {},
-    computedAccess: {
-      canManageProducts: canManageProducts(user),
-      canViewAllOrders: canViewAllOrders(user),
-      canManageInventory: canManageInventory(user),
-      canApproveUsers: canApproveUsers(user),
-      canManageUsers: canManageUsers(user),
-      canCreateOrders: canCreateOrders(user),
-      canAccessAdminPanel: canAccessAdminPanel(user),
-      canAccessManagerPanel: canAccessManagerPanel(user)
-    }
-  };
-};
-
 export default {
   canManageProducts,
   canViewAllOrders,
   canManageInventory,
   canApproveUsers,
-  canManageUsers,
   canAccessAdminPanel,
   canAccessManagerPanel,
   canCreateOrders,
@@ -263,6 +218,5 @@ export default {
   getUserAccessLevel,
   getAvailableNavItems,
   hasPermission,
-  getPermissionSummary,
   PERMISSIONS
 };

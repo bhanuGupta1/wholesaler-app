@@ -11,7 +11,7 @@ import ImageUploader from '../components/common/ImageUploader';
 const AddProduct = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
-  const { canManageProducts, canDeleteProducts, userAccessLevel, isAdmin, isManager } = useAccessControl();
+  const { canManageProducts, userAccessLevel, isAdmin, isManager } = useAccessControl();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -29,6 +29,9 @@ const AddProduct = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [deletingProducts, setDeletingProducts] = useState(new Set());
+
+  // Check if user can delete products (only admin and manager)
+  const canDeleteProducts = isAdmin || isManager;
 
   const categories = [
     'Electronics',
