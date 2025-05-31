@@ -21,6 +21,12 @@ const AboutUs = () => {
   <li>• Secure payment processing and transaction management</li>
   <li>• Quality assurance and supplier verification</li>
 </ul>
+<h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Information</h2>
+<div className="text-gray-600">
+  <p><strong>Email:</strong> info@wholesalehub.com</p>
+  <p><strong>Phone:</strong> +1 (555) 123-4567</p>
+  <p><strong>Address:</strong> 123 Commerce Street, Business District, NY 10001</p>
+</div>
 
         </div>
       </div>
