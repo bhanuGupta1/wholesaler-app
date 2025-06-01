@@ -15,6 +15,8 @@ import Login from './pages/Login';
 import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
+
+
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
@@ -33,6 +35,7 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
