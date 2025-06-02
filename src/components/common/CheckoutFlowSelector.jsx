@@ -1,4 +1,4 @@
-// src/components/common/CheckoutFlowSelector.jsx
+// src/components/common/CheckoutFlowSelector.jsx - Updated with proper guest support
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,15 +14,13 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
   const itemCount = getCartItemCount();
 
   const handleQuickCheckout = () => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: '/checkout' } } });
-    } else {
-      navigate('/checkout');
-    }
+    // Quick checkout allows guests - no login required
+    navigate('/checkout');
     if (onClose) onClose();
   };
 
   const handleAdvancedOrder = () => {
+    // Advanced order requires login
     if (!user) {
       navigate('/login', { state: { from: { pathname: '/create-order', state: { fromCart: true } } } });
     } else {
@@ -89,7 +87,7 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
               Quick Checkout
             </h3>
             <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Fast, streamlined process perfect for regular purchases
+              Fast, streamlined process perfect for guests and regular purchases
             </p>
             
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} space-y-1 mb-6`}>
@@ -97,10 +95,11 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
               <div>✅ Multiple payment methods</div>
               <div>✅ Express delivery options</div>
               <div>✅ Mobile optimized</div>
+              {!user && <div className="text-green-600">✅ No account required (Guest checkout)</div>}
             </div>
             
             <button className="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-              {user ? 'Continue' : 'Sign In & Continue'}
+              Continue as {user ? 'User' : 'Guest'}
             </button>
           </div>
         </div>
@@ -120,7 +119,7 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
               Advanced Order
             </h3>
             <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Full-featured ordering with advanced business options
+              Full-featured ordering with advanced business options (Account required)
             </p>
             
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} space-y-1 mb-6`}>
@@ -129,6 +128,7 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
               <div>✅ Business account features</div>
               <div>✅ Bulk order management</div>
               <div>✅ Advanced delivery options</div>
+              {!user && <div className="text-orange-600">🔒 Account required</div>}
             </div>
             
             <button className="w-full py-3 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
@@ -147,9 +147,12 @@ const CheckoutFlowSelector = ({ showAsModal = false, onClose = null }) => {
               Not sure which to choose?
             </h4>
             <p className={`text-sm ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-              {userRole === 'business' 
-                ? 'As a business user, we recommend the Advanced Order for bulk discounts and business features.'
-                : 'Quick Checkout is perfect for most users. Choose Advanced Order if you need detailed customization or business features.'
+              {user 
+                ? (userRole === 'business' 
+                    ? 'As a business user, we recommend the Advanced Order for bulk discounts and business features.'
+                    : 'Quick Checkout is perfect for most users. Choose Advanced Order if you need detailed customization or business features.'
+                  )
+                : 'Quick Checkout lets you purchase as a guest without creating an account. Advanced Order requires sign-in but offers more features and business options.'
               }
             </p>
           </div>
