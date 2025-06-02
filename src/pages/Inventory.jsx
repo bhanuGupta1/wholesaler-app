@@ -280,4 +280,27 @@ if (error) {
     </tbody>
   </table>
 </div>
+
+{filteredProducts.length === 0 && (
+  <div className="p-12 text-center">
+    <h3 className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+      {searchTerm ? 'No matching products' : 'No products found'}
+    </h3>
+    {canManageProducts && (
+      <button onClick={() => navigate('/add-product')}>
+        Add Your First Product
+      </button>
+    )}
+  </div>
+)}
+
+{isModalOpen && (
+  <ProductModal
+    product={selectedProduct}
+    onClose={(refresh) => {
+      setIsModalOpen(false);
+      if (refresh) fetchProducts();
+    }}
+  />
+)}
 export default Inventory;
