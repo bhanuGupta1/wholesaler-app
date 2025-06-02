@@ -64,3 +64,53 @@ const BusinessRating = ({ businessId }) => {
       </div>
     );
   }
+  return (
+    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="text-center md:text-left mb-4 md:mb-0">
+          <div className="text-4xl font-bold text-indigo-600">
+            {ratingData.averageRating}
+          </div>
+          <div className="flex justify-center md:justify-start mt-1">
+            {[1, 2, 3, 4, 5].map(star => (
+              <svg
+                key={star}
+                className={`h-5 w-5 ${star <= Math.round(ratingData.averageRating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+          </div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {ratingData.totalReviews} reviews
+          </div>
+        </div>
+        
+        <div className="w-full md:w-2/3">
+          {[5, 4, 3, 2, 1].map(star => (
+            <div key={star} className="flex items-center mb-2">
+              <div className="text-sm font-medium w-8">{star}</div>
+              <div className="flex-1 mx-2">
+                <div className={`h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                  <div 
+                    className="h-2 rounded-full bg-yellow-400" 
+                    style={{
+                      width: `${(ratingData.ratingCounts[star] / ratingData.totalReviews) * 100}%`
+                    }}
+                  ></div>
+                </div>
+              </div>
+              <div className={`text-xs w-10 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {ratingData.ratingCounts[star]}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BusinessRating;
