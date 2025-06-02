@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import NoShoppingRedirect from './components/common/NoShoppingRedirect';
+import QRPage from './pages/QRPage';
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
@@ -55,6 +56,17 @@ function App() {
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Registration />} />
+                <Route
+  path="/qr-tools"
+  element={
+    <ProtectedRoute allowedRoles={['admin', 'manager', 'business-seller']}>
+      <Layout>
+        <QRPage />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
                 
                 {/* Home Route - Default landing page for everyone */}
                 <Route path="/" element={
