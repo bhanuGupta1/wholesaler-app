@@ -1,9 +1,10 @@
-// src/components/common/Navbar.jsx - Enhanced with better cart integration
+// src/components/common/Navbar.jsx - UPDATED: Hide cart for admin/manager
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../context/CartContext';
+import { canAccessCart, canCreateOrders } from '../../utils/accessControl'; // NEW IMPORT
 import ThemeToggle from './ThemeToggle';
 import CheckoutFlowSelector from './CheckoutFlowSelector';
 
@@ -25,6 +26,10 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const isActive = (path) => location.pathname === path;
   const itemCount = getCartItemCount();
   const cartTotal = getCartTotal();
+  
+  // NEW: Check if user can access cart and create orders
+  const userCanAccessCart = canAccessCart(user);
+  const userCanCreateOrders = canCreateOrders(user);
   
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -149,120 +154,125 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             
             <div className="h-6 w-px bg-indigo-300"></div>
             
-            {/* Enhanced Cart Dropdown */}
-            <div className="relative" ref={cartDropdownRef}>
-              <button 
-                onClick={() => setCartDropdownOpen(!cartDropdownOpen)}
-                className={`relative inline-flex items-center px-3 py-2 rounded-lg font-medium text-white bg-white/10 hover:bg-white/20 transition-colors`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-                Cart
-                {itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
-                    {itemCount > 99 ? '99+' : itemCount}
-                  </span>
-                )}
-              </button>
-              
-              {/* Cart Dropdown */}
-              {cartDropdownOpen && (
-                <div className={`absolute right-0 mt-3 w-80 ${darkMode ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-black ring-opacity-5'} rounded-lg shadow-xl py-2 z-50 transform transition-all duration-150 origin-top-right`}>
-                  <div className={`px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <h3 className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Shopping Cart ({itemCount})
-                    </h3>
-                    {cartTotal > 0 && (
-                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Total: ${cartTotal.toFixed(2)}
-                      </p>
-                    )}
-                  </div>
-                  
-                  {cart.length === 0 ? (
-                    <div className="px-4 py-6 text-center">
-                      <div className="text-4xl mb-2">🛒</div>
-                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Your cart is empty
-                      </p>
-                      <Link
-                        to="/catalog"
-                        onClick={() => setCartDropdownOpen(false)}
-                        className="mt-3 inline-block text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
-                      >
-                        Browse Products
-                      </Link>
+            {/* UPDATED: Enhanced Cart Dropdown - Only show if user can access cart */}
+            {userCanAccessCart && (
+              <div className="relative" ref={cartDropdownRef}>
+                <button 
+                  onClick={() => setCartDropdownOpen(!cartDropdownOpen)}
+                  className={`relative inline-flex items-center px-3 py-2 rounded-lg font-medium text-white bg-white/10 hover:bg-white/20 transition-colors`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
+                  </svg>
+                  Cart
+                  {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Cart Dropdown */}
+                {cartDropdownOpen && (
+                  <div className={`absolute right-0 mt-3 w-80 ${darkMode ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-black ring-opacity-5'} rounded-lg shadow-xl py-2 z-50 transform transition-all duration-150 origin-top-right`}>
+                    <div className={`px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <h3 className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Shopping Cart ({itemCount})
+                      </h3>
+                      {cartTotal > 0 && (
+                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Total: ${cartTotal.toFixed(2)}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <>
-                      {/* Cart Items */}
-                      <div className="max-h-60 overflow-y-auto">
-                        {cart.slice(0, 3).map((item) => (
-                          <div key={item.id} className={`px-4 py-3 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
-                                {item.imageUrl ? (
-                                  <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
-                                ) : (
-                                  <span>📦</span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>
-                                  {item.name}
-                                </p>
-                                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  Qty: {item.quantity} × ${item.price.toFixed(2)}
-                                </p>
-                              </div>
-                              <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                ${(item.price * item.quantity).toFixed(2)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {cart.length > 3 && (
-                          <div className={`px-4 py-2 text-center border-t ${darkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'}`}>
-                            <span className="text-sm">
-                              +{cart.length - 3} more item{cart.length - 3 !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Cart Actions */}
-                      <div className={`px-4 py-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2`}>
-                        <button
-                          onClick={handleCheckoutFromDropdown}
-                          className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                          Checkout (${cartTotal.toFixed(2)})
-                        </button>
+                    
+                    {cart.length === 0 ? (
+                      <div className="px-4 py-6 text-center">
+                        <div className="text-4xl mb-2">🛒</div>
+                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Your cart is empty
+                        </p>
                         <Link
-                          to="/cart"
+                          to="/catalog"
                           onClick={() => setCartDropdownOpen(false)}
-                          className={`block w-full py-2 px-4 text-center border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} text-sm font-medium rounded-lg transition-colors`}
+                          className="mt-3 inline-block text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
                         >
-                          View Cart
+                          Browse Products
                         </Link>
                       </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                    ) : (
+                      <>
+                        {/* Cart Items */}
+                        <div className="max-h-60 overflow-y-auto">
+                          {cart.slice(0, 3).map((item) => (
+                            <div key={item.id} className={`px-4 py-3 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                                  {item.imageUrl ? (
+                                    <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
+                                  ) : (
+                                    <span>📦</span>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>
+                                    {item.name}
+                                  </p>
+                                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                  </p>
+                                </div>
+                                <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {cart.length > 3 && (
+                            <div className={`px-4 py-2 text-center border-t ${darkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'}`}>
+                              <span className="text-sm">
+                                +{cart.length - 3} more item{cart.length - 3 !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Cart Actions */}
+                        <div className={`px-4 py-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2`}>
+                          <button
+                            onClick={handleCheckoutFromDropdown}
+                            className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                          >
+                            Checkout (${cartTotal.toFixed(2)})
+                          </button>
+                          <Link
+                            to="/cart"
+                            onClick={() => setCartDropdownOpen(false)}
+                            className={`block w-full py-2 px-4 text-center border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} text-sm font-medium rounded-lg transition-colors`}
+                          >
+                            View Cart
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             
-            <Link 
-              to="/create-order" 
-              className={`bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium shadow-md transition-colors flex items-center`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New Order
-            </Link>
+            {/* UPDATED: Create Order button - Only show if user can create orders */}
+            {userCanCreateOrders && (
+              <Link 
+                to="/create-order" 
+                className={`bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-medium shadow-md transition-colors flex items-center`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                New Order
+              </Link>
+            )}
             
             {/* Dark mode toggle */}
             <div className="flex items-center">
@@ -293,6 +303,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                     <div className={`px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Signed in as</p>
                       <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>{user.email}</p>
+                      {/* NEW: Show user type for clarity */}
+                      <p className={`text-xs ${
+                        user.accountType === 'admin' ? 'text-red-500' : 
+                        user.accountType === 'manager' ? 'text-purple-500' : 
+                        'text-green-500'
+                      }`}>
+                        {user.accountType === 'admin' ? '👑 Administrator' : 
+                         user.accountType === 'manager' ? '👔 Manager' : 
+                         user.accountType === 'business' ? '🏢 Business User' : 
+                         '👤 Regular User'}
+                      </p>
                     </div>
                     <div className="py-1">
                       <Link 
@@ -344,20 +365,22 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Mobile Cart Button */}
-            <Link 
-              to="/cart"
-              className="relative p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
-              </svg>
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount > 9 ? '9+' : itemCount}
-                </span>
-              )}
-            </Link>
+            {/* UPDATED: Mobile Cart Button - Only show if user can access cart */}
+            {userCanAccessCart && (
+              <Link 
+                to="/cart"
+                className="relative p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
             
             <ThemeToggle className="mr-2" />
             
@@ -397,7 +420,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         )}
       </nav>
       
-      {/* Mobile Menu */}
+      {/* Mobile Menu - UPDATED: Conditional navigation items */}
       {mobileMenuOpen && (
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-indigo-800'} md:hidden`}>
           <div className="py-3 px-4 space-y-1">
@@ -429,13 +452,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             >
               Orders
             </Link>
-            <Link
-              to="/create-order"
-              className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              New Order
-            </Link>
+            
+            {/* UPDATED: Only show Create Order for users who can create orders */}
+            {userCanCreateOrders && (
+              <Link
+                to="/create-order"
+                className={`block px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                New Order
+              </Link>
+            )}
             
             {user ? (
               <div className={`pt-4 pb-3 border-t ${darkMode ? 'border-gray-700' : 'border-indigo-700'}`}>
@@ -446,6 +473,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <div className="ml-3">
                     <div className="text-base font-medium text-white">{user.displayName || "User"}</div>
                     <div className="text-sm font-medium text-indigo-300">{user.email}</div>
+                    {/* NEW: Show user type in mobile menu */}
+                    <div className={`text-xs ${
+                      user.accountType === 'admin' ? 'text-red-400' : 
+                      user.accountType === 'manager' ? 'text-purple-400' : 
+                      'text-green-400'
+                    }`}>
+                      {user.accountType === 'admin' ? '👑 Administrator' : 
+                       user.accountType === 'manager' ? '👔 Manager' : 
+                       user.accountType === 'business' ? '🏢 Business User' : 
+                       '👤 Regular User'}
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 space-y-1 px-2">

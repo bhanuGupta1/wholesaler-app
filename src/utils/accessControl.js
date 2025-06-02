@@ -1,7 +1,8 @@
-// src/utils/accessControl.js - Reusable access control utilities
+// src/utils/accessControl.js - FIXED: Regular users cannot add products
 
 /**
  * Check if user can manage products (add, edit, delete)
+ * FIXED: Regular users are customers, not sellers - they cannot add products
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -11,8 +12,53 @@ export const canManageProducts = (user) => {
   const isAdmin = user.accountType === 'admin';
   const isManager = user.accountType === 'manager';
   const isSeller = user.accountType === 'business' && user.businessType === 'seller';
+  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
+  const isRegularUser = user.accountType === 'user';
   
+  // FIXED: Block both business buyers AND regular users
+  // Regular users are customers who buy, not sellers who add products
+  if (isBuyer || isRegularUser) return false;
+  
+  // Only allow admin, manager, and business sellers
   return isAdmin || isManager || isSeller;
+};
+
+/**
+ * Check if user can access inventory
+ * FIXED: Regular users are customers - they browse catalog, not manage inventory
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canAccessInventory = (user) => {
+  if (!user) return false;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
+  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
+  const isRegularUser = user.accountType === 'user';
+  
+  // FIXED: Block both business buyers AND regular users from inventory
+  // Regular users shop in the catalog, they don't manage inventory
+  if (isBuyer || isRegularUser) return false;
+  
+  // Only allow admin, manager, and business sellers
+  return isAdmin || isManager || isSeller;
+};
+
+/**
+ * Check if user can view all products (not just their own)
+ * Only admins and managers can see all products
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canViewAllProducts = (user) => {
+  if (!user) return false;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
@@ -30,12 +76,27 @@ export const canViewAllOrders = (user) => {
 };
 
 /**
+ * Check if user can delete orders
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canDeleteOrders = (user) => {
+  if (!user) return false;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
+};
+
+/**
  * Check if user can manage inventory
+ * Same as canAccessInventory - regular users and business buyers excluded
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
 export const canManageInventory = (user) => {
-  return canManageProducts(user); // Same permissions as product management
+  return canAccessInventory(user);
 };
 
 /**
@@ -79,14 +140,50 @@ export const canAccessManagerPanel = (user) => {
 
 /**
  * Check if user can create orders
+ * Admin and Manager cannot create personal orders - they manage the platform
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
 export const canCreateOrders = (user) => {
   if (!user) return false;
   
-  // All authenticated users can create orders
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  // Admin and Manager cannot create personal orders - they manage the platform
+  if (isAdmin || isManager) return false;
+  
+  // All other authenticated users can create orders (regular users, business users)
   return true;
+};
+
+/**
+ * Check if user can access shopping cart
+ * Admin and Manager should not shop
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canAccessCart = (user) => {
+  if (!user) return true; // Guests can shop
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  // Admin and Manager cannot shop
+  if (isAdmin || isManager) return false;
+  
+  // All other users can shop (regular users, business users)
+  return true;
+};
+
+/**
+ * Check if user can access checkout
+ * Admin and Manager should not checkout
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canAccessCheckout = (user) => {
+  return canAccessCart(user); // Same logic as cart access
 };
 
 /**
@@ -120,27 +217,46 @@ export const getUserAccessLevel = (user) => {
     return 'Business User';
   }
   
-  return 'Regular User';
+  return 'Customer'; // FIXED: Regular users are customers, not "Regular User"
 };
 
 /**
  * Get available navigation items based on user permissions
+ * FIXED: Hide inventory/add product for regular users
  * @param {Object} user - User object from auth context
  * @returns {Array} Array of navigation items
  */
 export const getAvailableNavItems = (user) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: '🏠', available: true },
-    { name: 'Catalog', path: '/catalog', icon: '📋', available: true },
-    { name: 'Cart', path: '/cart', icon: '🛒', available: true }
+    { name: 'Catalog', path: '/catalog', icon: '📋', available: true }
   ];
 
-  if (user) {
+  // Only show cart for users who can shop (excludes admin/manager)
+  if (canAccessCart(user)) {
     navItems.push(
-      { name: 'Orders', path: '/orders', icon: '📦', available: canCreateOrders(user) }
+      { name: 'Cart', path: '/cart', icon: '🛒', available: true }
     );
+  }
 
-    if (canManageProducts(user)) {
+  if (user) {
+    // Only show orders for users who can create them (excludes admin/manager)
+    if (canCreateOrders(user)) {
+      navItems.push(
+        { name: 'Orders', path: '/orders', icon: '📦', available: true }
+      );
+    }
+
+    // Show "All Orders" for admin/manager who can view but not create
+    if (canViewAllOrders(user) && !canCreateOrders(user)) {
+      navItems.push(
+        { name: 'All Orders', path: '/orders', icon: '📦', available: true }
+      );
+    }
+
+    // FIXED: Only show inventory/add product for users who can access inventory
+    // This excludes regular users and business buyers
+    if (canAccessInventory(user)) {
       navItems.push(
         { name: 'Inventory', path: '/inventory', icon: '📊', available: true },
         { name: 'Add Product', path: '/add-product', icon: '➕', available: true }
@@ -168,12 +284,17 @@ export const getAvailableNavItems = (user) => {
  */
 export const PERMISSIONS = {
   MANAGE_PRODUCTS: 'canManageProducts',
+  ACCESS_INVENTORY: 'canAccessInventory',
+  VIEW_ALL_PRODUCTS: 'canViewAllProducts',
   VIEW_ALL_ORDERS: 'canViewAllOrders',
+  DELETE_ORDERS: 'canDeleteOrders',
   MANAGE_INVENTORY: 'canManageInventory',
   APPROVE_USERS: 'canApproveUsers',
   ACCESS_ADMIN_PANEL: 'canAccessAdminPanel',
   ACCESS_MANAGER_PANEL: 'canAccessManagerPanel',
   CREATE_ORDERS: 'canCreateOrders',
+  ACCESS_CART: 'canAccessCart',
+  ACCESS_CHECKOUT: 'canAccessCheckout',
   MANAGE_BUSINESS_SETTINGS: 'canManageBusinessSettings'
 };
 
@@ -187,8 +308,14 @@ export const hasPermission = (user, permission) => {
   switch (permission) {
     case PERMISSIONS.MANAGE_PRODUCTS:
       return canManageProducts(user);
+    case PERMISSIONS.ACCESS_INVENTORY:
+      return canAccessInventory(user);
+    case PERMISSIONS.VIEW_ALL_PRODUCTS:
+      return canViewAllProducts(user);
     case PERMISSIONS.VIEW_ALL_ORDERS:
       return canViewAllOrders(user);
+    case PERMISSIONS.DELETE_ORDERS:
+      return canDeleteOrders(user);
     case PERMISSIONS.MANAGE_INVENTORY:
       return canManageInventory(user);
     case PERMISSIONS.APPROVE_USERS:
@@ -199,6 +326,10 @@ export const hasPermission = (user, permission) => {
       return canAccessManagerPanel(user);
     case PERMISSIONS.CREATE_ORDERS:
       return canCreateOrders(user);
+    case PERMISSIONS.ACCESS_CART:
+      return canAccessCart(user);
+    case PERMISSIONS.ACCESS_CHECKOUT:
+      return canAccessCheckout(user);
     case PERMISSIONS.MANAGE_BUSINESS_SETTINGS:
       return canManageBusinessSettings(user);
     default:
@@ -208,12 +339,17 @@ export const hasPermission = (user, permission) => {
 
 export default {
   canManageProducts,
+  canAccessInventory,
+  canViewAllProducts,
   canViewAllOrders,
+  canDeleteOrders,
   canManageInventory,
   canApproveUsers,
   canAccessAdminPanel,
   canAccessManagerPanel,
   canCreateOrders,
+  canAccessCart,
+  canAccessCheckout,
   canManageBusinessSettings,
   getUserAccessLevel,
   getAvailableNavItems,
