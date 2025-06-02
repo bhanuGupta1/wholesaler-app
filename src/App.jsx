@@ -185,12 +185,15 @@ function App() {
 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
-                    <Layout>
-                      <ProductDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
+  <ProtectedRoute 
+    requiredPermission="canAccessInventory"
+    fallbackPath="/business-dashboard"
+  >
+    <Layout>
+      <ProductDetail />
+    </Layout>
+  </ProtectedRoute>
+} />
 
                 {/* Add Product route - Admin, Manager, and Sellers can add products */}
                 <Route path="/add-product" element={
