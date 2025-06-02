@@ -45,6 +45,21 @@ const SupportCenter = () => {
         </ul>
       </section>
 
+            {/* Ticket Submission */}
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-2">💬 Submit a Ticket</h2>
+        <p className="text-gray-700 mb-2">
+          If your issue is not listed, please submit a support ticket with detailed information, and our team will get back to you within 24 hours.
+        </p>
+        <a
+          href="mailto:support@wholesaler.com"
+          className="inline-block bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition"
+        >
+          Submit a Ticket
+        </a>
+      </section>
+
+
 
 
     </div>
