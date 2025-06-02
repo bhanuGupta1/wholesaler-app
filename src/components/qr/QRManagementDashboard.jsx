@@ -126,4 +126,42 @@ const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
     </div>
   )}
 </div>
+
+// Add state
+const [bulkQRData, setBulkQRData] = useState([]);
+const [showBulkModal, setShowBulkModal] = useState(false);
+
+// Add generateQRData and generateBulkQR functions
+const generateQRData = (item, type) => {
+  // Implementation...
+};
+
+const generateBulkQR = async () => {
+  // Implementation...
+};
+
+// Add BulkQRModal component
+const BulkQRModal = ({ isOpen, onClose, qrData, darkMode }) => {
+  // Implementation...
+};
+
+// Add to main component return
+{selectedItems.length > 0 && (
+  <div className="mt-4 flex items-center justify-between">
+    <span>{selectedItems.length} items selected</span>
+    <button onClick={generateBulkQR}>
+      Generate QR Codes
+    </button>
+  </div>
+)}
+
+{showBulkModal && (
+  <BulkQRModal
+    isOpen={showBulkModal}
+    onClose={() => setShowBulkModal(false)}
+    qrData={bulkQRData}
+    darkMode={darkMode}
+  />
+)}
+
 export default QRManagementDashboard;
