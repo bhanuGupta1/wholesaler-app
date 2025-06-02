@@ -191,7 +191,7 @@ export const getAllProducts = async (options = {}) => {
 // Get products owned by specific user
 export const getUserProducts = async (userId, options = {}) => {
   try {
-    let productsQuery = collection(db, PRODUCTS_COLLECTION);
+    const productsRef = collection(db, PRODUCTS_COLLECTION);
     const constraints = [where('ownedBy', '==', userId)];
 
     // Apply additional filters
@@ -212,8 +212,8 @@ export const getUserProducts = async (userId, options = {}) => {
       constraints.push(limit(options.limit));
     }
 
-    const productsQuery = query(productsQuery, ...constraints);
-    const querySnapshot = await getDocs(productsQuery);
+    const userProductsQuery = query(productsRef, ...constraints);
+    const querySnapshot = await getDocs(userProductsQuery);
     const products = [];
 
     querySnapshot.forEach((doc) => {
