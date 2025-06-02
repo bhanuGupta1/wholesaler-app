@@ -186,4 +186,25 @@ const ScannerModal = ({ isOpen, onClose, onScan, scanResult, darkMode }) => {
     darkMode={darkMode}
   />
 )}
+
+// Add search functionality
+const filteredData = useMemo(() => {
+  // Implementation...
+}, [products, orders, users, searchTerm]);
+
+// Add select all functionality
+const selectAllItems = () => {
+  // Implementation...
+};
+
+// Enhance ItemCard with more details
+const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
+  // Enhanced implementation...
+};
+
+// Add download all functionality
+const downloadAllQR = () => {
+  // Implementation...
+};
+
 export default QRManagementDashboard;
