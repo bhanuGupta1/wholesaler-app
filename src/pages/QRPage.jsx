@@ -258,4 +258,44 @@ const tabs = [
     {activeTab === 'bulk' && <QRBulkActions items={data} />}
   </div>
 </div>
+
+// Add QR stats tracking to QRPage.jsx
+const [qrStats, setQrStats] = useState({
+  generated: parseInt(localStorage.getItem('qr-generated') || '0'),
+  scanned: parseInt(localStorage.getItem('qr-scanned') || '0'),
+  today: parseInt(localStorage.getItem('qr-today') || '0')
+});
+
+const checkDailyReset = () => {
+  const lastDate = localStorage.getItem('qr-last-date');
+  const today = new Date().toDateString();
+  
+  if (lastDate !== today) {
+    localStorage.setItem('qr-today', '0');
+    localStorage.setItem('qr-last-date', today);
+    setQrStats(prev => ({ ...prev, today: 0 }));
+  }
+};
+
+const updateStats = (type) => {
+  setQrStats(prev => {
+    const newStats = {
+      ...prev,
+      [type]: prev[type] + 1,
+      today: type === 'generated' || type === 'scanned' ? prev.today + 1 : prev.today
+    };
+    
+    localStorage.setItem(`qr-${type}`, newStats[type].toString());
+    if (type === 'generated' || type === 'scanned') {
+      localStorage.setItem('qr-today', newStats.today.toString());
+    }
+    
+    return newStats;
+  });
+};
+
+// Add stats display UI
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+  {/* Stats cards for generated, scanned, today, etc. */}
+</div>
 export default QRPage;
