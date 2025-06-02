@@ -1,4 +1,4 @@
-// src/pages/Login.jsx - Enhanced with approval status handling
+// src/pages/Login.jsx - FIXED: Always redirect to home after login
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -11,8 +11,9 @@ const Login = () => {
   const { login, error: authError, loading: authLoading, user, approvalStatus, clearError } = useAuth();
   const { darkMode } = useTheme();
   
-  // Get redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/home";
+  // FIXED: Always redirect to home after login, ignore "from" location
+  // const from = location.state?.from?.pathname || "/home";  // OLD CODE
+  const from = "/home"; // FIXED: Always go to home
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -35,15 +36,14 @@ const Login = () => {
   useEffect(() => {
     if (user && loginAttempted) {
       if (user.canAccess) {
-        // User is approved and can access
-        navigate(from, { replace: true });
+        // FIXED: Always redirect to home, clear any previous location state
+        navigate('/home', { replace: true, state: {} });
       } else if (approvalStatus && !approvalStatus.canAccess) {
         // User logged in but not approved - they'll see the approval status screen
-        // The EnhancedProtectedRoute will handle this
-        navigate('/home', { replace: true });
+        navigate('/home', { replace: true, state: {} });
       }
     }
-  }, [user, approvalStatus, loginAttempted, navigate, from]);
+  }, [user, approvalStatus, loginAttempted, navigate]); // FIXED: Removed 'from' dependency
 
   const handleChange = (e) => {
     const { name, value } = e.target;

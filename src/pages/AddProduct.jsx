@@ -1,4 +1,4 @@
-// src/pages/AddProduct.jsx - Enhanced add product page with clean access control and delete functionality
+// src/pages/AddProduct.jsx - Updated with ownership tracking and user-specific filtering
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, doc, deleteDoc, where } from 'firebase/firestore';
@@ -11,7 +11,7 @@ import ImageUploader from '../components/common/ImageUploader';
 const AddProduct = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
-  const { canManageProducts, userAccessLevel, isAdmin, isManager } = useAccessControl();
+  const { canManageProducts, userAccessLevel, isAdmin, isManager, isSeller } = useAccessControl();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -20,7 +20,8 @@ const AddProduct = () => {
     price: '',
     stock: '',
     category: '',
-    imageUrl: ''
+    imageUrl: '',
+    sku: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ const AddProduct = () => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [deletingProducts, setDeletingProducts] = useState(new Set());
 
-  // Check if user can delete products (only admin and manager)
+  // Check if user can delete products (admin, manager, or their own products)
   const canDeleteProducts = isAdmin || isManager;
 
   const categories = [
@@ -47,12 +48,12 @@ const AddProduct = () => {
     'Other'
   ];
 
-  // Fetch recent products on component mount (for all users who can manage products)
+  // Fetch recent products based on user role with ownership filtering
   useEffect(() => {
     if (canManageProducts) {
       fetchRecentProducts();
     }
-  }, [canManageProducts]);
+  }, [canManageProducts, user]);
 
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
@@ -63,35 +64,99 @@ const AddProduct = () => {
       if (isAdmin || isManager) {
         // Admin and Manager can see all recent products
         q = query(productsRef, orderBy('createdAt', 'desc'), limit(5));
-      } else {
-        // Sellers can only see products they created
+      } else if (isSeller && user?.uid) {
+        // Sellers can only see products they created (no orderBy to avoid index issues)
         q = query(
           productsRef, 
           where('createdBy', '==', user.uid),
-          orderBy('createdAt', 'desc'), 
+          limit(5)
+        );
+      } else {
+        // Regular users see products they created (no orderBy to avoid index issues)
+        q = query(
+          productsRef, 
+          where('createdBy', '==', user?.uid || 'none'),
           limit(5)
         );
       }
       
       const snapshot = await getDocs(q);
-      const products = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }));
+      const products = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || 'Unnamed Product',
+          description: data.description || '',
+          price: data.price || 0,
+          stock: data.stock || data.stockQuantity || 0,
+          category: data.category || 'Uncategorized',
+          imageUrl: data.imageUrl || '',
+          sku: data.sku || '',
+          createdBy: data.createdBy || 'unknown',
+          ownedBy: data.ownedBy || data.createdBy || 'unknown',
+          createdByEmail: data.createdByEmail || 'unknown',
+          createdAt: data.createdAt?.toDate() || new Date()
+        };
+      });
       
+      // Sort products manually by creation date (newest first) for non-admin users
+      if (!isAdmin && !isManager) {
+        products.sort((a, b) => b.createdAt - a.createdAt);
+      }
+      
+      console.log(`📦 Successfully fetched ${products.length} recent products for ${userAccessLevel}`);
       setRecentProducts(products);
     } catch (err) {
       console.error('Error fetching recent products:', err);
+      // Handle indexing issues specifically
+      if (err.code === 'failed-precondition' || err.message.includes('index')) {
+        console.log('Firestore indexing issue, trying simpler query for recent products...');
+        // Try a simpler query without orderBy
+        if ((isSeller || !isAdmin) && user?.uid) {
+          try {
+            const simpleQuery = query(productsRef, where('createdBy', '==', user.uid), limit(5));
+            const snapshot = await getDocs(simpleQuery);
+            const products = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                name: data.name || 'Unnamed Product',
+                description: data.description || '',
+                price: data.price || 0,
+                stock: data.stock || data.stockQuantity || 0,
+                category: data.category || 'Uncategorized',
+                imageUrl: data.imageUrl || '',
+                sku: data.sku || '',
+                createdBy: data.createdBy || 'unknown',
+                ownedBy: data.ownedBy || data.createdBy || 'unknown',
+                createdByEmail: data.createdByEmail || 'unknown',
+                createdAt: data.createdAt?.toDate() || new Date()
+              };
+            });
+            
+            // Sort manually
+            products.sort((a, b) => b.createdAt - a.createdAt);
+            setRecentProducts(products);
+            return; // Exit successfully
+          } catch (simpleErr) {
+            console.error('Simple query also failed:', simpleErr);
+          }
+        }
+      }
+      // Don't show error for empty results in recent products - this is optional
     } finally {
       setLoadingProducts(false);
     }
   };
 
   const handleDeleteProduct = async (productId, productName) => {
+    // Check permissions
     if (!canDeleteProducts) {
-      setError('You do not have permission to delete products');
-      return;
+      const product = recentProducts.find(p => p.id === productId);
+      if (!product || (product.createdBy !== user?.uid && product.ownedBy !== user?.uid)) {
+        setError('You can only delete products you created');
+        return;
+      }
     }
 
     const confirmDelete = window.confirm(
@@ -124,7 +189,7 @@ const AddProduct = () => {
     }
   };
 
-  // Clean access control check
+  // Access control check
   if (!canManageProducts) {
     return (
       <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -197,35 +262,55 @@ const AddProduct = () => {
     setError(null);
 
     try {
-      // Prepare product data with bulk pricing
+      // Prepare product data with ownership tracking and bulk pricing
       const basePrice = parseFloat(formData.price);
+      const stockQuantity = parseInt(formData.stock);
 
       const productData = {
+        // Basic product info
         name: formData.name.trim(),
         description: formData.description.trim() || '',
         price: basePrice,
-        stock: parseInt(formData.stock),
+        stock: stockQuantity,
+        stockQuantity: stockQuantity, // Keep both for compatibility
         category: formData.category,
         imageUrl: formData.imageUrl.trim() || '',
-        createdAt: serverTimestamp(),
-        lastUpdated: serverTimestamp(),
+        sku: formData.sku.trim() || '',
+        
+        // Ownership tracking fields
         createdBy: user.uid,
+        ownedBy: user.uid,
         createdByEmail: user.email,
         businessId: user.uid,
-        businessName: user.businessName || '',
-        isApproved: ['admin', 'manager'].includes(user.accountType), // seller requires approval if needed
+        businessName: user.businessName || user.displayName || '',
+        
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        
+        // Status and approval
+        isApproved: true, // Auto-approve for now
         status: 'active',
+        
+        // Automatic bulk pricing tiers
         bulkPricing: {
-          '10': +(basePrice * 0.9).toFixed(2),
-          '50': +(basePrice * 0.85).toFixed(2),
-          '100': +(basePrice * 0.8).toFixed(2)
-        }
+          '10': +(basePrice * 0.9).toFixed(2),   // 10% off for 10+ units
+          '50': +(basePrice * 0.85).toFixed(2),  // 15% off for 50+ units
+          '100': +(basePrice * 0.8).toFixed(2)   // 20% off for 100+ units
+        },
+        
+        // Additional metadata
+        reorderPoint: Math.max(5, Math.floor(stockQuantity * 0.1)), // Auto-set reorder point
+        supplier: user.businessName || user.displayName || '',
+        tags: [formData.category.toLowerCase(), formData.name.toLowerCase().split(' ')[0]]
       };
 
       // Add to Firestore
       const docRef = await addDoc(collection(db, 'products'), productData);
       
       console.log('Product added with ID:', docRef.id);
+      console.log('Product data:', productData);
+      
       setSuccess(true);
       
       // Reset form
@@ -235,7 +320,8 @@ const AddProduct = () => {
         price: '',
         stock: '',
         category: '',
-        imageUrl: ''
+        imageUrl: '',
+        sku: ''
       });
 
       // Show success message and redirect after delay
@@ -243,10 +329,8 @@ const AddProduct = () => {
         navigate('/inventory');
       }, 2000);
 
-      // Refresh recent products list for all users who can manage products
-      if (canManageProducts) {
-        fetchRecentProducts();
-      }
+      // Refresh recent products list
+      fetchRecentProducts();
 
     } catch (err) {
       console.error('Error adding product:', err);
@@ -268,13 +352,20 @@ const AddProduct = () => {
           Add New Product
         </h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Add a new product to your inventory
+          Add a new product to your inventory with automatic ownership tracking
         </p>
         {/* Show user access level */}
-        <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-          darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-        }`}>
-          ✅ {userAccessLevel} Access
+        <div className="mt-2 flex items-center space-x-2">
+          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
+          }`}>
+            ✅ {userAccessLevel} Access
+          </div>
+          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+          }`}>
+            👤 Owner: {user?.displayName || user?.email || 'You'}
+          </div>
         </div>
       </div>
 
@@ -285,7 +376,7 @@ const AddProduct = () => {
             <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Product added successfully! Redirecting to inventory...
+            Product added successfully with ownership tracking! Redirecting to inventory...
           </div>
         </div>
       )}
@@ -323,6 +414,26 @@ const AddProduct = () => {
               } focus:ring-indigo-500 focus:border-indigo-500`}
               placeholder="Enter product name"
               required
+            />
+          </div>
+
+          {/* SKU */}
+          <div>
+            <label htmlFor="sku" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+              SKU (Stock Keeping Unit)
+            </label>
+            <input
+              type="text"
+              id="sku"
+              name="sku"
+              value={formData.sku}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 border rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } focus:ring-indigo-500 focus:border-indigo-500`}
+              placeholder="Enter SKU (optional)"
             />
           </div>
 
@@ -368,6 +479,13 @@ const AddProduct = () => {
                 placeholder="0.00"
                 required
               />
+              {formData.price && (
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Bulk pricing: 10+ units: ${(parseFloat(formData.price) * 0.9).toFixed(2)}, 
+                  50+ units: ${(parseFloat(formData.price) * 0.85).toFixed(2)}, 
+                  100+ units: ${(parseFloat(formData.price) * 0.8).toFixed(2)}
+                </p>
+              )}
             </div>
             
             <div>
@@ -389,6 +507,11 @@ const AddProduct = () => {
                 placeholder="0"
                 required
               />
+              {formData.stock && (
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Auto reorder point: {Math.max(5, Math.floor(parseInt(formData.stock) * 0.1))} units
+                </p>
+              )}
             </div>
           </div>
 
@@ -422,10 +545,14 @@ const AddProduct = () => {
               Product Image
             </label>
             <ImageUploader
-              existingUrl={formData.imageUrl}
-              onUploadSuccess={(url) =>
+              initialImage={formData.imageUrl}
+              onImageUploaded={(url) =>
                 setFormData(prev => ({ ...prev, imageUrl: url }))
               }
+              folder="product-images"
+              customId={user?.uid}
+              darkMode={darkMode}
+              autoUpload={true}
             />
           </div>
 
@@ -460,7 +587,7 @@ const AddProduct = () => {
         </form>
       </div>
 
-      {/* Additional Info */}
+      {/* Ownership Information */}
       <div className={`mt-6 p-4 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
         <div className="flex items-start">
           <svg className={`h-5 w-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'} mt-0.5 mr-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,39 +595,42 @@ const AddProduct = () => {
           </svg>
           <div>
             <h3 className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
-              Adding Products with Bulk Pricing
+              Ownership & Permissions
             </h3>
-            <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
-              Products you add will include automatic bulk pricing tiers (10+ units: 10% off, 50+ units: 15% off, 100+ units: 20% off) and will be immediately available in the inventory for orders.
-            </p>
+            <ul className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
+              <li>• Products you create will be automatically owned by you</li>
+              <li>• Automatic bulk pricing tiers will be applied (10%, 15%, 20% discounts)</li>
+              <li>• {isSeller ? 'As a seller, only you can edit/delete your products' : isAdmin || isManager ? 'As admin/manager, you can manage all products' : 'You can manage your own products'}</li>
+              <li>• Products will be immediately available in the inventory</li>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Recently Added Products Section - For all users who can manage products */}
+      {/* Recently Added Products Section - User-specific filtering */}
       {canManageProducts && (
         <div className={`mt-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border`}>
           <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
             <div>
               <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Recently Added Products
+                {isSeller ? 'My Recent Products' : 'Recently Added Products'}
               </h3>
               <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {isAdmin || isManager ? 'All recent products (Admin/Manager View)' : 'Your recent products (Seller View)'}
+                {isAdmin || isManager 
+                  ? 'All recent products (Admin/Manager View)' 
+                  : isSeller
+                  ? 'Your recent product listings'
+                  : 'Your recent products'
+                }
               </p>
             </div>
-            {recentProducts.length > 0 && canDeleteProducts && (
+            {recentProducts.length > 0 && (
               <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
+                canDeleteProducts
+                  ? darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
+                  : darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
               }`}>
-                🗑️ Delete Access
-              </div>
-            )}
-            {recentProducts.length > 0 && !canDeleteProducts && (
-              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
-              }`}>
-                👁️ View Only
+                {canDeleteProducts ? '🗑️ Delete Access' : '👁️ View Only'}
               </div>
             )}
           </div>
@@ -514,8 +644,11 @@ const AddProduct = () => {
             ) : recentProducts.length === 0 ? (
               <div className="text-center py-8">
                 <div className={`text-4xl mb-3 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>📦</div>
-                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  No recent products to display
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                  {isSeller ? 'No products created yet' : 'No recent products to display'}
+                </p>
+                <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {isSeller ? 'Add your first product above to start selling' : 'Products you create will appear here'}
                 </p>
               </div>
             ) : (
@@ -584,8 +717,8 @@ const AddProduct = () => {
                         View
                       </button>
                       
-                      {/* Only show delete button for admin and manager */}
-                      {canDeleteProducts && (
+                      {/* Show delete button based on permissions */}
+                      {(canDeleteProducts || product.createdBy === user?.uid) && (
                         <button
                           onClick={() => handleDeleteProduct(product.id, product.name)}
                           disabled={deletingProducts.has(product.id)}
@@ -621,16 +754,20 @@ const AddProduct = () => {
                 </svg>
                 <div>
                   <h4 className={`text-sm font-medium ${darkMode ? 'text-yellow-300' : 'text-yellow-800'} mb-1`}>
-                    🔐 Access Level Notice
+                    🔐 Ownership & Access Control
                   </h4>
                   <p className={`text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
                     {canDeleteProducts ? (
                       <>
                         <strong>Admin/Manager Access:</strong> You can view all products and delete any product. Deleted products cannot be recovered.
                       </>
+                    ) : isSeller ? (
+                      <>
+                        <strong>Seller Access:</strong> You can only view and manage products you created. Only you and administrators can delete your products.
+                      </>
                     ) : (
                       <>
-                        <strong>Seller Access:</strong> You can only view products you created. Only Administrators and Managers can delete products.
+                        <strong>User Access:</strong> You can view and manage products you created. Only administrators and managers can delete products created by others.
                       </>
                     )}
                   </p>
