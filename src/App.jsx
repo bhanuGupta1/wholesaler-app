@@ -29,6 +29,12 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+const SupportCenter = lazy(() => import('./pages/SupportCenter'));
+const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const Documentation = lazy(() => import('./pages/Documentation'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
