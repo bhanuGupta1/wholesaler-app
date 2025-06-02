@@ -31,6 +31,21 @@ const SupportCenter = () => {
         </ul>
       </section>
 
+            {/* Troubleshooting */}
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-2">🛠 Troubleshooting</h2>
+        <p className="text-gray-700">
+          If you experience any technical issues such as loading errors, login failures, or data syncing problems, try the following:
+        </p>
+        <ul className="list-disc pl-6 text-gray-700 mt-2">
+          <li>Clear your browser cache and cookies</li>
+          <li>Ensure you're using the latest version of Chrome or Firefox</li>
+          <li>Check your internet connection</li>
+          <li>Try logging out and back in</li>
+        </ul>
+      </section>
+
+
 
     </div>
   );
