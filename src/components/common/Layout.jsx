@@ -214,26 +214,26 @@ const Layout = ({ children }) => {
             <div>
               <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider mb-4`}>Company</h3>
               <ul className="space-y-3">
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>About Us</a></li>
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Careers</a></li>
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Privacy Policy</a></li>
+                 <li><Link to="/about-us" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>About Us</Link></li>
+                <li><Link to="/privacy-policy" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Terms of Service</Link></li>
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Terms of Service</a></li>
               </ul>
             </div>
             <div>
               <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider mb-4`}>Resources</h3>
               <ul className="space-y-3">
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Documentation</a></li>
+                 <li><Link to="/documentation" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Documentation</Link></li>
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Guides</a></li>
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>API Reference</a></li>
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Support Center</a></li>
+                 <li><Link to="/support-center" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Support Center</Link></li>
               </ul>
             </div>
             <div>
               <h3 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider mb-4`}>Features</h3>
               <ul className="space-y-3">
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Inventory Management</a></li>
-                <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Order Processing</a></li>
+                <li><Link to="/order-processing" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Order Processing</Link></li>
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Analytics</a></li>
                 <li><a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}>Integrations</a></li>
               </ul>
