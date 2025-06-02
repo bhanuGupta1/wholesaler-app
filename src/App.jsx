@@ -222,6 +222,33 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
+
+                <Route path="/about-us" element={
+  <Layout>
+    <AboutUs />
+  </Layout>
+} />
+<Route path="/documentation" element={
+  <Layout>
+    <Documentation />
+  </Layout>
+} />
+<Route path="/privacy-policy" element={
+  <Layout>
+    <PrivacyPolicy />
+  </Layout>
+} />
+<Route path="/support-center" element={
+  <Layout>
+    <SupportCenter />
+  </Layout>
+} />
+<Route path="/order-processing" element={
+  <Layout>
+    <OrderProcessing />
+  </Layout>
+} />
+
                 
                 <Route path="/orders/:id" element={
                   <ProtectedRoute>
