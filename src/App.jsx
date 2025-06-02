@@ -408,10 +408,13 @@ function App() {
           </ProtectedRoute>
         } />
                         <Route path="add-product" element={
-                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
-                            <AddProduct />
-                          </ProtectedRoute>
-                        } />
+          <ProtectedRoute 
+            requiredPermission="canAccessInventory"
+            fallbackPath="/business"
+          >
+            <AddProduct />
+          </ProtectedRoute>
+        } />
                         
                         <Route path="orders" element={
                           <UserSpecificOrders />
