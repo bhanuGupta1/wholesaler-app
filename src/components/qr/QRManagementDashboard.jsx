@@ -1,9 +1,12 @@
-// src/components/qr/QRManagementDashboard.jsx
+// src/components/qr/QRManagementDashboard.jsx - UPDATED: Using smart components with fallbacks
 import { useState, useMemo } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { QRCodeGenerator, QuickQRButton, QRCodeModal } from './QRCodeDisplay';
-import QRCodeScanner from './QRCodeScanner';
-import QRCode from 'qrcode';
+import { 
+  SmartQRGenerator as QRCodeGenerator, 
+  SmartQuickQRButton as QuickQRButton, 
+  SmartQRModal as QRCodeModal,
+  SmartQRScanner as QRCodeScanner
+} from './QRFallbackComponents';
 
 const QRManagementDashboard = ({ 
   products = [], 
@@ -112,7 +115,7 @@ const QRManagementDashboard = ({
     }
   };
 
-  // Generate bulk QR codes
+  // Generate bulk QR codes using external service
   const generateBulkQR = async () => {
     const selectedData = currentData.filter(item => selectedItems.includes(item.id));
     const qrDataArray = [];
@@ -122,11 +125,9 @@ const QRManagementDashboard = ({
       const qrString = JSON.stringify(qrData);
       
       try {
-        const qrCodeDataUrl = await QRCode.toDataURL(qrString, {
-          width: 300,
-          margin: 2,
-          color: { dark: '#000000', light: '#FFFFFF' }
-        });
+        // Use external QR service for bulk generation
+        const encodedData = encodeURIComponent(qrString);
+        const qrCodeDataUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedData}`;
 
         qrDataArray.push({
           item,
@@ -145,13 +146,24 @@ const QRManagementDashboard = ({
   };
 
   // Download all bulk QR codes
-  const downloadAllQR = () => {
-    bulkQRData.forEach(({ qrCodeDataUrl, filename }) => {
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = qrCodeDataUrl;
-      link.click();
-    });
+  const downloadAllQR = async () => {
+    for (const { qrCodeDataUrl, filename } of bulkQRData) {
+      try {
+        const response = await fetch(qrCodeDataUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        
+        // Small delay between downloads to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error('Error downloading QR code:', error);
+      }
+    }
     
     // Update stats
     setQrStats(prev => ({
@@ -168,6 +180,21 @@ const QRManagementDashboard = ({
       ...prev,
       scanned: prev.scanned + 1
     }));
+    
+    // Try to navigate to scanned item if it's a known format
+    try {
+      const parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
+      if (parsedResult.url) {
+        const shouldNavigate = window.confirm(
+          `QR code detected! Would you like to navigate to: ${parsedResult.url}?`
+        );
+        if (shouldNavigate) {
+          window.open(parsedResult.url, '_blank');
+        }
+      }
+    } catch (err) {
+      // Not a JSON format, that's okay
+    }
   };
 
   // Tab configuration
@@ -282,7 +309,10 @@ const QRManagementDashboard = ({
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setSelectedItems([]); // Clear selection when switching tabs
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                     activeTab === tab.id
                       ? darkMode ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white'
@@ -316,6 +346,7 @@ const QRManagementDashboard = ({
                   className={`px-3 py-2 rounded-lg text-sm ${
                     darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                   } transition-colors`}
+                  title="Refresh data"
                 >
                   🔄
                 </button>
@@ -391,6 +422,14 @@ const QRManagementDashboard = ({
               <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {searchTerm ? 'Try adjusting your search terms' : `No ${activeTab} available for QR generation`}
               </p>
+              {!searchTerm && activeTab === 'products' && (
+                <button
+                  onClick={() => window.location.href = '/add-product'}
+                  className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Add Products
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -423,7 +462,7 @@ const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
 
   const getItemTitle = () => {
     switch (type) {
-      case 'products': return item.name;
+      case 'products': return item.name || 'Unnamed Product';
       case 'orders': return `Order #${item.id.slice(0, 8)}`;
       case 'users': return item.displayName || item.email;
       default: return 'Item';
@@ -432,8 +471,8 @@ const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
 
   const getItemSubtitle = () => {
     switch (type) {
-      case 'products': return `SKU: ${item.sku} • $${item.price}`;
-      case 'orders': return `${item.customerName} • $${item.total}`;
+      case 'products': return `${item.sku ? `SKU: ${item.sku} • ` : ''}$${item.price || 0}`;
+      case 'orders': return `${item.customerName} • $${item.total || 0}`;
       case 'users': return item.email;
       default: return '';
     }
@@ -480,14 +519,14 @@ const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
             {type === 'products' && (
               <div className="flex items-center space-x-4 text-xs">
                 <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Stock: {item.stock}
+                  Stock: {item.stock || 0}
                 </span>
                 <span className={`px-2 py-1 rounded-full ${
-                  item.stock > 10 
+                  (item.stock || 0) > 10 
                     ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                     : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                 }`}>
-                  {item.stock > 10 ? 'In Stock' : 'Low Stock'}
+                  {(item.stock || 0) > 10 ? 'In Stock' : 'Low Stock'}
                 </span>
               </div>
             )}
@@ -501,7 +540,7 @@ const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
                       ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                 }`}>
-                  {item.status}
+                  {item.status || 'pending'}
                 </span>
               </div>
             )}
@@ -569,16 +608,27 @@ const BulkQRModal = ({ isOpen, onClose, qrData, onDownloadAll, darkMode }) => {
                   alt={`QR Code for ${item.name || item.id}`}
                   className="mx-auto mb-3 border rounded"
                   style={{ width: 150, height: 150 }}
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzllYTNhOSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yPC90ZXh0Pjwvc3ZnPg==';
+                  }}
                 />
                 <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'} mb-1`}>
                   {item.name || item.customerName || item.email || `Item ${item.id.slice(0, 8)}`}
                 </h4>
                 <button
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.download = filename;
-                    link.href = qrCodeDataUrl;
-                    link.click();
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(qrCodeDataUrl);
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.download = filename;
+                      link.href = url;
+                      link.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch (err) {
+                      console.error('Download failed:', err);
+                    }
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                 >
@@ -614,7 +664,7 @@ const ScannerModal = ({ isOpen, onClose, onScan, scanResult, darkMode }) => {
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
           <QRCodeScanner 
             onScan={onScan}
             showPreview={true}
@@ -626,7 +676,7 @@ const ScannerModal = ({ isOpen, onClose, onScan, scanResult, darkMode }) => {
               <h4 className={`font-medium ${darkMode ? 'text-green-400' : 'text-green-700'} mb-2`}>
                 ✅ Scan Result:
               </h4>
-              <pre className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} break-all whitespace-pre-wrap`}>
+              <pre className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} break-all whitespace-pre-wrap max-h-40 overflow-y-auto`}>
                 {typeof scanResult === 'object' ? JSON.stringify(scanResult, null, 2) : scanResult}
               </pre>
             </div>
