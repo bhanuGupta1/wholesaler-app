@@ -172,40 +172,31 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Inventory routes - Business buyers explicitly blocked */}
-<Route path="/inventory" element={
-  <ProtectedRoute 
-    requiredPermission="canAccessInventory"
-    fallbackPath="/business-dashboard"
-  >
-    <Layout>
-      <Inventory />
-    </Layout>
-  </ProtectedRoute>
-} />
+                {/* Inventory routes - Admin, Manager, and Sellers can manage inventory */}
+                <Route path="/inventory" element={
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                    <Layout>
+                      <Inventory />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
                 
                 <Route path="/inventory/:id" element={
-  <ProtectedRoute 
-    requiredPermission="canAccessInventory"
-    fallbackPath="/business-dashboard"
-  >
-    <Layout>
-      <ProductDetail />
-    </Layout>
-  </ProtectedRoute>
-} />
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                    <Layout>
+                      <ProductDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-                {/* Add Product route - Business buyers explicitly blocked */}
-<Route path="/add-product" element={
-  <ProtectedRoute 
-    requiredPermission="canAccessInventory"
-    fallbackPath="/business-dashboard"
-  >
-    <Layout>
-      <AddProduct />
-    </Layout>
-  </ProtectedRoute>
-} />
+                {/* Add Product route - Admin, Manager, and Sellers can add products */}
+                <Route path="/add-product" element={
+                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                    <Layout>
+                      <AddProduct />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
                 
                 {/* Orders routes - Protected with user-specific filtering */}
                 <Route path="/orders" element={
@@ -398,32 +389,18 @@ function App() {
                       <Routes>
                         <Route index element={<BusinessDashboard />} />
                         
-                          {/* Seller-only routes - automatically redirect buyers */}
-        <Route path="products" element={
-          <ProtectedRoute 
-            requiredPermission="canAccessInventory"
-            fallbackPath="/business"
-          >
-            <Inventory />
-          </ProtectedRoute>
-        } />
+                        {/* Seller-specific routes */}
+                        <Route path="products" element={
+                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                            <Inventory />
+                          </ProtectedRoute>
+                        } />
+                        
                         <Route path="add-product" element={
-          <ProtectedRoute 
-            requiredPermission="canAccessInventory"
-            fallbackPath="/business"
-          >
-            <AddProduct />
-          </ProtectedRoute>
-        } />
-
-        <Route path="inventory" element={
-          <ProtectedRoute 
-            requiredPermission="canAccessInventory"
-            fallbackPath="/business"
-          >
-            <Inventory />
-          </ProtectedRoute>
-        } />
+                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                            <AddProduct />
+                          </ProtectedRoute>
+                        } />
                         
                         <Route path="orders" element={
                           <UserSpecificOrders />

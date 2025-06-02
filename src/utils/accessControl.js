@@ -1,71 +1,92 @@
-// src/utils/accessControl.js - FIXED: Explicit seller access to inventory
+// src/utils/accessControl.js - SIMPLE FIX: Just block business buyers, keep everything else working
+
+/**
+ * Check if user can manage products (add, edit, delete)
+ * Business buyers are explicitly excluded from product management
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canManageProducts = (user) => {
+  if (!user) return false;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
+  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
+  const isRegularUser = user.accountType === 'user';
+  
+  // Explicitly exclude business buyers from product management
+  if (isBuyer) return false;
+  
+  return isAdmin || isManager || isSeller || isRegularUser;
+};
 
 /**
  * Check if user can access inventory
- * ALLOWS: Admin, Manager, Business Sellers
- * BLOCKS: Business Buyers only
+ * Business buyers cannot access inventory at all
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canAccessInventory = (user) => {
   if (!user) return false;
   
-  // Explicitly block ONLY business buyers
+  // Simple check: block ONLY business buyers
   if (user.accountType === 'business' && user.businessType === 'buyer') {
     return false;
   }
   
-  // Allow everyone else: admin, manager, business sellers, regular users
+  // Allow everyone else (admin, manager, business seller, regular user)
   return true;
-};
-
-/**
- * Check if user can manage products (add, edit, delete)
- * Same logic as inventory access
- */
-export const canManageProducts = (user) => {
-  return canAccessInventory(user);
 };
 
 /**
  * Check if user can view all products (not just their own)
  * Only admins and managers can see all products
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canViewAllProducts = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || user.accountType === 'manager';
-};
-
-/**
- * Check if user should see only their own products
- * Business sellers see only their products
- */
-export const shouldFilterByOwnership = (user) => {
-  if (!user) return false;
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
   
-  return user.accountType === 'business' && user.businessType === 'seller';
+  return isAdmin || isManager;
 };
 
 /**
  * Check if user can view all orders (not just their own)
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canViewAllOrders = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || user.accountType === 'manager';
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
  * Check if user can delete orders
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canDeleteOrders = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || user.accountType === 'manager';
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
  * Check if user can manage inventory
- * Same as canAccessInventory
+ * Same as canAccessInventory - business buyers excluded
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canManageInventory = (user) => {
   return canAccessInventory(user);
@@ -73,15 +94,22 @@ export const canManageInventory = (user) => {
 
 /**
  * Check if user can approve other users
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canApproveUsers = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || user.accountType === 'manager';
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
  * Check if user can access admin panel
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canAccessAdminPanel = (user) => {
   if (!user) return false;
@@ -91,15 +119,22 @@ export const canAccessAdminPanel = (user) => {
 
 /**
  * Check if user can access manager panel
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canAccessManagerPanel = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || user.accountType === 'manager';
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
 };
 
 /**
  * Check if user can create orders
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canCreateOrders = (user) => {
   if (!user) return false;
@@ -110,17 +145,23 @@ export const canCreateOrders = (user) => {
 
 /**
  * Check if user can manage their own business settings
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
  */
 export const canManageBusinessSettings = (user) => {
   if (!user) return false;
   
-  return user.accountType === 'admin' || 
-         user.accountType === 'manager' || 
-         user.accountType === 'business';
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  const isBusiness = user.accountType === 'business';
+  
+  return isAdmin || isManager || isBusiness;
 };
 
 /**
  * Get user's access level for display purposes
+ * @param {Object} user - User object from auth context
+ * @returns {string}
  */
 export const getUserAccessLevel = (user) => {
   if (!user) return 'Guest';
@@ -137,20 +178,9 @@ export const getUserAccessLevel = (user) => {
 };
 
 /**
- * Get appropriate redirect path for unauthorized access
- */
-export const getUnauthorizedRedirect = (user) => {
-  if (!user) return '/login';
-  
-  if (user.accountType === 'admin') return '/admin-dashboard';
-  if (user.accountType === 'manager') return '/manager-dashboard';
-  if (user.accountType === 'business') return '/business-dashboard';
-  
-  return '/user-dashboard';
-};
-
-/**
  * Get available navigation items based on user permissions
+ * @param {Object} user - User object from auth context
+ * @returns {Array} Array of navigation items
  */
 export const getAvailableNavItems = (user) => {
   const navItems = [
@@ -195,7 +225,6 @@ export const PERMISSIONS = {
   MANAGE_PRODUCTS: 'canManageProducts',
   ACCESS_INVENTORY: 'canAccessInventory',
   VIEW_ALL_PRODUCTS: 'canViewAllProducts',
-  FILTER_BY_OWNERSHIP: 'shouldFilterByOwnership',
   VIEW_ALL_ORDERS: 'canViewAllOrders',
   DELETE_ORDERS: 'canDeleteOrders',
   MANAGE_INVENTORY: 'canManageInventory',
@@ -208,6 +237,9 @@ export const PERMISSIONS = {
 
 /**
  * Check permission by name
+ * @param {Object} user - User object from auth context
+ * @param {string} permission - Permission constant
+ * @returns {boolean}
  */
 export const hasPermission = (user, permission) => {
   switch (permission) {
@@ -217,8 +249,6 @@ export const hasPermission = (user, permission) => {
       return canAccessInventory(user);
     case PERMISSIONS.VIEW_ALL_PRODUCTS:
       return canViewAllProducts(user);
-    case PERMISSIONS.FILTER_BY_OWNERSHIP:
-      return shouldFilterByOwnership(user);
     case PERMISSIONS.VIEW_ALL_ORDERS:
       return canViewAllOrders(user);
     case PERMISSIONS.DELETE_ORDERS:
@@ -244,7 +274,6 @@ export default {
   canManageProducts,
   canAccessInventory,
   canViewAllProducts,
-  shouldFilterByOwnership,
   canViewAllOrders,
   canDeleteOrders,
   canManageInventory,
@@ -254,7 +283,6 @@ export default {
   canCreateOrders,
   canManageBusinessSettings,
   getUserAccessLevel,
-  getUnauthorizedRedirect,
   getAvailableNavItems,
   hasPermission,
   PERMISSIONS
