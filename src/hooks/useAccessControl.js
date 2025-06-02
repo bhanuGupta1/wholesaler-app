@@ -1,9 +1,10 @@
-// src/hooks/useAccessControl.js - Updated with new business restrictions
+// src/hooks/useAccessControl.js - FIXED with all permissions
 import { useAuth } from './useAuth';
 import {
   canManageProducts,
   canAccessInventory,
   canViewAllProducts,
+  shouldFilterByOwnership,
   canViewAllOrders,
   canDeleteOrders,
   canManageInventory,
@@ -37,6 +38,7 @@ export const useAccessControl = () => {
     canManageProducts: canManageProducts(user),
     canAccessInventory: canAccessInventory(user),
     canViewAllProducts: canViewAllProducts(user),
+    shouldFilterByOwnership: shouldFilterByOwnership(user),
     canViewAllOrders: canViewAllOrders(user),
     canDeleteOrders: canDeleteOrders(user),
     canManageInventory: canManageInventory(user),
