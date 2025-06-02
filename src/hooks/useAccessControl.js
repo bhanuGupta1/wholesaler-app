@@ -1,8 +1,8 @@
-// src/hooks/useAccessControl.js - SIMPLE FIX: Just add canAccessInventory
+// src/hooks/useAccessControl.js - UPDATED: Added cart and checkout permissions
 import { useAuth } from './useAuth';
 import {
   canManageProducts,
-  canAccessInventory, // This is the only new one we need
+  canAccessInventory,
   canViewAllProducts,
   canViewAllOrders,
   canDeleteOrders,
@@ -11,6 +11,8 @@ import {
   canAccessAdminPanel,
   canAccessManagerPanel,
   canCreateOrders,
+  canAccessCart,        // NEW
+  canAccessCheckout,    // NEW
   canManageBusinessSettings,
   getUserAccessLevel,
   getAvailableNavItems,
@@ -33,7 +35,7 @@ export const useAccessControl = () => {
     
     // Permission checkers
     canManageProducts: canManageProducts(user),
-    canAccessInventory: canAccessInventory(user), // Only new addition
+    canAccessInventory: canAccessInventory(user),
     canViewAllProducts: canViewAllProducts(user),
     canViewAllOrders: canViewAllOrders(user),
     canDeleteOrders: canDeleteOrders(user),
@@ -42,6 +44,8 @@ export const useAccessControl = () => {
     canAccessAdminPanel: canAccessAdminPanel(user),
     canAccessManagerPanel: canAccessManagerPanel(user),
     canCreateOrders: canCreateOrders(user),
+    canAccessCart: canAccessCart(user),           // NEW
+    canAccessCheckout: canAccessCheckout(user),   // NEW
     canManageBusinessSettings: canManageBusinessSettings(user),
     
     // Generic permission checker
