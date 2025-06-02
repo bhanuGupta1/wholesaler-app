@@ -1,15 +1,17 @@
 // src/pages/OrderProcessing.jsx
+// Here I create the OrderProcessing component with an introduction and layout.
+
 const OrderProcessing = () => {
   return (
     <div className="p-8 max-w-6xl mx-auto text-gray-800">
-      {/* Page Title */}
+    
+      // Here I add the page title and introduction.
       <h1 className="text-4xl font-bold text-indigo-700 mb-6">Order Processing</h1>
-
-      {/* Introduction */}
       <p className="text-lg mb-6">
         The Wholesaler App provides a robust, real-time order processing system designed to streamline the fulfillment journey from cart to delivery. Our system supports businesses, bulk buyers, and regular users with maximum transparency and efficiency.
       </p>
-            {/* Section: Overview */}
+
+      // Here I define the Order Lifecycle section explaining each step.
       <section className="mb-10">
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">🔍 Overview of the Order Lifecycle</h2>
         <p className="mb-4">
@@ -26,7 +28,7 @@ const OrderProcessing = () => {
         </ol>
       </section>
 
-            {/* Section: Automation */}
+      // Here I introduce automation features that improve efficiency.
       <section className="mb-10">
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">⚙️ Automation & Smart Features</h2>
         <ul className="list-disc pl-6 space-y-2 text-gray-700">
@@ -36,7 +38,8 @@ const OrderProcessing = () => {
           <li><strong>Bulk Order Discounts:</strong> Dynamic pricing applied for large volumes.</li>
         </ul>
       </section>
-            {/* Section: Delivery Services */}
+
+      // Here I define the shipping and delivery options using a table format.
       <section className="mb-10">
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">🚚 Shipping & Delivery</h2>
         <p className="mb-2">We partner with multiple logistics providers to offer flexible shipping:</p>
@@ -72,7 +75,7 @@ const OrderProcessing = () => {
         </table>
       </section>
 
-            {/* Section: Modifications */}
+      // Here I allow users to modify or cancel their orders.
       <section className="mb-10">
         <h2 className="text-2xl font-semibold text-gray-900 mb-3">✏️ Modify or Cancel Orders</h2>
         <p className="text-gray-700 mb-2">
@@ -85,8 +88,39 @@ const OrderProcessing = () => {
         </ul>
       </section>
 
+      // Here I add tracking and support details for order inquiries.
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">📦 Real-Time Tracking</h2>
+        <p className="text-gray-700">
+          Every shipment comes with a tracking number visible under <strong>User Dashboard → Orders</strong>. Live status includes:
+        </p>
+        <ul className="list-disc pl-6 text-gray-700 mt-2">
+          <li>Order Confirmed</li>
+          <li>Packed</li>
+          <li>Shipped</li>
+          <li>Out for Delivery</li>
+          <li>Delivered</li>
+        </ul>
+      </section>
 
+      // Here I add FAQ and support contact details.
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">💬 Need Help?</h2>
+        <ul className="list-disc pl-6 text-gray-700">
+          <li>Email: <a href="mailto:orders@wholesaler.com" className="text-indigo-600 underline">orders@wholesaler.com</a></li>
+          <li>Phone: (123) 456-7890 (NZ only)</li>
+          <li>Live Chat: In-app support available from 9AM–5PM NZST</li>
+        </ul>
+      </section>
 
+      <div className="mt-10 text-center">
+        <a
+          href="/orders"
+          className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 text-lg"
+        >
+          View My Orders
+        </a>
+      </div>
 
     </div>
   );
