@@ -26,6 +26,18 @@ const OrderProcessing = () => {
         </ol>
       </section>
 
+            {/* Section: Automation */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">⚙️ Automation & Smart Features</h2>
+        <ul className="list-disc pl-6 space-y-2 text-gray-700">
+          <li><strong>Auto-Inventory Sync:</strong> Real-time deduction upon order placement.</li>
+          <li><strong>Order Alerts:</strong> Instant notifications for low stock or urgent orders.</li>
+          <li><strong>Smart Routing:</strong> Optimized delivery scheduling based on location.</li>
+          <li><strong>Bulk Order Discounts:</strong> Dynamic pricing applied for large volumes.</li>
+        </ul>
+      </section>
+
+
     </div>
   );
 };
