@@ -141,6 +141,21 @@ const filteredProducts = products.filter(product => {
 
 const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
+useEffect(() => {
+  if (products.length > 0) {
+    const totalProducts = products.length;
+    const lowStockProducts = products.filter(p => p.stockQuantity <= 10);
+    const totalValue = products.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0);
+    const averagePrice = totalProducts > 0 ? 
+      products.reduce((sum, p) => sum + p.price, 0) / totalProducts : 0;
 
+    setStats({
+      totalProducts,
+      lowStockCount: lowStockProducts.length,
+      totalValue,
+      averagePrice
+    });
+  }
+}, [products]);
 
 export default Inventory;
