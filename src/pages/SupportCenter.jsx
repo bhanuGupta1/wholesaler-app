@@ -1,13 +1,18 @@
 // src/pages/SupportCenter.jsx
+// This component provides support information, troubleshooting, and contact details.
+
 const SupportCenter = () => {
   return (
     <div className="p-8 max-w-5xl mx-auto">
+      {/* Page Title */}
       <h1 className="text-3xl font-bold text-indigo-600 mb-6">Support Center</h1>
 
+      {/* Introduction */}
       <p className="text-lg mb-4">
         Welcome to the Wholesaler App Support Center. Our goal is to provide you with all the tools and information you need to resolve any issues and use our platform effectively.
       </p>
 
+      {/* Contact Information */}
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-2">📞 Contact Us</h2>
         <ul className="list-disc pl-6 text-gray-700">
@@ -17,6 +22,7 @@ const SupportCenter = () => {
         </ul>
       </section>
 
+      {/* Help Topics */}
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-2">📚 Help Topics</h2>
         <ul className="list-disc pl-6 text-gray-700">
@@ -28,6 +34,7 @@ const SupportCenter = () => {
         </ul>
       </section>
 
+      {/* Troubleshooting */}
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-2">🛠 Troubleshooting</h2>
         <p className="text-gray-700">
@@ -41,6 +48,7 @@ const SupportCenter = () => {
         </ul>
       </section>
 
+      {/* Ticket Submission */}
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-2">💬 Submit a Ticket</h2>
         <p className="text-gray-700 mb-2">
