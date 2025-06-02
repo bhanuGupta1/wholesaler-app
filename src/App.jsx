@@ -1,4 +1,4 @@
-// src/App.jsx - FIXED: Complete with shopping restrictions and consistent permissions
+// src/App.jsx - FIXED: Remove broken permission checks, let components handle permissions
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -8,7 +8,7 @@ import Layout from './components/common/Layout';
 import Login from './pages/Login';
 import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import NoShoppingRedirect from './components/common/NoShoppingRedirect'; // ADDED: Missing import
+import NoShoppingRedirect from './components/common/NoShoppingRedirect';
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
@@ -94,7 +94,7 @@ function App() {
                   </Layout>
                 } />
 
-                {/* FIXED: Shopping routes - restricted for admin/manager */}
+                {/* Shopping routes - restricted for admin/manager */}
                 <Route path="/cart" element={
                   <NoShoppingRedirect type="cart">
                     <Layout>
@@ -171,12 +171,9 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Inventory routes - Consistent permission handling */}
+                {/* FIXED: Inventory routes - Let components handle permissions */}
                 <Route path="/inventory" element={
-                  <ProtectedRoute 
-                    requiredPermission="canAccessInventory"
-                    fallbackPath="/business-dashboard"
-                  >
+                  <ProtectedRoute>
                     <Layout>
                       <Inventory />
                     </Layout>
@@ -184,22 +181,16 @@ function App() {
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute 
-                    requiredPermission="canAccessInventory"
-                    fallbackPath="/business-dashboard"
-                  >
+                  <ProtectedRoute>
                     <Layout>
                       <ProductDetail />
                     </Layout>
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Add Product route - Consistent permission handling */}
+                {/* FIXED: Add Product route - Let component handle permissions */}
                 <Route path="/add-product" element={
-                  <ProtectedRoute 
-                    requiredPermission="canAccessInventory"
-                    fallbackPath="/business-dashboard"
-                  >
+                  <ProtectedRoute>
                     <Layout>
                       <AddProduct />
                     </Layout>
@@ -231,10 +222,10 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                {/* FIXED: Create Order - Restricted for admin/manager */}
+                {/* Create Order - Restricted for admin/manager */}
                 <Route path="/create-order" element={
                   <NoShoppingRedirect type="orders">
-                    <ProtectedRoute requiredPermission="canCreateOrders">
+                    <ProtectedRoute>
                       <Layout>
                         <CreateOrder />
                       </Layout>
@@ -393,37 +384,28 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Business-specific routes - Consistent permission handling */}
+                {/* FIXED: Business-specific routes - Let components handle permissions */}
                 <Route path="/business/*" element={
                   <ProtectedRoute requiredRole="business">
                     <Layout>
                       <Routes>
                         <Route index element={<BusinessDashboard />} />
                         
-                        {/* FIXED: Seller-only routes - consistent permission checks */}
+                        {/* FIXED: Seller routes - Let components handle permissions */}
                         <Route path="products" element={
-                          <ProtectedRoute 
-                            requiredPermission="canAccessInventory"
-                            fallbackPath="/business"
-                          >
+                          <ProtectedRoute>
                             <Inventory />
                           </ProtectedRoute>
                         } />
                         
                         <Route path="add-product" element={
-                          <ProtectedRoute 
-                            requiredPermission="canAccessInventory"
-                            fallbackPath="/business"
-                          >
+                          <ProtectedRoute>
                             <AddProduct />
                           </ProtectedRoute>
                         } />
 
                         <Route path="inventory" element={
-                          <ProtectedRoute 
-                            requiredPermission="canAccessInventory"
-                            fallbackPath="/business"
-                          >
+                          <ProtectedRoute>
                             <Inventory />
                           </ProtectedRoute>
                         } />
