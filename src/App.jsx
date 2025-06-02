@@ -172,14 +172,17 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Inventory routes - Admin, Manager, and Sellers can manage inventory */}
-                <Route path="/inventory" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
-                    <Layout>
-                      <Inventory />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
+                {/* Inventory routes - Business buyers explicitly blocked */}
+<Route path="/inventory" element={
+  <ProtectedRoute 
+    requiredPermission="canAccessInventory"
+    fallbackPath="/business-dashboard"
+  >
+    <Layout>
+      <Inventory />
+    </Layout>
+  </ProtectedRoute>
+} />
                 
                 <Route path="/inventory/:id" element={
                   <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
