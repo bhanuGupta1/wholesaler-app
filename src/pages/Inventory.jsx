@@ -140,7 +140,7 @@ const filteredProducts = products.filter(product => {
 });
 
 const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
-
+// add product statistics calculation
 useEffect(() => {
   if (products.length > 0) {
     const totalProducts = products.length;
@@ -157,5 +157,5 @@ useEffect(() => {
     });
   }
 }, [products]);
-
+// 
 export default Inventory;
