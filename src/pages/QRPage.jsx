@@ -92,5 +92,40 @@ const QRPage = () => {
     </div>
   );
 };
+// Add improved loading and error states to QRPage.jsx
+if (loading) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+        <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Loading QR Tools...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+if (error) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} px-4`}>
+      <div className={`max-w-md w-full p-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg text-center`}>
+        <div className="text-6xl mb-6">⚠️</div>
+        <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          QR Tools Error
+        </h2>
+        <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          {error}
+        </p>
+        <button
+          onClick={fetchData}
+          className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default QRPage;
