@@ -19,6 +19,18 @@ const SupportCenter = () => {
           <li>Live Chat: Available Monday to Friday, 9AM - 5PM</li>
         </ul>
       </section>
+            {/* Help Topics */}
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-2">📚 Help Topics</h2>
+        <ul className="list-disc pl-6 text-gray-700">
+          <li>Getting Started with Wholesaler</li>
+          <li>Managing Products and Inventory</li>
+          <li>Placing and Tracking Orders</li>
+          <li>Understanding Dashboard Metrics</li>
+          <li>Account Management and Security</li>
+        </ul>
+      </section>
+
 
     </div>
   );
