@@ -124,4 +124,23 @@ const handleDeleteProduct = async (productId, productName) => {
   }
 };
 
+const filteredProducts = products.filter(product => {
+  const matchesSearch = searchTerm.trim() === '' || 
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+  
+  const matchesStock = stockFilter === 'all' || 
+    (stockFilter === 'low' && product.stockQuantity <= 10) ||
+    (stockFilter === 'out' && product.stockQuantity === 0) ||
+    (stockFilter === 'in' && product.stockQuantity > 0);
+  
+  return matchesSearch && matchesCategory && matchesStock;
+});
+
+const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+
+
+
 export default Inventory;
