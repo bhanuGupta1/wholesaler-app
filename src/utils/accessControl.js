@@ -1,4 +1,4 @@
-// src/utils/accessControl.js - Reusable access control utilities
+// src/utils/accessControl.js - Fixed with canDeleteOrders permission
 
 /**
  * Check if user can manage products (add, edit, delete)
@@ -21,6 +21,20 @@ export const canManageProducts = (user) => {
  * @returns {boolean}
  */
 export const canViewAllOrders = (user) => {
+  if (!user) return false;
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  return isAdmin || isManager;
+};
+
+/**
+ * Check if user can delete orders
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canDeleteOrders = (user) => {
   if (!user) return false;
   
   const isAdmin = user.accountType === 'admin';
@@ -169,6 +183,7 @@ export const getAvailableNavItems = (user) => {
 export const PERMISSIONS = {
   MANAGE_PRODUCTS: 'canManageProducts',
   VIEW_ALL_ORDERS: 'canViewAllOrders',
+  DELETE_ORDERS: 'canDeleteOrders',
   MANAGE_INVENTORY: 'canManageInventory',
   APPROVE_USERS: 'canApproveUsers',
   ACCESS_ADMIN_PANEL: 'canAccessAdminPanel',
@@ -189,6 +204,8 @@ export const hasPermission = (user, permission) => {
       return canManageProducts(user);
     case PERMISSIONS.VIEW_ALL_ORDERS:
       return canViewAllOrders(user);
+    case PERMISSIONS.DELETE_ORDERS:
+      return canDeleteOrders(user);
     case PERMISSIONS.MANAGE_INVENTORY:
       return canManageInventory(user);
     case PERMISSIONS.APPROVE_USERS:
@@ -209,6 +226,7 @@ export const hasPermission = (user, permission) => {
 export default {
   canManageProducts,
   canViewAllOrders,
+  canDeleteOrders,
   canManageInventory,
   canApproveUsers,
   canAccessAdminPanel,
