@@ -1,4 +1,4 @@
-// src/utils/accessControl.js - SIMPLE FIX: Just block business buyers, keep everything else working
+// src/utils/accessControl.js - UPDATED: Exclude admin/manager from shopping features
 
 /**
  * Check if user can manage products (add, edit, delete)
@@ -133,14 +133,50 @@ export const canAccessManagerPanel = (user) => {
 
 /**
  * Check if user can create orders
+ * UPDATED: Admin and Manager cannot create personal orders
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
 export const canCreateOrders = (user) => {
   if (!user) return false;
   
-  // All authenticated users can create orders
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  // Admin and Manager cannot create personal orders - they manage the platform
+  if (isAdmin || isManager) return false;
+  
+  // All other authenticated users can create orders
   return true;
+};
+
+/**
+ * Check if user can access shopping cart
+ * UPDATED: Admin and Manager should not shop
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canAccessCart = (user) => {
+  if (!user) return true; // Guests can shop
+  
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  
+  // Admin and Manager cannot shop
+  if (isAdmin || isManager) return false;
+  
+  // All other users can shop
+  return true;
+};
+
+/**
+ * Check if user can access checkout
+ * UPDATED: Admin and Manager should not checkout
+ * @param {Object} user - User object from auth context
+ * @returns {boolean}
+ */
+export const canAccessCheckout = (user) => {
+  return canAccessCart(user); // Same logic as cart access
 };
 
 /**
@@ -179,20 +215,37 @@ export const getUserAccessLevel = (user) => {
 
 /**
  * Get available navigation items based on user permissions
+ * UPDATED: Hide cart/shopping for admin/manager
  * @param {Object} user - User object from auth context
  * @returns {Array} Array of navigation items
  */
 export const getAvailableNavItems = (user) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: '🏠', available: true },
-    { name: 'Catalog', path: '/catalog', icon: '📋', available: true },
-    { name: 'Cart', path: '/cart', icon: '🛒', available: true }
+    { name: 'Catalog', path: '/catalog', icon: '📋', available: true }
   ];
 
-  if (user) {
+  // Only show cart for users who can shop
+  if (canAccessCart(user)) {
     navItems.push(
-      { name: 'Orders', path: '/orders', icon: '📦', available: canCreateOrders(user) }
+      { name: 'Cart', path: '/cart', icon: '🛒', available: true }
     );
+  }
+
+  if (user) {
+    // Only show orders for users who can create them
+    if (canCreateOrders(user)) {
+      navItems.push(
+        { name: 'Orders', path: '/orders', icon: '📦', available: true }
+      );
+    }
+
+    // Show "All Orders" for admin/manager who can view but not create
+    if (canViewAllOrders(user) && !canCreateOrders(user)) {
+      navItems.push(
+        { name: 'All Orders', path: '/orders', icon: '📦', available: true }
+      );
+    }
 
     // Only show inventory/add product for users who can access inventory
     if (canAccessInventory(user)) {
@@ -220,6 +273,7 @@ export const getAvailableNavItems = (user) => {
 
 /**
  * Permission constants for easy reference
+ * UPDATED: Added cart and checkout permissions
  */
 export const PERMISSIONS = {
   MANAGE_PRODUCTS: 'canManageProducts',
@@ -232,11 +286,14 @@ export const PERMISSIONS = {
   ACCESS_ADMIN_PANEL: 'canAccessAdminPanel',
   ACCESS_MANAGER_PANEL: 'canAccessManagerPanel',
   CREATE_ORDERS: 'canCreateOrders',
+  ACCESS_CART: 'canAccessCart',
+  ACCESS_CHECKOUT: 'canAccessCheckout',
   MANAGE_BUSINESS_SETTINGS: 'canManageBusinessSettings'
 };
 
 /**
  * Check permission by name
+ * UPDATED: Added cart and checkout permission checks
  * @param {Object} user - User object from auth context
  * @param {string} permission - Permission constant
  * @returns {boolean}
@@ -263,6 +320,10 @@ export const hasPermission = (user, permission) => {
       return canAccessManagerPanel(user);
     case PERMISSIONS.CREATE_ORDERS:
       return canCreateOrders(user);
+    case PERMISSIONS.ACCESS_CART:
+      return canAccessCart(user);
+    case PERMISSIONS.ACCESS_CHECKOUT:
+      return canAccessCheckout(user);
     case PERMISSIONS.MANAGE_BUSINESS_SETTINGS:
       return canManageBusinessSettings(user);
     default:
@@ -281,6 +342,8 @@ export default {
   canAccessAdminPanel,
   canAccessManagerPanel,
   canCreateOrders,
+  canAccessCart,
+  canAccessCheckout,
   canManageBusinessSettings,
   getUserAccessLevel,
   getAvailableNavItems,
