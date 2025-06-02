@@ -163,5 +163,27 @@ const BulkQRModal = ({ isOpen, onClose, qrData, darkMode }) => {
     darkMode={darkMode}
   />
 )}
+ // Add state
+const [showScanModal, setShowScanModal] = useState(false);
+const [scanResult, setScanResult] = useState(null);
 
+// Add ScannerModal component
+const ScannerModal = ({ isOpen, onClose, onScan, scanResult, darkMode }) => {
+  // Implementation...
+};
+
+// Add to main component return
+<button onClick={() => setShowScanModal(true)}>
+  Scan QR Code
+</button>
+
+{showScanModal && (
+  <ScannerModal
+    isOpen={showScanModal}
+    onClose={() => setShowScanModal(false)}
+    onScan={handleScanResult}
+    scanResult={scanResult}
+    darkMode={darkMode}
+  />
+)}
 export default QRManagementDashboard;
