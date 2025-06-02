@@ -79,5 +79,51 @@ const [qrStats, setQrStats] = useState({
     {/* Other action buttons... */}
   </div>
 </div>
+ // Add state
+const [selectedItems, setSelectedItems] = useState([]);
+const [searchTerm, setSearchTerm] = useState('');
 
+// Add ItemCard component
+const ItemCard = ({ item, type, isSelected, onSelect, darkMode }) => {
+  return (
+    <div className={`border rounded-lg p-4 ${
+      isSelected ? 'border-indigo-500' : ''
+    }`}>
+      <div className="flex items-start space-x-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onSelect}
+        />
+        <div>
+          <h3 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            {item.name || item.id}
+          </h3>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Add to main component return
+<div className="p-6">
+  {currentData.length > 0 ? (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {currentData.map((item) => (
+        <ItemCard
+          key={item.id}
+          item={item}
+          type={activeTab}
+          isSelected={selectedItems.includes(item.id)}
+          onSelect={() => handleItemSelection(item.id)}
+          darkMode={darkMode}
+        />
+      ))}
+    </div>
+  ) : (
+    <div className="text-center py-12">
+      No items found
+    </div>
+  )}
+</div>
 export default QRManagementDashboard;
