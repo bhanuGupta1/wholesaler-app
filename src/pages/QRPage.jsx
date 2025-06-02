@@ -127,5 +127,52 @@ if (error) {
     </div>
   );
 }
+// Add library availability check to QRPage.jsx
+const [librariesAvailable, setLibrariesAvailable] = useState({
+  qrcode: false,
+  html5qrcode: false,
+  zxing: false
+});
 
+useEffect(() => {
+  checkLibraries();
+  fetchData();
+}, []);
+
+const checkLibraries = () => {
+  try {
+    const qrcodeAvailable = typeof window !== 'undefined';
+    const html5Available = typeof window !== 'undefined';
+    const zxingAvailable = typeof window !== 'undefined';
+    
+    setLibrariesAvailable({
+      qrcode: qrcodeAvailable,
+      html5qrcode: html5Available,
+      zxing: zxingAvailable
+    });
+  } catch (err) {
+    console.warn('QR libraries not available:', err);
+  }
+};
+
+// Add warning display in render
+const missingLibraries = Object.entries(librariesAvailable)
+  .filter(([_, available]) => !available)
+  .map(([name]) => name);
+
+{missingLibraries.length > 0 && (
+  <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border`}>
+    <div className="flex items-start">
+      <div className="text-2xl mr-3">⚠️</div>
+      <div>
+        <h3 className={`font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-800'} mb-1`}>
+          QR Libraries Not Available
+        </h3>
+        <p className={`text-sm ${darkMode ? 'text-yellow-300' : 'text-yellow-700'} mb-2`}>
+          Some QR features may be limited. Missing libraries: {missingLibraries.join(', ')}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 export default QRPage;
