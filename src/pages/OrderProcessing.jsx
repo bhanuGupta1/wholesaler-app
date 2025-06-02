@@ -36,6 +36,42 @@ const OrderProcessing = () => {
           <li><strong>Bulk Order Discounts:</strong> Dynamic pricing applied for large volumes.</li>
         </ul>
       </section>
+            {/* Section: Delivery Services */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">🚚 Shipping & Delivery</h2>
+        <p className="mb-2">We partner with multiple logistics providers to offer flexible shipping:</p>
+        <table className="table-auto w-full text-left border text-sm">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="p-2 border">Option</th>
+              <th className="p-2 border">Delivery Time</th>
+              <th className="p-2 border">Cost</th>
+              <th className="p-2 border">Availability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="p-2 border">Standard</td>
+              <td className="p-2 border">3–5 Business Days</td>
+              <td className="p-2 border">Free</td>
+              <td className="p-2 border">All Regions</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Express</td>
+              <td className="p-2 border">1–2 Business Days</td>
+              <td className="p-2 border">$15</td>
+              <td className="p-2 border">Metro Areas Only</td>
+            </tr>
+            <tr>
+              <td className="p-2 border">Bulk Freight</td>
+              <td className="p-2 border">3–7 Days</td>
+              <td className="p-2 border">Custom Quote</td>
+              <td className="p-2 border">Business Accounts</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
 
 
     </div>
