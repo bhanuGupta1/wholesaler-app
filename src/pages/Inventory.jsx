@@ -210,4 +210,34 @@ if (error) {
   </div>
   {/* Other stat cards */}
 </div>
+
+
+<div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <input
+      type="text"
+      placeholder="Search products..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+    <select
+      value={categoryFilter}
+      onChange={(e) => setCategoryFilter(e.target.value)}
+    >
+      <option value="all">All Categories</option>
+      {categories.map(category => (
+        <option key={category} value={category}>{category}</option>
+      ))}
+    </select>
+    <select
+      value={stockFilter}
+      onChange={(e) => setStockFilter(e.target.value)}
+    >
+      <option value="all">All Stock</option>
+      <option value="in">In Stock</option>
+      <option value="low">Low Stock</option>
+    </select>
+    <button onClick={fetchProducts}>Refresh</button>
+  </div>
+</div>
 export default Inventory;
