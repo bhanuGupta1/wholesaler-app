@@ -1,4 +1,5 @@
 // src/pages/OrderProcessing.jsx
+import React from 'react'
 // Here I create the OrderProcessing component with an introduction and layout.
 
 const OrderProcessing = () => {

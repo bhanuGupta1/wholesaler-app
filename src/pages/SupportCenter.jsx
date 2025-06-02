@@ -1,4 +1,5 @@
 // src/pages/SupportCenter.jsx
+import React from 'react'
 // This component provides support information, troubleshooting, and contact details.
 
 const SupportCenter = () => {
