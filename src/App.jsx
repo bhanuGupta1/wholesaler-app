@@ -1,10 +1,4 @@
-// src/App.jsx - Enhanced with AddProduct, comprehensive nested routing, and role-based access control
-// Key Features:
-// • AddProduct route with ImageUploader integration and bulk pricing
-// • Enhanced Business Panel with buyer/seller differentiation and nested routing
-// • Comprehensive Manager Panel with analytics, reports, and settings
-// • Role-based access control with permission-based routing
-// • Support for seller upgrade workflow and business account types
+// src/App.jsx - FIXED: Complete with shopping restrictions and consistent permissions
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -14,6 +8,7 @@ import Layout from './components/common/Layout';
 import Login from './pages/Login';
 import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import NoShoppingRedirect from './components/common/NoShoppingRedirect'; // ADDED: Missing import
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
@@ -99,17 +94,21 @@ function App() {
                   </Layout>
                 } />
 
-                {/* Shopping routes - accessible by all */}
+                {/* FIXED: Shopping routes - restricted for admin/manager */}
                 <Route path="/cart" element={
-                  <Layout>
-                    <Cart />
-                  </Layout>
+                  <NoShoppingRedirect type="cart">
+                    <Layout>
+                      <Cart />
+                    </Layout>
+                  </NoShoppingRedirect>
                 } />
 
                 <Route path="/checkout" element={
-                  <Layout>
-                    <Checkout />
-                  </Layout>
+                  <NoShoppingRedirect type="checkout">
+                    <Layout>
+                      <Checkout />
+                    </Layout>
+                  </NoShoppingRedirect>
                 } />
 
                 {/* Role-specific dashboard routes with access control */}
@@ -172,9 +171,12 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Inventory routes - Admin, Manager, and Sellers can manage inventory */}
+                {/* FIXED: Inventory routes - Consistent permission handling */}
                 <Route path="/inventory" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                  <ProtectedRoute 
+                    requiredPermission="canAccessInventory"
+                    fallbackPath="/business-dashboard"
+                  >
                     <Layout>
                       <Inventory />
                     </Layout>
@@ -182,16 +184,22 @@ function App() {
                 } />
                 
                 <Route path="/inventory/:id" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                  <ProtectedRoute 
+                    requiredPermission="canAccessInventory"
+                    fallbackPath="/business-dashboard"
+                  >
                     <Layout>
                       <ProductDetail />
                     </Layout>
                   </ProtectedRoute>
                 } />
 
-                {/* Add Product route - Admin, Manager, and Sellers can add products */}
+                {/* FIXED: Add Product route - Consistent permission handling */}
                 <Route path="/add-product" element={
-                  <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                  <ProtectedRoute 
+                    requiredPermission="canAccessInventory"
+                    fallbackPath="/business-dashboard"
+                  >
                     <Layout>
                       <AddProduct />
                     </Layout>
@@ -223,12 +231,15 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
+                {/* FIXED: Create Order - Restricted for admin/manager */}
                 <Route path="/create-order" element={
-                  <ProtectedRoute requiredPermission="canCreateOrders">
-                    <Layout>
-                      <CreateOrder />
-                    </Layout>
-                  </ProtectedRoute>
+                  <NoShoppingRedirect type="orders">
+                    <ProtectedRoute requiredPermission="canCreateOrders">
+                      <Layout>
+                        <CreateOrder />
+                      </Layout>
+                    </ProtectedRoute>
+                  </NoShoppingRedirect>
                 } />
 
                 {/* Manager-only routes - Enhanced with nested routing */}
@@ -276,8 +287,8 @@ function App() {
                                 <div className="flex items-center">
                                   <div className="text-3xl mr-4">📋</div>
                                   <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Processing</h3>
-                                    <p className="text-gray-600 dark:text-gray-400">View and process orders</p>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Management</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">View and process all orders</p>
                                   </div>
                                 </div>
                               </Link>
@@ -382,23 +393,38 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Business-specific routes - Enhanced with nested routing */}
+                {/* FIXED: Business-specific routes - Consistent permission handling */}
                 <Route path="/business/*" element={
                   <ProtectedRoute requiredRole="business">
                     <Layout>
                       <Routes>
                         <Route index element={<BusinessDashboard />} />
                         
-                        {/* Seller-specific routes */}
+                        {/* FIXED: Seller-only routes - consistent permission checks */}
                         <Route path="products" element={
-                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                          <ProtectedRoute 
+                            requiredPermission="canAccessInventory"
+                            fallbackPath="/business"
+                          >
                             <Inventory />
                           </ProtectedRoute>
                         } />
                         
                         <Route path="add-product" element={
-                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
+                          <ProtectedRoute 
+                            requiredPermission="canAccessInventory"
+                            fallbackPath="/business"
+                          >
                             <AddProduct />
+                          </ProtectedRoute>
+                        } />
+
+                        <Route path="inventory" element={
+                          <ProtectedRoute 
+                            requiredPermission="canAccessInventory"
+                            fallbackPath="/business"
+                          >
+                            <Inventory />
                           </ProtectedRoute>
                         } />
                         
