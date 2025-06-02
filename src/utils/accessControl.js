@@ -1,8 +1,8 @@
-// src/utils/accessControl.js - UPDATED: Exclude admin/manager from shopping features
+// src/utils/accessControl.js - FIXED: Regular users cannot add products
 
 /**
  * Check if user can manage products (add, edit, delete)
- * Business buyers are explicitly excluded from product management
+ * FIXED: Regular users are customers, not sellers - they cannot add products
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -15,28 +15,35 @@ export const canManageProducts = (user) => {
   const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
   const isRegularUser = user.accountType === 'user';
   
-  // Explicitly exclude business buyers from product management
-  if (isBuyer) return false;
+  // FIXED: Block both business buyers AND regular users
+  // Regular users are customers who buy, not sellers who add products
+  if (isBuyer || isRegularUser) return false;
   
-  return isAdmin || isManager || isSeller || isRegularUser;
+  // Only allow admin, manager, and business sellers
+  return isAdmin || isManager || isSeller;
 };
 
 /**
  * Check if user can access inventory
- * Business buyers cannot access inventory at all
+ * FIXED: Regular users are customers - they browse catalog, not manage inventory
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
 export const canAccessInventory = (user) => {
   if (!user) return false;
   
-  // Simple check: block ONLY business buyers
-  if (user.accountType === 'business' && user.businessType === 'buyer') {
-    return false;
-  }
+  const isAdmin = user.accountType === 'admin';
+  const isManager = user.accountType === 'manager';
+  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
+  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
+  const isRegularUser = user.accountType === 'user';
   
-  // Allow everyone else (admin, manager, business seller, regular user)
-  return true;
+  // FIXED: Block both business buyers AND regular users from inventory
+  // Regular users shop in the catalog, they don't manage inventory
+  if (isBuyer || isRegularUser) return false;
+  
+  // Only allow admin, manager, and business sellers
+  return isAdmin || isManager || isSeller;
 };
 
 /**
@@ -84,7 +91,7 @@ export const canDeleteOrders = (user) => {
 
 /**
  * Check if user can manage inventory
- * Same as canAccessInventory - business buyers excluded
+ * Same as canAccessInventory - regular users and business buyers excluded
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -133,7 +140,7 @@ export const canAccessManagerPanel = (user) => {
 
 /**
  * Check if user can create orders
- * UPDATED: Admin and Manager cannot create personal orders
+ * Admin and Manager cannot create personal orders - they manage the platform
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -146,13 +153,13 @@ export const canCreateOrders = (user) => {
   // Admin and Manager cannot create personal orders - they manage the platform
   if (isAdmin || isManager) return false;
   
-  // All other authenticated users can create orders
+  // All other authenticated users can create orders (regular users, business users)
   return true;
 };
 
 /**
  * Check if user can access shopping cart
- * UPDATED: Admin and Manager should not shop
+ * Admin and Manager should not shop
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -165,13 +172,13 @@ export const canAccessCart = (user) => {
   // Admin and Manager cannot shop
   if (isAdmin || isManager) return false;
   
-  // All other users can shop
+  // All other users can shop (regular users, business users)
   return true;
 };
 
 /**
  * Check if user can access checkout
- * UPDATED: Admin and Manager should not checkout
+ * Admin and Manager should not checkout
  * @param {Object} user - User object from auth context
  * @returns {boolean}
  */
@@ -210,12 +217,12 @@ export const getUserAccessLevel = (user) => {
     return 'Business User';
   }
   
-  return 'Regular User';
+  return 'Customer'; // FIXED: Regular users are customers, not "Regular User"
 };
 
 /**
  * Get available navigation items based on user permissions
- * UPDATED: Hide cart/shopping for admin/manager
+ * FIXED: Hide inventory/add product for regular users
  * @param {Object} user - User object from auth context
  * @returns {Array} Array of navigation items
  */
@@ -225,7 +232,7 @@ export const getAvailableNavItems = (user) => {
     { name: 'Catalog', path: '/catalog', icon: '📋', available: true }
   ];
 
-  // Only show cart for users who can shop
+  // Only show cart for users who can shop (excludes admin/manager)
   if (canAccessCart(user)) {
     navItems.push(
       { name: 'Cart', path: '/cart', icon: '🛒', available: true }
@@ -233,7 +240,7 @@ export const getAvailableNavItems = (user) => {
   }
 
   if (user) {
-    // Only show orders for users who can create them
+    // Only show orders for users who can create them (excludes admin/manager)
     if (canCreateOrders(user)) {
       navItems.push(
         { name: 'Orders', path: '/orders', icon: '📦', available: true }
@@ -247,7 +254,8 @@ export const getAvailableNavItems = (user) => {
       );
     }
 
-    // Only show inventory/add product for users who can access inventory
+    // FIXED: Only show inventory/add product for users who can access inventory
+    // This excludes regular users and business buyers
     if (canAccessInventory(user)) {
       navItems.push(
         { name: 'Inventory', path: '/inventory', icon: '📊', available: true },
@@ -273,7 +281,6 @@ export const getAvailableNavItems = (user) => {
 
 /**
  * Permission constants for easy reference
- * UPDATED: Added cart and checkout permissions
  */
 export const PERMISSIONS = {
   MANAGE_PRODUCTS: 'canManageProducts',
@@ -293,7 +300,6 @@ export const PERMISSIONS = {
 
 /**
  * Check permission by name
- * UPDATED: Added cart and checkout permission checks
  * @param {Object} user - User object from auth context
  * @param {string} permission - Permission constant
  * @returns {boolean}
