@@ -1,10 +1,9 @@
-// src/hooks/useAccessControl.js - FIXED with all permissions
+// src/hooks/useAccessControl.js - SIMPLE FIX: Just add canAccessInventory
 import { useAuth } from './useAuth';
 import {
   canManageProducts,
-  canAccessInventory,
+  canAccessInventory, // This is the only new one we need
   canViewAllProducts,
-  shouldFilterByOwnership,
   canViewAllOrders,
   canDeleteOrders,
   canManageInventory,
@@ -14,7 +13,6 @@ import {
   canCreateOrders,
   canManageBusinessSettings,
   getUserAccessLevel,
-  getUnauthorizedRedirect,
   getAvailableNavItems,
   hasPermission,
   PERMISSIONS
@@ -32,13 +30,11 @@ export const useAccessControl = () => {
     user,
     userAccessLevel: getUserAccessLevel(user),
     availableNavItems: getAvailableNavItems(user),
-    unauthorizedRedirect: getUnauthorizedRedirect(user),
     
     // Permission checkers
     canManageProducts: canManageProducts(user),
-    canAccessInventory: canAccessInventory(user),
+    canAccessInventory: canAccessInventory(user), // Only new addition
     canViewAllProducts: canViewAllProducts(user),
-    shouldFilterByOwnership: shouldFilterByOwnership(user),
     canViewAllOrders: canViewAllOrders(user),
     canDeleteOrders: canDeleteOrders(user),
     canManageInventory: canManageInventory(user),
