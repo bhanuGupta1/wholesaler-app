@@ -90,4 +90,38 @@ useEffect(() => {
     fetchProducts();
   }
 }, [user]);
+
+const showNotification = (message, type = 'success') => {
+  setNotification({ message, type });
+  setTimeout(() => setNotification(null), 4000);
+};
+
+const handleDeleteProduct = async (productId, productName) => {
+  if (!canManageProducts) {
+    showNotification('You do not have permission to delete products', 'error');
+    return;
+  }
+
+  if (isSeller) {
+    const product = products.find(p => p.id === productId);
+    if (product && product.createdBy !== user.uid) {
+      showNotification('You can only delete products you created', 'error');
+      return;
+    }
+  }
+
+  const confirmDelete = window.confirm(`Delete "${productName}"?`);
+
+  if (!confirmDelete) return;
+
+  try {
+    await deleteDoc(doc(db, 'products', productId));
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    showNotification('Product deleted successfully');
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    showNotification('Failed to delete product', 'error');
+  }
+};
+
 export default Inventory;
