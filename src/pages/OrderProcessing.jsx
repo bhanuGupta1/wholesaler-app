@@ -72,6 +72,20 @@ const OrderProcessing = () => {
         </table>
       </section>
 
+            {/* Section: Modifications */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-3">✏️ Modify or Cancel Orders</h2>
+        <p className="text-gray-700 mb-2">
+          We understand that plans change. Here's how to modify your order:
+        </p>
+        <ul className="list-disc pl-6 text-gray-700">
+          <li>Orders can be edited within 1 hour of placement.</li>
+          <li>To cancel, navigate to your Order History & click “Cancel” before it ships.</li>
+          <li>Business users can schedule future dispatches using advanced settings.</li>
+        </ul>
+      </section>
+
+
 
 
     </div>
