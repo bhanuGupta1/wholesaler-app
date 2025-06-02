@@ -158,4 +158,32 @@ useEffect(() => {
   }
 }, [products]);
 // 
+
+if (loading) {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <span className="ml-3 text-gray-600">Loading inventory...</span>
+    </div>
+  );
+}
+
+if (error) {
+  return (
+    <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+      <div className="text-center py-12">
+        <div className="text-4xl mb-4 text-red-500">⚠</div>
+        <h2 className="text-2xl font-bold mb-2">Error Loading Inventory</h2>
+        <p className="text-gray-500 mb-4">{error}</p>
+        <button
+          onClick={fetchProducts}
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 mr-2"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+} 
+
 export default Inventory;
