@@ -1,10 +1,10 @@
-// src/components/common/Navbar.jsx - UPDATED: Hide cart for admin/manager
+// src/components/common/Navbar.jsx - UPDATED: Added QR Tools navigation
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../context/CartContext';
-import { canAccessCart, canCreateOrders } from '../../utils/accessControl'; // NEW IMPORT
+import { canAccessCart, canCreateOrders } from '../../utils/accessControl';
 import ThemeToggle from './ThemeToggle';
 import CheckoutFlowSelector from './CheckoutFlowSelector';
 
@@ -27,9 +27,12 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const itemCount = getCartItemCount();
   const cartTotal = getCartTotal();
   
-  // NEW: Check if user can access cart and create orders
+  // Check if user can access cart and create orders
   const userCanAccessCart = canAccessCart(user);
   const userCanCreateOrders = canCreateOrders(user);
+  
+  // Check if user can access QR tools (everyone can access, but admins/managers see more)
+  const userCanAccessQR = true; // QR tools are available to everyone
   
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -71,11 +74,16 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
       {/* Top Bar with Search */}
       <div className={`${darkMode ? 'bg-gray-900' : 'bg-indigo-800'} py-2 px-4 text-indigo-100`}>
         <div className="container mx-auto flex items-center justify-between text-sm">
-          <p className="hidden md:block">Wholesaler | Premium Inventory Management</p>
+          <p className="hidden md:block">Wholesaler | Premium Inventory Management with QR Tools</p>
           <div className="flex items-center space-x-3">
             <a href="#" className="hover:text-white transition-colors">Help Center</a>
             <span>|</span>
             <a href="#" className="hover:text-white transition-colors">Contact Support</a>
+            <span>|</span>
+            <Link to="/qr-tools" className="hover:text-white transition-colors flex items-center">
+              <span className="mr-1">📱</span>
+              QR Tools
+            </Link>
           </div>
         </div>
       </div>
@@ -99,7 +107,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             <div className="relative w-full">
               <input 
                 type="text" 
-                placeholder="Search products, orders, or customers..." 
+                placeholder="Search products, orders, customers, or scan QR codes..." 
                 className={`w-full py-2 pl-4 pr-10 rounded-lg border-0 focus:ring-2 focus:ring-indigo-400 ${darkMode ? 'bg-gray-700 text-white placeholder-gray-400' : 'bg-white text-gray-800 placeholder-gray-500'}`}
               />
               <button className="absolute right-0 top-0 bottom-0 px-3 bg-indigo-500 text-white rounded-r-lg hover:bg-indigo-600 transition-colors">
@@ -151,10 +159,23 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </svg>
               Orders
             </Link>
+
+            {/* NEW: QR Tools Link */}
+            {userCanAccessQR && (
+              <Link 
+                to="/qr-tools" 
+                className={`text-indigo-100 hover:text-white font-medium transition-colors flex items-center ${isActive('/qr-tools') ? 'border-b-2 border-white' : ''}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                📱 QR Tools
+              </Link>
+            )}
             
             <div className="h-6 w-px bg-indigo-300"></div>
             
-            {/* UPDATED: Enhanced Cart Dropdown - Only show if user can access cart */}
+            {/* Enhanced Cart Dropdown - Only show if user can access cart */}
             {userCanAccessCart && (
               <div className="relative" ref={cartDropdownRef}>
                 <button 
@@ -261,7 +282,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </div>
             )}
             
-            {/* UPDATED: Create Order button - Only show if user can create orders */}
+            {/* Create Order button - Only show if user can create orders */}
             {userCanCreateOrders && (
               <Link 
                 to="/create-order" 
@@ -303,7 +324,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                     <div className={`px-4 py-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Signed in as</p>
                       <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>{user.email}</p>
-                      {/* NEW: Show user type for clarity */}
+                      {/* Show user type for clarity */}
                       <p className={`text-xs ${
                         user.accountType === 'admin' ? 'text-red-500' : 
                         user.accountType === 'manager' ? 'text-purple-500' : 
@@ -335,6 +356,15 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                         </svg>
                         Settings
                       </Link>
+                      {/* NEW: QR Tools in Profile Menu */}
+                      <Link 
+                        to="/qr-tools" 
+                        className={`flex items-center px-4 py-2 text-sm ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'}`}
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <span className="mr-3">📱</span>
+                        QR Tools
+                      </Link>
                     </div>
                     <div className={`py-1 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                       <button 
@@ -365,7 +395,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* UPDATED: Mobile Cart Button - Only show if user can access cart */}
+            {/* Mobile Cart Button - Only show if user can access cart */}
             {userCanAccessCart && (
               <Link 
                 to="/cart"
@@ -381,6 +411,15 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 )}
               </Link>
             )}
+
+            {/* Mobile QR Tools Button */}
+            <Link 
+              to="/qr-tools"
+              className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+              title="QR Tools"
+            >
+              <span className="text-lg">📱</span>
+            </Link>
             
             <ThemeToggle className="mr-2" />
             
@@ -420,7 +459,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         )}
       </nav>
       
-      {/* Mobile Menu - UPDATED: Conditional navigation items */}
+      {/* Mobile Menu - Updated with QR Tools */}
       {mobileMenuOpen && (
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-indigo-800'} md:hidden`}>
           <div className="py-3 px-4 space-y-1">
@@ -452,8 +491,18 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             >
               Orders
             </Link>
+
+            {/* NEW: QR Tools in Mobile Menu */}
+            <Link
+              to="/qr-tools"
+              className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-white hover:${darkMode ? 'bg-gray-700' : 'bg-indigo-700'}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="mr-2">📱</span>
+              QR Tools
+            </Link>
             
-            {/* UPDATED: Only show Create Order for users who can create orders */}
+            {/* Only show Create Order for users who can create orders */}
             {userCanCreateOrders && (
               <Link
                 to="/create-order"
@@ -473,7 +522,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <div className="ml-3">
                     <div className="text-base font-medium text-white">{user.displayName || "User"}</div>
                     <div className="text-sm font-medium text-indigo-300">{user.email}</div>
-                    {/* NEW: Show user type in mobile menu */}
+                    {/* Show user type in mobile menu */}
                     <div className={`text-xs ${
                       user.accountType === 'admin' ? 'text-red-400' : 
                       user.accountType === 'manager' ? 'text-purple-400' : 
