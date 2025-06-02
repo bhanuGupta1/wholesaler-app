@@ -219,4 +219,43 @@ const missingLibraries = Object.entries(librariesAvailable)
     </div>
   </div>
 </div>
+// Create new components and refactor QRPage.jsx
+import CompleteQRScanner from '../components/qr/CompleteQRScanner';
+import QRCodeViewer from '../components/qr/QRCodeViewer';
+import QRBulkActions from '../components/qr/QRBulkActions';
+
+// Add tab state management
+const [activeTab, setActiveTab] = useState('scanner');
+const tabs = [
+  { id: 'scanner', name: 'Scanner', icon: '📷', description: 'Scan QR codes' },
+  { id: 'generator', name: 'Generator', icon: '📱', description: 'Generate QR codes' },
+  { id: 'bulk', name: 'Bulk Tools', icon: '⚡', description: 'Bulk operations' }
+];
+
+// Add tab navigation UI
+<div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border overflow-hidden mb-6`}>
+  <div className="flex border-b border-gray-200 dark:border-gray-700">
+    {tabs.map((tab) => (
+      <button
+        key={tab.id}
+        onClick={() => setActiveTab(tab.id)}
+        className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+          activeTab === tab.id
+            ? darkMode ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white'
+            : darkMode ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }`}
+      >
+        <div className="text-2xl mb-1">{tab.icon}</div>
+        <div className="text-sm font-medium">{tab.name}</div>
+        <div className={`text-xs opacity-75`}>{tab.description}</div>
+      </button>
+    ))}
+  </div>
+
+  <div className="p-6">
+    {activeTab === 'scanner' && <CompleteQRScanner />}
+    {activeTab === 'generator' && <QRCodeViewer items={data} />}
+    {activeTab === 'bulk' && <QRBulkActions items={data} />}
+  </div>
+</div>
 export default QRPage;
