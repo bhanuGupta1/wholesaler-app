@@ -1,9 +1,11 @@
-// src/hooks/useAccessControl.js - FIXED with canDeleteOrders
+// src/hooks/useAccessControl.js - Updated with new business restrictions
 import { useAuth } from './useAuth';
 import {
   canManageProducts,
+  canAccessInventory,
+  canViewAllProducts,
   canViewAllOrders,
-  canDeleteOrders, // ← This import exists
+  canDeleteOrders,
   canManageInventory,
   canApproveUsers,
   canAccessAdminPanel,
@@ -11,6 +13,7 @@ import {
   canCreateOrders,
   canManageBusinessSettings,
   getUserAccessLevel,
+  getUnauthorizedRedirect,
   getAvailableNavItems,
   hasPermission,
   PERMISSIONS
@@ -28,11 +31,14 @@ export const useAccessControl = () => {
     user,
     userAccessLevel: getUserAccessLevel(user),
     availableNavItems: getAvailableNavItems(user),
+    unauthorizedRedirect: getUnauthorizedRedirect(user),
     
     // Permission checkers
     canManageProducts: canManageProducts(user),
+    canAccessInventory: canAccessInventory(user),
+    canViewAllProducts: canViewAllProducts(user),
     canViewAllOrders: canViewAllOrders(user),
-    canDeleteOrders: canDeleteOrders(user), // ← ADD THIS LINE - it was missing!
+    canDeleteOrders: canDeleteOrders(user),
     canManageInventory: canManageInventory(user),
     canApproveUsers: canApproveUsers(user),
     canAccessAdminPanel: canAccessAdminPanel(user),
