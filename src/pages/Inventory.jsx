@@ -78,12 +78,11 @@ const Inventory = () => {
         console.log('👑 Admin/Manager: Fetching all products');
         productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
       } else if (shouldShowSellerProducts) {
-        // Business Seller: See only their own products
+        // Business Seller: See only their own products (no orderBy to avoid index issues)
         console.log('🏪 Seller: Fetching products for user:', user.uid);
         productsQuery = query(
           productsRef, 
-          where('createdBy', '==', user.uid),
-          orderBy('createdAt', 'desc')
+          where('createdBy', '==', user.uid)
         );
       } else {
         // Regular users - can see all products but can't manage them
@@ -112,7 +111,12 @@ const Inventory = () => {
         });
       });
 
-      console.log(`📦 Fetched ${fetchedProducts.length} products for ${userAccessLevel}`);
+      // Sort products manually by creation date (newest first) for sellers
+      if (shouldShowSellerProducts) {
+        fetchedProducts.sort((a, b) => b.createdAt - a.createdAt);
+      }
+      
+      console.log(`📦 Successfully fetched ${fetchedProducts.length} products for ${userAccessLevel}`);
       setProducts(fetchedProducts);
 
       // Calculate stats
@@ -128,13 +132,67 @@ const Inventory = () => {
         averagePrice
       });
 
+      // Clear any previous errors since we succeeded
+      setError(null);
+
     } catch (err) {
       console.error('Error fetching products:', err);
       // Better error handling - only set error for actual failures, not empty results
       if (err.code === 'permission-denied') {
         setError('You do not have permission to access inventory');
-      } else if (err.code === 'failed-precondition') {
-        setError('Database indexing in progress. Please try again in a moment.');
+      } else if (err.code === 'failed-precondition' || err.message.includes('index')) {
+        // This specifically handles the indexing issue
+        console.log('Firestore indexing issue detected, trying simpler query...');
+        // Try a simpler query without orderBy for sellers
+        if (shouldShowSellerProducts) {
+          try {
+            const simpleQuery = query(productsRef, where('createdBy', '==', user.uid));
+            const querySnapshot = await getDocs(simpleQuery);
+            const fetchedProducts = [];
+
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              fetchedProducts.push({
+                id: doc.id,
+                name: data.name || 'Unnamed Product',
+                description: data.description || '',
+                price: data.price || 0,
+                stockQuantity: data.stock || data.stockQuantity || 0,
+                category: data.category || 'Uncategorized',
+                imageUrl: data.imageUrl || '',
+                sku: data.sku || '',
+                createdBy: data.createdBy || data.ownedBy || 'unknown',
+                ownedBy: data.ownedBy || data.createdBy || 'unknown',
+                createdAt: data.createdAt?.toDate() || new Date(),
+                updatedAt: data.updatedAt?.toDate() || new Date()
+              });
+            });
+
+            // Sort manually by creation date
+            fetchedProducts.sort((a, b) => b.createdAt - a.createdAt);
+            setProducts(fetchedProducts);
+            
+            // Calculate stats
+            const totalProducts = fetchedProducts.length;
+            const lowStockProducts = fetchedProducts.filter(p => p.stockQuantity <= 10);
+            const totalValue = fetchedProducts.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0);
+            const averagePrice = totalProducts > 0 ? fetchedProducts.reduce((sum, p) => sum + p.price, 0) / totalProducts : 0;
+
+            setStats({
+              totalProducts,
+              lowStockCount: lowStockProducts.length,
+              totalValue,
+              averagePrice
+            });
+            
+            return; // Exit successfully
+          } catch (simpleErr) {
+            console.error('Simple query also failed:', simpleErr);
+            setError('Unable to load inventory. Please contact support.');
+          }
+        } else {
+          setError('Database indexing in progress. Please try again in a moment.');
+        }
       } else {
         setError(`Failed to load inventory: ${err.message}`);
       }
