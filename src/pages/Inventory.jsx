@@ -240,4 +240,44 @@ if (error) {
     <button onClick={fetchProducts}>Refresh</button>
   </div>
 </div>
+
+
+<div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl overflow-hidden`}>
+  <table className="w-full">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        {shouldShowAllProducts && <th>Owner</th>}
+        {canManageProducts && <th>Actions</th>}
+      </tr>
+    </thead>
+    <tbody>
+      {filteredProducts.map(product => (
+        <tr key={product.id}>
+          <td>{product.name}</td>
+          <td>{product.category}</td>
+          <td>${product.price?.toFixed(2)}</td>
+          <td>{product.stockQuantity}</td>
+          {shouldShowAllProducts && <td>{product.ownedBy?.slice(0, 8)}</td>}
+          {canManageProducts && (
+            <td>
+              <button onClick={() => {
+                setSelectedProduct(product);
+                setIsModalOpen(true);
+              }}>
+                Edit
+              </button>
+              <button onClick={() => handleDeleteProduct(product.id, product.name)}>
+                Delete
+              </button>
+            </td>
+          )}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 export default Inventory;
