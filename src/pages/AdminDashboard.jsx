@@ -1,12 +1,19 @@
-// src/pages/AdminDashboard.jsx - Admin dashboard with routing
+// src/pages/AdminDashboard.jsx - Fixed user labeling logic
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 
-// Import all the components from the original file
-// (RealDataChart, SystemHealthMonitor, UserManagement, AllOrdersManagement, AdminAnalytics components remain the same)
+// Helper function to display user roles properly
+const displayRole = (user) => {
+  if (user.isAdmin || user.role === 'admin' || user.accountType === 'admin') return 'Admin';
+  if (user.isManager || user.role === 'manager' || user.accountType === 'manager') return 'Manager';
+  if (user.businessType === 'buyer') return 'Business Buyer';
+  if (user.businessType === 'seller') return 'Business Seller';
+  if (user.role === 'business' || user.accountType === 'business') return 'Business User';
+  return 'User';
+};
 
 // Enhanced chart component with real data visualization
 const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar' }) => {
@@ -161,7 +168,7 @@ const SystemHealthMonitor = ({ darkMode }) => {
   );
 };
 
-// Enhanced User Management Component with bulk actions
+// Enhanced User Management Component with bulk actions and fixed user labeling
 const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRefreshUsers, onBulkAction }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -173,7 +180,16 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
     let result = users;
     
     if (roleFilter !== 'all') {
-      result = result.filter(user => user.role === roleFilter);
+      result = result.filter(user => {
+        const userRole = displayRole(user);
+        if (roleFilter === 'admin') return userRole === 'Admin';
+        if (roleFilter === 'manager') return userRole === 'Manager';
+        if (roleFilter === 'business') return userRole.includes('Business');
+        if (roleFilter === 'user') return userRole === 'User';
+        if (roleFilter === 'buyer') return userRole === 'Business Buyer';
+        if (roleFilter === 'seller') return userRole === 'Business Seller';
+        return user.role === roleFilter || user.accountType === roleFilter;
+      });
     }
     
     if (searchTerm.trim()) {
@@ -300,8 +316,10 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
               <option value="manager">Manager</option>
-              <option value="business">Business</option>
-              <option value="user">User</option>
+              <option value="business">All Business</option>
+              <option value="buyer">Business Buyer</option>
+              <option value="seller">Business Seller</option>
+              <option value="user">Regular User</option>
             </select>
             <button
               onClick={onRefreshUsers}
@@ -393,19 +411,24 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <select
-                    value={user.role}
-                    onChange={(e) => handleRoleUpdate(user.id, e.target.value, user.role)}
-                    disabled={loading}
-                    className={`text-sm rounded-md ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-                    } border focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50`}
-                  >
-                    <option value="user">User</option>
-                    <option value="business">Business</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                  <div className="flex flex-col">
+                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'} mb-1`}>
+                      {displayRole(user)}
+                    </span>
+                    <select
+                      value={user.role || user.accountType || 'user'}
+                      onChange={(e) => handleRoleUpdate(user.id, e.target.value, user.role)}
+                      disabled={loading}
+                      className={`text-xs rounded-md ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                      } border focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50`}
+                    >
+                      <option value="user">User</option>
+                      <option value="business">Business</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -448,6 +471,9 @@ const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRef
     </div>
   );
 };
+
+// Rest of the AdminDashboard component remains the same...
+// (Other components like AllOrdersManagement, AdminAnalytics, etc. would continue here)
 
 // Enhanced Order Management with bulk operations
 const AllOrdersManagement = ({ orders, darkMode, onBulkOrderAction }) => {
