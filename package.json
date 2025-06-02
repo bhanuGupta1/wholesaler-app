@@ -6,12 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage",
+    "serve:local": "firebase serve --only hosting",
+    "test:local": "npm run build && npm run serve:local"
   },
   "dependencies": {
+    "@zxing/library": "^0.21.3",
     "date-fns": "^4.1.0",
     "firebase": "^11.7.1",
     "framer-motion": "^11.18.2",
+    "html5-qrcode": "^2.3.8",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.5.3",

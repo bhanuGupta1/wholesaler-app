@@ -1,31 +1,77 @@
-// src/context/CartContext.jsx - Enhanced with more functionality
+// src/context/CartContext.jsx - FIXED: User-specific cart persistence
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  const { user } = useAuth(); // Get current user
   const [cart, setCart] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
+  // Generate user-specific cart key
+  const getCartKey = (userId) => {
+    if (!userId) return 'wholesaler-cart-guest';
+    return `wholesaler-cart-${userId}`;
+  };
+
+  // Load cart from localStorage for specific user
+  const loadUserCart = (userId) => {
     try {
-      const savedCart = localStorage.getItem('wholesaler-cart');
+      setIsLoading(true);
+      const cartKey = getCartKey(userId);
+      const savedCart = localStorage.getItem(cartKey);
+      
       if (savedCart) {
-        setCart(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart);
+        setCart(parsedCart);
+      } else {
+        setCart([]); // Empty cart for new user/guest
       }
     } catch (error) {
       console.error('Error loading cart from localStorage:', error);
+      setCart([]); // Fallback to empty cart
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
+  // Save cart to localStorage for specific user
+  const saveUserCart = (userId, cartData) => {
     try {
-      localStorage.setItem('wholesaler-cart', JSON.stringify(cart));
+      const cartKey = getCartKey(userId);
+      localStorage.setItem(cartKey, JSON.stringify(cartData));
     } catch (error) {
       console.error('Error saving cart to localStorage:', error);
     }
-  }, [cart]);
+  };
+
+  // Clear old guest cart when user logs in
+  const clearGuestCart = () => {
+    try {
+      localStorage.removeItem('wholesaler-cart-guest');
+      localStorage.removeItem('wholesaler-cart'); // Legacy key cleanup
+    } catch (error) {
+      console.error('Error clearing guest cart:', error);
+    }
+  };
+
+  // Load cart when user changes (login/logout/switch user)
+  useEffect(() => {
+    loadUserCart(user?.uid);
+    
+    // If user just logged in, clear any guest cart
+    if (user?.uid) {
+      clearGuestCart();
+    }
+  }, [user?.uid]);
+
+  // Save cart whenever it changes (but not during initial load)
+  useEffect(() => {
+    if (!isLoading) {
+      saveUserCart(user?.uid, cart);
+    }
+  }, [cart, user?.uid, isLoading]);
 
   const addToCart = (product, quantity = 1) => {
     setCart(prev => {
@@ -64,6 +110,48 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => {
     setCart([]);
   };
+
+  // Transfer guest cart to user cart when they log in
+  const transferGuestCart = async () => {
+    try {
+      const guestCart = localStorage.getItem('wholesaler-cart-guest');
+      if (guestCart && user?.uid) {
+        const parsedGuestCart = JSON.parse(guestCart);
+        if (parsedGuestCart.length > 0) {
+          // Merge with existing user cart if any
+          setCart(prev => {
+            const merged = [...prev];
+            parsedGuestCart.forEach(guestItem => {
+              const existing = merged.find(item => item.id === guestItem.id);
+              if (existing) {
+                // Update quantity if item already exists
+                existing.quantity = Math.min(
+                  existing.quantity + guestItem.quantity, 
+                  guestItem.stock || 999
+                );
+              } else {
+                // Add new item
+                merged.push(guestItem);
+              }
+            });
+            return merged;
+          });
+          
+          // Clear guest cart after transfer
+          clearGuestCart();
+        }
+      }
+    } catch (error) {
+      console.error('Error transferring guest cart:', error);
+    }
+  };
+
+  // Call transfer when user logs in
+  useEffect(() => {
+    if (user?.uid) {
+      transferGuestCart();
+    }
+  }, [user?.uid]);
 
   const getCartTotal = () => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -124,8 +212,20 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  // Get cart info for debugging
+  const getCartInfo = () => {
+    return {
+      userId: user?.uid || 'guest',
+      cartKey: getCartKey(user?.uid),
+      itemCount: cart.length,
+      total: getCartTotal(),
+      isLoading
+    };
+  };
+
   const value = {
     cart,
+    isLoading,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -135,7 +235,9 @@ export const CartProvider = ({ children }) => {
     isInCart,
     getCartItem,
     validateCartStock,
-    fixCartQuantities
+    fixCartQuantities,
+    transferGuestCart,
+    getCartInfo // For debugging
   };
 
   return (
