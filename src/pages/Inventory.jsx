@@ -48,4 +48,46 @@ useEffect(() => {
     navigate('/business-dashboard', { replace: true });
   }
 }, [user, navigate]);
+const fetchProducts = async () => {
+  if (!user) {
+    setError('Please log in to view inventory');
+    setLoading(false);
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setError(null);
+    const productsRef = collection(db, 'products');
+    let productsQuery;
+
+    if (shouldShowAllProducts) {
+      productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
+    } else if (shouldShowSellerProducts) {
+      productsQuery = query(productsRef, where('createdBy', '==', user.uid));
+    } else {
+      productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
+    }
+
+    const querySnapshot = await getDocs(productsQuery);
+    const fetchedProducts = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    setProducts(fetchedProducts);
+    setError(null);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    setError('Failed to load inventory');
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  if (user && !(user.accountType === 'business' && user.businessType === 'buyer')) {
+    fetchProducts();
+  }
+}, [user]);
 export default Inventory;
