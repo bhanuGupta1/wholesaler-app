@@ -25,3 +25,24 @@ const BusinessRating = ({ businessId }) => {
           });
           return;
         }
+        let totalRating = 0;
+        const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        
+        snapshot.forEach(doc => {
+          const feedback = doc.data();
+          totalRating += feedback.rating;
+          ratingCounts[feedback.rating]++;
+        });
+        
+        setRatingData({
+          averageRating: (totalRating / snapshot.size).toFixed(1),
+          totalReviews: snapshot.size,
+          ratingCounts
+        });
+      } catch (err) {
+        console.error('Error fetching rating data:', err);
+        setError('Failed to load rating data');
+      } finally {
+        setLoading(false);
+      }
+    };
