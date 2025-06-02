@@ -175,4 +175,48 @@ const missingLibraries = Object.entries(librariesAvailable)
     </div>
   </div>
 )}
+// Add data summary cards to QRPage.jsx
+<div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow border p-4`}>
+    <div className="flex items-center">
+      <div className="text-2xl mr-3">📦</div>
+      <div>
+        <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {data.products.length}
+        </p>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Products Available
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow border p-4`}>
+    <div className="flex items-center">
+      <div className="text-2xl mr-3">📋</div>
+      <div>
+        <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {data.orders.length}
+        </p>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Orders Available
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-lg shadow border p-4`}>
+    <div className="flex items-center">
+      <div className="text-2xl mr-3">👥</div>
+      <div>
+        <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {data.users.length}
+        </p>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          Users Available
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 export default QRPage;
