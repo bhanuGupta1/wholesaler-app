@@ -1,16 +1,11 @@
-// src/pages/Inventory.jsx - FIXED: Sellers can access, buyers blocked
+// src/pages/Inventory.jsx - FIXED: Proper seller product filtering and error handling
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, query, where, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAccessControl } from '../hooks/useAccessControl';
-import { 
-  getProducts, 
-  getAllProducts, 
-  getUserProducts, 
-  deleteProduct,
-  getProductStats 
-} from '../firebase/productService';
 import ProductModal from '../components/inventory/ProductModal';
 import LowStockAlert from '../components/inventory/LowStockAlert';
 
@@ -26,7 +21,7 @@ const Inventory = () => {
     isBuyer,
     isAdmin,
     isManager,
-    unauthorizedRedirect 
+    userAccessLevel 
   } = useAccessControl();
 
   const [products, setProducts] = useState([]);
@@ -44,53 +39,14 @@ const Inventory = () => {
     averagePrice: 0
   });
   const [notification, setNotification] = useState(null);
-  const [debugInfo, setDebugInfo] = useState({});
 
-  // Debug user access
-  useEffect(() => {
-    console.log('🔍 Inventory Access Debug:');
-    console.log('User:', user);
-    console.log('User accountType:', user?.accountType);
-    console.log('User businessType:', user?.businessType);
-    console.log('isSeller:', isSeller);
-    console.log('isBuyer:', isBuyer);
-    console.log('isAdmin:', isAdmin);
-    console.log('isManager:', isManager);
-    console.log('canAccessInventory:', canAccessInventory);
-    console.log('canViewAllProducts:', canViewAllProducts);
-    
-    setDebugInfo({
-      accountType: user?.accountType,
-      businessType: user?.businessType,
-      isSeller,
-      isBuyer,
-      canAccessInventory,
-      canViewAllProducts
-    });
-  }, [user, isSeller, isBuyer, isAdmin, isManager, canAccessInventory, canViewAllProducts]);
-
-  // Block ONLY business buyers - allow everyone else
+  // Block business buyers immediately
   useEffect(() => {
     if (user && user.accountType === 'business' && user.businessType === 'buyer') {
-      console.log('❌ Blocking business buyer from inventory');
       navigate('/business-dashboard', { replace: true });
       return;
     }
-    
-    // Allow admin, manager, and business sellers
-    const shouldAllowAccess = user && (
-      user.accountType === 'admin' ||
-      user.accountType === 'manager' ||
-      (user.accountType === 'business' && user.businessType === 'seller') ||
-      user.accountType === 'user' // Also allow regular users if needed
-    );
-    
-    if (user && !shouldAllowAccess) {
-      console.log('❌ User not authorized for inventory');
-      navigate(unauthorizedRedirect || '/', { replace: true });
-      return;
-    }
-  }, [user, navigate, unauthorizedRedirect]);
+  }, [user, navigate]);
 
   // Show notification
   const showNotification = (message, type = 'success') => {
@@ -98,17 +54,11 @@ const Inventory = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Determine what products to fetch based on user role
-  const shouldShowAllProducts = user && (
-    user.accountType === 'admin' || 
-    user.accountType === 'manager'
-  );
+  // Determine user access level
+  const shouldShowAllProducts = user && (isAdmin || isManager);
+  const shouldShowSellerProducts = user && isSeller;
 
-  const shouldShowSellerProducts = user && 
-    user.accountType === 'business' && 
-    user.businessType === 'seller';
-
-  // Fetch products based on user role
+  // Fetch products based on user role with proper error handling
   const fetchProducts = async () => {
     if (!user) {
       setError('Please log in to view inventory');
@@ -120,32 +70,74 @@ const Inventory = () => {
       setLoading(true);
       setError(null);
 
-      let fetchedProducts;
-      let productStats;
+      const productsRef = collection(db, 'products');
+      let productsQuery;
 
       if (shouldShowAllProducts) {
         // Admin/Manager: See all products
-        console.log('👑 Fetching ALL products for admin/manager');
-        fetchedProducts = await getAllProducts();
-        productStats = await getProductStats(null, 'admin');
+        console.log('👑 Admin/Manager: Fetching all products');
+        productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
       } else if (shouldShowSellerProducts) {
         // Business Seller: See only their own products
-        console.log('🏪 Fetching seller products for:', user.uid);
-        fetchedProducts = await getUserProducts(user.uid);
-        productStats = await getProductStats(user.uid, 'business');
+        console.log('🏪 Seller: Fetching products for user:', user.uid);
+        productsQuery = query(
+          productsRef, 
+          where('createdBy', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
       } else {
-        // Regular users or others - you can decide what to show
-        console.log('👤 Fetching products for regular user');
-        fetchedProducts = await getAllProducts(); // or getUserProducts(user.uid)
-        productStats = await getProductStats(user.uid, 'user');
+        // Regular users - can see all products but can't manage them
+        console.log('👤 Regular user: Fetching all products (view-only)');
+        productsQuery = query(productsRef, orderBy('createdAt', 'desc'));
       }
 
-      console.log('📦 Fetched products:', fetchedProducts.length);
+      const querySnapshot = await getDocs(productsQuery);
+      const fetchedProducts = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedProducts.push({
+          id: doc.id,
+          name: data.name || 'Unnamed Product',
+          description: data.description || '',
+          price: data.price || 0,
+          stockQuantity: data.stock || data.stockQuantity || 0,
+          category: data.category || 'Uncategorized',
+          imageUrl: data.imageUrl || '',
+          sku: data.sku || '',
+          createdBy: data.createdBy || data.ownedBy || 'unknown',
+          ownedBy: data.ownedBy || data.createdBy || 'unknown',
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        });
+      });
+
+      console.log(`📦 Fetched ${fetchedProducts.length} products for ${userAccessLevel}`);
       setProducts(fetchedProducts);
-      setStats(productStats);
+
+      // Calculate stats
+      const totalProducts = fetchedProducts.length;
+      const lowStockProducts = fetchedProducts.filter(p => p.stockQuantity <= 10);
+      const totalValue = fetchedProducts.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0);
+      const averagePrice = totalProducts > 0 ? fetchedProducts.reduce((sum, p) => sum + p.price, 0) / totalProducts : 0;
+
+      setStats({
+        totalProducts,
+        lowStockCount: lowStockProducts.length,
+        totalValue,
+        averagePrice
+      });
+
     } catch (err) {
       console.error('Error fetching products:', err);
-      setError(err.message || 'Failed to load inventory');
+      // Better error handling - only set error for actual failures, not empty results
+      if (err.code === 'permission-denied') {
+        setError('You do not have permission to access inventory');
+      } else if (err.code === 'failed-precondition') {
+        setError('Database indexing in progress. Please try again in a moment.');
+      } else {
+        setError(`Failed to load inventory: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -159,26 +151,49 @@ const Inventory = () => {
   }, [user, shouldShowAllProducts, shouldShowSellerProducts]);
 
   // Handle product deletion with ownership check
-  const handleDeleteProduct = async (productId) => {
+  const handleDeleteProduct = async (productId, productName) => {
     if (!canManageProducts) {
       showNotification('You do not have permission to delete products', 'error');
       return;
     }
 
+    // Check ownership for sellers
+    if (isSeller) {
+      const product = products.find(p => p.id === productId);
+      if (product && product.createdBy !== user.uid && product.ownedBy !== user.uid) {
+        showNotification('You can only delete products you created', 'error');
+        return;
+      }
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${productName}"? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
     try {
-      await deleteProduct(productId, user?.uid, user?.accountType);
+      await deleteDoc(doc(db, 'products', productId));
       setProducts(prev => prev.filter(p => p.id !== productId));
       showNotification('Product deleted successfully', 'success');
       
       // Refresh stats
-      await fetchProducts();
+      const updatedProducts = products.filter(p => p.id !== productId);
+      const totalProducts = updatedProducts.length;
+      const lowStockProducts = updatedProducts.filter(p => p.stockQuantity <= 10);
+      const totalValue = updatedProducts.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0);
+      const averagePrice = totalProducts > 0 ? updatedProducts.reduce((sum, p) => sum + p.price, 0) / totalProducts : 0;
+
+      setStats({
+        totalProducts,
+        lowStockCount: lowStockProducts.length,
+        totalValue,
+        averagePrice
+      });
+
     } catch (error) {
       console.error('Error deleting product:', error);
-      if (error.message.includes('permission')) {
-        showNotification('You can only delete products you created', 'error');
-      } else {
-        showNotification('Failed to delete product', 'error');
-      }
+      showNotification('Failed to delete product. Please try again.', 'error');
     }
   };
 
@@ -232,6 +247,7 @@ const Inventory = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <span className="ml-3 text-gray-600">Loading inventory...</span>
       </div>
     );
   }
@@ -247,7 +263,7 @@ const Inventory = () => {
             onClick={fetchProducts}
             className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 mr-2"
           >
-            Retry
+            Try Again
           </button>
           <button
             onClick={() => navigate('/')}
@@ -273,32 +289,24 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* Debug Info (remove in production) */}
-      <details className="mb-4">
-        <summary className="cursor-pointer text-sm text-gray-500">🔍 Debug Access Info</summary>
-        <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-        </div>
-      </details>
-
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {shouldShowAllProducts ? 'All Inventory' : 'My Products'}
+              {shouldShowAllProducts ? 'All Inventory' : shouldShowSellerProducts ? 'My Products' : 'Product Inventory'}
             </h1>
             <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {shouldShowAllProducts 
                 ? 'Manage all products in the system' 
                 : shouldShowSellerProducts
                 ? 'Manage your product listings and inventory'
-                : 'View and manage products'
+                : 'View product inventory'
               }
             </p>
           </div>
           
-          {/* User type indicator */}
+          {/* User type indicator and actions */}
           <div className="flex items-center space-x-3">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
               shouldShowAllProducts
@@ -311,12 +319,14 @@ const Inventory = () => {
                shouldShowSellerProducts ? '🏪 Seller View' : '👤 User View'}
             </span>
             
-            <button
-              onClick={() => navigate('/add-product')}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Add Product
-            </button>
+            {canManageProducts && (
+              <button
+                onClick={() => navigate('/add-product')}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Add Product
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -381,60 +391,62 @@ const Inventory = () => {
       </div>
 
       {/* Filters */}
-      <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full px-3 py-2 rounded-md ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            />
-          </div>
-          
-          <div>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className={`w-full px-3 py-2 rounded-md ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <select
-              value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value)}
-              className={`w-full px-3 py-2 rounded-md ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            >
-              <option value="all">All Stock Levels</option>
-              <option value="in">In Stock</option>
-              <option value="low">Low Stock</option>
-              <option value="out">Out of Stock</option>
-            </select>
-          </div>
-          
-          <div>
-            <button
-              onClick={fetchProducts}
-              className="w-full bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-            >
-              Refresh
-            </button>
+      {products.length > 0 && (
+        <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border`}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border focus:ring-indigo-500 focus:border-indigo-500`}
+              />
+            </div>
+            
+            <div>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border focus:ring-indigo-500 focus:border-indigo-500`}
+              >
+                <option value="all">All Categories</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <select
+                value={stockFilter}
+                onChange={(e) => setStockFilter(e.target.value)}
+                className={`w-full px-3 py-2 rounded-md ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                } border focus:ring-indigo-500 focus:border-indigo-500`}
+              >
+                <option value="all">All Stock Levels</option>
+                <option value="in">In Stock</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+              </select>
+            </div>
+            
+            <div>
+              <button
+                onClick={fetchProducts}
+                className="w-full bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Low Stock Alert */}
       {stats.lowStockCount > 0 && (
@@ -476,9 +488,11 @@ const Inventory = () => {
                       Owner
                     </th>
                   )}
-                  <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
-                    Actions
-                  </th>
+                  {canManageProducts && (
+                    <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
@@ -517,49 +531,57 @@ const Inventory = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        (product.stockQuantity || 0) <= 0 
+                        product.stockQuantity <= 0 
                           ? darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-                          : (product.stockQuantity || 0) <= 10 
+                          : product.stockQuantity <= 10 
                             ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
                             : darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
                       }`}>
-                        {product.stockQuantity || 0} in stock
+                        {product.stockQuantity} in stock
                       </span>
                     </td>
                     {shouldShowAllProducts && (
                       <td className="px-6 py-4">
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {product.ownedBy === user?.uid ? 'You' : 
-                           product.createdBy === user?.uid ? 'You' : 
-                           product.ownedBy?.slice(0, 8) || 'Unknown'}
+                          {product.ownedBy === user?.uid || product.createdBy === user?.uid ? (
+                            <span className="text-green-600 font-medium">You</span>
+                          ) : (
+                            product.ownedBy?.slice(0, 8) || 'Unknown'
+                          )}
                         </span>
                       </td>
                     )}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedProduct(product);
-                            setIsModalOpen(true);
-                          }}
-                          className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'} font-medium`}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                    {canManageProducts && (
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product);
+                              setIsModalOpen(true);
+                            }}
+                            className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
+                          >
+                            Edit
+                          </button>
+                          {/* Only show delete for admin/manager or product owner */}
+                          {(shouldShowAllProducts || product.createdBy === user?.uid || product.ownedBy === user?.uid) && (
+                            <button
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'} font-medium`}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
+          // NO PRODUCTS FOUND STATE - This is the fix for the error
           <div className="p-12 text-center">
             <div className={`text-4xl mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
               📦
@@ -575,15 +597,35 @@ const Inventory = () => {
             <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
               {shouldShowSellerProducts
                 ? 'Start by adding your first product to begin selling.'
-                : 'Add products to get started with inventory management.'
+                : canManageProducts
+                ? 'Add products to get started with inventory management.'
+                : 'Contact admin to add products to the inventory.'
               }
             </p>
-            <button
-              onClick={() => navigate('/add-product')}
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-            >
-              Add Your First Product
-            </button>
+            {canManageProducts && (
+              <button
+                onClick={() => navigate('/add-product')}
+                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              >
+                Add Your First Product
+              </button>
+            )}
+            {(searchTerm || categoryFilter !== 'all' || stockFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoryFilter('all');
+                  setStockFilter('all');
+                }}
+                className={`ml-2 px-4 py-2 border rounded ${
+                  darkMode 
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         )}
       </div>
