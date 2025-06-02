@@ -185,5 +185,29 @@ if (error) {
     </div>
   );
 } 
+<div className="mb-8">
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        {shouldShowAllProducts ? 'All Inventory' : shouldShowSellerProducts ? 'My Products' : 'Product Inventory'}
+      </h1>
+    </div>
+    {canManageProducts && (
+      <button
+        onClick={() => navigate('/add-product')}
+        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+      >
+        Add Product
+      </button>
+    )}
+  </div>
+</div>
 
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6`}>
+    <p>Total Products</p>
+    <p>{stats.totalProducts}</p>
+  </div>
+  {/* Other stat cards */}
+</div>
 export default Inventory;
