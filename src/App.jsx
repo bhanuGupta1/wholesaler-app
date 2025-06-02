@@ -398,13 +398,15 @@ function App() {
                       <Routes>
                         <Route index element={<BusinessDashboard />} />
                         
-                        {/* Seller-specific routes */}
-                        <Route path="products" element={
-                          <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
-                            <Inventory />
-                          </ProtectedRoute>
-                        } />
-                        
+                          {/* Seller-only routes - automatically redirect buyers */}
+        <Route path="products" element={
+          <ProtectedRoute 
+            requiredPermission="canAccessInventory"
+            fallbackPath="/business"
+          >
+            <Inventory />
+          </ProtectedRoute>
+        } />
                         <Route path="add-product" element={
                           <ProtectedRoute allowedRoles={['admin', 'manager', 'business']}>
                             <AddProduct />
