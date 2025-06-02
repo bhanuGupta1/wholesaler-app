@@ -65,19 +65,17 @@ const AddProduct = () => {
         // Admin and Manager can see all recent products
         q = query(productsRef, orderBy('createdAt', 'desc'), limit(5));
       } else if (isSeller && user?.uid) {
-        // Sellers can only see products they created
+        // Sellers can only see products they created (no orderBy to avoid index issues)
         q = query(
           productsRef, 
           where('createdBy', '==', user.uid),
-          orderBy('createdAt', 'desc'), 
           limit(5)
         );
       } else {
-        // Regular users see products they created
+        // Regular users see products they created (no orderBy to avoid index issues)
         q = query(
           productsRef, 
           where('createdBy', '==', user?.uid || 'none'),
-          orderBy('createdAt', 'desc'), 
           limit(5)
         );
       }
@@ -101,11 +99,51 @@ const AddProduct = () => {
         };
       });
       
-      console.log(`📦 Fetched ${products.length} recent products for ${userAccessLevel}`);
+      // Sort products manually by creation date (newest first) for non-admin users
+      if (!isAdmin && !isManager) {
+        products.sort((a, b) => b.createdAt - a.createdAt);
+      }
+      
+      console.log(`📦 Successfully fetched ${products.length} recent products for ${userAccessLevel}`);
       setRecentProducts(products);
     } catch (err) {
       console.error('Error fetching recent products:', err);
-      // Don't show error for empty results in this case
+      // Handle indexing issues specifically
+      if (err.code === 'failed-precondition' || err.message.includes('index')) {
+        console.log('Firestore indexing issue, trying simpler query for recent products...');
+        // Try a simpler query without orderBy
+        if ((isSeller || !isAdmin) && user?.uid) {
+          try {
+            const simpleQuery = query(productsRef, where('createdBy', '==', user.uid), limit(5));
+            const snapshot = await getDocs(simpleQuery);
+            const products = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                name: data.name || 'Unnamed Product',
+                description: data.description || '',
+                price: data.price || 0,
+                stock: data.stock || data.stockQuantity || 0,
+                category: data.category || 'Uncategorized',
+                imageUrl: data.imageUrl || '',
+                sku: data.sku || '',
+                createdBy: data.createdBy || 'unknown',
+                ownedBy: data.ownedBy || data.createdBy || 'unknown',
+                createdByEmail: data.createdByEmail || 'unknown',
+                createdAt: data.createdAt?.toDate() || new Date()
+              };
+            });
+            
+            // Sort manually
+            products.sort((a, b) => b.createdAt - a.createdAt);
+            setRecentProducts(products);
+            return; // Exit successfully
+          } catch (simpleErr) {
+            console.error('Simple query also failed:', simpleErr);
+          }
+        }
+      }
+      // Don't show error for empty results in recent products - this is optional
     } finally {
       setLoadingProducts(false);
     }
