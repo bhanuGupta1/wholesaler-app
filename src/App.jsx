@@ -56,17 +56,6 @@ function App() {
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Registration />} />
-                <Route
-  path="/qr-tools"
-  element={
-    <ProtectedRoute allowedRoles={['admin', 'manager', 'business-seller']}>
-      <Layout>
-        <QRPage />
-      </Layout>
-    </ProtectedRoute>
-  }
-/>
-
                 
                 {/* Home Route - Default landing page for everyone */}
                 <Route path="/" element={
@@ -81,6 +70,16 @@ function App() {
                     <GuestDashboard />
                   </Layout>
                 } />
+<Route
+  path="/qr-tools"
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <QRPage />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
 
                 <Route path="/catalog" element={
                   <Layout>
