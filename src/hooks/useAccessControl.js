@@ -1,8 +1,9 @@
-// src/hooks/useAccessControl.js - Custom hook for access control
+// src/hooks/useAccessControl.js - FIXED with canDeleteOrders
 import { useAuth } from './useAuth';
 import {
   canManageProducts,
   canViewAllOrders,
+  canDeleteOrders, // ← This import exists
   canManageInventory,
   canApproveUsers,
   canAccessAdminPanel,
@@ -31,6 +32,7 @@ export const useAccessControl = () => {
     // Permission checkers
     canManageProducts: canManageProducts(user),
     canViewAllOrders: canViewAllOrders(user),
+    canDeleteOrders: canDeleteOrders(user), // ← ADD THIS LINE - it was missing!
     canManageInventory: canManageInventory(user),
     canApproveUsers: canApproveUsers(user),
     canAccessAdminPanel: canAccessAdminPanel(user),
