@@ -46,3 +46,21 @@ const BusinessRating = ({ businessId }) => {
         setLoading(false);
       }
     };
+ fetchRatingData();
+  }, [businessId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`p-4 rounded-lg ${darkMode ? 'bg-red-900/20 text-red-300' : 'bg-red-50 text-red-700'}`}>
+        {error}
+      </div>
+    );
+  }
