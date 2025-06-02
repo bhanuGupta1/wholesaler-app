@@ -10,7 +10,18 @@ const Inventory = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+  const { 
+    canAccessInventory, 
+    canViewAllProducts, 
+    canManageProducts, 
+    isSeller, 
+    isBuyer,
+    isAdmin,
+    isManager,
+    userAccessLevel 
+  } = useAccessControl();
+
+
   return <div>Inventory Component</div>;
 };
 const [products, setProducts] = useState([]);
@@ -29,6 +40,12 @@ const [stats, setStats] = useState({
 });
 const [notification, setNotification] = useState(null);
 
+const shouldShowAllProducts = user && (isAdmin || isManager);
+const shouldShowSellerProducts = user && isSeller;
 
-
+useEffect(() => {
+  if (user && user.accountType === 'business' && user.businessType === 'buyer') {
+    navigate('/business-dashboard', { replace: true });
+  }
+}, [user, navigate]);
 export default Inventory;
