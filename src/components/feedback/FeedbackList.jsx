@@ -75,3 +75,27 @@ if (loading) {
           </button>
         </div>
       </div>
+      {showForm && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <RatingForm productId={productId} onSuccess={handleNewFeedback} />
+        </div>
+      )}
+
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        {feedback.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              No feedback yet. Be the first to review!
+            </p>
+          </div>
+        ) : (
+          feedback.map(item => (
+            <FeedbackItem key={item.id} feedback={item} darkMode={darkMode} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FeedbackList;
