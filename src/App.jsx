@@ -415,6 +415,15 @@ function App() {
             <AddProduct />
           </ProtectedRoute>
         } />
+
+        <Route path="inventory" element={
+          <ProtectedRoute 
+            requiredPermission="canAccessInventory"
+            fallbackPath="/business"
+          >
+            <Inventory />
+          </ProtectedRoute>
+        } />
                         
                         <Route path="orders" element={
                           <UserSpecificOrders />
