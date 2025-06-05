@@ -6,7 +6,8 @@ const SupportCenter = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white shadow-lg rounded-lg p-10">
-          {/* Header */}
+          
+          {/* Here I add a header section with a title and brief introduction */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">Support Center</h1>
             <p className="text-gray-600 text-lg">
@@ -14,21 +15,24 @@ const SupportCenter = () => {
             </p>
           </div>
 
-          {/* Contact Information */}
+          {/* Here I add a section for contact information */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center mb-4">
               <FaPhoneAlt className="text-indigo-600 mr-2" />
               Contact Us
             </h2>
             <ul className="text-gray-700 space-y-2 pl-6 list-disc">
+              {/* Here I add email contact details */}
               <li>
                 <FaEnvelope className="inline-block mr-2 text-indigo-600" />
                 Email: <a href="mailto:support@wholesaler.com" className="text-indigo-600 underline">support@wholesaler.com</a>
               </li>
+              {/* Here I add phone contact details */}
               <li>
                 <FaPhoneAlt className="inline-block mr-2 text-indigo-600" />
                 Phone: <a href="tel:+11234567890" className="text-indigo-600 underline">(123) 456-7890</a>
               </li>
+              {/* Here I add live chat availability details */}
               <li>
                 <FaClock className="inline-block mr-2 text-indigo-600" />
                 Live Chat: Monday – Friday, 9AM – 5PM (NZST)
@@ -36,37 +40,27 @@ const SupportCenter = () => {
             </ul>
           </section>
 
-          {/* Help Topics */}
+          {/* Here I add a section listing help topics */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center mb-4">
               <FaBookOpen className="text-indigo-600 mr-2" />
               Help Topics
             </h2>
             <div className="grid sm:grid-cols-2 gap-6 text-gray-700">
+              {/* Here I add help topics for getting started */}
               <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
                 <h3 className="font-semibold text-indigo-700">Getting Started</h3>
                 <p>Learn how to create an account, navigate the dashboard, and start placing orders.</p>
               </div>
+              {/* Here I add inventory management help topics */}
               <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
                 <h3 className="font-semibold text-indigo-700">Inventory Management</h3>
                 <p>Manage your products, stock levels, and availability settings effectively.</p>
               </div>
-              <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-                <h3 className="font-semibold text-indigo-700">Order Processing</h3>
-                <p>Step-by-step help with placing, tracking, and managing orders.</p>
-              </div>
-              <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-                <h3 className="font-semibold text-indigo-700">Analytics & Insights</h3>
-                <p>Understand performance reports and use analytics to grow your business.</p>
-              </div>
-              <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-                <h3 className="font-semibold text-indigo-700">Security & Account Settings</h3>
-                <p>Update personal info, manage login credentials, and configure privacy settings.</p>
-              </div>
             </div>
           </section>
 
-          {/* Troubleshooting */}
+          {/* Here I add a troubleshooting section */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center mb-4">
               <FaTools className="text-indigo-600 mr-2" />
@@ -83,7 +77,7 @@ const SupportCenter = () => {
             </ul>
           </section>
 
-          {/* Submit a Ticket */}
+          {/* Here I add a submit ticket section */}
           <section className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 flex justify-center items-center mb-4">
               <FaTicketAlt className="text-indigo-600 mr-2" />
