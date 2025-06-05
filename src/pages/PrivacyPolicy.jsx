@@ -2,12 +2,14 @@ import React from 'react';
 import { FaEnvelope, FaUserShield, FaChartBar, FaCookieBite, FaLock, FaGavel } from 'react-icons/fa';
 
 const PrivacyPolicy = () => {
+  // Here I set the last updated date dynamically
   const lastUpdated = new Date().toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
+  // Here I define the navigation sections for the sidebar
   const sections = [
     { id: 'overview', label: 'Overview', icon: <FaUserShield /> },
     { id: 'data-collection', label: 'Data Collection', icon: <FaChartBar /> },
@@ -22,7 +24,8 @@ const PrivacyPolicy = () => {
   return (
     <div className="bg-gray-50 py-16 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Navigation */}
+        
+        {/* Here I add the sidebar navigation */}
         <aside className="lg:w-1/4 bg-white shadow border border-gray-200 rounded-lg p-6 sticky top-24 h-fit">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Contents</h2>
           <nav className="space-y-3 text-sm">
@@ -39,11 +42,12 @@ const PrivacyPolicy = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
+        {/* Here I add the main privacy policy content */}
         <main className="flex-1 bg-white p-8 rounded-lg shadow text-gray-800">
           <h1 className="text-4xl font-bold text-indigo-700 mb-2">Privacy Policy</h1>
           <p className="text-sm text-gray-500 mb-8">Last updated: {lastUpdated}</p>
 
+          {/* Here I add the overview section */}
           <section id="overview" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">Overview</h2>
             <p>
@@ -52,6 +56,7 @@ const PrivacyPolicy = () => {
             </p>
           </section>
 
+          {/* Here I add the data collection section */}
           <section id="data-collection" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">Data Collection</h2>
             <p className="mb-3">We may collect the following types of information:</p>
@@ -63,6 +68,7 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          {/* Here I add the cookies and tracking section */}
           <section id="cookies" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">Cookies & Tracking</h2>
             <p className="mb-3">
@@ -75,6 +81,7 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          {/* Here I add the data usage section */}
           <section id="usage" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">How We Use Your Data</h2>
             <ul className="list-disc list-inside space-y-1">
@@ -85,11 +92,10 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          {/* Here I add the data sharing section */}
           <section id="sharing" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">Data Sharing</h2>
-            <p>
-              We do not sell your personal data. We may share it with:
-            </p>
+            <p>We do not sell your personal data. We may share it with:</p>
             <ul className="list-disc list-inside space-y-1 mt-2">
               <li>Service providers (e.g. payment processors)</li>
               <li>Legal authorities if required by law</li>
@@ -97,6 +103,7 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          {/* Here I add the user rights section */}
           <section id="rights" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">User Rights</h2>
             <p className="mb-3">You have the right to:</p>
@@ -108,6 +115,7 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          {/* Here I add the policy updates section */}
           <section id="updates" className="mb-10">
             <h2 className="text-2xl font-semibold mb-4">Policy Updates</h2>
             <p>
@@ -115,6 +123,7 @@ const PrivacyPolicy = () => {
             </p>
           </section>
 
+          {/* Here I add the contact section */}
           <section id="contact">
             <h2 className="text-2xl font-semibold mb-4">Contact</h2>
             <p className="flex items-center text-gray-700">
