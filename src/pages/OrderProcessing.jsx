@@ -15,7 +15,7 @@ const OrderProcessing = () => {
     <div className="bg-gray-50 py-12 px-6 min-h-screen">
       <div className="max-w-6xl mx-auto bg-white p-10 rounded-lg shadow-md text-gray-800">
 
-        {/* Header */}
+        {/* This is the Header section */}
         <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">Order Processing</h1>
         <p className="text-lg mb-10 text-gray-600">
           Our order processing system ensures accuracy, transparency, and fast fulfillment — designed for both bulk and individual buyers.
@@ -44,7 +44,7 @@ const OrderProcessing = () => {
           </div>
         </section>
 
-        {/* Automation Section */}
+        {/* This section include features and discount related information.*/}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold flex items-center mb-4">
             <FaCogs className="text-indigo-600 mr-2" />
@@ -58,7 +58,7 @@ const OrderProcessing = () => {
           </ul>
         </section>
 
-        {/* Shipping Table */}
+        {/* This is the Shipping Table just for additional information. */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold flex items-center mb-4">
             <FaShippingFast className="text-indigo-600 mr-2" />
@@ -99,7 +99,7 @@ const OrderProcessing = () => {
           </div>
         </section>
 
-        {/* Modifications */}
+        {/* This is just order related problems related modifications */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold flex items-center mb-4">
             <FaEdit className="text-indigo-600 mr-2" />
@@ -115,7 +115,7 @@ const OrderProcessing = () => {
           </ul>
         </section>
 
-        {/* Tracking */}
+        {/* This sections holds the tracking information.*/}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold flex items-center mb-4">
             <FaTruckMoving className="text-indigo-600 mr-2" />
@@ -133,7 +133,7 @@ const OrderProcessing = () => {
           </ul>
         </section>
 
-        {/* Support */}
+        {/* THis is the Support section. */}
         <section className="mb-10">
           <h2 className="text-2xl font-semibold flex items-center mb-4">
             <FaRegClock className="text-indigo-600 mr-2" />
