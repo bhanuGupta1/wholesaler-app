@@ -41,3 +41,19 @@ const FeedbackPage = () => {
           </p>
         </div>
       )}
+      <FeedbackList 
+        orderId={`general-feedback-${user.uid}`}
+        onLoading={setLoading}
+        onError={setError}
+      />
+
+      {loading && !error && (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FeedbackPage;
