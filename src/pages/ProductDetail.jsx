@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import ProductModal from '../components/inventory/ProductModal';
+import FeedbackList from '../components/feedback/FeedbackList';
 
 const ProductDetail = () => {
   const { id } = useParams();
