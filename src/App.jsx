@@ -135,7 +135,7 @@ function App() {
                  <Route path="/feedback" element={
                   <ProtectedRoute requiredRole="user">
                     <Layout>
-                      <Feedback Page />
+                      <FeedbackPage />
                     </Layout>
                   </ProtectedRoute>
                 } />
