@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import FeedbackList from '../components/feedback/FeedbackList';
 
+
 const FeedbackPage = () => {
   const { user } = useAuth();
 
@@ -14,7 +15,8 @@ const FeedbackPage = () => {
       <h1 className="text-2xl font-bold mb-4">Give Feedback</h1>
       <p className="text-gray-600 mb-6 dark:text-gray-400">We’d love to hear your thoughts about our service!</p>
       {/* You can pass a placeholder orderId or userId-based identifier */}
-      <FeedbackList orderId={`general-feedback-${user.uid}`} />
+   <FeedbackList orderId={`general-feedback-${user.uid}`} />
+
     </div>
   );
 };

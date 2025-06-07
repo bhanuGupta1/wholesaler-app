@@ -4,6 +4,7 @@ import { db } from '../../firebase/config';
 import { useTheme } from '../../context/ThemeContext';
 import FeedbackItem from './FeedbackItem';
 import RatingForm from './RatingForm';
+import React from 'react';
 
 const FeedbackList = ({ productId }) => {
   const { darkMode } = useTheme();
