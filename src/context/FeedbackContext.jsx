@@ -32,3 +32,24 @@ const FeedbackList = ({ orderId, onLoading, onError }) => {
   if (isLoading) {
     return null; // Loading state is handled by parent
   }
+
+   return (
+    <div className="space-y-4">
+      {feedback.length > 0 ? (
+        feedback.map((item) => (
+          <div key={item.id} className="p-4 border rounded-lg dark:border-gray-700">
+            {/* Render feedback items */}
+          </div>
+        ))
+      ) : (
+        !isLoading && (
+          <p className="text-gray-500 dark:text-gray-400">
+            No feedback yet. Be the first to share your thoughts!
+          </p>
+        )
+      )}
+    </div>
+  );
+};
+
+export default FeedbackList;
