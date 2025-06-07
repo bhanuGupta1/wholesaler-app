@@ -129,7 +129,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </svg>
               Dashboard
             </Link>
-            
+           <Link 
+              to="/feedback" 
+              className={`text-indigo-100 hover:text-white font-medium transition-colors flex items-center ${isActive('/feedback') ? 'border-b-2 border-white' : ''}`}
+          >
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h6m-6 4h8M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+  Feedback
+</Link>
+
+
             <Link 
               to="/catalog" 
               className={`text-indigo-100 hover:text-white font-medium transition-colors flex items-center ${isActive('/catalog') ? 'border-b-2 border-white' : ''}`}
