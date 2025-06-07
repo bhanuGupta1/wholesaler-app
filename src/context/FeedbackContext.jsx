@@ -16,3 +16,19 @@ const FeedbackList = ({ orderId, onLoading, onError }) => {
         }
         const data = await response.json();
         setFeedback(data);
+        if (onError) onError(null);
+      } catch (err) {
+        console.error('Feedback loading error:', err);
+        if (onError) onError(err);
+      } finally {
+        setIsLoading(false);
+        if (onLoading) onLoading(false);
+      }
+    };
+
+    fetchFeedback();
+  }, [orderId, onLoading, onError]);
+
+  if (isLoading) {
+    return null; // Loading state is handled by parent
+  }
