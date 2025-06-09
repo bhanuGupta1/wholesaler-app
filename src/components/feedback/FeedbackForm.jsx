@@ -61,3 +61,33 @@ const FeedbackForm = ({ onSubmit }) => {
           required
         />
       </div>
+       <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Rating</label>
+        <div className="flex space-x-2 mt-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              className={`h-8 w-8 rounded-full ${rating >= star ? 'bg-yellow-400' : 'bg-gray-200'}`}
+            >
+              {star}
+            </button>
+          ))}
+        </div>
+      </div>
+
