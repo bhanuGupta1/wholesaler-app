@@ -39,3 +39,10 @@ const FeedbackForm = ({ onSubmit }) => {
       console.error('Feedback submission error:', error);
     }
   };
+  if (submitted) {
+    return (
+      <div className="p-4 bg-green-100 text-green-800 rounded-lg">
+        Thank you for your feedback! We appreciate your input.
+      </div>
+    );
+  }
