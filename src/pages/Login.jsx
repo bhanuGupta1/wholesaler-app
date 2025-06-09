@@ -1,4 +1,4 @@
-// src/pages/Login.jsx - CYBERPUNK VERSION with Matrix Rain and Neural Interface
+// src/pages/Login.jsx - CYBERPUNK VERSION with visible Matrix Rain and Theme Toggle
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -26,7 +26,7 @@ const Login = () => {
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
 
-  // Matrix Rain Effect
+  // Matrix Rain Effect - Enhanced and Visible
   useEffect(() => {
     const canvas = matrixCanvasRef.current;
     if (!canvas) return;
@@ -40,10 +40,11 @@ const Login = () => {
 
     const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
     const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const alphabet = katakana + latin;
+    const nums = '0123456789';
+    const alphabet = katakana + latin + nums;
 
     const fontSize = 14;
-    const columns = canvas.width / fontSize;
+    const columns = Math.floor(canvas.width / fontSize);
     const rainDrops = [];
 
     for (let x = 0; x < columns; x++) {
@@ -51,7 +52,8 @@ const Login = () => {
     }
 
     const draw = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      // Semi-transparent black overlay for trail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.font = fontSize + 'px monospace';
@@ -59,14 +61,28 @@ const Login = () => {
       for (let i = 0; i < rainDrops.length; i++) {
         const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
         
-        const gradient = ctx.createLinearGradient(0, rainDrops[i] * fontSize - 20, 0, rainDrops[i] * fontSize);
-        gradient.addColorStop(0, '#00FFFF');
-        gradient.addColorStop(0.5, '#00FF88');
-        gradient.addColorStop(1, 'rgba(0, 255, 255, 0.05)');
+        // Create gradient for each character
+        const gradient = ctx.createLinearGradient(
+          0, 
+          rainDrops[i] * fontSize - 20, 
+          0, 
+          rainDrops[i] * fontSize + 10
+        );
+        
+        if (darkMode) {
+          gradient.addColorStop(0, '#00FFFF');
+          gradient.addColorStop(0.7, '#00FF88');
+          gradient.addColorStop(1, 'rgba(0, 255, 255, 0.1)');
+        } else {
+          gradient.addColorStop(0, '#0066CC');
+          gradient.addColorStop(0.7, '#0088AA');
+          gradient.addColorStop(1, 'rgba(0, 102, 204, 0.1)');
+        }
         
         ctx.fillStyle = gradient;
         ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
 
+        // Reset drop when it reaches bottom
         if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
           rainDrops[i] = 0;
         }
@@ -74,10 +90,18 @@ const Login = () => {
       }
     };
 
-    const interval = setInterval(draw, 100);
+    const interval = setInterval(draw, 60); // Faster for more visible effect
 
     const handleResize = () => {
       updateCanvasSize();
+      // Recalculate columns on resize
+      const newColumns = Math.floor(canvas.width / fontSize);
+      if (newColumns !== columns) {
+        rainDrops.length = newColumns;
+        for (let x = columns; x < newColumns; x++) {
+          rainDrops[x] = Math.random() * canvas.height / fontSize;
+        }
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -85,7 +109,7 @@ const Login = () => {
       clearInterval(interval);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [darkMode]); // Re-run when theme changes
 
   // Floating Particles Effect
   useEffect(() => {
@@ -100,23 +124,23 @@ const Login = () => {
     updateCanvasSize();
 
     const particles = [];
-    const particleCount = 40;
+    const particleCount = 50;
     
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
         size: Math.random() * 2 + 1,
         pulse: Math.random() * Math.PI * 2,
-        color: `hsl(${180 + Math.random() * 60}, 100%, 50%)`,
+        color: darkMode ? `hsl(${180 + Math.random() * 60}, 100%, 50%)` : `hsl(${200 + Math.random() * 40}, 80%, 40%)`,
         energy: Math.random()
       });
     }
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+      ctx.fillStyle = darkMode ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((particle) => {
@@ -128,7 +152,7 @@ const Login = () => {
         if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
 
-        const glowSize = particle.size + particle.energy * 2;
+        const glowSize = particle.size + particle.energy * 3;
         const gradient = ctx.createRadialGradient(
           particle.x, particle.y, 0,
           particle.x, particle.y, glowSize
@@ -153,7 +177,7 @@ const Login = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [darkMode]); // Re-run when theme changes
 
   // Clear errors when component mounts or when user types
   useEffect(() => {
@@ -231,60 +255,83 @@ const Login = () => {
   };
 
   return (
-    <div className="cyberpunk-layout-wrapper min-h-screen relative overflow-hidden">
-      {/* CYBERPUNK BACKGROUND EFFECTS */}
+    // SIMPLIFIED: Direct background without complex wrappers
+    <div className={`min-h-screen relative overflow-hidden ${darkMode ? 'bg-black' : 'bg-gray-100'}`}>
+      
+      {/* MATRIX RAIN - TOP LAYER, MOST VISIBLE */}
       <canvas 
         ref={matrixCanvasRef} 
-        className="fixed inset-0 pointer-events-none z-0 opacity-20" 
-      />
-      <canvas 
-        ref={particleCanvasRef} 
-        className="fixed inset-0 pointer-events-none z-1 opacity-30" 
+        className="fixed inset-0 z-0" 
+        style={{ 
+          opacity: darkMode ? 0.4 : 0.2,
+          mixBlendMode: darkMode ? 'normal' : 'multiply'
+        }}
       />
       
-      {/* Grid Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-2 opacity-10">
-        <div className="cyberpunk-grid"></div>
-      </div>
+      {/* FLOATING PARTICLES */}
+      <canvas 
+        ref={particleCanvasRef} 
+        className="fixed inset-0 z-1" 
+        style={{ 
+          opacity: darkMode ? 0.6 : 0.3 
+        }}
+      />
+      
+      {/* CYBERPUNK GRID - Only in dark mode */}
+      {darkMode && (
+        <div className="fixed inset-0 z-2 opacity-15 pointer-events-none">
+          <div className="cyberpunk-grid"></div>
+        </div>
+      )}
 
-      {/* Scanlines */}
-      <div className="fixed inset-0 pointer-events-none z-3">
-        <div className="scanlines"></div>
-      </div>
+      {/* SCANLINES - Only in dark mode */}
+      {darkMode && (
+        <div className="fixed inset-0 z-3 pointer-events-none">
+          <div className="scanlines"></div>
+        </div>
+      )}
 
       {/* MAIN CONTENT */}
       <div className="relative z-10 min-h-screen flex flex-col md:flex-row">
         
         {/* Left Panel - Neural Interface Info */}
-        <div className="hidden md:flex md:w-1/2 relative p-12 flex-col justify-between overflow-hidden">
-          {/* Background glow for left panel */}
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-purple-900/20 backdrop-blur-sm"></div>
+        <div className="hidden md:flex md:w-1/2 relative p-12 flex-col justify-between">
+          {/* Background overlay */}
+          <div className={`absolute inset-0 ${
+            darkMode 
+              ? 'bg-gradient-to-br from-cyan-900/30 to-purple-900/30' 
+              : 'bg-gradient-to-br from-blue-900/80 to-purple-900/80'
+          } backdrop-blur-sm`}></div>
           
           <div className="relative z-10">
             {/* Cyberpunk Logo */}
             <div className="flex items-center mb-12">
-              <div className="cyber-logo h-12 w-12">
+              <div className={`cyber-logo h-12 w-12 ${darkMode ? '' : 'border-blue-600'}`}>
                 <div className="logo-glow"></div>
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                   <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold ml-4 cyberpunk-title text-cyan-400 cyber-glow">
+              <h1 className={`text-3xl font-bold ml-4 cyberpunk-title ${
+                darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'
+              }`}>
                 WHOLESALER
               </h1>
             </div>
             
             {/* Main Title */}
             <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
-              <span className="text-cyan-400 cyber-glow">NEURAL</span>
+              <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>NEURAL</span>
               <br />
-              <span className="text-pink-400 cyber-glow">INTERFACE</span>
+              <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-700'}>INTERFACE</span>
               <br />
-              <span className="text-yellow-400 cyber-glow">ACCESS</span>
+              <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>ACCESS</span>
             </h2>
             
-            <p className="text-xl text-gray-300 mb-12 leading-relaxed">
+            <p className={`text-xl mb-12 leading-relaxed ${
+              darkMode ? 'text-gray-300' : 'text-white'
+            }`}>
               Connect to the wholesale neural network and manage your business operations 
               through our advanced quantum commerce platform.
             </p>
@@ -294,39 +341,51 @@ const Login = () => {
               <div className="flex items-start">
                 <div className="feature-icon mr-6">
                   <div className="icon-glow"></div>
-                  <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-8 h-8 ${darkMode ? 'text-cyan-400' : 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-cyan-400 mb-2 cyberpunk-title">QUANTUM SECURITY</h3>
-                  <p className="text-gray-400">Role-based neural authentication with quantum encryption</p>
+                  <h3 className={`text-xl font-bold mb-2 cyberpunk-title ${
+                    darkMode ? 'text-cyan-400' : 'text-blue-600'
+                  }`}>QUANTUM SECURITY</h3>
+                  <p className={darkMode ? 'text-gray-400' : 'text-gray-200'}>
+                    Role-based neural authentication with quantum encryption
+                  </p>
                 </div>
               </div>
               
               <div className="flex items-start">
                 <div className="feature-icon mr-6">
                   <div className="icon-glow"></div>
-                  <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-8 h-8 ${darkMode ? 'text-green-400' : 'text-green-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-green-400 mb-2 cyberpunk-title">MULTI-PROTOCOL SUPPORT</h3>
-                  <p className="text-gray-400">Advanced dashboards for all business entity types</p>
+                  <h3 className={`text-xl font-bold mb-2 cyberpunk-title ${
+                    darkMode ? 'text-green-400' : 'text-green-600'
+                  }`}>MULTI-PROTOCOL SUPPORT</h3>
+                  <p className={darkMode ? 'text-gray-400' : 'text-gray-200'}>
+                    Advanced dashboards for all business entity types
+                  </p>
                 </div>
               </div>
               
               <div className="flex items-start">
                 <div className="feature-icon mr-6">
                   <div className="icon-glow"></div>
-                  <svg className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-8 h-8 ${darkMode ? 'text-purple-400' : 'text-purple-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-purple-400 mb-2 cyberpunk-title">NEURAL COMMERCE</h3>
-                  <p className="text-gray-400">AI-powered buyer and seller ecosystem integration</p>
+                  <h3 className={`text-xl font-bold mb-2 cyberpunk-title ${
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`}>NEURAL COMMERCE</h3>
+                  <p className={darkMode ? 'text-gray-400' : 'text-gray-200'}>
+                    AI-powered buyer and seller ecosystem integration
+                  </p>
                 </div>
               </div>
             </div>
@@ -334,7 +393,7 @@ const Login = () => {
           
           {/* Footer */}
           <div className="relative z-10">
-            <p className="text-sm text-gray-500 font-mono">
+            <p className={`text-sm font-mono ${darkMode ? 'text-gray-500' : 'text-gray-300'}`}>
               © {new Date().getFullYear()} NEURAL WHOLESALER CORP. ALL RIGHTS RESERVED.
             </p>
           </div>
@@ -343,7 +402,9 @@ const Login = () => {
         {/* Right Panel - Login Interface */}
         <div className="flex flex-col justify-center items-center p-6 md:p-12 w-full md:w-1/2 relative">
           {/* Background for right panel */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+          <div className={`absolute inset-0 ${
+            darkMode ? 'bg-black/90' : 'bg-white/95'
+          } backdrop-blur-md`}></div>
           
           {/* Theme Toggle */}
           <div className="absolute top-6 right-6 z-20">
@@ -353,14 +414,16 @@ const Login = () => {
           <div className="w-full max-w-md relative z-10">
             {/* Mobile Logo */}
             <div className="md:hidden flex items-center justify-center mb-12">
-              <div className="cyber-logo h-12 w-12">
+              <div className={`cyber-logo h-12 w-12 ${darkMode ? '' : 'border-blue-600'}`}>
                 <div className="logo-glow"></div>
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                   <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold ml-3 cyberpunk-title text-cyan-400 cyber-glow">
+              <h1 className={`text-2xl font-bold ml-3 cyberpunk-title ${
+                darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'
+              }`}>
                 WHOLESALER
               </h1>
             </div>
@@ -368,27 +431,31 @@ const Login = () => {
             {/* Login Title */}
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4 cyberpunk-title">
-                <span className="text-cyan-400 cyber-glow">ACCESS</span>
+                <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>ACCESS</span>
                 <br />
-                <span className="text-pink-400 cyber-glow">TERMINAL</span>
+                <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-700'}>TERMINAL</span>
               </h2>
-              <p className="text-gray-400 text-lg">Initialize neural connection</p>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Initialize neural connection
+              </p>
             </div>
             
             {/* Demo Accounts Card */}
-            <div className="cyber-card mb-8">
-              <div className="card-glow"></div>
+            <div className={`${darkMode ? 'cyber-card' : 'bg-gray-50 border-2 border-gray-300 rounded-lg'} mb-8`}>
+              {darkMode && <div className="card-glow"></div>}
               <div className="card-content p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <p className="text-cyan-400 font-bold text-sm cyberpunk-title">
+                  <p className={`font-bold text-sm cyberpunk-title ${
+                    darkMode ? 'text-cyan-400' : 'text-blue-600'
+                  }`}>
                     DEMO PROTOCOLS
                   </p>
                   <button 
                     onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-                    className="cyber-btn cyber-btn-ghost text-xs py-1 px-3"
+                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'bg-blue-100 hover:bg-blue-200 border border-blue-300 rounded px-3 py-1'} text-xs`}
                   >
-                    <span className="btn-text">{showDemoAccounts ? 'HIDE' : 'SHOW'}</span>
-                    <div className="btn-glow"></div>
+                    {darkMode && <div className="btn-glow"></div>}
+                    <span className={darkMode ? 'btn-text' : ''}>{showDemoAccounts ? 'HIDE' : 'SHOW'}</span>
                   </button>
                 </div>
                 
@@ -396,38 +463,38 @@ const Login = () => {
                   <div className="space-y-3">
                     <button 
                       onClick={() => useTestAccount('admin')}
-                      className="cyber-btn cyber-btn-red w-full text-xs py-2"
+                      className={`${darkMode ? 'cyber-btn cyber-btn-red' : 'bg-red-100 hover:bg-red-200 border border-red-300 rounded px-3 py-2'} w-full text-xs`}
                     >
-                      <span className="btn-text">🔴 ADMIN PROTOCOL</span>
-                      <div className="btn-glow"></div>
+                      {darkMode && <div className="btn-glow"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>🔴 ADMIN PROTOCOL</span>
                     </button>
                     <button 
                       onClick={() => useTestAccount('manager')}
-                      className="cyber-btn cyber-btn-purple w-full text-xs py-2"
+                      className={`${darkMode ? 'cyber-btn cyber-btn-purple' : 'bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded px-3 py-2'} w-full text-xs`}
                     >
-                      <span className="btn-text">🟣 MANAGER PROTOCOL</span>
-                      <div className="btn-glow"></div>
+                      {darkMode && <div className="btn-glow"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>🟣 MANAGER PROTOCOL</span>
                     </button>
                     <button 
                       onClick={() => useTestAccount('business_buyer')}
-                      className="cyber-btn cyber-btn-blue w-full text-xs py-2"
+                      className={`${darkMode ? 'cyber-btn cyber-btn-blue' : 'bg-blue-100 hover:bg-blue-200 border border-blue-300 rounded px-3 py-2'} w-full text-xs`}
                     >
-                      <span className="btn-text">🔵 BUYER PROTOCOL</span>
-                      <div className="btn-glow"></div>
+                      {darkMode && <div className="btn-glow"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>🔵 BUYER PROTOCOL</span>
                     </button>
                     <button 
                       onClick={() => useTestAccount('business_seller')}
-                      className="cyber-btn cyber-btn-green w-full text-xs py-2"
+                      className={`${darkMode ? 'cyber-btn cyber-btn-green' : 'bg-green-100 hover:bg-green-200 border border-green-300 rounded px-3 py-2'} w-full text-xs`}
                     >
-                      <span className="btn-text">🟠 SELLER PROTOCOL</span>
-                      <div className="btn-glow"></div>
+                      {darkMode && <div className="btn-glow"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>🟠 SELLER PROTOCOL</span>
                     </button>
                     <button 
                       onClick={() => useTestAccount('user')}
-                      className="cyber-btn cyber-btn-cyan w-full text-xs py-2"
+                      className={`${darkMode ? 'cyber-btn cyber-btn-cyan' : 'bg-cyan-100 hover:bg-cyan-200 border border-cyan-300 rounded px-3 py-2'} w-full text-xs`}
                     >
-                      <span className="btn-text">🟢 USER PROTOCOL</span>
-                      <div className="btn-glow"></div>
+                      {darkMode && <div className="btn-glow"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>🟢 USER PROTOCOL</span>
                     </button>
                   </div>
                 )}
@@ -436,17 +503,19 @@ const Login = () => {
             
             {/* Error Display */}
             {(error || authError) && (
-              <div className="cyber-card mb-8 border-red-600">
+              <div className={`${darkMode ? 'cyber-card border-red-600' : 'bg-red-50 border-2 border-red-300 rounded-lg'} mb-8`}>
                 <div className="card-content p-4">
                   <div className="flex items-center">
                     <svg className="h-6 w-6 text-red-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <h3 className="text-red-400 font-bold text-sm cyberpunk-title mb-1">
+                      <h3 className={`font-bold text-sm cyberpunk-title mb-1 ${
+                        darkMode ? 'text-red-400' : 'text-red-700'
+                      }`}>
                         CONNECTION ERROR
                       </h3>
-                      <p className="text-red-300 text-sm">
+                      <p className={`text-sm ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
                         {error || authError}
                       </p>
                     </div>
@@ -457,17 +526,19 @@ const Login = () => {
 
             {/* Approval Status */}
             {approvalStatus && !approvalStatus.canAccess && user && (
-              <div className="cyber-card mb-8 border-yellow-600">
+              <div className={`${darkMode ? 'cyber-card border-yellow-600' : 'bg-yellow-50 border-2 border-yellow-300 rounded-lg'} mb-8`}>
                 <div className="card-content p-4">
                   <div className="flex items-center">
                     <svg className="h-6 w-6 text-yellow-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 13.5C3.312 15.333 4.27 17 5.81 17z" />
                     </svg>
                     <div>
-                      <h3 className="text-yellow-400 font-bold text-sm cyberpunk-title mb-1">
+                      <h3 className={`font-bold text-sm cyberpunk-title mb-1 ${
+                        darkMode ? 'text-yellow-400' : 'text-yellow-700'
+                      }`}>
                         AUTHORIZATION STATUS: {approvalStatus.status?.replace('_', ' ').toUpperCase()}
                       </h3>
-                      <p className="text-yellow-300 text-sm">
+                      <p className={`text-sm ${darkMode ? 'text-yellow-300' : 'text-yellow-600'}`}>
                         {approvalStatus.message || 'Neural access requires admin approval.'}
                       </p>
                     </div>
@@ -479,12 +550,14 @@ const Login = () => {
             {/* Login Form */}
             <form className="space-y-8" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email-address" className="block text-sm font-bold text-cyan-400 cyberpunk-title mb-2">
+                <label htmlFor="email-address" className={`block text-sm font-bold cyberpunk-title mb-2 ${
+                  darkMode ? 'text-cyan-400' : 'text-blue-600'
+                }`}>
                   EMAIL PROTOCOL
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`h-5 w-5 ${darkMode ? 'text-cyan-600' : 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                   </div>
@@ -496,19 +569,25 @@ const Login = () => {
                     required
                     value={credentials.email}
                     onChange={handleChange}
-                    className="pl-12 py-4 text-lg font-mono"
+                    className={`pl-12 py-4 text-lg font-mono w-full rounded-lg border-2 transition-all ${
+                      darkMode 
+                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500' 
+                        : 'bg-white border-blue-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500'
+                    }`}
                     placeholder="neural.id@corp.net"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-bold text-cyan-400 cyberpunk-title mb-2">
+                <label htmlFor="password" className={`block text-sm font-bold cyberpunk-title mb-2 ${
+                  darkMode ? 'text-cyan-400' : 'text-blue-600'
+                }`}>
                   ACCESS KEY
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`h-5 w-5 ${darkMode ? 'text-cyan-600' : 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
                   </div>
@@ -520,7 +599,11 @@ const Login = () => {
                     required
                     value={credentials.password}
                     onChange={handleChange}
-                    className="pl-12 py-4 text-lg font-mono"
+                    className={`pl-12 py-4 text-lg font-mono w-full rounded-lg border-2 transition-all ${
+                      darkMode 
+                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500' 
+                        : 'bg-white border-blue-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500'
+                    }`}
                     placeholder="••••••••••••••••"
                   />
                 </div>
@@ -534,15 +617,25 @@ const Login = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-cyan-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500"
+                    className={`h-4 w-4 rounded ${
+                      darkMode 
+                        ? 'border-cyan-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500' 
+                        : 'border-blue-300 bg-white text-blue-500 focus:ring-blue-500'
+                    }`}
                   />
-                  <label htmlFor="remember-me" className="ml-3 block text-sm text-gray-400 cyberpunk-title">
+                  <label htmlFor="remember-me" className={`ml-3 block text-sm cyberpunk-title ${
+                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     MAINTAIN CONNECTION
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="text-pink-400 hover:text-pink-300 cyberpunk-title cyber-glow">
+                  <Link to="/forgot-password" className={`cyberpunk-title transition-colors ${
+                    darkMode 
+                      ? 'text-purple-400 hover:text-purple-300 cyber-glow' 
+                      : 'text-purple-600 hover:text-purple-700'
+                  }`}>
                     RESET ACCESS
                   </Link>
                 </div>
@@ -552,31 +645,35 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading || authLoading}
-                  className="cyber-btn cyber-btn-primary w-full py-4 text-lg"
+                  className={`${
+                    darkMode ? 'cyber-btn cyber-btn-primary' : 'bg-blue-600 hover:bg-blue-700 border-2 border-blue-600 text-white rounded-lg transition-all'
+                  } w-full py-4 text-lg font-bold`}
                 >
                   {(loading || authLoading) ? (
                     <>
-                      <div className="cyber-loading-spinner w-6 h-6 mr-3"></div>
-                      <span className="btn-text">CONNECTING...</span>
+                      {darkMode && <div className="cyber-loading-spinner w-6 h-6 mr-3"></div>}
+                      <span className={darkMode ? 'btn-text' : ''}>CONNECTING...</span>
                     </>
                   ) : (
-                    <span className="btn-text">INITIALIZE CONNECTION</span>
+                    <span className={darkMode ? 'btn-text' : ''}>INITIALIZE CONNECTION</span>
                   )}
-                  <div className="btn-glow"></div>
+                  {darkMode && <div className="btn-glow"></div>}
                 </button>
               </div>
             </form>
             
             {/* Registration Link */}
             <div className="mt-10 text-center">
-              <p className="text-gray-400 text-sm mb-2">
+              <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Need neural access credentials?
               </p>
-              <Link to="/register" className="cyber-btn cyber-btn-outline">
-                <span className="btn-text">REQUEST ACCESS</span>
-                <div className="btn-glow"></div>
+              <Link to="/register" className={`${
+                darkMode ? 'cyber-btn cyber-btn-outline' : 'bg-white border-2 border-blue-300 text-blue-600 hover:bg-blue-50 rounded-lg px-6 py-3 transition-all'
+              }`}>
+                {darkMode && <div className="btn-glow"></div>}
+                <span className={darkMode ? 'btn-text' : ''}>REQUEST ACCESS</span>
               </Link>
-              <p className="text-xs mt-4 text-gray-500 font-mono">
+              <p className={`text-xs mt-4 font-mono ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                 ⚠️ Business and manager protocols require admin authorization
               </p>
             </div>
