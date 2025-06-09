@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - Original with Theme Toggle Support Added
+// src/pages/Home.jsx - Fixed with proper Theme Toggle Support
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -24,7 +24,7 @@ const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Get role-specific dashboard info with cyberpunk colors
+  // Get role-specific dashboard info with theme-adaptive colors
   const getDashboardInfo = () => {
     if (!user) return null;
     
@@ -37,7 +37,7 @@ const Home = () => {
           description: 'Manage users, system settings, and monitor platform health',
           route: '/admin-dashboard',
           icon: '⚙️',
-          color: 'cyber-btn-red'
+          color: darkMode ? 'cyber-btn-red' : 'bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg'
         };
       case 'manager':
         return {
@@ -45,7 +45,7 @@ const Home = () => {
           description: 'Oversee team performance and business metrics',
           route: '/manager-dashboard',
           icon: '📊',
-          color: 'cyber-btn-purple'
+          color: darkMode ? 'cyber-btn-purple' : 'bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg'
         };
       case 'business':
         if (businessType === 'seller') {
@@ -54,7 +54,7 @@ const Home = () => {
             description: 'Manage products, inventory, and track sales performance',
             route: '/business-dashboard',
             icon: '🏪',
-            color: 'cyber-btn-green'
+            color: darkMode ? 'cyber-btn-green' : 'bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg'
           };
         } else {
           return {
@@ -62,7 +62,7 @@ const Home = () => {
             description: 'Browse products, manage orders, and track purchases',
             route: '/business-dashboard',
             icon: '🛒',
-            color: 'cyber-btn-blue'
+            color: darkMode ? 'cyber-btn-blue' : 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg'
           };
         }
       case 'user':
@@ -71,7 +71,7 @@ const Home = () => {
           description: 'Manage your orders and view your activity',
           route: '/user-dashboard',
           icon: '👤',
-          color: 'cyber-btn-cyan'
+          color: darkMode ? 'cyber-btn-cyan' : 'bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg'
         };
       default:
         return null;
@@ -97,7 +97,7 @@ const Home = () => {
           <div className={`${darkMode ? 'cyber-loading-spinner' : 'animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 mx-auto'} mb-8`}></div>
           
           {/* Loading Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 cyberpunk-title">
+          <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${darkMode ? 'cyberpunk-title' : 'font-bold'}`}>
             <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>INITIALIZING</span>
             <br />
             <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>NEURAL INTERFACE</span>
@@ -178,9 +178,8 @@ const Home = () => {
   }
 
   return (
-    // Theme-aware background
-    <div className={darkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}>
-      {/* Override any wrapper backgrounds with this style */}
+    <>
+      {/* Override any wrapper backgrounds */}
       <style>{`
         .main-content-wrapper {
           background: transparent !important;
@@ -189,12 +188,12 @@ const Home = () => {
         }
       `}</style>
       
-      {/* HERO SECTION - DIRECT ON BACKGROUND */}
+      {/* HERO SECTION */}
       <section className="min-h-screen flex items-center justify-center relative">
         <div className="text-center max-w-6xl mx-auto px-4">
-          {/* Holographic Title Effect */}
+          {/* Title with theme-adaptive styling */}
           <div className="mb-12 relative">
-            <h1 className="cyberpunk-title text-6xl md:text-9xl font-bold mb-6">
+            <h1 className={`text-6xl md:text-9xl font-bold mb-6 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
               {user ? (
                 <>
                   <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>WELCOME BACK</span>
@@ -212,13 +211,13 @@ const Home = () => {
               )}
             </h1>
             
-            {/* Holographic subtitle */}
+            {/* Subtitle */}
             <div className={`text-2xl md:text-4xl mb-8 ${darkMode ? 'text-gray-300 holographic-text' : 'text-gray-600'}`}>
               NEURAL COMMERCE PLATFORM
             </div>
           </div>
 
-          {/* Enhanced subtitle with typewriter effect */}
+          {/* Description */}
           <p className={`text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed ${darkMode ? 'text-gray-300 typewriter-text' : 'text-gray-700'}`}>
             {user 
               ? 'Neural interface activated. Your wholesale management systems are online.'
@@ -226,80 +225,80 @@ const Home = () => {
             }
           </p>
           
-          {/* CYBERPUNK BUTTONS */}
+          {/* Action Buttons */}
           <div className="flex flex-wrap gap-6 justify-center mb-16">
             {user ? (
               // Authenticated User Buttons
               <>
-                <Link to="/products" className="cyber-btn cyber-btn-primary">
-                  <span className="btn-icon">🛒</span>
-                  <span className="btn-text">Browse Products</span>
-                  <div className="btn-glow"></div>
+                <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">🛒</span>
+                  <span>Browse Products</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
-                <Link to="/cart" className="cyber-btn cyber-btn-secondary">
-                  <span className="btn-icon">🛍️</span>
-                  <span className="btn-text">Shopping Cart</span>
-                  <div className="btn-glow"></div>
+                <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">🛍️</span>
+                  <span>Shopping Cart</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
                 {dashboardInfo && (
-                  <Link to={dashboardInfo.route} className={`cyber-btn ${dashboardInfo.color}`}>
-                    <span className="btn-icon">{dashboardInfo.icon}</span>
-                    <span className="btn-text">{dashboardInfo.title}</span>
-                    <div className="btn-glow"></div>
+                  <Link to={dashboardInfo.route} className={darkMode ? `cyber-btn ${dashboardInfo.color}` : `${dashboardInfo.color} font-semibold transition-colors inline-flex items-center gap-2`}>
+                    <span className="text-xl">{dashboardInfo.icon}</span>
+                    <span>{dashboardInfo.title}</span>
+                    {darkMode && <div className="btn-glow"></div>}
                   </Link>
                 )}
               </>
             ) : (
               // Guest User Buttons
               <>
-                <Link to="/products" className="cyber-btn cyber-btn-primary">
-                  <span className="btn-icon">🛒</span>
-                  <span className="btn-text">Browse Products</span>
-                  <div className="btn-glow"></div>
+                <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">🛒</span>
+                  <span>Browse Products</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
-                <Link to="/cart" className="cyber-btn cyber-btn-secondary">
-                  <span className="btn-icon">🛍️</span>
-                  <span className="btn-text">Shopping Cart</span>
-                  <div className="btn-glow"></div>
+                <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">🛍️</span>
+                  <span>Shopping Cart</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
-                <Link to="/guest-dashboard" className="cyber-btn cyber-btn-ghost">
-                  <span className="btn-icon">👁️</span>
-                  <span className="btn-text">Guest View</span>
-                  <div className="btn-glow"></div>
+                <Link to="/guest-dashboard" className={darkMode ? "cyber-btn cyber-btn-ghost" : "bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">👁️</span>
+                  <span>Guest View</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
-                <Link to="/login" className="cyber-btn cyber-btn-outline">
-                  <span className="btn-icon">🔑</span>
-                  <span className="btn-text">Sign In</span>
-                  <div className="btn-glow"></div>
+                <Link to="/login" className={darkMode ? "cyber-btn cyber-btn-outline" : "border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">🔑</span>
+                  <span>Sign In</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
                 
-                <Link to="/register" className="cyber-btn cyber-btn-success">
-                  <span className="btn-icon">✨</span>
-                  <span className="btn-text">Get Started Free</span>
-                  <div className="btn-glow"></div>
+                <Link to="/register" className={darkMode ? "cyber-btn cyber-btn-success" : "bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                  <span className="text-xl">✨</span>
+                  <span>Get Started Free</span>
+                  {darkMode && <div className="btn-glow"></div>}
                 </Link>
               </>
             )}
           </div>
 
-          {/* Futuristic System Status */}
+          {/* System Status */}
           <div className="flex justify-center space-x-12 text-sm">
-            <div className="status-indicator">
-              <div className="status-dot status-online"></div>
-              <span className="status-text">SECURE</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-green-400 shadow-glow' : 'bg-green-500'} animate-pulse`}></div>
+              <span className={`font-mono font-semibold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>SECURE</span>
             </div>
-            <div className="status-indicator">
-              <div className="status-dot status-quantum"></div>
-              <span className="status-text">QUANTUM</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-yellow-400 shadow-glow' : 'bg-yellow-500'} animate-pulse`}></div>
+              <span className={`font-mono font-semibold ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>QUANTUM</span>
             </div>
-            <div className="status-indicator">
-              <div className="status-dot status-neural"></div>
-              <span className="status-text">NEURAL</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-purple-400 shadow-glow' : 'bg-purple-500'} animate-pulse`}></div>
+              <span className={`font-mono font-semibold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>NEURAL</span>
             </div>
           </div>
         </div>
@@ -317,128 +316,86 @@ const Home = () => {
         )}
       </section>
 
-      {/* QUICK ACCESS SECTION FOR LOGGED-IN USERS - TRANSPARENT */}
+      {/* QUICK ACCESS SECTION FOR LOGGED-IN USERS */}
       {user && (
         <section className="py-20 relative">
           <div className="container mx-auto px-4">
-            <h2 className="text-5xl font-bold text-center mb-16 cyberpunk-title">
+            <h2 className={`text-5xl font-bold text-center mb-16 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
               <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>QUICK ACCESS</span>
               <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}> TERMINAL</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <Link to="/orders" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">📋</div>
-                    <h3 className="card-title">My Orders</h3>
-                    <p className="card-description">View and manage your orders</p>
-                  </div>
-                </div>
-              </Link>
-              
-              {user.accountType === 'business' && user.businessType === 'seller' ? (
-                <Link to="/inventory" className="cyber-card-link group">
-                  <div className="cyber-card">
-                    <div className="card-glow"></div>
-                    <div className="card-content">
-                      <div className="card-icon">📦</div>
-                      <h3 className="card-title">My Inventory</h3>
-                      <p className="card-description">Manage your products</p>
+              {[
+                { to: '/orders', icon: '📋', title: 'My Orders', desc: 'View and manage your orders' },
+                { 
+                  to: user.accountType === 'business' && user.businessType === 'seller' ? '/inventory' : '/create-order', 
+                  icon: user.accountType === 'business' && user.businessType === 'seller' ? '📦' : '➕', 
+                  title: user.accountType === 'business' && user.businessType === 'seller' ? 'My Inventory' : 'New Order', 
+                  desc: user.accountType === 'business' && user.businessType === 'seller' ? 'Manage your products' : 'Create a new order quickly' 
+                },
+                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our catalog' },
+                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'Review your cart items' }
+              ].map((item, index) => (
+                <Link key={index} to={item.to} className="group">
+                  <div className={`p-6 rounded-lg transition-all duration-300 group-hover:scale-105 ${
+                    darkMode 
+                      ? 'cyber-card' 
+                      : 'bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
+                  }`}>
+                    {darkMode && <div className="card-glow"></div>}
+                    <div className={darkMode ? 'card-content' : 'text-center'}>
+                      <div className={`text-4xl mb-4 ${darkMode ? 'card-icon' : 'filter drop-shadow-lg'}`}>{item.icon}</div>
+                      <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'card-title' : 'text-gray-900 dark:text-white'}`}>{item.title}</h3>
+                      <p className={darkMode ? 'card-description' : 'text-gray-600 dark:text-gray-400'}>{item.desc}</p>
                     </div>
                   </div>
                 </Link>
-              ) : (
-                <Link to="/create-order" className="cyber-card-link group">
-                  <div className="cyber-card">
-                    <div className="card-glow"></div>
-                    <div className="card-content">
-                      <div className="card-icon">➕</div>
-                      <h3 className="card-title">New Order</h3>
-                      <p className="card-description">Create a new order quickly</p>
-                    </div>
-                  </div>
-                </Link>
-              )}
-              
-              <Link to="/products" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">🛒</div>
-                    <h3 className="card-title">Browse Products</h3>
-                    <p className="card-description">Explore our catalog</p>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/cart" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">🛍️</div>
-                    <h3 className="card-title">Shopping Cart</h3>
-                    <p className="card-description">Review your cart items</p>
-                  </div>
-                </div>
-              </Link>
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* SHOPPING SECTION FOR GUESTS - TRANSPARENT */}
+      {/* SHOPPING SECTION FOR GUESTS */}
       {!user && (
         <section className="py-20 relative">
           <div className="container mx-auto px-4">
-            <h2 className="text-5xl font-bold text-center mb-16 cyberpunk-title">
+            <h2 className={`text-5xl font-bold text-center mb-16 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
               <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>START</span>
               <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> SHOPPING</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <Link to="/products" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">🛒</div>
-                    <h3 className="card-title">Browse Products</h3>
-                    <p className="card-description">Explore our product catalog</p>
+              {[
+                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our product catalog' },
+                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'View your selected items' },
+                { to: '/guest-dashboard', icon: '👁️', title: 'Guest View', desc: 'Browse as a guest user' }
+              ].map((item, index) => (
+                <Link key={index} to={item.to} className="group">
+                  <div className={`p-6 rounded-lg transition-all duration-300 group-hover:scale-105 ${
+                    darkMode 
+                      ? 'cyber-card' 
+                      : 'bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
+                  }`}>
+                    {darkMode && <div className="card-glow"></div>}
+                    <div className={darkMode ? 'card-content' : 'text-center'}>
+                      <div className={`text-4xl mb-4 ${darkMode ? 'card-icon' : 'filter drop-shadow-lg'}`}>{item.icon}</div>
+                      <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'card-title' : 'text-gray-900 dark:text-white'}`}>{item.title}</h3>
+                      <p className={darkMode ? 'card-description' : 'text-gray-600 dark:text-gray-400'}>{item.desc}</p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-              
-              <Link to="/cart" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">🛍️</div>
-                    <div className="card-title">Shopping Cart</div>
-                    <p className="card-description">View your selected items</p>
-                  </div>
-                </div>
-              </Link>
-              
-              <Link to="/guest-dashboard" className="cyber-card-link group">
-                <div className="cyber-card">
-                  <div className="card-glow"></div>
-                  <div className="card-content">
-                    <div className="card-icon">👁️</div>
-                    <h3 className="card-title">Guest View</h3>
-                    <p className="card-description">Browse as a guest user</p>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* FEATURES SECTION - TRANSPARENT */}
+      {/* FEATURES SECTION */}
       <section className="py-20 relative">
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl font-bold text-center mb-4 cyberpunk-title">
+          <h2 className={`text-5xl font-bold text-center mb-4 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
             <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}>{user ? 'PLATFORM' : 'WHY CHOOSE'}</span>
             <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> {user ? 'FEATURES' : 'US?'}</span>
           </h2>
@@ -448,44 +405,43 @@ const Home = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <div className="icon-glow"></div>
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                </svg>
+            {[
+              { 
+                icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10', 
+                title: 'Real-time Inventory', 
+                desc: 'Track your products with real-time updates and low stock alerts',
+                color: darkMode ? 'text-cyan-400' : 'text-blue-600'
+              },
+              { 
+                icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 
+                title: 'Order Processing', 
+                desc: 'Streamlined order management from creation to fulfillment',
+                color: darkMode ? 'text-green-400' : 'text-green-600'
+              },
+              { 
+                icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 
+                title: 'Analytics & Reports', 
+                desc: 'Detailed insights to help you make informed business decisions',
+                color: darkMode ? 'text-purple-400' : 'text-purple-600'
+              }
+            ].map((feature, index) => (
+              <div key={index} className={`text-center p-8 transition-all duration-300 hover:scale-105 ${
+                darkMode 
+                  ? 'feature-card' 
+                  : 'bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
+              }`}>
+                <div className={`inline-flex mb-6 ${feature.color}`}>
+                  {darkMode && <div className="icon-glow"></div>}
+                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
+                  </svg>
+                </div>
+                <h3 className={`text-2xl font-bold mb-4 ${feature.color}`}>{feature.title}</h3>
+                <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {feature.desc}
+                </p>
               </div>
-              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Real-time Inventory</h3>
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Track your products with real-time updates and low stock alerts
-              </p>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <div className="icon-glow"></div>
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>Order Processing</h3>
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Streamlined order management from creation to fulfillment
-              </p>
-            </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <div className="icon-glow"></div>
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>Analytics & Reports</h3>
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Detailed insights to help you make informed business decisions
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -494,26 +450,34 @@ const Home = () => {
       {user && dashboardInfo && (
         <section className="py-20 relative">
           <div className="container mx-auto px-4">
-            <div className="cyber-dashboard-card max-w-6xl mx-auto">
-              <div className="dashboard-glow"></div>
-              <div className="md:flex md:items-center md:justify-between p-12">
+            <div className={`max-w-6xl mx-auto rounded-lg p-12 ${
+              darkMode 
+                ? 'cyber-dashboard-card' 
+                : 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-xl'
+            }`}>
+              {darkMode && <div className="dashboard-glow"></div>}
+              <div className="md:flex md:items-center md:justify-between">
                 <div className="md:flex-1">
                   <div className="flex items-center mb-6">
-                    <span className="text-6xl mr-6 dashboard-icon">{dashboardInfo.icon}</span>
+                    <span className={`text-6xl mr-6 ${darkMode ? 'dashboard-icon' : 'filter drop-shadow-lg'}`}>{dashboardInfo.icon}</span>
                     <div>
-                      <h2 className="text-4xl font-bold text-white mb-2">
+                      <h2 className={`text-4xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         Your {dashboardInfo.title}
                       </h2>
-                      <p className="text-xl text-gray-300">
+                      <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
                         {dashboardInfo.description}
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-6 md:mt-0">
-                  <Link to={dashboardInfo.route} className="cyber-btn cyber-btn-dashboard">
-                    <span className="btn-text">Go to Dashboard</span>
-                    <div className="btn-glow"></div>
+                  <Link to={dashboardInfo.route} className={
+                    darkMode 
+                      ? "cyber-btn cyber-btn-dashboard" 
+                      : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  }>
+                    <span>Go to Dashboard</span>
+                    {darkMode && <div className="btn-glow"></div>}
                   </Link>
                 </div>
               </div>
@@ -525,54 +489,62 @@ const Home = () => {
       {/* CTA SECTION */}
       <section className="py-20 relative">
         <div className="container mx-auto px-4 text-center">
-          <div className="cyber-cta-card max-w-6xl mx-auto">
-            <div className="cta-glow"></div>
-            <div className="p-16">
+          <div className={`max-w-6xl mx-auto rounded-lg p-16 ${
+            darkMode 
+              ? 'cyber-cta-card' 
+              : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 border border-gray-200 dark:border-gray-600 shadow-2xl'
+          }`}>
+            {darkMode && <div className="cta-glow"></div>}
+            <div className="relative z-10">
               {user ? (
                 <div>
-                  <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
+                  <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
                     <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>READY TO BOOST</span>
                     <br />
                     <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-700'}>YOUR PRODUCTIVITY?</span>
                   </h2>
-                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
                     Explore all the features available in your dashboard
                   </p>
                   <div className="flex flex-wrap gap-6 justify-center">
-                    <Link to="/products" className="cyber-btn cyber-btn-primary">
-                      <span className="btn-text">Start Shopping</span>
-                      <div className="btn-glow"></div>
+                    <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
+                      <span>Start Shopping</span>
+                      {darkMode && <div className="btn-glow"></div>}
                     </Link>
-                    <Link to="/cart" className="cyber-btn cyber-btn-secondary">
-                      <span className="btn-text">View Cart</span>
-                      <div className="btn-glow"></div>
+                    <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
+                      <span>View Cart</span>
+                      {darkMode && <div className="btn-glow"></div>}
                     </Link>
                     {dashboardInfo && (
-                      <Link to={dashboardInfo.route} className={`cyber-btn ${dashboardInfo.color}`}>
-                        <span className="btn-text">Go to {dashboardInfo.title}</span>
-                        <div className="btn-glow"></div>
+                      <Link to={dashboardInfo.route} className={
+                        darkMode 
+                          ? `cyber-btn ${dashboardInfo.color}` 
+                          : `${dashboardInfo.color} font-bold text-lg transition-all duration-300`
+                      }>
+                        <span>Go to {dashboardInfo.title}</span>
+                        {darkMode && <div className="btn-glow"></div>}
                       </Link>
                     )}
                   </div>
                 </div>
               ) : (
                 <div>
-                  <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
+                  <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
                     <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>READY TO GET</span>
                     <br />
                     <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>STARTED?</span>
                   </h2>
-                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
                     Join thousands of businesses already using our platform
                   </p>
                   <div className="flex flex-wrap gap-6 justify-center">
-                    <Link to="/products" className="cyber-btn cyber-btn-success">
-                      <span className="btn-text">Browse Products</span>
-                      <div className="btn-glow"></div>
+                    <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-success" : "bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
+                      <span>Browse Products</span>
+                      {darkMode && <div className="btn-glow"></div>}
                     </Link>
-                    <Link to="/register" className="cyber-btn cyber-btn-primary">
-                      <span className="btn-text">Start Free Trial</span>
-                      <div className="btn-glow"></div>
+                    <Link to="/register" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
+                      <span>Start Free Trial</span>
+                      {darkMode && <div className="btn-glow"></div>}
                     </Link>
                   </div>
                 </div>
@@ -581,7 +553,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </div>
+    </>
   );
 };
 
