@@ -1,5 +1,5 @@
-// src/pages/Login.jsx - CLEAN: Using existing cyberpunk CSS classes with proper JSX
-import { useState, useEffect } from 'react';
+// src/pages/Login.jsx - CYBERPUNK VERSION with Matrix Rain and Neural Interface
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from '../components/common/ThemeToggle';
@@ -11,7 +11,9 @@ const Login = () => {
   const { login, error: authError, loading: authLoading, user, approvalStatus, clearError } = useAuth();
   const { darkMode } = useTheme();
   
-  const from = "/home";
+  // Canvas refs for cyberpunk effects
+  const matrixCanvasRef = useRef(null);
+  const particleCanvasRef = useRef(null);
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -24,11 +26,142 @@ const Login = () => {
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
 
+  // Matrix Rain Effect
+  useEffect(() => {
+    const canvas = matrixCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const updateCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    updateCanvasSize();
+
+    const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const alphabet = katakana + latin;
+
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const rainDrops = [];
+
+    for (let x = 0; x < columns; x++) {
+      rainDrops[x] = Math.random() * canvas.height / fontSize;
+    }
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < rainDrops.length; i++) {
+        const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        
+        const gradient = ctx.createLinearGradient(0, rainDrops[i] * fontSize - 20, 0, rainDrops[i] * fontSize);
+        gradient.addColorStop(0, '#00FFFF');
+        gradient.addColorStop(0.5, '#00FF88');
+        gradient.addColorStop(1, 'rgba(0, 255, 255, 0.05)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+        if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          rainDrops[i] = 0;
+        }
+        rainDrops[i]++;
+      }
+    };
+
+    const interval = setInterval(draw, 100);
+
+    const handleResize = () => {
+      updateCanvasSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Floating Particles Effect
+  useEffect(() => {
+    const canvas = particleCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const updateCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    updateCanvasSize();
+
+    const particles = [];
+    const particleCount = 40;
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: Math.random() * 2 + 1,
+        pulse: Math.random() * Math.PI * 2,
+        color: `hsl(${180 + Math.random() * 60}, 100%, 50%)`,
+        energy: Math.random()
+      });
+    }
+
+    const animate = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.pulse += 0.02;
+        particle.energy = Math.sin(particle.pulse) * 0.5 + 0.5;
+
+        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+
+        const glowSize = particle.size + particle.energy * 2;
+        const gradient = ctx.createRadialGradient(
+          particle.x, particle.y, 0,
+          particle.x, particle.y, glowSize
+        );
+        gradient.addColorStop(0, particle.color);
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      updateCanvasSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Clear errors when component mounts or when user types
   useEffect(() => {
     clearError();
     setError('');
   }, [credentials.email, credentials.password, clearError]);
 
+  // Handle successful login or approval status
   useEffect(() => {
     if (user && loginAttempted) {
       if (user.canAccess) {
@@ -94,174 +227,168 @@ const Login = () => {
         email = 'user@wholesaler.com';
     }
 
-    setCredentials({
-      email,
-      password
-    });
+    setCredentials({ email, password });
   };
 
   return (
-    <div className="cyberpunk-login-wrapper">
-      {/* Theme Toggle */}
-      <div className="absolute top-6 right-6 z-50">
-        <ThemeToggle />
+    <div className="cyberpunk-layout-wrapper min-h-screen relative overflow-hidden">
+      {/* CYBERPUNK BACKGROUND EFFECTS */}
+      <canvas 
+        ref={matrixCanvasRef} 
+        className="fixed inset-0 pointer-events-none z-0 opacity-20" 
+      />
+      <canvas 
+        ref={particleCanvasRef} 
+        className="fixed inset-0 pointer-events-none z-1 opacity-30" 
+      />
+      
+      {/* Grid Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-2 opacity-10">
+        <div className="cyberpunk-grid"></div>
       </div>
 
-      <div className="min-h-screen flex relative z-10">
-        {/* Left Panel - Cyberpunk Brand */}
-        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-green-500/5"></div>
+      {/* Scanlines */}
+      <div className="fixed inset-0 pointer-events-none z-3">
+        <div className="scanlines"></div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="relative z-10 min-h-screen flex flex-col md:flex-row">
+        
+        {/* Left Panel - Neural Interface Info */}
+        <div className="hidden md:flex md:w-1/2 relative p-12 flex-col justify-between overflow-hidden">
+          {/* Background glow for left panel */}
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-purple-900/20 backdrop-blur-sm"></div>
           
-          <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
-            {/* Header */}
-            <div>
-              <div className="flex items-center mb-12">
-                <div className="cyber-logo">
-                  <div className="logo-glow"></div>
-                  <svg className="h-8 w-8 text-cyan-400 cyber-glow animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                  </svg>
-                </div>
-                <div className="ml-4">
-                  <h1 className="text-4xl font-bold cyberpunk-title">
-                    <span className="text-cyan-400 cyber-glow">WHOLESALER</span>
-                  </h1>
-                  <div className="text-sm text-yellow-400 font-mono typewriter-text">2077 EDITION</div>
-                </div>
+          <div className="relative z-10">
+            {/* Cyberpunk Logo */}
+            <div className="flex items-center mb-12">
+              <div className="cyber-logo h-12 w-12">
+                <div className="logo-glow"></div>
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
+                </svg>
               </div>
-              
-              <div className="mb-12">
-                <h2 className="text-6xl font-bold leading-tight mb-8 cyberpunk-title">
-                  <span className="text-cyan-400 cyber-glow animate-float">NEURAL</span>
-                  <br />
-                  <span className="text-purple-400 cyber-glow animate-float">ACCESS</span>
-                  <br />
-                  <span className="text-yellow-400 cyber-glow hacker-text animate-float" data-text="PORTAL">PORTAL</span>
-                </h2>
-                <p className="text-xl text-gray-300 leading-relaxed font-mono typewriter-text">
-                  Secure authentication to your quantum commerce platform
-                </p>
-              </div>
-              
-              {/* Features */}
-              <div className="space-y-8">
-                <div className="flex items-start space-x-4 animate-float">
-                  <div className="feature-icon">
-                    <div className="icon-glow"></div>
-                    <svg className="h-6 w-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 text-green-400 text-glow">QUANTUM SECURITY</h3>
-                    <p className="text-gray-300 font-mono text-sm">Military-grade encryption with neural authentication protocols</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4 animate-float">
-                  <div className="feature-icon">
-                    <div className="icon-glow"></div>
-                    <svg className="h-6 w-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 text-purple-400 text-glow">MULTI-ROLE MATRIX</h3>
-                    <p className="text-gray-300 font-mono text-sm">Dynamic access levels for admins, managers, and operatives</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4 animate-float">
-                  <div className="feature-icon">
-                    <div className="icon-glow"></div>
-                    <svg className="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 text-yellow-400 text-glow">REAL-TIME NEURAL NET</h3>
-                    <p className="text-gray-300 font-mono text-sm">Instant data synchronization across quantum networks</p>
-                  </div>
-                </div>
-              </div>
+              <h1 className="text-3xl font-bold ml-4 cyberpunk-title text-cyan-400 cyber-glow">
+                WHOLESALER
+              </h1>
             </div>
             
-            {/* Footer */}
-            <div className="border-t border-cyan-400/20 pt-8">
-              <div className="flex items-center justify-between">
-                <p className="text-gray-400 font-mono text-sm text-glow">
-                  © 2077 WHOLESALER CORP
-                </p>
-                <div className="flex space-x-4">
-                  <div className="status-indicator">
-                    <div className="status-dot status-online"></div>
-                    <span className="status-text text-xs">SECURE</span>
-                  </div>
-                  <div className="status-indicator">
-                    <div className="status-dot status-neural"></div>
-                    <span className="status-text text-xs">NEURAL</span>
-                  </div>
+            {/* Main Title */}
+            <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
+              <span className="text-cyan-400 cyber-glow">NEURAL</span>
+              <br />
+              <span className="text-pink-400 cyber-glow">INTERFACE</span>
+              <br />
+              <span className="text-yellow-400 cyber-glow">ACCESS</span>
+            </h2>
+            
+            <p className="text-xl text-gray-300 mb-12 leading-relaxed">
+              Connect to the wholesale neural network and manage your business operations 
+              through our advanced quantum commerce platform.
+            </p>
+            
+            {/* Features */}
+            <div className="space-y-8">
+              <div className="flex items-start">
+                <div className="feature-icon mr-6">
+                  <div className="icon-glow"></div>
+                  <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-cyan-400 mb-2 cyberpunk-title">QUANTUM SECURITY</h3>
+                  <p className="text-gray-400">Role-based neural authentication with quantum encryption</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="feature-icon mr-6">
+                  <div className="icon-glow"></div>
+                  <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-green-400 mb-2 cyberpunk-title">MULTI-PROTOCOL SUPPORT</h3>
+                  <p className="text-gray-400">Advanced dashboards for all business entity types</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="feature-icon mr-6">
+                  <div className="icon-glow"></div>
+                  <svg className="w-8 h-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-purple-400 mb-2 cyberpunk-title">NEURAL COMMERCE</h3>
+                  <p className="text-gray-400">AI-powered buyer and seller ecosystem integration</p>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Floating Holograms */}
-          <div className="absolute top-20 left-20 hologram-float">
-            <div className="hologram-cube"></div>
-          </div>
-          <div className="absolute bottom-20 right-20 hologram-float">
-            <div className="hologram-pyramid"></div>
+          {/* Footer */}
+          <div className="relative z-10">
+            <p className="text-sm text-gray-500 font-mono">
+              © {new Date().getFullYear()} NEURAL WHOLESALER CORP. ALL RIGHTS RESERVED.
+            </p>
           </div>
         </div>
         
-        {/* Right Panel - Login Form */}
-        <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 relative">
-          <div className="mx-auto w-full max-w-md relative z-10">
+        {/* Right Panel - Login Interface */}
+        <div className="flex flex-col justify-center items-center p-6 md:p-12 w-full md:w-1/2 relative">
+          {/* Background for right panel */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+          
+          {/* Theme Toggle */}
+          <div className="absolute top-6 right-6 z-20">
+            <ThemeToggle />
+          </div>
+          
+          <div className="w-full max-w-md relative z-10">
             {/* Mobile Logo */}
-            <div className="lg:hidden flex items-center justify-center mb-8">
-              <div className="cyber-logo">
+            <div className="md:hidden flex items-center justify-center mb-12">
+              <div className="cyber-logo h-12 w-12">
                 <div className="logo-glow"></div>
-                <svg className="h-8 w-8 text-cyan-400 cyber-glow animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <h1 className="text-2xl font-bold cyberpunk-title">
-                  <span className="text-cyan-400 cyber-glow">WHOLESALER</span>
-                </h1>
-                <div className="text-xs text-yellow-400 font-mono typewriter-text">2077 EDITION</div>
-              </div>
+              <h1 className="text-2xl font-bold ml-3 cyberpunk-title text-cyan-400 cyber-glow">
+                WHOLESALER
+              </h1>
             </div>
             
-            {/* Header */}
-            <div className="text-center mb-8">
+            {/* Login Title */}
+            <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4 cyberpunk-title">
-                <span className="text-cyan-400 cyber-glow animate-float">ACCESS</span>
-                <span className="text-purple-400 cyber-glow animate-float"> GRANTED</span>
+                <span className="text-cyan-400 cyber-glow">ACCESS</span>
+                <br />
+                <span className="text-pink-400 cyber-glow">TERMINAL</span>
               </h2>
-              <p className="text-lg text-gray-300 font-mono typewriter-text">
-                Initialize neural connection
-              </p>
+              <p className="text-gray-400 text-lg">Initialize neural connection</p>
             </div>
             
-            {/* Demo Accounts Panel */}
-            <div className="mb-8">
-              <div className="border border-cyan-400/30 rounded-lg p-6 relative overflow-hidden bg-black/20 backdrop-blur-sm">
+            {/* Demo Accounts Card */}
+            <div className="cyber-card mb-8">
+              <div className="card-glow"></div>
+              <div className="card-content p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 bg-green-400/20 rounded-lg flex items-center justify-center mr-3 border border-green-400/50">
-                      <svg className="h-4 w-4 text-green-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-bold text-green-400 font-mono text-glow animate-float">DEMO MATRIX</h3>
-                  </div>
+                  <p className="text-cyan-400 font-bold text-sm cyberpunk-title">
+                    DEMO PROTOCOLS
+                  </p>
                   <button 
                     onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-                    className="text-sm font-mono text-cyan-400 hover:text-cyan-300 transition-colors text-glow holographic-text"
+                    className="cyber-btn cyber-btn-ghost text-xs py-1 px-3"
                   >
-                    {showDemoAccounts ? '[HIDE]' : '[SHOW]'} TEST ACCOUNTS
+                    <span className="btn-text">{showDemoAccounts ? 'HIDE' : 'SHOW'}</span>
+                    <div className="btn-glow"></div>
                   </button>
                 </div>
                 
@@ -269,52 +396,39 @@ const Login = () => {
                   <div className="space-y-3">
                     <button 
                       onClick={() => useTestAccount('admin')}
-                      className="cyber-btn cyber-btn-red w-full justify-between bg-transparent animate-float"
+                      className="cyber-btn cyber-btn-red w-full text-xs py-2"
                     >
-                      <span>🔴 ADMIN</span>
-                      <span className="text-xs opacity-80">admin@wholesaler.com</span>
+                      <span className="btn-text">🔴 ADMIN PROTOCOL</span>
                       <div className="btn-glow"></div>
                     </button>
-                    
                     <button 
                       onClick={() => useTestAccount('manager')}
-                      className="cyber-btn cyber-btn-purple w-full justify-between bg-transparent animate-float"
+                      className="cyber-btn cyber-btn-purple w-full text-xs py-2"
                     >
-                      <span>🟣 MANAGER</span>
-                      <span className="text-xs opacity-80">manager@wholesaler.com</span>
+                      <span className="btn-text">🟣 MANAGER PROTOCOL</span>
                       <div className="btn-glow"></div>
                     </button>
-                    
                     <button 
                       onClick={() => useTestAccount('business_buyer')}
-                      className="cyber-btn cyber-btn-blue w-full justify-between bg-transparent animate-float"
+                      className="cyber-btn cyber-btn-blue w-full text-xs py-2"
                     >
-                      <span>🔵 BUYER</span>
-                      <span className="text-xs opacity-80">buyer@wholesaler.com</span>
+                      <span className="btn-text">🔵 BUYER PROTOCOL</span>
                       <div className="btn-glow"></div>
                     </button>
-                    
                     <button 
                       onClick={() => useTestAccount('business_seller')}
-                      className="cyber-btn cyber-btn-success w-full justify-between bg-transparent animate-float"
+                      className="cyber-btn cyber-btn-green w-full text-xs py-2"
                     >
-                      <span>🟠 SELLER</span>
-                      <span className="text-xs opacity-80">seller@wholesaler.com</span>
+                      <span className="btn-text">🟠 SELLER PROTOCOL</span>
                       <div className="btn-glow"></div>
                     </button>
-                    
                     <button 
                       onClick={() => useTestAccount('user')}
-                      className="cyber-btn cyber-btn-green w-full justify-between bg-transparent animate-float"
+                      className="cyber-btn cyber-btn-cyan w-full text-xs py-2"
                     >
-                      <span>🟢 USER</span>
-                      <span className="text-xs opacity-80">user@wholesaler.com</span>
+                      <span className="btn-text">🟢 USER PROTOCOL</span>
                       <div className="btn-glow"></div>
                     </button>
-                    
-                    <div className="text-xs text-center pt-3 text-gray-400 font-mono bg-black/10 rounded p-2">
-                      PASSWORD: <span className="text-cyan-400 text-glow holographic-text">password123</span>
-                    </div>
                   </div>
                 )}
               </div>
@@ -322,17 +436,20 @@ const Login = () => {
             
             {/* Error Display */}
             {(error || authError) && (
-              <div className="mb-6 p-4 border border-red-500/50 rounded-lg relative overflow-hidden bg-red-900/10 backdrop-blur-sm">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <div className="cyber-card mb-8 border-red-600">
+                <div className="card-content p-4">
+                  <div className="flex items-center">
+                    <svg className="h-6 w-6 text-red-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-mono text-red-300 text-glow hacker-text">
-                      ERROR: {error || authError}
-                    </p>
+                    <div>
+                      <h3 className="text-red-400 font-bold text-sm cyberpunk-title mb-1">
+                        CONNECTION ERROR
+                      </h3>
+                      <p className="text-red-300 text-sm">
+                        {error || authError}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -340,34 +457,34 @@ const Login = () => {
 
             {/* Approval Status */}
             {approvalStatus && !approvalStatus.canAccess && user && (
-              <div className="mb-6 p-4 border border-yellow-500/50 rounded-lg relative overflow-hidden bg-yellow-900/10 backdrop-blur-sm">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-yellow-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <div className="cyber-card mb-8 border-yellow-600">
+                <div className="card-content p-4">
+                  <div className="flex items-center">
+                    <svg className="h-6 w-6 text-yellow-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 13.5C3.312 15.333 4.27 17 5.81 17z" />
                     </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-bold text-yellow-400 font-mono text-glow typewriter-text">
-                      STATUS: {approvalStatus.status?.replace('_', ' ').toUpperCase()}
-                    </h3>
-                    <p className="text-sm mt-1 text-yellow-300 font-mono holographic-text">
-                      {approvalStatus.message || 'AWAITING ADMIN CLEARANCE'}
-                    </p>
+                    <div>
+                      <h3 className="text-yellow-400 font-bold text-sm cyberpunk-title mb-1">
+                        AUTHORIZATION STATUS: {approvalStatus.status?.replace('_', ' ').toUpperCase()}
+                      </h3>
+                      <p className="text-yellow-300 text-sm">
+                        {approvalStatus.message || 'Neural access requires admin approval.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
             
             {/* Login Form */}
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="animate-float">
-                <label htmlFor="email-address" className="block text-sm font-bold mb-3 text-cyan-400 font-mono text-glow">
-                  EMAIL.ADDRESS
+            <form className="space-y-8" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email-address" className="block text-sm font-bold text-cyan-400 cyberpunk-title mb-2">
+                  EMAIL PROTOCOL
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                   </div>
@@ -379,20 +496,20 @@ const Login = () => {
                     required
                     value={credentials.email}
                     onChange={handleChange}
-                    className="block w-full pl-12 pr-3 py-3 font-mono bg-transparent border border-cyan-400/30 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:bg-black/10 transition-all backdrop-blur-sm"
-                    placeholder="neural.user@domain.com"
+                    className="pl-12 py-4 text-lg font-mono"
+                    placeholder="neural.id@corp.net"
                   />
                 </div>
               </div>
 
-              <div className="animate-float">
-                <label htmlFor="password" className="block text-sm font-bold mb-3 text-cyan-400 font-mono text-glow">
-                  ACCESS.CODE
+              <div>
+                <label htmlFor="password" className="block text-sm font-bold text-cyan-400 cyberpunk-title mb-2">
+                  ACCESS KEY
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg className="h-5 w-5 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
                   </div>
                   <input
@@ -403,13 +520,13 @@ const Login = () => {
                     required
                     value={credentials.password}
                     onChange={handleChange}
-                    className="block w-full pl-12 pr-3 py-3 font-mono bg-transparent border border-cyan-400/30 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:bg-black/10 transition-all backdrop-blur-sm"
+                    className="pl-12 py-4 text-lg font-mono"
                     placeholder="••••••••••••••••"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between animate-float">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
                     id="remember-me"
@@ -417,79 +534,51 @@ const Login = () => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-cyan-400 focus:ring-cyan-500 border-cyan-400/50 bg-transparent rounded"
+                    className="h-4 w-4 rounded border-cyan-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500"
                   />
-                  <label htmlFor="remember-me" className="ml-3 block text-sm text-gray-300 font-mono">
-                    REMEMBER SESSION
+                  <label htmlFor="remember-me" className="ml-3 block text-sm text-gray-400 cyberpunk-title">
+                    MAINTAIN CONNECTION
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <Link 
-                    to="/forgot-password" 
-                    className="font-mono text-yellow-400 hover:text-yellow-300 transition-colors text-glow holographic-text"
-                  >
-                    RESET.ACCESS.CODE
+                  <Link to="/forgot-password" className="text-pink-400 hover:text-pink-300 cyberpunk-title cyber-glow">
+                    RESET ACCESS
                   </Link>
                 </div>
               </div>
 
-              <div className="animate-float">
+              <div>
                 <button
                   type="submit"
                   disabled={loading || authLoading}
-                  className={`cyber-btn cyber-btn-primary w-full bg-transparent ${
-                    (loading || authLoading) ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
+                  className="cyber-btn cyber-btn-primary w-full py-4 text-lg"
                 >
-                  <div className="btn-glow"></div>
                   {(loading || authLoading) ? (
-                    <div className="flex items-center justify-center">
-                      <div className="cyber-loading-spinner w-5 h-5 mr-3"></div>
-                      <span className="btn-text font-mono text-glow hacker-text">AUTHENTICATING...</span>
-                    </div>
+                    <>
+                      <div className="cyber-loading-spinner w-6 h-6 mr-3"></div>
+                      <span className="btn-text">CONNECTING...</span>
+                    </>
                   ) : (
-                    <div className="flex items-center justify-center">
-                      <span className="btn-text font-mono text-glow hacker-text">INITIALIZE CONNECTION</span>
-                      <svg className="ml-2 h-4 w-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </div>
+                    <span className="btn-text">INITIALIZE CONNECTION</span>
                   )}
+                  <div className="btn-glow"></div>
                 </button>
               </div>
             </form>
             
-            {/* Sign Up Section */}
-            <div className="mt-8 animate-float">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-cyan-400/30" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-black/20 backdrop-blur-sm text-gray-300 font-mono rounded text-glow holographic-text">OR</span>
-                </div>
-              </div>
-              
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-300 font-mono typewriter-text">
-                  NO NEURAL.PROFILE?{' '}
-                  <Link 
-                    to="/register" 
-                    className="font-bold text-green-400 hover:text-green-300 transition-colors text-glow hacker-text holographic-text"
-                  >
-                    CREATE.ACCOUNT
-                  </Link>
-                </p>
-                <p className="text-xs mt-3 text-gray-400 font-mono bg-black/10 rounded p-2 animate-float">
-                  <span className="inline-flex items-center">
-                    <svg className="h-3 w-3 mr-1 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="holographic-text">BUSINESS.ACCOUNTS REQUIRE ADMIN.CLEARANCE</span>
-                  </span>
-                </p>
-              </div>
+            {/* Registration Link */}
+            <div className="mt-10 text-center">
+              <p className="text-gray-400 text-sm mb-2">
+                Need neural access credentials?
+              </p>
+              <Link to="/register" className="cyber-btn cyber-btn-outline">
+                <span className="btn-text">REQUEST ACCESS</span>
+                <div className="btn-glow"></div>
+              </Link>
+              <p className="text-xs mt-4 text-gray-500 font-mono">
+                ⚠️ Business and manager protocols require admin authorization
+              </p>
             </div>
           </div>
         </div>
