@@ -11,6 +11,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import NoShoppingRedirect from './components/common/NoShoppingRedirect';
 import QRPage from './pages/QRPage';
 
+
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
