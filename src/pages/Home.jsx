@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - No content wrappers, direct on black background like original
+// src/pages/Home.jsx - Original with Theme Toggle Support Added
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -7,7 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const Home = () => {
-  const { darkMode } = useTheme();
+  const { darkMode } = useTheme(); // Added theme support
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -82,59 +82,65 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-        {/* Loading Background Effects */}
-        <div className="absolute inset-0">
-          <div className="cyberpunk-grid opacity-20"></div>
-          <div className="scanlines"></div>
-        </div>
+      <div className={`fixed inset-0 z-50 flex items-center justify-center ${darkMode ? 'bg-black' : 'bg-gray-100'}`}>
+        {/* Loading Background Effects - Only show in dark mode */}
+        {darkMode && (
+          <div className="absolute inset-0">
+            <div className="cyberpunk-grid opacity-20"></div>
+            <div className="scanlines"></div>
+          </div>
+        )}
         
         {/* Loading Content */}
         <div className="relative z-10 text-center max-w-2xl mx-auto px-4">
           {/* Main Loading Spinner */}
-          <div className="cyber-loading-spinner mb-8 mx-auto"></div>
+          <div className={`${darkMode ? 'cyber-loading-spinner' : 'animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 mx-auto'} mb-8`}></div>
           
           {/* Loading Title */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 cyberpunk-title">
-            <span className="text-cyan-400 cyber-glow">INITIALIZING</span>
+            <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>INITIALIZING</span>
             <br />
-            <span className="text-yellow-400 cyber-glow">NEURAL INTERFACE</span>
+            <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>NEURAL INTERFACE</span>
           </h1>
           
           {/* Loading Progress */}
           <div className="mb-8">
-            <div className="w-full bg-gray-800 rounded-full h-2 mb-4 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-cyan-400 to-yellow-400 rounded-full animate-pulse"></div>
+            <div className={`w-full rounded-full h-2 mb-4 overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-gray-300'}`}>
+              <div className={`h-full rounded-full animate-pulse ${darkMode ? 'bg-gradient-to-r from-cyan-400 to-yellow-400' : 'bg-gradient-to-r from-blue-500 to-yellow-500'}`}></div>
             </div>
-            <div className="text-cyan-400 font-mono text-lg animate-pulse">
+            <div className={`font-mono text-lg animate-pulse ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
               Loading quantum matrices...
             </div>
           </div>
           
           {/* Loading Messages */}
-          <div className="space-y-2 text-gray-400 font-mono text-sm">
+          <div className={`space-y-2 font-mono text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             <div className="typewriter-loading">Connecting to neural network...</div>
             <div className="typewriter-loading" style={{animationDelay: '1s'}}>Synchronizing data streams...</div>
             <div className="typewriter-loading" style={{animationDelay: '2s'}}>Activating cyberpunk protocols...</div>
           </div>
           
-          {/* Floating Loading Elements */}
-          <div className="absolute top-10 left-10 hologram-float">
-            <div className="w-6 h-6 bg-cyan-400 opacity-30 rotate-45 animate-spin"></div>
-          </div>
-          <div className="absolute top-20 right-10 hologram-float" style={{animationDelay: '1s'}}>
-            <div className="w-4 h-4 bg-yellow-400 opacity-30 rounded-full animate-bounce"></div>
-          </div>
-          <div className="absolute bottom-20 left-20 hologram-float" style={{animationDelay: '2s'}}>
-            <div className="w-5 h-5 bg-pink-400 opacity-30 triangle animate-pulse"></div>
-          </div>
+          {/* Floating Loading Elements - Only show in dark mode */}
+          {darkMode && (
+            <>
+              <div className="absolute top-10 left-10 hologram-float">
+                <div className="w-6 h-6 bg-cyan-400 opacity-30 rotate-45 animate-spin"></div>
+              </div>
+              <div className="absolute top-20 right-10 hologram-float" style={{animationDelay: '1s'}}>
+                <div className="w-4 h-4 bg-yellow-400 opacity-30 rounded-full animate-bounce"></div>
+              </div>
+              <div className="absolute bottom-20 left-20 hologram-float" style={{animationDelay: '2s'}}>
+                <div className="w-5 h-5 bg-purple-400 opacity-30 triangle animate-pulse"></div>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Loading Page Styles */}
         <style jsx>{`
           .typewriter-loading {
             overflow: hidden;
-            border-right: 2px solid #00FFFF;
+            border-right: 2px solid ${darkMode ? '#00FFFF' : '#0066CC'};
             white-space: nowrap;
             margin: 0 auto;
             animation: typing 2s steps(40, end), blink-caret 1s step-end infinite;
@@ -164,7 +170,7 @@ const Home = () => {
           
           @keyframes blink-caret {
             from, to { border-color: transparent; }
-            50% { border-color: #00FFFF; }
+            50% { border-color: ${darkMode ? '#00FFFF' : '#0066CC'}; }
           }
         `}</style>
       </div>
@@ -172,8 +178,8 @@ const Home = () => {
   }
 
   return (
-    // COMPLETELY RAW - NO BACKGROUND WRAPPERS AT ALL
-    <>
+    // Theme-aware background
+    <div className={darkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}>
       {/* Override any wrapper backgrounds with this style */}
       <style>{`
         .main-content-wrapper {
@@ -183,7 +189,7 @@ const Home = () => {
         }
       `}</style>
       
-      {/* HERO SECTION - DIRECT ON BLACK BACKGROUND */}
+      {/* HERO SECTION - DIRECT ON BACKGROUND */}
       <section className="min-h-screen flex items-center justify-center relative">
         <div className="text-center max-w-6xl mx-auto px-4">
           {/* Holographic Title Effect */}
@@ -191,29 +197,29 @@ const Home = () => {
             <h1 className="cyberpunk-title text-6xl md:text-9xl font-bold mb-6">
               {user ? (
                 <>
-                  <span className="text-cyan-400 cyber-glow">WELCOME BACK</span>
+                  <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>WELCOME BACK</span>
                   <br />
-                  <span className="text-pink-400 cyber-glow hacker-text" data-text={user.displayName || user.email?.split('@')[0] || 'USER'}>
+                  <span className={`${darkMode ? 'text-purple-400 cyber-glow hacker-text' : 'text-purple-700'}`} data-text={user.displayName || user.email?.split('@')[0] || 'USER'}>
                     {user.displayName || user.email?.split('@')[0] || 'USER'}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="text-cyan-400 cyber-glow">WHOLESALER</span>
+                  <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>WHOLESALER</span>
                   <br />
-                  <span className="text-yellow-400 cyber-glow">2077</span>
+                  <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>2077</span>
                 </>
               )}
             </h1>
             
             {/* Holographic subtitle */}
-            <div className="text-2xl md:text-4xl text-gray-300 mb-8 holographic-text">
+            <div className={`text-2xl md:text-4xl mb-8 ${darkMode ? 'text-gray-300 holographic-text' : 'text-gray-600'}`}>
               NEURAL COMMERCE PLATFORM
             </div>
           </div>
 
           {/* Enhanced subtitle with typewriter effect */}
-          <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed typewriter-text">
+          <p className={`text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed ${darkMode ? 'text-gray-300 typewriter-text' : 'text-gray-700'}`}>
             {user 
               ? 'Neural interface activated. Your wholesale management systems are online.'
               : 'Next-generation wholesale platform powered by quantum neural networks.'
@@ -298,13 +304,17 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Floating Holograms */}
-        <div className="absolute top-20 left-20 hologram-float">
-          <div className="hologram-cube"></div>
-        </div>
-        <div className="absolute bottom-20 right-20 hologram-float" style={{animationDelay: '2s'}}>
-          <div className="hologram-pyramid"></div>
-        </div>
+        {/* Floating Holograms - Only show in dark mode */}
+        {darkMode && (
+          <>
+            <div className="absolute top-20 left-20 hologram-float">
+              <div className="hologram-cube"></div>
+            </div>
+            <div className="absolute bottom-20 right-20 hologram-float" style={{animationDelay: '2s'}}>
+              <div className="hologram-pyramid"></div>
+            </div>
+          </>
+        )}
       </section>
 
       {/* QUICK ACCESS SECTION FOR LOGGED-IN USERS - TRANSPARENT */}
@@ -312,8 +322,8 @@ const Home = () => {
         <section className="py-20 relative">
           <div className="container mx-auto px-4">
             <h2 className="text-5xl font-bold text-center mb-16 cyberpunk-title">
-              <span className="text-cyan-400 cyber-glow">QUICK ACCESS</span>
-              <span className="text-pink-400 cyber-glow"> TERMINAL</span>
+              <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>QUICK ACCESS</span>
+              <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}> TERMINAL</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -383,8 +393,8 @@ const Home = () => {
         <section className="py-20 relative">
           <div className="container mx-auto px-4">
             <h2 className="text-5xl font-bold text-center mb-16 cyberpunk-title">
-              <span className="text-green-400 cyber-glow">START</span>
-              <span className="text-cyan-400 cyber-glow"> SHOPPING</span>
+              <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>START</span>
+              <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> SHOPPING</span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -404,7 +414,7 @@ const Home = () => {
                   <div className="card-glow"></div>
                   <div className="card-content">
                     <div className="card-icon">🛍️</div>
-                    <h3 className="card-title">Shopping Cart</h3>
+                    <div className="card-title">Shopping Cart</div>
                     <p className="card-description">View your selected items</p>
                   </div>
                 </div>
@@ -429,11 +439,11 @@ const Home = () => {
       <section className="py-20 relative">
         <div className="container mx-auto px-4">
           <h2 className="text-5xl font-bold text-center mb-4 cyberpunk-title">
-            <span className="text-purple-400 cyber-glow">{user ? 'PLATFORM' : 'WHY CHOOSE'}</span>
-            <span className="text-cyan-400 cyber-glow"> {user ? 'FEATURES' : 'US?'}</span>
+            <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}>{user ? 'PLATFORM' : 'WHY CHOOSE'}</span>
+            <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> {user ? 'FEATURES' : 'US?'}</span>
           </h2>
           
-          <p className="text-xl text-gray-400 text-center mb-16 max-w-4xl mx-auto">
+          <p className={`text-xl text-center mb-16 max-w-4xl mx-auto ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Advanced quantum algorithms power your business operations
           </p>
           
@@ -445,8 +455,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-cyan-400">Real-time Inventory</h3>
-              <p className="text-gray-400 text-lg">
+              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>Real-time Inventory</h3>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Track your products with real-time updates and low stock alerts
               </p>
             </div>
@@ -458,8 +468,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-green-400">Order Processing</h3>
-              <p className="text-gray-400 text-lg">
+              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>Order Processing</h3>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Streamlined order management from creation to fulfillment
               </p>
             </div>
@@ -471,8 +481,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-purple-400">Analytics & Reports</h3>
-              <p className="text-gray-400 text-lg">
+              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>Analytics & Reports</h3>
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Detailed insights to help you make informed business decisions
               </p>
             </div>
@@ -521,11 +531,11 @@ const Home = () => {
               {user ? (
                 <div>
                   <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
-                    <span className="text-cyan-400 cyber-glow">READY TO BOOST</span>
+                    <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>READY TO BOOST</span>
                     <br />
-                    <span className="text-pink-400 cyber-glow">YOUR PRODUCTIVITY?</span>
+                    <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-700'}>YOUR PRODUCTIVITY?</span>
                   </h2>
-                  <p className="text-xl text-gray-300 mb-12">
+                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     Explore all the features available in your dashboard
                   </p>
                   <div className="flex flex-wrap gap-6 justify-center">
@@ -548,11 +558,11 @@ const Home = () => {
               ) : (
                 <div>
                   <h2 className="text-5xl font-bold mb-8 cyberpunk-title">
-                    <span className="text-green-400 cyber-glow">READY TO GET</span>
+                    <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>READY TO GET</span>
                     <br />
-                    <span className="text-cyan-400 cyber-glow">STARTED?</span>
+                    <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>STARTED?</span>
                   </h2>
-                  <p className="text-xl text-gray-300 mb-12">
+                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     Join thousands of businesses already using our platform
                   </p>
                   <div className="flex flex-wrap gap-6 justify-center">
@@ -571,7 +581,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
