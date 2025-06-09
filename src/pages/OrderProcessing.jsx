@@ -1,128 +1,170 @@
-// src/pages/OrderProcessing.jsx
-import React from 'react'
-// Here I create the OrderProcessing component with an introduction and layout.
+import React from 'react';
+import {
+  FaCogs,
+  FaShippingFast,
+  FaEdit,
+  FaTruckMoving,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaRegClock,
+  FaBoxOpen
+} from 'react-icons/fa';
 
 const OrderProcessing = () => {
   return (
-    <div className="p-8 max-w-6xl mx-auto text-gray-800">
-    
-      // Here I add the page title and introduction.
-      <h1 className="text-4xl font-bold text-indigo-700 mb-6">Order Processing</h1>
-      <p className="text-lg mb-6">
-        The Wholesaler App provides a robust, real-time order processing system designed to streamline the fulfillment journey from cart to delivery. Our system supports businesses, bulk buyers, and regular users with maximum transparency and efficiency.
-      </p>
+    <div className="bg-gray-50 py-12 px-6 min-h-screen">
+      <div className="max-w-6xl mx-auto bg-white p-10 rounded-lg shadow-md text-gray-800">
 
-      // Here I define the Order Lifecycle section explaining each step.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">🔍 Overview of the Order Lifecycle</h2>
-        <p className="mb-4">
-          Every order follows a standardized yet flexible lifecycle to ensure that both suppliers and customers are aligned on timelines and expectations.
+        {/* This is the Header section */}
+        <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">Order Processing</h1>
+        <p className="text-lg mb-10 text-gray-600">
+          Our order processing system ensures accuracy, transparency, and fast fulfillment — designed for both bulk and individual buyers.
         </p>
-        <ol className="list-decimal pl-6 space-y-2 text-gray-700">
-          <li><strong>Product Selection:</strong> Users browse products with live stock updates.</li>
-          <li><strong>Order Submission:</strong> Cart contents are validated before checkout.</li>
-          <li><strong>Payment:</strong> Multiple secure options (credit card, business account).</li>
-          <li><strong>Confirmation:</strong> Email and in-app confirmation with invoice ID.</li>
-          <li><strong>Fulfillment:</strong> Order packed, labeled, and queued for dispatch.</li>
-          <li><strong>Shipping:</strong> Tracking ID shared and updated in the dashboard.</li>
-          <li><strong>Completion:</strong> Order marked as delivered or completed.</li>
-        </ol>
-      </section>
 
-      // Here I introduce automation features that improve efficiency.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">⚙️ Automation & Smart Features</h2>
-        <ul className="list-disc pl-6 space-y-2 text-gray-700">
-          <li><strong>Auto-Inventory Sync:</strong> Real-time deduction upon order placement.</li>
-          <li><strong>Order Alerts:</strong> Instant notifications for low stock or urgent orders.</li>
-          <li><strong>Smart Routing:</strong> Optimized delivery scheduling based on location.</li>
-          <li><strong>Bulk Order Discounts:</strong> Dynamic pricing applied for large volumes.</li>
-        </ul>
-      </section>
+        {/* Lifecycle Section */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaBoxOpen className="text-indigo-600 mr-2" />
+            Order Lifecycle Overview
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              ['Product Selection', 'Browse inventory with live stock updates.'],
+              ['Order Submission', 'Validate and place items into the cart.'],
+              ['Secure Payment', 'Complete checkout via safe, encrypted gateways.'],
+              ['Order Confirmation', 'Receive in-app and email confirmation instantly.'],
+              ['Packaging & Fulfillment', 'Products packed and marked for dispatch.'],
+              ['Shipping & Delivery', 'Tracked delivery with real-time updates.'],
+            ].map(([title, desc], i) => (
+              <div key={i} className="border-l-4 border-indigo-600 bg-indigo-50 p-4 rounded shadow-sm">
+                <h3 className="font-semibold text-indigo-700">{title}</h3>
+                <p className="text-gray-700 text-sm">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      // Here I define the shipping and delivery options using a table format.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">🚚 Shipping & Delivery</h2>
-        <p className="mb-2">We partner with multiple logistics providers to offer flexible shipping:</p>
-        <table className="table-auto w-full text-left border text-sm">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2 border">Option</th>
-              <th className="p-2 border">Delivery Time</th>
-              <th className="p-2 border">Cost</th>
-              <th className="p-2 border">Availability</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="p-2 border">Standard</td>
-              <td className="p-2 border">3–5 Business Days</td>
-              <td className="p-2 border">Free</td>
-              <td className="p-2 border">All Regions</td>
-            </tr>
-            <tr>
-              <td className="p-2 border">Express</td>
-              <td className="p-2 border">1–2 Business Days</td>
-              <td className="p-2 border">$15</td>
-              <td className="p-2 border">Metro Areas Only</td>
-            </tr>
-            <tr>
-              <td className="p-2 border">Bulk Freight</td>
-              <td className="p-2 border">3–7 Days</td>
-              <td className="p-2 border">Custom Quote</td>
-              <td className="p-2 border">Business Accounts</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+        {/* This section include features and discount related information.*/}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaCogs className="text-indigo-600 mr-2" />
+            Automation & Smart Features
+          </h2>
+          <ul className="list-disc pl-6 space-y-2 text-gray-700">
+            <li><strong>Auto-Inventory Sync:</strong> Inventory adjusts in real-time upon order.</li>
+            <li><strong>Order Alerts:</strong> Get alerts on urgent or delayed orders instantly.</li>
+            <li><strong>Smart Routing:</strong> Auto-scheduling deliveries based on your location.</li>
+            <li><strong>Bulk Discounts:</strong> Dynamic pricing for wholesale and large orders.</li>
+          </ul>
+        </section>
 
-      // Here I allow users to modify or cancel their orders.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">✏️ Modify or Cancel Orders</h2>
-        <p className="text-gray-700 mb-2">
-          We understand that plans change. Here's how to modify your order:
-        </p>
-        <ul className="list-disc pl-6 text-gray-700">
-          <li>Orders can be edited within 1 hour of placement.</li>
-          <li>To cancel, navigate to your Order History & click “Cancel” before it ships.</li>
-          <li>Business users can schedule future dispatches using advanced settings.</li>
-        </ul>
-      </section>
+        {/* This is the Shipping Table just for additional information. */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaShippingFast className="text-indigo-600 mr-2" />
+            Shipping & Delivery Options
+          </h2>
+          <p className="text-gray-700 mb-4">We collaborate with reliable logistics partners for all your shipping needs:</p>
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full border text-sm">
+              <thead className="bg-indigo-100 text-indigo-800">
+                <tr>
+                  <th className="p-3 border">Option</th>
+                  <th className="p-3 border">Time</th>
+                  <th className="p-3 border">Cost</th>
+                  <th className="p-3 border">Availability</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-700">
+                <tr className="hover:bg-gray-50">
+                  <td className="p-3 border">Standard</td>
+                  <td className="p-3 border">3–5 Business Days</td>
+                  <td className="p-3 border">Free</td>
+                  <td className="p-3 border">Nationwide</td>
+                </tr>
+                <tr className="hover:bg-gray-50 bg-gray-50">
+                  <td className="p-3 border">Express</td>
+                  <td className="p-3 border">1–2 Business Days</td>
+                  <td className="p-3 border">$15</td>
+                  <td className="p-3 border">Metro Only</td>
+                </tr>
+                <tr className="hover:bg-gray-50">
+                  <td className="p-3 border">Bulk Freight</td>
+                  <td className="p-3 border">3–7 Days</td>
+                  <td className="p-3 border">Custom Quote</td>
+                  <td className="p-3 border">B2B Clients</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      // Here I add tracking and support details for order inquiries.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">📦 Real-Time Tracking</h2>
-        <p className="text-gray-700">
-          Every shipment comes with a tracking number visible under <strong>User Dashboard → Orders</strong>. Live status includes:
-        </p>
-        <ul className="list-disc pl-6 text-gray-700 mt-2">
-          <li>Order Confirmed</li>
-          <li>Packed</li>
-          <li>Shipped</li>
-          <li>Out for Delivery</li>
-          <li>Delivered</li>
-        </ul>
-      </section>
+        {/* This is just order related problems related modifications */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaEdit className="text-indigo-600 mr-2" />
+            Modify or Cancel Orders
+          </h2>
+          <p className="mb-3 text-gray-700">
+            Need to make changes? You can modify or cancel your order under certain conditions:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>Orders can be edited within 1 hour of placement.</li>
+            <li>Cancel directly from the "My Orders" page before shipping.</li>
+            <li>For scheduled dispatch, changes are allowed up to 24 hours before shipping.</li>
+          </ul>
+        </section>
 
-      // Here I add FAQ and support contact details.
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-3">💬 Need Help?</h2>
-        <ul className="list-disc pl-6 text-gray-700">
-          <li>Email: <a href="mailto:orders@wholesaler.com" className="text-indigo-600 underline">orders@wholesaler.com</a></li>
-          <li>Phone: (123) 456-7890 (NZ only)</li>
-          <li>Live Chat: In-app support available from 9AM–5PM NZST</li>
-        </ul>
-      </section>
+        {/* This sections holds the tracking information.*/}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaTruckMoving className="text-indigo-600 mr-2" />
+            Real-Time Tracking
+          </h2>
+          <p className="text-gray-700 mb-2">
+            Stay updated every step of the way. Your order status is visible under <strong>Dashboard → Orders</strong>:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-1">
+            <li>Order Confirmed</li>
+            <li>Processing & Packing</li>
+            <li>Dispatched with Tracking ID</li>
+            <li>Out for Delivery</li>
+            <li>Delivered</li>
+          </ul>
+        </section>
 
-      <div className="mt-10 text-center">
-        <a
-          href="/orders"
-          className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 text-lg"
-        >
-          View My Orders
-        </a>
+        {/* THis is the Support section. */}
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold flex items-center mb-4">
+            <FaRegClock className="text-indigo-600 mr-2" />
+            Need Assistance?
+          </h2>
+          <ul className="list-disc pl-6 text-gray-700">
+            <li>
+              <FaEnvelope className="inline-block text-indigo-600 mr-2" />
+              Email: <a href="mailto:orders@wholesaler.com" className="text-indigo-600 underline">orders@wholesaler.com</a>
+            </li>
+            <li>
+              <FaPhoneAlt className="inline-block text-indigo-600 mr-2" />
+              Phone: (123) 456-7890 (NZ only)
+            </li>
+            <li>
+              <FaRegClock className="inline-block text-indigo-600 mr-2" />
+              Live Chat: 9AM–5PM NZST, Monday to Friday
+            </li>
+          </ul>
+        </section>
+
+        {/* CTA */}
+        <div className="text-center mt-12">
+          <a
+            href="/orders"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium text-lg shadow-sm transition"
+          >
+            View My Orders
+          </a>
+        </div>
       </div>
-
     </div>
   );
 };
