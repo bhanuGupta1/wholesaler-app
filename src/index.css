@@ -1,1 +1,340 @@
+/* src/index.css - Main stylesheet with proper import order */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+/* Import Cyberpunk Styles FIRST - This ensures they have proper precedence */
+@import './styles/cyberpunk.css';
+
+/* Import Tailwind CSS */
 @import "tailwindcss";
+
+/* Optional: Enhanced Cyberpunk Fonts from Google Fonts */
+
+
+/* ==============================================
+   GLOBAL BASE STYLES
+   ============================================== */
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Rajdhani', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* Enhanced typography hierarchy */
+h1, h2, h3, h4, h5, h6, 
+.cyberpunk-title, 
+.cyber-title {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  font-weight: 700;
+}
+
+/* Code and monospace elements */
+code, pre, .font-mono {
+  font-family: 'Courier New', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* ==============================================
+   SCROLLBAR STYLING (CYBERPUNK THEME)
+   ============================================== */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #00FFFF, #FF00FF);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #00FFFF, #FFFF00);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #00FFFF rgba(0, 0, 0, 0.8);
+}
+
+/* ==============================================
+   SELECTION STYLING
+   ============================================== */
+
+::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+::-moz-selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+/* ==============================================
+   FOCUS STYLES (ACCESSIBILITY)
+   ============================================== */
+
+/* Enhanced focus for better accessibility */
+*:focus {
+  outline: 2px solid #00FFFF;
+  outline-offset: 2px;
+}
+
+/* Remove default focus for elements that have custom focus styles */
+.cyber-btn:focus,
+.cyber-nav-link:focus,
+.cyber-close-btn:focus,
+.cyber-fab-button:focus {
+  outline: none;
+}
+
+/* ==============================================
+   FORM ELEMENTS (CYBERPUNK STYLE)
+   ============================================== */
+
+/* Input fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #00FFFF;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  background: rgba(0, 255, 255, 0.05);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #666;
+  font-style: italic;
+}
+
+/* Checkboxes and radios */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #00FFFF;
+}
+
+/* ==============================================
+   UTILITY CLASSES
+   ============================================== */
+
+/* Text utilities */
+.text-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.text-glow-strong {
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor;
+}
+
+/* Background utilities */
+.bg-cyber {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.bg-cyber-glow {
+  background: linear-gradient(45deg, 
+    rgba(0, 255, 255, 0.1), 
+    rgba(255, 0, 255, 0.1),
+    rgba(0, 255, 255, 0.1)
+  );
+}
+
+/* Border utilities */
+.border-cyber {
+  border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.border-cyber-glow {
+  border: 2px solid #00FFFF;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+/* Animation utilities */
+.animate-glow {
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-matrix {
+  animation: matrixFlow 20s linear infinite;
+}
+
+@keyframes matrixFlow {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ==============================================
+   RESPONSIVE HELPERS
+   ============================================== */
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ==============================================
+   PRINT STYLES
+   ============================================== */
+
+@media print {
+  /* Hide cyberpunk effects when printing */
+  .cyberpunk-grid,
+  .scanlines,
+  .cyber-loading-spinner,
+  .hologram-float,
+  canvas {
+    display: none !important;
+  }
+  
+  /* Simplify colors for printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .cyber-btn,
+  .cyber-card,
+  .feature-card {
+    border: 1px solid #000 !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .cyber-glow,
+  .text-glow,
+  .text-glow-strong {
+    text-shadow: none !important;
+  }
+}
+
+/* ==============================================
+   DARK/LIGHT MODE OVERRIDES
+   ============================================== */
+
+/* Since we're in cyberpunk mode, we force dark theme */
+.light {
+  /* Override any light mode attempts */
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* ==============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================== */
+
+/* Will-change for animated elements */
+.cyberpunk-grid,
+.scanlines,
+canvas,
+.cyber-loading-spinner {
+  will-change: transform, opacity;
+}
+
+/* Hardware acceleration for smooth animations */
+.cyber-btn,
+.cyber-card,
+.cyber-nav-link {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ==============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cyber-btn {
+    border-width: 3px;
+  }
+  
+  .cyber-glow {
+    text-shadow: 
+      0 0 3px currentColor,
+      0 0 6px currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .cyberpunk-grid,
+  .scanlines {
+    animation: none;
+  }
+}
