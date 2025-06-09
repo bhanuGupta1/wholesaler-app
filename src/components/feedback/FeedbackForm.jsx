@@ -13,3 +13,29 @@ const FeedbackForm = ({ onSubmit }) => {
       alert('Please fill all fields and give a rating.');
       return;
     }
+     try {
+      await onSubmit({ name, email, rating, message });
+      setSubmitted(true);
+      // Reset form after successful submission
+      setName('');
+      setEmail('');
+      setRating(0);
+      setMessage('');
+    } catch (error) {
+      alert('Failed to submit feedback. Please try again.');
+      console.error('Feedback submission error:', error);
+    }
+  };
+ try {
+      await onSubmit({ name, email, rating, message });
+      setSubmitted(true);
+      // Reset form after successful submission
+      setName('');
+      setEmail('');
+      setRating(0);
+      setMessage('');
+    } catch (error) {
+      alert('Failed to submit feedback. Please try again.');
+      console.error('Feedback submission error:', error);
+    }
+  };
