@@ -9,14 +9,18 @@ const FeedbackForm = ({ onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !message || rating === 0) {
+
+    // Trim whitespace to prevent empty inputs
+    if (!name.trim() || !email.trim() || !message.trim() || rating === 0) {
       alert('Please fill all fields and give a rating.');
       return;
     }
-     try {
-      await onSubmit({ name, email, rating, message });
+
+    try {
+      await onSubmit({ name: name.trim(), email: email.trim(), rating, message: message.trim() });
       setSubmitted(true);
-      // Reset form after successful submission
+
+      // Reset form
       setName('');
       setEmail('');
       setRating(0);
@@ -26,19 +30,7 @@ const FeedbackForm = ({ onSubmit }) => {
       console.error('Feedback submission error:', error);
     }
   };
- try {
-      await onSubmit({ name, email, rating, message });
-      setSubmitted(true);
-      // Reset form after successful submission
-      setName('');
-      setEmail('');
-      setRating(0);
-      setMessage('');
-    } catch (error) {
-      alert('Failed to submit feedback. Please try again.');
-      console.error('Feedback submission error:', error);
-    }
-  };
+
   if (submitted) {
     return (
       <div className="p-4 bg-green-100 text-green-800 rounded-lg">
@@ -46,7 +38,8 @@ const FeedbackForm = ({ onSubmit }) => {
       </div>
     );
   }
-   return (
+
+  return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -61,7 +54,8 @@ const FeedbackForm = ({ onSubmit }) => {
           required
         />
       </div>
-       <div>
+      
+      <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           Email
         </label>
@@ -90,7 +84,8 @@ const FeedbackForm = ({ onSubmit }) => {
           ))}
         </div>
       </div>
-<div>
+
+      <div>
         <label htmlFor="message" className="block text-sm font-medium text-gray-700">
           Message
         </label>
