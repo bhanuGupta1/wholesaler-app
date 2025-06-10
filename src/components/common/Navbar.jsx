@@ -172,7 +172,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 </Link>
 
             {/* NEW: QR Tools Link */}
-            {userCanAccessQR && (
+            {/* {userCanAccessQR && (
               <Link 
                 to="/qr-tools" 
                 className={`text-indigo-100 hover:text-white font-medium transition-colors flex items-center ${isActive('/qr-tools') ? 'border-b-2 border-white' : ''}`}
@@ -183,7 +183,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 📱 QR Tools
               </Link>
             )}
-            
+             */}
             <div className="h-6 w-px bg-indigo-300"></div>
             
             {/* Enhanced Cart Dropdown - Only show if user can access cart */}
