@@ -29,7 +29,7 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
-//const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
