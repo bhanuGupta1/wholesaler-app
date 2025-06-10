@@ -420,26 +420,26 @@ const Layout = ({ children }) => {
                 <div>
                   <h3 className="footer-heading">CORPORATION</h3>
                   <ul className="footer-links">
-                    <li><a href="#" className="footer-link">About Neural Corp</a></li>
+                    <li><Link to="/about-us" className="footer-link">About Neural Corp</Link></li>
                     <li><a href="#" className="footer-link">Digital Careers</a></li>
-                    <li><a href="#" className="footer-link">Privacy Protocol</a></li>
-                    <li><a href="#" className="footer-link">Terms of Interface</a></li>
+                    <li><Link to="/privacy-policy" className="footer-link">Privacy Protocol</Link></li>
+                    <li><Link to="/terms-of-service" className="footer-link">Terms of Interface</Link></li>
                   </ul>
                 </div>
                 <div>
                   <h3 className="footer-heading">RESOURCES</h3>
                   <ul className="footer-links">
-                    <li><a href="#" className="footer-link">Neural Documentation</a></li>
+                    <li><Link to="/documentation" className="footer-link">Neural Documentation</Link></li>
                     <li><a href="#" className="footer-link">Interface Guides</a></li>
                     <li><a href="#" className="footer-link">API Gateway</a></li>
-                    <li><a href="#" className="footer-link">Support Matrix</a></li>
+                    <li><Link to="/support-center" className="footer-link">Support Matrix</Link></li>
                   </ul>
                 </div>
                 <div>
                   <h3 className="footer-heading">FEATURES</h3>
                   <ul className="footer-links">
                     <li><a href="#" className="footer-link">Quantum Inventory</a></li>
-                    <li><a href="#" className="footer-link">Neural Processing</a></li>
+                    <li><Link to="/order-processing" className="footer-link">Neural Processing</Link></li>
                     <li><a href="#" className="footer-link">Data Analytics</a></li>
                     <li><a href="#" className="footer-link">System Integration</a></li>
                   </ul>
