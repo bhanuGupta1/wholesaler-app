@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - FIXED: No longer overrides Layout background animations
+// src/pages/Home.jsx - Enhanced with Futuristic Neumorphism Features
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -37,32 +37,36 @@ const Home = () => {
     return dashboards[accountType] || null;
   };
 
-  // Theme-aware classes
+  // Enhanced theme-aware classes with new futuristic features
   const getThemeClasses = () => ({
-    // Buttons
-    btnPrimary: darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary',
+    // Enhanced Buttons with new effects
+    btnPrimary: darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary neon-border',
     btnSecondary: darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn neumorph-btn-secondary',
     btnOutline: darkMode ? 'cyber-btn cyber-btn-outline' : 'neumorph-btn neumorph-btn-outline',
-    btnGhost: darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn neumorph-btn-ghost',
+    btnGhost: darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn neumorph-btn-ghost neumorph-glass',
     btnSuccess: darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn neumorph-btn-success',
     
-    // Cards
-    card: darkMode ? 'cyber-card' : 'neumorph-card',
+    // Enhanced Cards with glass morphism
+    card: darkMode ? 'cyber-card' : 'neumorph-card neumorph-glass',
     cardGlow: darkMode ? 'card-glow' : 'neumorph-card-glow',
+    featureCard: darkMode ? 'feature-card' : 'neumorph-feature-card neumorph-holographic',
     
-    // Text
+    // Enhanced Text with new effects
     title: darkMode ? 'cyberpunk-title' : 'neumorph-title',
     titleGlow: darkMode ? 'cyber-glow' : 'neumorph-text-shadow',
+    holographicText: darkMode ? 'holographic-text' : 'neumorph-holographic-text',
+    gradientText: darkMode ? 'holographic-text' : 'neumorph-gradient-text',
     description: darkMode ? 'text-gray-300' : 'text-gray-600',
     
-    // Text colors (no background overrides)
+    // Enhanced Text colors
     textPrimary: darkMode ? 'text-cyan-400' : 'text-blue-600',
     textSecondary: darkMode ? 'text-purple-400' : 'text-purple-600',
     textAccent: darkMode ? 'text-yellow-400' : 'text-green-600',
     
-    // Containers (transparent to show Layout background)
+    // Enhanced Containers
     container: 'relative z-1',
-    section: 'py-20 relative z-1'
+    section: 'py-20 relative z-1',
+    glassContainer: darkMode ? '' : 'neumorph-glass-strong'
   });
 
   const theme = getThemeClasses();
@@ -71,8 +75,8 @@ const Home = () => {
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="relative z-10 text-center max-w-2xl mx-auto px-4">
-          <div className={`${darkMode ? 'cyber-loading-spinner' : 'neumorph-loading-spinner'} mb-8`}></div>
+        <div className={`relative z-10 text-center max-w-2xl mx-auto px-4 ${!darkMode ? 'neumorph-glass' : ''} ${!darkMode ? 'p-12 rounded-3xl' : ''}`}>
+          <div className={`${darkMode ? 'cyber-loading-spinner' : 'neumorph-loading-spinner'} mb-8 mx-auto`}></div>
           <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${theme.title}`}>
             <span className={`${theme.textPrimary} ${theme.titleGlow}`}>
               {darkMode ? 'INITIALIZING' : 'Loading'}
@@ -82,20 +86,21 @@ const Home = () => {
               {darkMode ? 'NEURAL INTERFACE' : 'Platform'}
             </span>
           </h1>
+          <div className={`${theme.holographicText} text-lg`}>
+            {darkMode ? 'Establishing secure connection...' : 'Preparing your experience...'}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    // FIXED: No background override - let Layout handle all background animations
     <div className="min-h-screen">
-      {/* FIXED: Removed all background effects - Layout handles these */}
-      
-      {/* HERO SECTION */}
+      {/* ENHANCED HERO SECTION */}
       <section className="min-h-screen flex items-center justify-center relative z-1">
         <div className="text-center max-w-6xl mx-auto px-4">
           <div className="mb-12 relative">
+            {/* Enhanced main title with new effects */}
             <h1 className={`text-6xl md:text-9xl font-bold mb-6 ${theme.title}`}>
               {user ? (
                 <>
@@ -104,7 +109,7 @@ const Home = () => {
                   </span>
                   <br />
                   <span 
-                    className={`${theme.textSecondary} ${theme.titleGlow} ${darkMode ? 'hacker-text' : ''}`} 
+                    className={`${theme.textSecondary} ${theme.titleGlow} ${darkMode ? 'hacker-text' : 'neumorph-holographic-text'}`} 
                     data-text={user.displayName || user.email?.split('@')[0] || 'USER'}
                   >
                     {user.displayName || user.email?.split('@')[0] || 'USER'}
@@ -123,42 +128,48 @@ const Home = () => {
               )}
             </h1>
             
-            <div className={`text-2xl md:text-4xl mb-8 ${theme.description} ${darkMode ? 'holographic-text' : 'neumorph-gradient-text'}`}>
-              {darkMode ? 'NEURAL COMMERCE PLATFORM' : 'Modern Wholesale Management'}
+            {/* Enhanced subtitle with holographic effects */}
+            <div className={`text-2xl md:text-4xl mb-8 ${theme.gradientText}`}>
+              {darkMode ? 'NEURAL COMMERCE PLATFORM' : 'Next-Generation Wholesale Management'}
             </div>
           </div>
 
+          {/* Enhanced description */}
           <p className={`text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed ${theme.description} ${darkMode ? 'typewriter-text' : ''}`}>
             {user 
               ? darkMode 
                 ? 'Neural interface activated. Your wholesale management systems are online.'
-                : 'Welcome to your wholesale management dashboard. Everything you need is at your fingertips.'
+                : 'Welcome to your enhanced wholesale management dashboard. Advanced tools powered by modern technology.'
               : darkMode
                 ? 'Next-generation wholesale platform powered by quantum neural networks.'
-                : 'Streamline your wholesale operations with our comprehensive management platform.'
+                : 'Experience the future of wholesale management with our advanced, intuitive platform designed for modern businesses.'
             }
           </p>
           
+          {/* Enhanced action buttons */}
           <div className="flex flex-wrap gap-6 justify-center mb-16">
             {user ? (
               <>
                 <Link to="/products" className={theme.btnPrimary}>
                   <span className="text-xl">🛒</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Browse Products</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Browse Products</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 <Link to="/cart" className={theme.btnSecondary}>
                   <span className="text-xl">🛍️</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Shopping Cart</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Shopping Cart</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 {dashboardInfo && (
                   <Link to={dashboardInfo.route} className={theme.btnPrimary}>
                     <span className="text-xl">{dashboardInfo.icon}</span>
-                    <span className={darkMode ? 'btn-text' : ''}>{dashboardInfo.title}</span>
+                    <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>{dashboardInfo.title}</span>
                     {darkMode && <div className="btn-glow"></div>}
+                    {!darkMode && <div className="neumorph-btn-glow"></div>}
                   </Link>
                 )}
               </>
@@ -166,45 +177,50 @@ const Home = () => {
               <>
                 <Link to="/products" className={theme.btnPrimary}>
                   <span className="text-xl">🛒</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Browse Products</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Browse Products</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 <Link to="/cart" className={theme.btnSecondary}>
                   <span className="text-xl">🛍️</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Shopping Cart</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Shopping Cart</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 <Link to="/guest-dashboard" className={theme.btnGhost}>
                   <span className="text-xl">👁️</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Guest View</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Guest View</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 <Link to="/login" className={theme.btnOutline}>
                   <span className="text-xl">🔑</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Sign In</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Sign In</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 <Link to="/register" className={theme.btnSuccess}>
                   <span className="text-xl">✨</span>
-                  <span className={darkMode ? 'btn-text' : ''}>Get Started Free</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Get Started Free</span>
                   {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
               </>
             )}
           </div>
 
-          {/* Status Indicators */}
-          <div className="flex justify-center space-x-12 text-sm">
+          {/* Enhanced Status Indicators */}
+          <div className={`flex justify-center space-x-12 text-sm ${!darkMode ? 'neumorph-glass p-6 rounded-2xl inline-flex' : ''}`}>
             {(darkMode ? ['SECURE', 'QUANTUM', 'NEURAL'] : ['Secure', 'Advanced', 'Smart']).map((status, i) => (
               <div key={status} className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full animate-pulse ${
                   darkMode 
                     ? `bg-${['green', 'yellow', 'purple'][i]}-400 shadow-lg shadow-${['green', 'yellow', 'purple'][i]}-400/50`
-                    : `bg-${['green', 'blue', 'purple'][i]}-500`
+                    : `bg-${['green', 'blue', 'purple'][i]}-500 shadow-lg`
                 }`}></div>
                 <span className={`font-bold ${
                   darkMode 
@@ -218,7 +234,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* FIXED: Simplified floating elements with lower z-index */}
+        {/* Enhanced floating elements */}
         {darkMode ? (
           <>
             <div className="absolute top-20 left-20 hologram-float opacity-50">
@@ -230,20 +246,23 @@ const Home = () => {
           </>
         ) : (
           <>
-            <div className="absolute top-20 left-20 neumorph-float opacity-30">
-              <div className="neumorph-shape"></div>
+            <div className="absolute top-20 left-20 neumorph-float opacity-40">
+              <div className="neumorph-shape neumorph-elevated"></div>
             </div>
-            <div className="absolute bottom-20 right-20 neumorph-float opacity-30" style={{animationDelay: '2s'}}>
-              <div className="neumorph-shape neumorph-circle"></div>
+            <div className="absolute bottom-20 right-20 neumorph-float opacity-40" style={{animationDelay: '2s'}}>
+              <div className="neumorph-shape neumorph-circle neumorph-elevated"></div>
+            </div>
+            <div className="absolute top-1/2 right-10 neumorph-float opacity-30" style={{animationDelay: '4s'}}>
+              <div className="neumorph-shape neumorph-subtle"></div>
             </div>
           </>
         )}
       </section>
 
-      {/* QUICK ACCESS SECTION */}
+      {/* ENHANCED QUICK ACCESS SECTION */}
       {user && (
         <section className={theme.section}>
-          <div className="container mx-auto px-4">
+          <div className={`container mx-auto px-4 ${theme.glassContainer} ${!darkMode ? 'py-16 rounded-3xl' : ''}`}>
             <h2 className={`text-5xl font-bold text-center mb-16 ${theme.title}`}>
               <span className={`${theme.textPrimary} ${theme.titleGlow}`}>
                 {darkMode ? 'QUICK ACCESS' : 'Quick Access'}
@@ -281,10 +300,10 @@ const Home = () => {
         </section>
       )}
 
-      {/* SHOPPING SECTION FOR GUESTS */}
+      {/* ENHANCED SHOPPING SECTION FOR GUESTS */}
       {!user && (
         <section className={theme.section}>
-          <div className="container mx-auto px-4">
+          <div className={`container mx-auto px-4 ${theme.glassContainer} ${!darkMode ? 'py-16 rounded-3xl' : ''}`}>
             <h2 className={`text-5xl font-bold text-center mb-16 ${theme.title}`}>
               <span className={`${theme.textAccent} ${theme.titleGlow}`}>
                 {darkMode ? 'START' : 'Start'}
@@ -296,9 +315,9 @@ const Home = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {[
-                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our product catalog' },
-                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'View your selected items' },
-                { to: '/guest-dashboard', icon: '👁️', title: 'Guest View', desc: 'Browse as a guest user' }
+                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our futuristic product catalog' },
+                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'View your selected items with smart recommendations' },
+                { to: '/guest-dashboard', icon: '👁️', title: 'Guest View', desc: 'Experience the platform as a guest user' }
               ].map((item, index) => (
                 <Link key={index} to={item.to} className="group">
                   <div className={theme.card}>
@@ -316,7 +335,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* FEATURES SECTION */}
+      {/* ENHANCED FEATURES SECTION */}
       <section className={theme.section}>
         <div className="container mx-auto px-4">
           <h2 className={`text-5xl font-bold text-center mb-4 ${theme.title}`}>
@@ -331,7 +350,7 @@ const Home = () => {
           <p className={`text-xl text-center mb-16 max-w-4xl mx-auto ${theme.description}`}>
             {darkMode 
               ? 'Advanced quantum algorithms power your business operations'
-              : 'Modern solutions designed to streamline your business operations'
+              : 'Cutting-edge technology and intuitive design come together to revolutionize your business operations'
             }
           </p>
           
@@ -340,23 +359,23 @@ const Home = () => {
               { 
                 icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10', 
                 title: 'Real-time Inventory', 
-                desc: 'Track your products with real-time updates and intelligent stock alerts',
+                desc: 'Advanced AI-powered tracking with predictive analytics and intelligent stock optimization',
                 color: darkMode ? 'text-cyan-400' : 'text-blue-600'
               },
               { 
                 icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 
-                title: 'Order Processing', 
-                desc: 'Efficient order management from creation to delivery and beyond',
+                title: 'Smart Order Processing', 
+                desc: 'Automated workflows with machine learning optimization for seamless order management',
                 color: darkMode ? 'text-green-400' : 'text-green-600'
               },
               { 
                 icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 
-                title: 'Analytics & Reports', 
-                desc: 'Comprehensive insights and reports to drive informed business decisions',
+                title: 'Advanced Analytics', 
+                desc: 'Deep insights powered by advanced algorithms to drive data-driven business decisions',
                 color: darkMode ? 'text-purple-400' : 'text-purple-600'
               }
             ].map((feature, index) => (
-              <div key={index} className={darkMode ? 'feature-card' : 'neumorph-feature-card'}>
+              <div key={index} className={theme.featureCard}>
                 <div className={`inline-flex mb-6 ${feature.color}`}>
                   <div className={darkMode ? 'icon-glow' : 'neumorph-icon-glow'}></div>
                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,11 +390,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ROLE-SPECIFIC DASHBOARD INFO */}
+      {/* ENHANCED ROLE-SPECIFIC DASHBOARD INFO */}
       {user && dashboardInfo && (
         <section className={theme.section}>
           <div className="container mx-auto px-4">
-            <div className={`max-w-6xl mx-auto ${darkMode ? 'cyber-dashboard-card' : 'neumorph-dashboard-card'}`}>
+            <div className={`max-w-6xl mx-auto ${darkMode ? 'cyber-dashboard-card' : 'neumorph-dashboard-card neumorph-holographic'}`}>
               <div className={darkMode ? 'dashboard-glow' : 'neumorph-dashboard-glow'}></div>
               <div className="md:flex md:items-center md:justify-between relative z-10 p-12">
                 <div className="md:flex-1">
@@ -388,15 +407,16 @@ const Home = () => {
                         Your {dashboardInfo.title}
                       </h2>
                       <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Access your personalized dashboard with role-specific features and tools
+                        Access your personalized dashboard with advanced features and intelligent tools
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-6 md:mt-0">
-                  <Link to={dashboardInfo.route} className={darkMode ? 'cyber-btn cyber-btn-dashboard' : 'neumorph-btn neumorph-btn-dashboard'}>
-                    <span className={darkMode ? 'btn-text' : ''}>Go to Dashboard</span>
+                  <Link to={dashboardInfo.route} className={darkMode ? 'cyber-btn cyber-btn-dashboard' : 'neumorph-btn neumorph-btn-dashboard neon-border'}>
+                    <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Go to Dashboard</span>
                     {darkMode && <div className="btn-glow"></div>}
+                    {!darkMode && <div className="neumorph-btn-glow"></div>}
                   </Link>
                 </div>
               </div>
@@ -405,48 +425,52 @@ const Home = () => {
         </section>
       )}
 
-      {/* CTA SECTION */}
+      {/* ENHANCED CTA SECTION */}
       <section className={theme.section}>
         <div className="container mx-auto px-4 text-center">
-          <div className={`max-w-6xl mx-auto ${darkMode ? 'cyber-cta-card' : 'neumorph-cta-card'}`}>
+          <div className={`max-w-6xl mx-auto ${darkMode ? 'cyber-cta-card' : 'neumorph-cta-card neumorph-holographic'}`}>
             <div className={darkMode ? 'cta-glow' : 'neumorph-cta-glow'}></div>
             <div className="relative z-10 p-16">
               <h2 className={`text-5xl font-bold mb-8 ${theme.title}`}>
                 <span className={`${theme.textPrimary} ${theme.titleGlow}`}>
-                  {darkMode ? 'READY TO GET' : 'Ready to Get'}
+                  {darkMode ? 'READY TO GET' : 'Ready to Experience'}
                 </span>
                 <br />
                 <span className={`${theme.textSecondary} ${theme.titleGlow}`}>
-                  {darkMode ? 'STARTED?' : 'Started?'}
+                  {darkMode ? 'STARTED?' : 'The Future?'}
                 </span>
               </h2>
               <p className={`text-xl mb-12 ${theme.description}`}>
                 {user 
-                  ? 'Explore all the features available in your dashboard'
-                  : 'Join thousands of businesses already using our platform'
+                  ? 'Unlock the full potential of your business with our advanced platform features'
+                  : 'Join thousands of forward-thinking businesses already transforming their operations'
                 }
               </p>
               <div className="flex flex-wrap gap-6 justify-center">
                 {user ? (
                   <>
                     <Link to="/products" className={theme.btnPrimary}>
-                      <span className={darkMode ? 'btn-text' : ''}>Start Shopping</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Start Shopping</span>
                       {darkMode && <div className="btn-glow"></div>}
+                      {!darkMode && <div className="neumorph-btn-glow"></div>}
                     </Link>
                     <Link to="/cart" className={theme.btnSecondary}>
-                      <span className={darkMode ? 'btn-text' : ''}>View Cart</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>View Cart</span>
                       {darkMode && <div className="btn-glow"></div>}
+                      {!darkMode && <div className="neumorph-btn-glow"></div>}
                     </Link>
                   </>
                 ) : (
                   <>
                     <Link to="/products" className={theme.btnSuccess}>
-                      <span className={darkMode ? 'btn-text' : ''}>Browse Products</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Explore Products</span>
                       {darkMode && <div className="btn-glow"></div>}
+                      {!darkMode && <div className="neumorph-btn-glow"></div>}
                     </Link>
                     <Link to="/register" className={theme.btnPrimary}>
-                      <span className={darkMode ? 'btn-text' : ''}>Start Free Trial</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Start Your Journey</span>
                       {darkMode && <div className="btn-glow"></div>}
+                      {!darkMode && <div className="neumorph-btn-glow"></div>}
                     </Link>
                   </>
                 )}
