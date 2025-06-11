@@ -226,7 +226,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* FIXED: Simplified floating elements */}
+        {/* ENHANCED: Visible floating elements for both themes */}
         {darkMode ? (
           <>
             <div className="absolute top-20 left-20 hologram-float opacity-50">
@@ -238,14 +238,30 @@ const Home = () => {
           </>
         ) : (
           <>
-            <div className="absolute top-20 left-20 opacity-40 animate-bounce" style={{animationDelay: '0s', animationDuration: '3s'}}>
-              <div className="w-12 h-12 bg-blue-200 rounded-lg shadow-lg neumorph-elevated"></div>
+            {/* Enhanced neumorphism floating elements */}
+            <div className="absolute top-20 left-20 neumorph-float opacity-70">
+              <div className="neumorph-floating-shape neumorph-floating-cube"></div>
             </div>
-            <div className="absolute bottom-20 right-20 opacity-40 animate-bounce" style={{animationDelay: '2s', animationDuration: '4s'}}>
-              <div className="w-16 h-16 bg-purple-200 rounded-full shadow-lg neumorph-elevated"></div>
+            <div className="absolute bottom-20 right-20 neumorph-float opacity-70" style={{animationDelay: '2s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-sphere"></div>
             </div>
-            <div className="absolute top-1/2 right-10 opacity-30 animate-bounce" style={{animationDelay: '4s', animationDuration: '5s'}}>
-              <div className="w-8 h-8 bg-green-200 rounded-lg shadow-lg neumorph-subtle"></div>
+            <div className="absolute top-1/2 right-10 neumorph-float opacity-60" style={{animationDelay: '4s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-diamond"></div>
+            </div>
+            <div className="absolute top-1/3 left-1/4 neumorph-float opacity-50" style={{animationDelay: '6s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-hexagon"></div>
+            </div>
+            <div className="absolute bottom-1/3 left-20 neumorph-float opacity-60" style={{animationDelay: '8s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-triangle"></div>
+            </div>
+            
+            {/* Floating particles */}
+            <div className="neumorph-particles-container">
+              <div className="neumorph-particle" style={{animationDelay: '0s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '2s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '4s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '6s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '8s'}}></div>
             </div>
           </>
         )}
