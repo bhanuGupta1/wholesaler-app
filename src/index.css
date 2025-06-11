@@ -1,17 +1,18 @@
 /* src/index.css - Main stylesheet with proper import order */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
-/* Import Cyberpunk Styles FIRST - This ensures they have proper precedence */
+/* Import Fonts for Both Themes */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Import Theme Styles FIRST */
 @import './styles/cyberpunk.css';
+@import './styles/neumorphism.css';
 
 /* Import Tailwind CSS */
 @import "tailwindcss";
 
-/* Optional: Enhanced Cyberpunk Fonts from Google Fonts */
-
-
 /* ==============================================
-   GLOBAL BASE STYLES
+   GLOBAL BASE STYLES (THEME AWARE)
    ============================================== */
 
 /* Reset and base styles */
@@ -23,23 +24,53 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Base body styles - will be overridden by theme classes */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Rajdhani', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Dark theme (Cyberpunk) body styles */
+.dark body,
+body.dark {
   background: #000;
   color: #fff;
-  overflow-x: hidden;
+  font-family: 'Rajdhani', 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Light theme (Neumorphism) body styles */
+.light body,
+body.light,
+body:not(.dark) {
+  background: #f0f0f3;
+  color: #333;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Enhanced typography hierarchy */
-h1, h2, h3, h4, h5, h6, 
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+/* Dark theme typography */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
 .cyberpunk-title, 
 .cyber-title {
   font-family: 'Orbitron', 'Courier New', monospace;
   font-weight: 700;
+}
+
+/* Light theme typography */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6,
+.neumorph-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Code and monospace elements */
@@ -48,64 +79,121 @@ code, pre, .font-mono {
 }
 
 /* ==============================================
-   SCROLLBAR STYLING (CYBERPUNK THEME)
+   THEME-AWARE SCROLLBAR STYLING
    ============================================== */
 
-/* Webkit browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
+/* Dark theme scrollbars (Cyberpunk) */
+.dark ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
 }
 
-::-webkit-scrollbar-track {
+.dark ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.8);
   border-radius: 6px;
 }
 
-::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb {
   background: linear-gradient(45deg, #00FFFF, #FF00FF);
   border-radius: 6px;
   border: 2px solid rgba(0, 0, 0, 0.8);
 }
 
-::-webkit-scrollbar-thumb:hover {
+.dark ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #00FFFF, #FFFF00);
   box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
-::-webkit-scrollbar-corner {
+.dark ::-webkit-scrollbar-corner {
   background: rgba(0, 0, 0, 0.8);
 }
 
-/* Firefox */
-html {
+/* Light theme scrollbars (Neumorphism) */
+.light ::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.light ::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #f0f0f3;
+  border-radius: 6px;
+}
+
+.light ::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 6px;
+  border: 2px solid #f0f0f3;
+}
+
+.light ::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #667eea, #f093fb);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+.light ::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: #f0f0f3;
+}
+
+/* Firefox scrollbars */
+.dark html {
   scrollbar-width: thin;
   scrollbar-color: #00FFFF rgba(0, 0, 0, 0.8);
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #f0f0f3;
+}
+
 /* ==============================================
-   SELECTION STYLING
+   THEME-AWARE SELECTION STYLING
    ============================================== */
 
+/* Dark theme selection (Cyberpunk) */
+.dark ::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+.dark ::-moz-selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+/* Light theme selection (Neumorphism) */
+.light ::selection,
 ::selection {
-  background: rgba(0, 255, 255, 0.3);
-  color: #fff;
-  text-shadow: 0 0 10px #00FFFF;
+  background: rgba(102, 126, 234, 0.2);
+  color: #333;
 }
 
+.light ::-moz-selection,
 ::-moz-selection {
-  background: rgba(0, 255, 255, 0.3);
-  color: #fff;
-  text-shadow: 0 0 10px #00FFFF;
+  background: rgba(102, 126, 234, 0.2);
+  color: #333;
 }
 
 /* ==============================================
-   FOCUS STYLES (ACCESSIBILITY)
+   THEME-AWARE FOCUS STYLES (ACCESSIBILITY)
    ============================================== */
 
-/* Enhanced focus for better accessibility */
-*:focus {
+/* Dark theme focus */
+.dark *:focus {
   outline: 2px solid #00FFFF;
+  outline-offset: 2px;
+}
+
+/* Light theme focus */
+.light *:focus,
+*:focus {
+  outline: 2px solid #667eea;
   outline-offset: 2px;
 }
 
@@ -113,22 +201,26 @@ html {
 .cyber-btn:focus,
 .cyber-nav-link:focus,
 .cyber-close-btn:focus,
-.cyber-fab-button:focus {
+.cyber-fab-button:focus,
+.neumorph-btn:focus,
+.neumorph-nav-link:focus,
+.neumorph-close-btn:focus,
+.neumorph-fab-button:focus {
   outline: none;
 }
 
 /* ==============================================
-   FORM ELEMENTS (CYBERPUNK STYLE)
+   THEME-AWARE FORM ELEMENTS
    ============================================== */
 
-/* Input fields */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-textarea,
-select {
+/* Dark theme form elements (Cyberpunk) */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark textarea,
+.dark select {
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid rgba(0, 255, 255, 0.3);
   border-radius: 8px;
@@ -139,6 +231,65 @@ select {
   transition: all 0.3s ease;
 }
 
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="number"]:focus,
+.dark input[type="search"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #00FFFF;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #666;
+  font-style: italic;
+}
+
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+  accent-color: #00FFFF;
+}
+
+/* Light theme form elements (Neumorphism) */
+.light input[type="text"],
+.light input[type="email"],
+.light input[type="password"],
+.light input[type="number"],
+.light input[type="search"],
+.light textarea,
+.light select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  background: #f0f0f3;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 
+    inset 8px 8px 16px rgba(163, 177, 198, 0.6),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.light input[type="text"]:focus,
+.light input[type="email"]:focus,
+.light input[type="password"]:focus,
+.light input[type="number"]:focus,
+.light input[type="search"]:focus,
+.light textarea:focus,
+.light select:focus,
 input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus,
@@ -146,46 +297,50 @@ input[type="number"]:focus,
 input[type="search"]:focus,
 textarea:focus,
 select:focus {
-  border-color: #00FFFF;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-  background: rgba(0, 255, 255, 0.05);
+  outline: none;
+  box-shadow: 
+    inset 12px 12px 20px rgba(163, 177, 198, 0.7),
+    inset -12px -12px 20px rgba(255, 255, 255, 0.9);
 }
 
+.light input::placeholder,
+.light textarea::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: #666;
-  font-style: italic;
+  color: #999;
+  font-weight: 400;
+  font-style: normal;
 }
 
-/* Checkboxes and radios */
+.light input[type="checkbox"],
+.light input[type="radio"],
 input[type="checkbox"],
 input[type="radio"] {
-  accent-color: #00FFFF;
+  accent-color: #667eea;
 }
 
 /* ==============================================
-   UTILITY CLASSES
+   THEME-AWARE UTILITY CLASSES
    ============================================== */
 
-/* Text utilities */
-.text-glow {
+/* Dark theme utilities */
+.dark .text-glow {
   text-shadow: 0 0 10px currentColor;
 }
 
-.text-glow-strong {
+.dark .text-glow-strong {
   text-shadow: 
     0 0 5px currentColor,
     0 0 10px currentColor,
     0 0 15px currentColor;
 }
 
-/* Background utilities */
-.bg-cyber {
+.dark .bg-cyber {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(10px);
 }
 
-.bg-cyber-glow {
+.dark .bg-cyber-glow {
   background: linear-gradient(45deg, 
     rgba(0, 255, 255, 0.1), 
     rgba(255, 0, 255, 0.1),
@@ -193,27 +348,99 @@ input[type="radio"] {
   );
 }
 
-/* Border utilities */
-.border-cyber {
+.dark .border-cyber {
   border: 1px solid rgba(0, 255, 255, 0.3);
 }
 
-.border-cyber-glow {
+.dark .border-cyber-glow {
   border: 2px solid #00FFFF;
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
 }
 
-/* Animation utilities */
-.animate-glow {
+/* Light theme utilities */
+.light .text-glow,
+.text-glow {
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    -1px -1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.light .text-glow-strong,
+.text-glow-strong {
+  text-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.15),
+    -2px -2px 4px rgba(255, 255, 255, 0.9);
+}
+
+.light .bg-cyber,
+.bg-cyber {
+  background: #f0f0f3;
+  box-shadow: 
+    inset 8px 8px 16px rgba(163, 177, 198, 0.6),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.light .bg-cyber-glow,
+.bg-cyber-glow {
+  background: linear-gradient(45deg, 
+    rgba(102, 126, 234, 0.1), 
+    rgba(240, 147, 251, 0.1),
+    rgba(102, 126, 234, 0.1)
+  );
+}
+
+.light .border-cyber,
+.border-cyber {
+  border: 1px solid rgba(163, 177, 198, 0.3);
+}
+
+.light .border-cyber-glow,
+.border-cyber-glow {
+  border: 2px solid #667eea;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* ==============================================
+   ANIMATION UTILITIES (THEME AWARE)
+   ============================================== */
+
+/* Dark theme animations */
+.dark .animate-glow {
   animation: pulseGlow 2s ease-in-out infinite alternate;
 }
 
-.animate-float {
+.dark .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-.animate-matrix {
+.dark .animate-matrix {
   animation: matrixFlow 20s linear infinite;
+}
+
+/* Light theme animations */
+.light .animate-glow,
+.animate-glow {
+  animation: neumorph-pulse 2s ease-in-out infinite alternate;
+}
+
+.light .animate-float,
+.animate-float {
+  animation: neumorph-float 6s ease-in-out infinite;
+}
+
+@keyframes neumorph-pulse {
+  from { 
+    box-shadow: 
+      8px 8px 16px rgba(163, 177, 198, 0.6),
+      -8px -8px 16px rgba(255, 255, 255, 0.8);
+  }
+  to { 
+    box-shadow: 
+      12px 12px 20px rgba(163, 177, 198, 0.7),
+      -12px -12px 20px rgba(255, 255, 255, 0.9);
+  }
 }
 
 @keyframes matrixFlow {
@@ -244,10 +471,11 @@ input[type="radio"] {
    ============================================== */
 
 @media print {
-  /* Hide cyberpunk effects when printing */
+  /* Hide theme effects when printing */
   .cyberpunk-grid,
   .scanlines,
   .cyber-loading-spinner,
+  .neumorph-loading-spinner,
   .hologram-float,
   canvas {
     display: none !important;
@@ -261,6 +489,8 @@ input[type="radio"] {
   
   .cyber-btn,
   .cyber-card,
+  .neumorph-btn,
+  .neumorph-card,
   .feature-card {
     border: 1px solid #000 !important;
     background: white !important;
@@ -276,32 +506,26 @@ input[type="radio"] {
 }
 
 /* ==============================================
-   DARK/LIGHT MODE OVERRIDES
-   ============================================== */
-
-/* Since we're in cyberpunk mode, we force dark theme */
-.light {
-  /* Override any light mode attempts */
-  background: #000 !important;
-  color: #fff !important;
-}
-
-/* ==============================================
    PERFORMANCE OPTIMIZATIONS
    ============================================== */
 
 /* Will-change for animated elements */
 .cyberpunk-grid,
 .scanlines,
+.neumorph-grid,
 canvas,
-.cyber-loading-spinner {
+.cyber-loading-spinner,
+.neumorph-loading-spinner {
   will-change: transform, opacity;
 }
 
 /* Hardware acceleration for smooth animations */
 .cyber-btn,
 .cyber-card,
-.cyber-nav-link {
+.cyber-nav-link,
+.neumorph-btn,
+.neumorph-card,
+.neumorph-nav-link {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -312,7 +536,8 @@ canvas,
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .cyber-btn {
+  .cyber-btn,
+  .neumorph-btn {
     border-width: 3px;
   }
   
@@ -334,7 +559,39 @@ canvas,
   }
   
   .cyberpunk-grid,
-  .scanlines {
+  .scanlines,
+  .neumorph-grid {
     animation: none;
   }
+}
+
+/* ==============================================
+   THEME TRANSITION EFFECTS
+   ============================================== */
+
+/* Smooth theme transitions */
+body,
+.cyber-btn,
+.neumorph-btn,
+input,
+textarea,
+select {
+  transition: all 0.3s ease;
+}
+
+/* Theme-specific root styles */
+:root {
+  --transition-speed: 0.3s;
+}
+
+.dark {
+  --bg-primary: #000;
+  --text-primary: #fff;
+  --accent-primary: #00FFFF;
+}
+
+.light {
+  --bg-primary: #f0f0f3;
+  --text-primary: #333;
+  --accent-primary: #667eea;
 }
