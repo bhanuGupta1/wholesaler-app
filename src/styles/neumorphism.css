@@ -35,6 +35,12 @@
   background-size: 20px 20px;
   width: 100%;
   height: 100%;
+  animation: neumorph-gridMove 30s linear infinite;
+}
+
+@keyframes neumorph-gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(20px, 20px); }
 }
 
 /* Soft Gradient Overlay */
@@ -46,6 +52,12 @@
   );
   width: 100%;
   height: 100%;
+  animation: neumorph-gradientShift 15s ease-in-out infinite;
+}
+
+@keyframes neumorph-gradientShift {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.1; }
 }
 
 /* ==============================================
@@ -89,6 +101,31 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: neumorph-textShift 4s ease-in-out infinite;
+}
+
+@keyframes neumorph-textShift {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(45deg); }
+}
+
+/* Smooth Text Animation */
+.neumorph-typewriter {
+  overflow: hidden;
+  border-right: 2px solid #667eea;
+  white-space: nowrap;
+  margin: 0 auto;
+  animation: neumorph-typing 3s steps(80, end), neumorph-blink 0.75s step-end infinite;
+}
+
+@keyframes neumorph-typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes neumorph-blink {
+  from, to { border-color: transparent; }
+  50% { border-color: #667eea; }
 }
 
 /* ==============================================
@@ -112,6 +149,22 @@
   box-shadow: 
     8px 8px 16px rgba(163, 177, 198, 0.6),
     -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transition: left 0.5s;
+  border-radius: 12px;
+}
+
+.neumorph-btn:hover::before {
+  left: 100%;
 }
 
 .neumorph-btn:hover {
@@ -141,6 +194,7 @@
   box-shadow: 
     12px 12px 20px rgba(102, 126, 234, 0.5),
     -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-secondary {
@@ -155,6 +209,7 @@
   box-shadow: 
     12px 12px 20px rgba(240, 147, 251, 0.5),
     -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-success {
@@ -169,6 +224,7 @@
   box-shadow: 
     12px 12px 20px rgba(79, 172, 254, 0.5),
     -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-ghost {
@@ -184,6 +240,7 @@
   box-shadow: 
     4px 4px 8px rgba(163, 177, 198, 0.3),
     -4px -4px 8px rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-outline {
@@ -201,6 +258,7 @@
   box-shadow: 
     8px 8px 16px rgba(102, 126, 234, 0.4),
     -8px -8px 16px rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-red {
@@ -211,12 +269,26 @@
     -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
 
+.neumorph-btn-red:hover {
+  box-shadow: 
+    12px 12px 20px rgba(255, 107, 107, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
 .neumorph-btn-purple {
   background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
   color: #333;
   box-shadow: 
     8px 8px 16px rgba(168, 237, 234, 0.4),
     -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-btn-purple:hover {
+  box-shadow: 
+    12px 12px 20px rgba(168, 237, 234, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-green {
@@ -227,6 +299,13 @@
     -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
 
+.neumorph-btn-green:hover {
+  box-shadow: 
+    12px 12px 20px rgba(210, 153, 194, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
 .neumorph-btn-blue {
   background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
   color: white;
@@ -235,12 +314,26 @@
     -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
 
+.neumorph-btn-blue:hover {
+  box-shadow: 
+    12px 12px 20px rgba(137, 247, 254, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
 .neumorph-btn-cyan {
   background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
   color: #333;
   box-shadow: 
     8px 8px 16px rgba(168, 237, 234, 0.4),
     -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-btn-cyan:hover {
+  box-shadow: 
+    12px 12px 20px rgba(168, 237, 234, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
 }
 
 .neumorph-btn-dashboard {
@@ -261,6 +354,33 @@
   transform: translateY(-3px);
 }
 
+/* Button Glow Effect */
+.neumorph-btn-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.neumorph-btn:hover .neumorph-btn-glow {
+  opacity: 0.3;
+}
+
+.neumorph-btn-icon {
+  font-size: 20px;
+}
+
+.neumorph-btn-text {
+  position: relative;
+  z-index: 1;
+}
+
 /* ==============================================
    LOADING SPINNER
    ============================================== */
@@ -270,7 +390,7 @@
   border-radius: 50%;
   background: #f0f0f3;
   position: relative;
-  animation: spin 2s linear infinite;
+  animation: neumorph-spin 2s linear infinite;
   box-shadow: 
     inset 8px 8px 16px rgba(163, 177, 198, 0.6),
     inset -8px -8px 16px rgba(255, 255, 255, 0.8);
@@ -285,10 +405,109 @@
   bottom: 10px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  animation: spin 1.5s linear infinite reverse;
+  animation: neumorph-spin 1.5s linear infinite reverse;
 }
 
-@keyframes spin {
+@keyframes neumorph-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==============================================
+   STATUS INDICATORS
+   ============================================== */
+.neumorph-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.neumorph-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+  background: #f0f0f3;
+  box-shadow: 
+    inset 2px 2px 4px rgba(163, 177, 198, 0.6),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+  animation: neumorph-pulse 2s infinite;
+}
+
+.neumorph-status-online::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.neumorph-status-quantum::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.neumorph-status-neural::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.neumorph-status-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: #666;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+@keyframes neumorph-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ==============================================
+   FLOATING ELEMENTS
+   ============================================== */
+.neumorph-float {
+  animation: neumorph-float 6s ease-in-out infinite;
+}
+
+@keyframes neumorph-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.neumorph-shape {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #f0f0f3;
+  box-shadow: 
+    8px 8px 16px rgba(163, 177, 198, 0.6),
+    -8px -8px 16px rgba(255, 255, 255, 0.8);
+  animation: neumorph-rotate 10s linear infinite;
+}
+
+.neumorph-circle {
+  border-radius: 50%;
+}
+
+@keyframes neumorph-rotate {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
@@ -296,6 +515,11 @@
 /* ==============================================
    ENHANCED CARDS
    ============================================== */
+.neumorph-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .neumorph-card {
   position: relative;
   background: #f0f0f3;
@@ -305,6 +529,7 @@
   box-shadow: 
     20px 20px 40px rgba(163, 177, 198, 0.6),
     -20px -20px 40px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
 }
 
 .neumorph-card:hover {
@@ -312,6 +537,25 @@
   box-shadow: 
     25px 25px 50px rgba(163, 177, 198, 0.7),
     -25px -25px 50px rgba(255, 255, 255, 0.9);
+}
+
+.neumorph-card-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #667eea);
+  background-size: 400% 400%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: neumorph-gradientShift 3s ease infinite;
+  z-index: -1;
+  border-radius: 22px;
+}
+
+.neumorph-card:hover .neumorph-card-glow {
+  opacity: 0.3;
 }
 
 .neumorph-card-content {
@@ -354,6 +598,7 @@
   box-shadow: 
     15px 15px 30px rgba(163, 177, 198, 0.6),
     -15px -15px 30px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
 }
 
 .neumorph-feature-card:hover {
@@ -370,9 +615,26 @@
   padding: 16px;
   border-radius: 16px;
   background: #f0f0f3;
+  color: #667eea;
   box-shadow: 
     8px 8px 16px rgba(163, 177, 198, 0.6),
     -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-icon-glow {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 26px;
+}
+
+.neumorph-feature-card:hover .neumorph-icon-glow {
+  opacity: 1;
 }
 
 /* ==============================================
@@ -386,6 +648,17 @@
   box-shadow: 
     25px 25px 50px rgba(163, 177, 198, 0.6),
     -25px -25px 50px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-dashboard-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(252, 182, 159, 0.1), rgba(102, 126, 234, 0.1));
+  opacity: 0.5;
 }
 
 .neumorph-dashboard-icon {
@@ -409,6 +682,23 @@
   box-shadow: 
     30px 30px 60px rgba(252, 182, 159, 0.4),
     -30px -30px 60px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-cta-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1), rgba(252, 182, 159, 0.1));
+  background-size: 400% 400%;
+  animation: neumorph-ctaGlow 4s ease infinite;
+}
+
+@keyframes neumorph-ctaGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* ==============================================
@@ -424,10 +714,489 @@
     0 -8px 16px rgba(255, 255, 255, 0.8);
 }
 
+.neumorph-navbar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.1), 
+    rgba(240, 147, 251, 0.1), 
+    rgba(102, 126, 234, 0.1)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.neumorph-navbar-scrolled .neumorph-navbar-glow {
+  opacity: 1;
+}
+
 .neumorph-navbar-scrolled {
   box-shadow: 
     0 12px 24px rgba(163, 177, 198, 0.7),
     0 -12px 24px rgba(255, 255, 255, 0.9);
+}
+
+/* ==============================================
+   FAB BUTTON
+   ============================================== */
+.neumorph-fab-button {
+  width: 56px;
+  height: 56px;
+  background: #f0f0f3;
+  border: none;
+  border-radius: 50%;
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 
+    8px 8px 16px rgba(163, 177, 198, 0.6),
+    -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-fab-button:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    12px 12px 20px rgba(163, 177, 198, 0.7),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+}
+
+.neumorph-fab-button:active {
+  transform: scale(0.95);
+  box-shadow: 
+    inset 4px 4px 8px rgba(163, 177, 198, 0.6),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-fab-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #667eea, #f093fb, #667eea);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.neumorph-fab-button:hover .neumorph-fab-glow {
+  opacity: 0.3;
+}
+
+/* ==============================================
+   SIDEBAR STYLES
+   ============================================== */
+.neumorph-sidebar {
+  background: #f0f0f3;
+  border-right: none;
+  position: relative;
+  box-shadow: 
+    8px 0 16px rgba(163, 177, 198, 0.6),
+    -8px 0 16px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-sidebar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, 
+    rgba(102, 126, 234, 0.05), 
+    rgba(240, 147, 251, 0.05),
+    rgba(102, 126, 234, 0.05)
+  );
+  opacity: 0.8;
+}
+
+.neumorph-sidebar-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Logo */
+.neumorph-logo {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  background: #f0f0f3;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #667eea;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-logo-glow {
+  position: absolute;
+  inset: -2px;
+  background: #667eea;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.neumorph-logo:hover .neumorph-logo-glow {
+  opacity: 0.2;
+}
+
+/* Close Button */
+.neumorph-close-btn {
+  color: #666;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #f0f0f3;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-close-btn:hover {
+  color: #667eea;
+  box-shadow: 
+    inset 2px 2px 4px rgba(163, 177, 198, 0.6),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8);
+}
+
+/* User Card */
+.neumorph-user-card {
+  position: relative;
+  background: #f0f0f3;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 
+    8px 8px 16px rgba(163, 177, 198, 0.6),
+    -8px -8px 16px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-user-card-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #667eea, #f093fb, #667eea);
+  border-radius: 18px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.neumorph-user-card:hover .neumorph-user-card-glow {
+  opacity: 0.2;
+}
+
+.neumorph-user-avatar {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: #f0f0f3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #667eea;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-avatar-glow {
+  position: absolute;
+  inset: -2px;
+  background: #667eea;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.neumorph-user-avatar:hover .neumorph-avatar-glow {
+  opacity: 0.2;
+}
+
+.neumorph-user-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  margin: 0;
+}
+
+.neumorph-user-email {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.neumorph-user-role {
+  font-size: 10px;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Navigation Links */
+.neumorph-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #666;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  margin: 4px 0;
+  overflow: hidden;
+}
+
+.neumorph-nav-link:hover,
+.neumorph-nav-link.active {
+  color: #667eea;
+  background: #f0f0f3;
+  box-shadow: 
+    inset 4px 4px 8px rgba(163, 177, 198, 0.6),
+    inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+.neumorph-nav-link-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #667eea, #f093fb, #667eea);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: 12px;
+}
+
+.neumorph-nav-link:hover .neumorph-nav-link-glow,
+.neumorph-nav-link.active .neumorph-nav-link-glow {
+  opacity: 0.1;
+}
+
+.neumorph-nav-icon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+/* Sign Out Button */
+.neumorph-signout-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 
+    8px 8px 16px rgba(255, 107, 107, 0.4),
+    -8px -8px 16px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-signout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    12px 12px 20px rgba(255, 107, 107, 0.5),
+    -12px -12px 20px rgba(255, 255, 255, 0.9);
+}
+
+.neumorph-signout-glow {
+  position: absolute;
+  inset: 0;
+  background: #ff6b6b;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: 12px;
+}
+
+.neumorph-signout-btn:hover .neumorph-signout-glow {
+  opacity: 0.3;
+}
+
+/* ==============================================
+   FOOTER STYLES
+   ============================================== */
+.neumorph-footer {
+  background: #f0f0f3;
+  border-top: none;
+  padding: 40px 0 20px;
+  position: relative;
+  box-shadow: 
+    0 -8px 16px rgba(163, 177, 198, 0.6),
+    0 8px 16px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-footer-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.05), 
+    rgba(240, 147, 251, 0.05),
+    rgba(102, 126, 234, 0.05)
+  );
+  opacity: 0.8;
+}
+
+.neumorph-footer-content {
+  position: relative;
+  z-index: 1;
+}
+
+.neumorph-footer-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  text-shadow: 
+    1px 1px 2px rgba(255, 255, 255, 0.8),
+    -1px -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.neumorph-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.neumorph-footer-links li {
+  margin-bottom: 8px;
+}
+
+.neumorph-footer-link {
+  display: block;
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 4px 0;
+  transition: all 0.3s ease;
+}
+
+.neumorph-footer-link:hover {
+  color: #667eea;
+  transform: translateX(2px);
+  text-shadow: 
+    1px 1px 2px rgba(255, 255, 255, 0.8),
+    -1px -1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.neumorph-footer-contact {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.neumorph-contact-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  color: #667eea;
+}
+
+.neumorph-social-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.neumorph-social-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f0f0f3;
+  border-radius: 12px;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+}
+
+.neumorph-social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    6px 6px 12px rgba(163, 177, 198, 0.7),
+    -6px -6px 12px rgba(255, 255, 255, 0.9);
+}
+
+.neumorph-social-glow {
+  position: absolute;
+  inset: -2px;
+  background: #667eea;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.neumorph-social-link:hover .neumorph-social-glow {
+  opacity: 0.2;
+}
+
+.neumorph-footer-bottom {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(163, 177, 198, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.neumorph-footer-copyright {
+  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.neumorph-footer-made-by {
+  color: #666;
+  font-size: 12px;
 }
 
 /* ==============================================
@@ -473,8 +1242,53 @@
 }
 
 /* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+@media (max-width: 768px) {
+  .neumorph-title {
+    font-size: 2.5rem;
+  }
+  
+  .neumorph-btn {
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+  
+  .neumorph-card {
+    padding: 24px;
+    border-radius: 16px;
+  }
+  
+  .neumorph-card-icon {
+    font-size: 36px;
+  }
+  
+  .neumorph-card-title {
+    font-size: 20px;
+  }
+  
+  .neumorph-footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 768px) {
+  .neumorph-footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* ==============================================
    UTILITY CLASSES
    ============================================== */
+.neumorph-title {
+  font-family: 'Inter', 'SF Pro Display', -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .neumorph-elevated {
   box-shadow: 
     20px 20px 40px rgba(163, 177, 198, 0.6),
@@ -491,4 +1305,25 @@
   box-shadow: 
     4px 4px 8px rgba(163, 177, 198, 0.6),
     -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* Enhanced focus states for accessibility */
+.neumorph-btn:focus,
+.neumorph-nav-link:focus,
+.neumorph-close-btn:focus,
+.neumorph-fab-button:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .neumorph-btn,
+  .neumorph-card,
+  .neumorph-feature-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    background: white;
+    color: black;
+  }
 }
