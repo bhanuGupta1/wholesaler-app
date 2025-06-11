@@ -429,9 +429,16 @@ const Layout = ({ children }) => {
           </div>
         </div>
         
-        {/* MAIN CONTENT */}
+       {/* MAIN CONTENT - Fixed to show background animations */}
         <main className="flex-grow py-6 px-4 relative z-10">
-          <div className={darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'}>
+          <div className={`${darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'}`}
+               style={{ 
+                 background: 'transparent',
+                 border: 'none',
+                 backdropFilter: 'none',
+                 boxShadow: 'none',
+                 borderRadius: '0'
+               }}>
             {children}
           </div>
         </main>
