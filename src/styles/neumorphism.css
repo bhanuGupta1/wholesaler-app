@@ -1796,3 +1796,483 @@
     justify-content: space-between;
   }
 }
+/* Enhanced Neumorphism Animations & Font Updates - Add to neumorphism.css */
+
+/* ==============================================
+   FONT CONSISTENCY - Use Same Fonts as Dark Mode
+   ============================================== */
+
+/* Override the light theme fonts to match dark theme */
+.neumorph-title {
+  font-family: 'Orbitron', 'Rajdhani', 'Courier New', monospace !important;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+/* Make all neumorphism text use futuristic fonts */
+.neumorph-layout-wrapper,
+.neumorph-layout-wrapper * {
+  font-family: 'Rajdhani', 'Orbitron', 'Segoe UI', sans-serif !important;
+}
+
+/* Specific title and heading fonts */
+.neumorph-layout-wrapper h1, 
+.neumorph-layout-wrapper h2, 
+.neumorph-layout-wrapper h3, 
+.neumorph-layout-wrapper h4, 
+.neumorph-layout-wrapper h5, 
+.neumorph-layout-wrapper h6 {
+  font-family: 'Orbitron', 'Rajdhani', monospace !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Button and interactive text */
+.neumorph-btn,
+.neumorph-nav-link,
+.neumorph-footer-heading {
+  font-family: 'Rajdhani', 'Orbitron', monospace !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==============================================
+   ENHANCED BACKGROUND ANIMATIONS FOR LIGHT THEME
+   ============================================== */
+
+/* Enhanced quantum grid with more visibility */
+.neumorph-grid {
+  background-image: 
+    linear-gradient(rgba(102, 126, 234, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102, 126, 234, 0.12) 1px, transparent 1px),
+    radial-gradient(circle at 20% 80%, rgba(240, 147, 251, 0.08), transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(79, 172, 254, 0.08), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(168, 237, 234, 0.05), transparent 70%);
+  background-size: 25px 25px, 25px 25px, 150px 150px, 150px 150px, 300px 300px;
+  width: 100%;
+  height: 100%;
+  animation: neumorph-quantumGrid 30s linear infinite;
+}
+
+@keyframes neumorph-quantumGrid {
+  0% { 
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translate(15px, 15px) rotate(0.5deg);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(25px, 25px) rotate(1deg);
+    opacity: 0.6;
+  }
+}
+
+/* Enhanced gradient with more visible effects */
+.neumorph-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(102, 126, 234, 0.2) 25%,
+    rgba(240, 147, 251, 0.15) 50%,
+    rgba(79, 172, 254, 0.18) 75%,
+    rgba(168, 237, 234, 0.12) 100%
+  );
+  width: 100%;
+  height: 100%;
+  animation: neumorph-holographicShift 15s ease-in-out infinite;
+}
+
+@keyframes neumorph-holographicShift {
+  0%, 100% { 
+    opacity: 0.8;
+    filter: hue-rotate(0deg) brightness(1.1);
+    transform: scale(1);
+  }
+  25% { 
+    opacity: 1;
+    filter: hue-rotate(30deg) brightness(1.2);
+    transform: scale(1.02);
+  }
+  50% { 
+    opacity: 0.6;
+    filter: hue-rotate(60deg) brightness(0.9);
+    transform: scale(0.98);
+  }
+  75% { 
+    opacity: 0.9;
+    filter: hue-rotate(90deg) brightness(1.1);
+    transform: scale(1.01);
+  }
+}
+
+/* ==============================================
+   FLOATING SHAPES FOR LIGHT THEME
+   ============================================== */
+
+.neumorph-float {
+  animation: neumorph-floatAnimation 8s ease-in-out infinite;
+}
+
+@keyframes neumorph-floatAnimation {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg) scale(1);
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: translateY(-15px) rotate(5deg) scale(1.05);
+    filter: hue-rotate(15deg);
+  }
+  50% { 
+    transform: translateY(-25px) rotate(-3deg) scale(0.95);
+    filter: hue-rotate(30deg);
+  }
+  75% { 
+    transform: translateY(-10px) rotate(8deg) scale(1.02);
+    filter: hue-rotate(45deg);
+  }
+}
+
+.neumorph-floating-shape {
+  position: relative;
+  background: rgba(240, 240, 243, 0.9);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  box-shadow: 
+    12px 12px 24px rgba(163, 177, 198, 0.6),
+    -12px -12px 24px rgba(255, 255, 255, 0.9),
+    0 0 30px rgba(102, 126, 234, 0.3);
+  animation: neumorph-shapeQuantumPulse 4s ease-in-out infinite;
+}
+
+@keyframes neumorph-shapeQuantumPulse {
+  0%, 100% { 
+    box-shadow: 
+      12px 12px 24px rgba(163, 177, 198, 0.6),
+      -12px -12px 24px rgba(255, 255, 255, 0.9),
+      0 0 30px rgba(102, 126, 234, 0.3);
+    filter: brightness(1);
+  }
+  50% { 
+    box-shadow: 
+      18px 18px 36px rgba(163, 177, 198, 0.8),
+      -18px -18px 36px rgba(255, 255, 255, 1),
+      0 0 50px rgba(240, 147, 251, 0.5);
+    filter: brightness(1.2);
+  }
+}
+
+.neumorph-floating-shape:hover {
+  transform: scale(1.1) rotate(10deg);
+  filter: brightness(1.3) saturate(1.2);
+}
+
+/* Different shapes */
+.neumorph-floating-cube {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.2));
+}
+
+.neumorph-floating-sphere {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.2), rgba(79, 172, 254, 0.2));
+}
+
+.neumorph-floating-diamond {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(168, 237, 234, 0.2));
+}
+
+.neumorph-floating-hexagon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(168, 237, 234, 0.2), rgba(102, 126, 234, 0.2));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.neumorph-floating-triangle {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(240, 147, 251, 0.15));
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* ==============================================
+   FLOATING PARTICLES SYSTEM
+   ============================================== */
+
+.neumorph-particles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.neumorph-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(102, 126, 234, 0.4);
+  border-radius: 50%;
+  animation: neumorph-particleFloat 20s linear infinite;
+  box-shadow: 
+    0 0 10px rgba(102, 126, 234, 0.3),
+    0 0 20px rgba(102, 126, 234, 0.2);
+}
+
+.neumorph-particle:nth-child(1) {
+  left: 10%;
+  animation-duration: 18s;
+  background: rgba(102, 126, 234, 0.4);
+}
+
+.neumorph-particle:nth-child(2) {
+  left: 30%;
+  animation-duration: 22s;
+  background: rgba(240, 147, 251, 0.4);
+}
+
+.neumorph-particle:nth-child(3) {
+  left: 50%;
+  animation-duration: 19s;
+  background: rgba(79, 172, 254, 0.4);
+}
+
+.neumorph-particle:nth-child(4) {
+  left: 70%;
+  animation-duration: 21s;
+  background: rgba(168, 237, 234, 0.4);
+}
+
+.neumorph-particle:nth-child(5) {
+  left: 90%;
+  animation-duration: 17s;
+  background: rgba(102, 126, 234, 0.4);
+}
+
+@keyframes neumorph-particleFloat {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(90vh) translateX(10px) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(10vh) translateX(-10px) scale(1);
+  }
+  100% {
+    transform: translateY(-10vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ==============================================
+   ENHANCED LAYOUT BACKGROUND EFFECTS
+   ============================================== */
+
+/* Add moving light rays */
+.neumorph-layout-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(102, 126, 234, 0.1),
+    rgba(240, 147, 251, 0.1),
+    rgba(79, 172, 254, 0.1),
+    transparent
+  );
+  animation: neumorph-lightSweep 15s ease-in-out infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes neumorph-lightSweep {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 200%;
+    opacity: 0;
+  }
+}
+
+/* Enhanced quantum shift with more movement */
+.neumorph-layout-wrapper::after {
+  background-size: 400% 400%;
+  animation: neumorph-quantumShift 20s ease-in-out infinite;
+}
+
+@keyframes neumorph-quantumShift {
+  0%, 100% { 
+    background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.15), transparent 60%);
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg);
+    transform: scale(1);
+  }
+  25% { 
+    background: radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.18), transparent 60%);
+    background-position: 25% 25%;
+    filter: hue-rotate(30deg);
+    transform: scale(1.02);
+  }
+  50% { 
+    background: radial-gradient(circle at 20% 80%, rgba(79, 172, 254, 0.20), transparent 60%);
+    background-position: 50% 75%;
+    filter: hue-rotate(60deg);
+    transform: scale(0.98);
+  }
+  75% { 
+    background: radial-gradient(circle at 60% 40%, rgba(168, 237, 234, 0.16), transparent 60%);
+    background-position: 75% 40%;
+    filter: hue-rotate(90deg);
+    transform: scale(1.01);
+  }
+}
+
+/* ==============================================
+   ENHANCED WAVE EFFECTS
+   ============================================== */
+
+.neumorph-layout-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.neumorph-layout-wrapper::after {
+  z-index: 1;
+}
+
+/* Add wave animation container */
+.neumorph-waves {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.neumorph-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    0deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(240, 147, 251, 0.03) 50%,
+    transparent 100%
+  );
+  border-radius: 1000px 1000px 0 0;
+  animation: neumorph-waveMove 8s ease-in-out infinite;
+}
+
+.neumorph-wave:nth-child(2) {
+  animation-delay: -2s;
+  opacity: 0.5;
+  background: linear-gradient(
+    0deg,
+    rgba(240, 147, 251, 0.05) 0%,
+    rgba(79, 172, 254, 0.03) 50%,
+    transparent 100%
+  );
+}
+
+.neumorph-wave:nth-child(3) {
+  animation-delay: -4s;
+  opacity: 0.3;
+  background: linear-gradient(
+    0deg,
+    rgba(79, 172, 254, 0.05) 0%,
+    rgba(168, 237, 234, 0.03) 50%,
+    transparent 100%
+  );
+}
+
+@keyframes neumorph-waveMove {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-20px);
+  }
+}
+
+/* ==============================================
+   ENHANCED CARD ANIMATIONS
+   ============================================== */
+
+.neumorph-card {
+  animation: neumorph-cardBreathing 6s ease-in-out infinite;
+}
+
+@keyframes neumorph-cardBreathing {
+  0%, 100% { 
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+  50% { 
+    filter: brightness(1.05) saturate(1.1);
+    transform: scale(1.005);
+  }
+}
+
+/* ==============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================== */
+
+.neumorph-floating-shape,
+.neumorph-particle,
+.neumorph-wave {
+  will-change: transform, opacity, filter;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .neumorph-float,
+  .neumorph-particle,
+  .neumorph-wave,
+  .neumorph-layout-wrapper::before,
+  .neumorph-layout-wrapper::after,
+  .neumorph-grid,
+  .neumorph-gradient {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
