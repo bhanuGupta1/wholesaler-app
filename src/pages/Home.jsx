@@ -157,7 +157,7 @@ const Home = () => {
             
             {/* ENHANCED: Premium subtitle with quantum effects */}
             <div className={`text-2xl md:text-4xl mb-8 ${theme.gradientText} ${!darkMode ? 'neumorph-breathing' : ''}`}>
-              {darkMode ? 'NEURAL COMMERCE PLATFORM' : 'NEXT-GENERATION WHOLESALE MANAGEMENT'}
+              {darkMode ? 'NEURAL COMMERCE PLATFORM' : 'TACTICAL BUSINESS COMMAND CENTER'}
             </div>
           </div>
 
@@ -167,10 +167,10 @@ const Home = () => {
               {user 
                 ? darkMode 
                   ? 'Neural interface activated. Your wholesale management systems are online.'
-                  : 'Welcome to your enhanced wholesale management dashboard. Advanced quantum-powered tools at your fingertips.'
+                  : 'Command center operational. Your tactical business management systems are fully armed and ready for deployment.'
                 : darkMode
                   ? 'Next-generation wholesale platform powered by quantum neural networks.'
-                  : 'Experience the future of wholesale management with our advanced, intuitive platform designed for visionary businesses.'
+                  : 'Deploy the ultimate business warfare platform with military-grade precision tools designed for tactical market domination.'
               }
             </p>
           </div>
@@ -215,7 +215,7 @@ const Home = () => {
                 
                 <Link to="/guest-dashboard" className={theme.btnGhost}>
                   <span className="text-xl">👁️</span>
-                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Guest Experience</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Recon Mode</span>
                   {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
@@ -227,7 +227,7 @@ const Home = () => {
                 
                 <Link to="/register" className={theme.btnSuccess}>
                   <span className="text-xl">✨</span>
-                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Start Free Trial</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Deploy Free</span>
                   {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
               </>
@@ -237,7 +237,7 @@ const Home = () => {
           {/* ENHANCED: Premium Status Indicators with glass morphism */}
           <div className={`flex justify-center space-x-12 text-sm ${theme.statusContainer} ${!darkMode ? 'p-8 rounded-2xl inline-flex' : ''}`}>
             {!darkMode && <div className="neumorph-card-glow"></div>}
-            {(darkMode ? ['SECURE', 'QUANTUM', 'NEURAL'] : ['SECURE', 'QUANTUM', 'SMART']).map((status, i) => (
+            {(darkMode ? ['SECURE', 'QUANTUM', 'NEURAL'] : ['SECURE', 'TACTICAL', 'ARMED']).map((status, i) => (
               <div key={status} className="flex items-center gap-3">
                 <div className={`w-4 h-4 rounded-full ${!darkMode ? 'neumorph-status-dot' : ''} ${
                   darkMode 
@@ -314,24 +314,24 @@ const Home = () => {
             
             <h2 className={`text-5xl font-bold text-center mb-16 ${theme.title}`}>
               <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
-                {darkMode ? 'QUICK ACCESS' : 'QUICK ACCESS'}
+                {darkMode ? 'QUICK ACCESS' : 'TACTICAL ACCESS'}
               </span>
               <span className={`${theme.textSecondary} ${theme.holographicText}`}>
-                {darkMode ? ' TERMINAL' : ' DASHBOARD'}
+                {darkMode ? ' TERMINAL' : ' COMMAND'}
               </span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { to: '/orders', icon: '📋', title: 'My Orders', desc: 'Advanced order management with quantum tracking' },
+                { to: '/orders', icon: '📋', title: 'My Orders', desc: 'Advanced command management with tactical tracking protocols' },
                 { 
                   to: user.accountType === 'business' && user.businessType === 'seller' ? '/inventory' : '/create-order', 
                   icon: user.accountType === 'business' && user.businessType === 'seller' ? '📦' : '➕', 
-                  title: user.accountType === 'business' && user.businessType === 'seller' ? 'My Inventory' : 'New Order', 
-                  desc: user.accountType === 'business' && user.businessType === 'seller' ? 'Intelligent product management' : 'Create orders with AI assistance' 
+                  title: user.accountType === 'business' && user.businessType === 'seller' ? 'My Arsenal' : 'Deploy Order', 
+                  desc: user.accountType === 'business' && user.businessType === 'seller' ? 'Strategic product deployment system' : 'Launch orders with tactical AI assistance' 
                 },
-                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our futuristic product ecosystem' },
-                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'Smart cart with predictive recommendations' }
+                { to: '/products', icon: '🛒', title: 'Browse Arsenal', desc: 'Explore our tactical equipment ecosystem' },
+                { to: '/cart', icon: '🛍️', title: 'Command Cart', desc: 'Strategic cart with intel-based recommendations' }
               ].map((item, index) => (
                 <Link key={index} to={item.to} className="group">
                   <div className={`${theme.card} neumorph-elevated`}>
@@ -360,15 +360,15 @@ const Home = () => {
                 {darkMode ? 'START' : 'BEGIN YOUR'}
               </span>
               <span className={`${theme.textPrimary} ${theme.holographicText}`}>
-                {darkMode ? ' SHOPPING' : ' JOURNEY'}
+                {darkMode ? ' SHOPPING' : ' MISSION'}
               </span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {[
-                { to: '/products', icon: '🛒', title: 'Explore Products', desc: 'Discover our quantum-enhanced product catalog with AI recommendations' },
-                { to: '/cart', icon: '🛍️', title: 'Smart Cart', desc: 'Experience intelligent shopping with predictive analytics and premium features' },
-                { to: '/guest-dashboard', icon: '👁️', title: 'Guest Experience', desc: 'Preview our platform capabilities with full guest access and demo features' }
+                { to: '/products', icon: '🛒', title: 'Explore Arsenal', desc: 'Discover our tactical-enhanced product catalog with strategic AI intel' },
+                { to: '/cart', icon: '🛍️', title: 'Command Cart', desc: 'Experience tactical shopping with predictive battle analytics and precision features' },
+                { to: '/guest-dashboard', icon: '👁️', title: 'Recon Mission', desc: 'Preview our platform capabilities with full reconnaissance access and tactical demo features' }
               ].map((item, index) => (
                 <Link key={index} to={item.to} className="group">
                   <div className={`${theme.card} neumorph-elevated`}>
@@ -412,20 +412,20 @@ const Home = () => {
             {[
               { 
                 icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10', 
-                title: 'Quantum Inventory', 
-                desc: 'Advanced AI-powered tracking with predictive analytics, machine learning optimization, and real-time quantum synchronization',
+                title: 'Tactical Inventory', 
+                desc: 'Military-grade tracking systems with advanced reconnaissance, strategic analytics, and battlefield-ready stock deployment',
                 color: darkMode ? 'text-cyan-400' : 'text-blue-600'
               },
               { 
                 icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 
-                title: 'Neural Processing', 
-                desc: 'Automated workflows with quantum machine learning optimization, intelligent routing, and seamless order orchestration',
+                title: 'Command Processing', 
+                desc: 'Automated warfare protocols with tactical AI optimization, strategic routing, and precision order execution systems',
                 color: darkMode ? 'text-green-400' : 'text-green-600'
               },
               { 
                 icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 
-                title: 'Quantum Analytics', 
-                desc: 'Deep insights powered by advanced quantum algorithms, predictive modeling, and real-time data-driven business intelligence',
+                title: 'Battle Analytics', 
+                desc: 'Strategic intelligence powered by advanced combat algorithms, predictive warfare modeling, and real-time tactical operations data',
                 color: darkMode ? 'text-purple-400' : 'text-purple-600'
               }
             ].map((feature, index) => (
@@ -462,7 +462,7 @@ const Home = () => {
                         Your {dashboardInfo.title}
                       </h2>
                       <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600 neumorph-text-shadow'}`}>
-                        Access your personalized quantum dashboard with advanced AI features and intelligent automation tools
+                        Access your personalized command center with advanced tactical features and strategic automation systems
                       </p>
                     </div>
                   </div>
@@ -487,28 +487,28 @@ const Home = () => {
             <div className="relative z-10">
               <h2 className={`text-5xl font-bold mb-8 ${theme.title}`}>
                 <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
-                  {darkMode ? 'READY TO GET' : 'READY TO EXPERIENCE'}
+                  {darkMode ? 'READY TO GET' : 'READY TO DEPLOY'}
                 </span>
                 <br />
                 <span className={`${theme.textSecondary} ${theme.holographicText}`}>
-                  {darkMode ? 'STARTED?' : 'THE FUTURE?'}
+                  {darkMode ? 'STARTED?' : 'THE ARSENAL?'}
                 </span>
               </h2>
               <p className={`text-xl mb-12 ${theme.description} ${!darkMode ? 'neumorph-text-shadow' : ''}`}>
                 {user 
-                  ? 'Unlock the full potential of your business with our advanced quantum platform features and AI-powered automation'
-                  : 'Join thousands of visionary businesses already transforming their operations with our revolutionary quantum-enhanced platform'
+                  ? 'Unlock the full potential of your business with our advanced tactical platform features and AI-powered combat systems'
+                  : 'Join thousands of elite commanders already dominating their markets with our revolutionary tactical-enhanced battle platform'
                 }
               </p>
               <div className="flex flex-wrap gap-6 justify-center">
                 {user ? (
                   <>
                     <Link to="/products" className={`${theme.btnPrimary} neon-border`}>
-                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Start Shopping</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Deploy Arsenal</span>
                       {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
                     <Link to="/cart" className={theme.btnSecondary}>
-                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>View Cart</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>View Command</span>
                       {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
                   </>
