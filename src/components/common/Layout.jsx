@@ -1,4 +1,4 @@
-// src/components/common/Layout.jsx - Theme-aware version
+// src/components/common/Layout.jsx - FIXED: Background animations now visible
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -238,6 +238,21 @@ const Layout = ({ children }) => {
 
   return (
     <div className={`${layoutPrefix}-layout-wrapper`}>
+      {/* CSS OVERRIDE FOR TRANSPARENCY */}
+      <style>{`
+        /* Force transparency with higher specificity */
+        .layout-wrapper .force-transparent.main-content-wrapper,
+        .layout-wrapper .force-transparent.neumorph-main-content-wrapper,
+        .layout-wrapper main .force-transparent {
+          background: transparent !important;
+          border: none !important;
+          backdrop-filter: none !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          min-height: auto !important;
+        }
+      `}</style>
+
       {/* BACKGROUND EFFECTS - Theme aware */}
       {darkMode ? (
         <>
@@ -266,8 +281,8 @@ const Layout = ({ children }) => {
         </>
       )}
 
-      {/* LAYOUT CONTENT WITH THEME STYLING */}
-      <div className={`${layoutPrefix}-layout-content relative z-10 min-h-screen flex flex-col`}>
+      {/* LAYOUT CONTENT WITH THEME STYLING - FIXED: Added layout-wrapper class */}
+      <div className={`${layoutPrefix}-layout-content layout-wrapper relative z-10 min-h-screen flex flex-col`}>
         
         {/* THEME-AWARE NAVBAR */}
         <div className={`sticky top-0 z-40 transition-all duration-300 ${
@@ -429,16 +444,11 @@ const Layout = ({ children }) => {
           </div>
         </div>
         
-       {/* MAIN CONTENT - Fixed to show background animations */}
-        <main className="flex-grow py-6 px-4 relative z-10">
-          <div className={`${darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'}`}
-               style={{ 
-                 background: 'transparent',
-                 border: 'none',
-                 backdropFilter: 'none',
-                 boxShadow: 'none',
-                 borderRadius: '0'
-               }}>
+        {/* MAIN CONTENT - FIXED: Updated z-index and added force-transparent class */}
+        <main className="flex-grow py-6 px-4 relative z-1">
+          <div 
+            className={`${darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'} force-transparent`}
+          >
             {children}
           </div>
         </main>
