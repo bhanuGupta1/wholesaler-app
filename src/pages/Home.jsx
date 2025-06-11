@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - Fixed JSX Syntax Errors
+// src/pages/Home.jsx - FIXED: No longer overrides Layout background animations
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -55,15 +55,14 @@ const Home = () => {
     titleGlow: darkMode ? 'cyber-glow' : 'neumorph-text-shadow',
     description: darkMode ? 'text-gray-300' : 'text-gray-600',
     
-    // Backgrounds
-    bgPrimary: darkMode ? 'bg-black' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50',
+    // Text colors (no background overrides)
     textPrimary: darkMode ? 'text-cyan-400' : 'text-blue-600',
     textSecondary: darkMode ? 'text-purple-400' : 'text-purple-600',
     textAccent: darkMode ? 'text-yellow-400' : 'text-green-600',
     
-    // Containers
-    container: darkMode ? 'relative z-10' : 'relative z-10',
-    section: darkMode ? 'py-20 relative z-10' : 'py-20 relative z-10'
+    // Containers (transparent to show Layout background)
+    container: 'relative z-1',
+    section: 'py-20 relative z-1'
   });
 
   const theme = getThemeClasses();
@@ -71,7 +70,7 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className={`fixed inset-0 z-50 flex items-center justify-center ${theme.bgPrimary}`}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="relative z-10 text-center max-w-2xl mx-auto px-4">
           <div className={`${darkMode ? 'cyber-loading-spinner' : 'neumorph-loading-spinner'} mb-8`}></div>
           <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${theme.title}`}>
@@ -89,33 +88,12 @@ const Home = () => {
   }
 
   return (
-    <div className={theme.bgPrimary}>
-      {/* Background Effects - HIGHER Z-INDEX to show above main content */}
-      {darkMode ? (
-        <>
-          <div className="fixed inset-0 z-5 opacity-15 pointer-events-none">
-            <div className="cyberpunk-grid"></div>
-          </div>
-          <div className="fixed inset-0 z-6 pointer-events-none">
-            <div className="scanlines"></div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="fixed inset-0 pointer-events-none overflow-hidden z-4">
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-100 rounded-full opacity-30 animate-pulse"></div>
-            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-100 rounded-full opacity-30 animate-pulse"></div>
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-100 rounded-full opacity-20 animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-green-100 rounded-full opacity-20 animate-pulse"></div>
-          </div>
-          <div className="fixed inset-0 z-5 opacity-10 pointer-events-none">
-            <div className="neumorph-grid"></div>
-          </div>
-        </>
-      )}
-
+    // FIXED: No background override - let Layout handle all background animations
+    <div className="min-h-screen">
+      {/* FIXED: Removed all background effects - Layout handles these */}
+      
       {/* HERO SECTION */}
-      <section className="min-h-screen flex items-center justify-center relative z-10">
+      <section className="min-h-screen flex items-center justify-center relative z-1">
         <div className="text-center max-w-6xl mx-auto px-4">
           <div className="mb-12 relative">
             <h1 className={`text-6xl md:text-9xl font-bold mb-6 ${theme.title}`}>
@@ -240,22 +218,22 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Floating Elements */}
+        {/* FIXED: Simplified floating elements with lower z-index */}
         {darkMode ? (
           <>
-            <div className="absolute top-20 left-20 hologram-float">
+            <div className="absolute top-20 left-20 hologram-float opacity-50">
               <div className="hologram-cube"></div>
             </div>
-            <div className="absolute bottom-20 right-20 hologram-float" style={{animationDelay: '2s'}}>
+            <div className="absolute bottom-20 right-20 hologram-float opacity-50" style={{animationDelay: '2s'}}>
               <div className="hologram-pyramid"></div>
             </div>
           </>
         ) : (
           <>
-            <div className="absolute top-20 left-20 neumorph-float">
+            <div className="absolute top-20 left-20 neumorph-float opacity-30">
               <div className="neumorph-shape"></div>
             </div>
-            <div className="absolute bottom-20 right-20 neumorph-float" style={{animationDelay: '2s'}}>
+            <div className="absolute bottom-20 right-20 neumorph-float opacity-30" style={{animationDelay: '2s'}}>
               <div className="neumorph-shape neumorph-circle"></div>
             </div>
           </>
@@ -476,7 +454,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-              </section>
+      </section>
     </div>
   );
 };
