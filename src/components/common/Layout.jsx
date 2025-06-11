@@ -1,4 +1,4 @@
-// src/components/common/Layout.jsx - Clean version using external CSS
+// src/components/common/Layout.jsx - Theme-aware version
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -15,11 +15,15 @@ const Layout = ({ children }) => {
   const { user, logout, userRole } = useAuth();
   const { darkMode } = useTheme();
   
-  // Cyberpunk effect refs
+  // Cyberpunk effect refs (only for dark mode)
   const canvasRef = useRef(null);
   const matrixRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
+
+  // Get theme prefix based on current theme
+  const themePrefix = darkMode ? 'cyber' : 'neumorph';
+  const layoutPrefix = darkMode ? 'cyberpunk' : 'neumorph';
 
   // Handle scrolling for navbar effects
   useEffect(() => {
@@ -48,8 +52,10 @@ const Layout = ({ children }) => {
                      location.pathname === '/register' ||
                      location.pathname === '/forgot-password';
 
-  // Advanced Particle System with Neural Networks (ENHANCED)
+  // Advanced Particle System (ONLY FOR DARK MODE)
   useEffect(() => {
+    if (!darkMode) return; // Skip effects in light mode
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -61,7 +67,7 @@ const Layout = ({ children }) => {
     updateCanvasSize();
 
     const particles = [];
-    const particleCount = 60; // Reduced for better performance with layout
+    const particleCount = 60;
     
     // Create particles
     for (let i = 0; i < particleCount; i++) {
@@ -78,7 +84,7 @@ const Layout = ({ children }) => {
     }
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.03)'; // Lighter trail for better readability
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((particle, i) => {
@@ -87,11 +93,9 @@ const Layout = ({ children }) => {
         particle.pulse += 0.02;
         particle.energy = Math.sin(particle.pulse) * 0.5 + 0.5;
 
-        // Bounce off edges
         if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
 
-        // Draw particle with glow
         const glowSize = particle.size + particle.energy * 3;
         const gradient = ctx.createRadialGradient(
           particle.x, particle.y, 0,
@@ -105,7 +109,6 @@ const Layout = ({ children }) => {
         ctx.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw connections
         particles.forEach((otherParticle, j) => {
           if (i !== j) {
             const dx = particle.x - otherParticle.x;
@@ -136,10 +139,12 @@ const Layout = ({ children }) => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [darkMode]); // Re-run when theme changes
 
-  // Matrix Rain Effect (OPTIMIZED)
+  // Matrix Rain Effect (ONLY FOR DARK MODE)
   useEffect(() => {
+    if (!darkMode) return; // Skip effects in light mode
+    
     const canvas = matrixRef.current;
     if (!canvas) return;
 
@@ -186,7 +191,7 @@ const Layout = ({ children }) => {
       }
     };
 
-    const interval = setInterval(draw, 80); // Slower for better performance
+    const interval = setInterval(draw, 80);
 
     const handleResize = () => {
       updateCanvasSize();
@@ -197,23 +202,34 @@ const Layout = ({ children }) => {
       clearInterval(interval);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [darkMode]); // Re-run when theme changes
 
-  // For login pages, render without layout
+  // For login pages, render with appropriate theme
   if (isLoginPage) {
     return (
-      <div className="cyberpunk-login-wrapper">
-        {/* Background effects for login pages too */}
-        <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
-        <canvas ref={matrixRef} className="fixed inset-0 pointer-events-none z-1 opacity-5" />
+      <div className={`${layoutPrefix}-login-wrapper`}>
+        {/* Background effects - only for dark mode */}
+        {darkMode && (
+          <>
+            <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
+            <canvas ref={matrixRef} className="fixed inset-0 pointer-events-none z-1 opacity-5" />
+            
+            <div className="fixed inset-0 pointer-events-none z-2 opacity-10">
+              <div className="cyberpunk-grid"></div>
+            </div>
+            
+            <div className="fixed inset-0 pointer-events-none z-3">
+              <div className="scanlines"></div>
+            </div>
+          </>
+        )}
         
-        <div className="fixed inset-0 pointer-events-none z-2 opacity-10">
-          <div className="cyberpunk-grid"></div>
-        </div>
-        
-        <div className="fixed inset-0 pointer-events-none z-3">
-          <div className="scanlines"></div>
-        </div>
+        {/* Light mode subtle background */}
+        {!darkMode && (
+          <div className="fixed inset-0 pointer-events-none z-2 opacity-30">
+            <div className="neumorph-grid"></div>
+          </div>
+        )}
         
         <main className="relative z-10">{children}</main>
       </div>
@@ -221,81 +237,107 @@ const Layout = ({ children }) => {
   }
 
   return (
-    <div className="cyberpunk-layout-wrapper">
-      {/* CYBERPUNK BACKGROUND EFFECTS - ALWAYS ON TOP */}
-      <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
-      <canvas ref={matrixRef} className="fixed inset-0 pointer-events-none z-1 opacity-8" />
-      
-      {/* Animated Grid Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-2 opacity-15">
-        <div className="cyberpunk-grid"></div>
-      </div>
+    <div className={`${layoutPrefix}-layout-wrapper`}>
+      {/* BACKGROUND EFFECTS - Theme aware */}
+      {darkMode ? (
+        <>
+          {/* Cyberpunk effects */}
+          <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
+          <canvas ref={matrixRef} className="fixed inset-0 pointer-events-none z-1 opacity-8" />
+          
+          <div className="fixed inset-0 pointer-events-none z-2 opacity-15">
+            <div className="cyberpunk-grid"></div>
+          </div>
 
-      {/* Scanline Effect */}
-      <div className="fixed inset-0 pointer-events-none z-3">
-        <div className="scanlines"></div>
-      </div>
+          <div className="fixed inset-0 pointer-events-none z-3">
+            <div className="scanlines"></div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Neumorphism effects */}
+          <div className="fixed inset-0 pointer-events-none z-2 opacity-20">
+            <div className="neumorph-grid"></div>
+          </div>
+          
+          <div className="fixed inset-0 pointer-events-none z-3 opacity-10">
+            <div className="neumorph-gradient"></div>
+          </div>
+        </>
+      )}
 
-      {/* LAYOUT CONTENT WITH CYBERPUNK STYLING */}
-      <div className="cyberpunk-layout-content relative z-10 min-h-screen flex flex-col">
+      {/* LAYOUT CONTENT WITH THEME STYLING */}
+      <div className={`${layoutPrefix}-layout-content relative z-10 min-h-screen flex flex-col`}>
         
-        {/* FIXED CYBERPUNK NAVBAR */}
-<div className={`sticky top-0 z-40 transition-all duration-300 ${
-  scrolled 
-    ? 'cyber-navbar-scrolled shadow-lg' 
-    : ''
-}`}>
-  <div className="cyber-navbar-wrapper">
-    <div className="cyber-navbar-glow"></div>
-    <div className="relative z-50"> {/* Ensure navbar is above glow effects */}
-      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-    </div>
-  </div>
-</div>
+        {/* THEME-AWARE NAVBAR */}
+        <div className={`sticky top-0 z-40 transition-all duration-300 ${
+          scrolled 
+            ? `${themePrefix}-navbar-scrolled shadow-lg` 
+            : ''
+        }`}>
+          <div className={`${themePrefix}-navbar-wrapper`}>
+            {darkMode && <div className="cyber-navbar-glow"></div>}
+            {!darkMode && <div className="neumorph-navbar-glow"></div>}
+            <div className="relative z-50">
+              <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+            </div>
+          </div>
+        </div>
         
         {/* Mobile sidebar backdrop */}
         {sidebarOpen && (
           <div 
-            className="fixed inset-0 z-20 bg-black bg-opacity-70 lg:hidden backdrop-blur-sm"
+            className={`fixed inset-0 z-20 ${
+              darkMode 
+                ? 'bg-black bg-opacity-70 backdrop-blur-sm' 
+                : 'bg-white bg-opacity-70 backdrop-blur-sm'
+            } lg:hidden`}
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}
         
-        {/* CYBERPUNK MOBILE SIDEBAR BUTTON */}
+        {/* THEME-AWARE MOBILE SIDEBAR BUTTON */}
         <button
-          className="cyber-fab-button fixed bottom-6 right-6 z-30 lg:hidden"
+          className={`${themePrefix}-fab-button fixed bottom-6 right-6 z-30 lg:hidden`}
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label="Toggle sidebar"
         >
-          <div className="fab-glow"></div>
+          {darkMode && <div className="fab-glow"></div>}
+          {!darkMode && <div className="neumorph-fab-glow"></div>}
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
         </button>
         
-        {/* CYBERPUNK SIDEBAR */}
-        <div className={`cyber-sidebar fixed inset-y-0 left-0 transform ${
+        {/* THEME-AWARE SIDEBAR */}
+        <div className={`${themePrefix}-sidebar fixed inset-y-0 left-0 transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:hidden z-30 w-64 transition-transform duration-300 ease-in-out`}>
-          <div className="sidebar-glow"></div>
-          <div className="sidebar-content p-6">
+          {darkMode && <div className="sidebar-glow"></div>}
+          {!darkMode && <div className="neumorph-sidebar-glow"></div>}
+          <div className={`${darkMode ? 'sidebar-content' : 'neumorph-sidebar-content'} p-6`}>
             
             {/* Sidebar Header */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center">
-                <div className="cyber-logo">
-                  <div className="logo-glow"></div>
+                <div className={`${themePrefix}-logo`}>
+                  {darkMode && <div className="logo-glow"></div>}
+                  {!darkMode && <div className="neumorph-logo-glow"></div>}
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                     <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H14a1 1 0 001-1V5a1 1 0 00-1-1H3z" />
                   </svg>
                 </div>
-                <h2 className="ml-3 text-xl font-bold text-cyan-400 cyber-glow">
+                <h2 className={`ml-3 text-xl font-bold ${
+                  darkMode 
+                    ? 'text-cyan-400 cyber-glow' 
+                    : 'text-indigo-600 neumorph-text-shadow'
+                }`}>
                   WHOLESALER
                 </h2>
               </div>
               <button
-                className="cyber-close-btn"
+                className={`${themePrefix}-close-btn`}
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Close sidebar"
               >
@@ -308,96 +350,79 @@ const Layout = ({ children }) => {
             {/* User Info */}
             {user ? (
               <div className="mb-8">
-                <div className="cyber-user-card">
-                  <div className="user-card-glow"></div>
-                  <div className="user-avatar">
-                    <div className="avatar-glow"></div>
+                <div className={`${themePrefix}-user-card`}>
+                  {darkMode && <div className="user-card-glow"></div>}
+                  {!darkMode && <div className="neumorph-user-card-glow"></div>}
+                  <div className={`${darkMode ? 'user-avatar' : 'neumorph-user-avatar'}`}>
+                    {darkMode && <div className="avatar-glow"></div>}
+                    {!darkMode && <div className="neumorph-avatar-glow"></div>}
                     {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div className="user-info">
-                    <p className="user-name">{user.displayName || 'User'}</p>
-                    <p className="user-email">{user.email}</p>
-                    <p className="user-role">{userRole}</p>
+                    <p className={darkMode ? 'user-name' : 'neumorph-user-name'}>{user.displayName || 'User'}</p>
+                    <p className={darkMode ? 'user-email' : 'neumorph-user-email'}>{user.email}</p>
+                    <p className={darkMode ? 'user-role' : 'neumorph-user-role'}>{userRole}</p>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="mb-8 flex justify-center">
-                <Link to="/login" className="cyber-btn cyber-btn-primary">
-                  <span className="btn-text">SIGN IN</span>
-                  <div className="btn-glow"></div>
+                <Link to="/login" className={`${themePrefix}-btn ${themePrefix}-btn-primary`}>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>SIGN IN</span>
+                  {darkMode && <div className="btn-glow"></div>}
+                  {!darkMode && <div className="neumorph-btn-glow"></div>}
                 </Link>
               </div>
             )}
             
             {/* Navigation Links */}
             <nav className="space-y-2">
-              <Link
-                to="/"
-                className={`cyber-nav-link ${isActive('/') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <div className="nav-link-glow"></div>
-                <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>DASHBOARD</span>
-              </Link>
-              
-              <Link
-                to="/inventory"
-                className={`cyber-nav-link ${isActive('/inventory') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <div className="nav-link-glow"></div>
-                <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-                <span>INVENTORY</span>
-              </Link>
-              
-              <Link
-                to="/orders"
-                className={`cyber-nav-link ${isActive('/orders') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <div className="nav-link-glow"></div>
-                <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span>ORDERS</span>
-              </Link>
-              
-              <Link
-                to="/create-order"
-                className={`cyber-nav-link ${isActive('/create-order') ? 'active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <div className="nav-link-glow"></div>
-                <svg className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span>NEW ORDER</span>
-              </Link>
+              {[
+                { to: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: 'DASHBOARD' },
+                { to: '/inventory', icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', label: 'INVENTORY' },
+                { to: '/orders', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', label: 'ORDERS' },
+                { to: '/create-order', icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', label: 'NEW ORDER' }
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`${themePrefix}-nav-link ${isActive(item.to) ? 'active' : ''}`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  {darkMode && <div className="nav-link-glow"></div>}
+                  {!darkMode && <div className="neumorph-nav-link-glow"></div>}
+                  <svg className={darkMode ? 'nav-icon' : 'neumorph-nav-icon'} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
             </nav>
             
             {/* Theme Toggle and Sign Out */}
-            <div className="mt-10 pt-6 border-t border-cyan-900/30">
+            <div className={`mt-10 pt-6 border-t ${
+              darkMode ? 'border-cyan-900/30' : 'border-gray-300'
+            }`}>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">NEURAL THEME</h3>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${
+                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {darkMode ? 'NEURAL THEME' : 'Interface Theme'}
+                </h3>
                 <ThemeToggle />
               </div>
               
               {user && (
                 <button
                   onClick={handleSignOut}
-                  className="cyber-signout-btn w-full"
+                  className={`${themePrefix}-signout-btn w-full`}
                 >
-                  <div className="signout-glow"></div>
+                  {darkMode && <div className="signout-glow"></div>}
+                  {!darkMode && <div className="neumorph-signout-glow"></div>}
                   <svg className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  <span>DISCONNECT</span>
+                  <span>{darkMode ? 'DISCONNECT' : 'Sign Out'}</span>
                 </button>
               )}
             </div>
@@ -406,82 +431,95 @@ const Layout = ({ children }) => {
         
         {/* MAIN CONTENT */}
         <main className="flex-grow py-6 px-4 relative z-10">
-          <div className="main-content-wrapper">
+          <div className={darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'}>
             {children}
           </div>
         </main>
         
-        {/* CYBERPUNK FOOTER */}
-        <footer className="cyber-footer relative z-10 mt-auto">
-          <div className="footer-glow"></div>
-          <div className="footer-content">
+        {/* THEME-AWARE FOOTER */}
+        <footer className={`${themePrefix}-footer relative z-10 mt-auto`}>
+          {darkMode && <div className="footer-glow"></div>}
+          {!darkMode && <div className="neumorph-footer-glow"></div>}
+          <div className={darkMode ? 'footer-content' : 'neumorph-footer-content'}>
             <div className="container mx-auto px-4 md:px-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                  <h3 className="footer-heading">CORPORATION</h3>
-                  <ul className="footer-links">
-                    <li><Link to="/about-us" className="footer-link">About Neural Corp</Link></li>
-                    <li><a href="#" className="footer-link">Digital Careers</a></li>
-                    <li><Link to="/privacy-policy" className="footer-link">Privacy Protocol</Link></li>
-                    <li><Link to="/terms-of-service" className="footer-link">Terms of Interface</Link></li>
+                  <h3 className={darkMode ? 'footer-heading' : 'neumorph-footer-heading'}>
+                    {darkMode ? 'CORPORATION' : 'Company'}
+                  </h3>
+                  <ul className={darkMode ? 'footer-links' : 'neumorph-footer-links'}>
+                    <li><Link to="/about-us" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'About Neural Corp' : 'About Us'}
+                    </Link></li>
+                    <li><a href="#" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Digital Careers' : 'Careers'}
+                    </a></li>
+                    <li><Link to="/privacy-policy" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Privacy Protocol' : 'Privacy Policy'}
+                    </Link></li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="footer-heading">RESOURCES</h3>
-                  <ul className="footer-links">
-                    <li><Link to="/documentation" className="footer-link">Neural Documentation</Link></li>
-                    <li><a href="#" className="footer-link">Interface Guides</a></li>
-                    <li><a href="#" className="footer-link">API Gateway</a></li>
-                    <li><Link to="/support-center" className="footer-link">Support Matrix</Link></li>
+                  <h3 className={darkMode ? 'footer-heading' : 'neumorph-footer-heading'}>
+                    {darkMode ? 'RESOURCES' : 'Resources'}
+                  </h3>
+                  <ul className={darkMode ? 'footer-links' : 'neumorph-footer-links'}>
+                    <li><Link to="/documentation" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Neural Documentation' : 'Documentation'}
+                    </Link></li>
+                    <li><Link to="/support-center" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Support Matrix' : 'Support Center'}
+                    </Link></li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="footer-heading">FEATURES</h3>
-                  <ul className="footer-links">
-                    <li><a href="#" className="footer-link">Quantum Inventory</a></li>
-                    <li><Link to="/order-processing" className="footer-link">Neural Processing</Link></li>
-                    <li><a href="#" className="footer-link">Data Analytics</a></li>
-                    <li><a href="#" className="footer-link">System Integration</a></li>
+                  <h3 className={darkMode ? 'footer-heading' : 'neumorph-footer-heading'}>
+                    {darkMode ? 'FEATURES' : 'Features'}
+                  </h3>
+                  <ul className={darkMode ? 'footer-links' : 'neumorph-footer-links'}>
+                    <li><a href="#" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Quantum Inventory' : 'Inventory Management'}
+                    </a></li>
+                    <li><Link to="/order-processing" className={darkMode ? 'footer-link' : 'neumorph-footer-link'}>
+                      {darkMode ? 'Neural Processing' : 'Order Processing'}
+                    </Link></li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="footer-heading">CONNECT</h3>
-                  <ul className="footer-links">
-                    <li className="footer-contact">
-                      <svg className="contact-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <h3 className={darkMode ? 'footer-heading' : 'neumorph-footer-heading'}>
+                    {darkMode ? 'CONNECT' : 'Contact'}
+                  </h3>
+                  <ul className={darkMode ? 'footer-links' : 'neumorph-footer-links'}>
+                    <li className={darkMode ? 'footer-contact' : 'neumorph-footer-contact'}>
+                      <svg className={darkMode ? 'contact-icon' : 'neumorph-contact-icon'} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
-                      +1 (555) NEURAL
+                      {darkMode ? '+1 (555) NEURAL' : '+1 (555) 123-4567'}
                     </li>
-                    <li className="footer-contact">
-                      <svg className="contact-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <li className={darkMode ? 'footer-contact' : 'neumorph-footer-contact'}>
+                      <svg className={darkMode ? 'contact-icon' : 'neumorph-contact-icon'} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      contact@neural-corp.net
+                      {darkMode ? 'contact@neural-corp.net' : 'hello@wholesaler.com'}
                     </li>
                   </ul>
-                  <div className="cyber-social-links">
-                    <a href="#" className="social-link">
-                      <div className="social-glow"></div>
-                      FB
-                    </a>
-                    <a href="#" className="social-link">
-                      <div className="social-glow"></div>
-                      TW
-                    </a>
-                    <a href="#" className="social-link">
-                      <div className="social-glow"></div>
-                      LI
-                    </a>
+                  <div className={darkMode ? 'cyber-social-links' : 'neumorph-social-links'}>
+                    {['FB', 'TW', 'LI'].map((social) => (
+                      <a key={social} href="#" className={darkMode ? 'social-link' : 'neumorph-social-link'}>
+                        {darkMode && <div className="social-glow"></div>}
+                        {!darkMode && <div className="neumorph-social-glow"></div>}
+                        {social}
+                      </a>
+                    ))}
                   </div>
                 </div>
               </div>
-              <div className="footer-bottom">
-                <p className="footer-copyright">
-                  &copy; {new Date().getFullYear()} NEURAL WHOLESALER CORP. ALL RIGHTS RESERVED.
+              <div className={darkMode ? 'footer-bottom' : 'neumorph-footer-bottom'}>
+                <p className={darkMode ? 'footer-copyright' : 'neumorph-footer-copyright'}>
+                  &copy; {new Date().getFullYear()} {darkMode ? 'NEURAL WHOLESALER CORP. ALL RIGHTS RESERVED.' : 'Wholesaler Inc. All rights reserved.'}
                 </p>
-                <div className="footer-made-by">
-                  <p>ENGINEERED WITH ⚡ BY THE NEURAL TEAM</p>
+                <div className={darkMode ? 'footer-made-by' : 'neumorph-footer-made-by'}>
+                  <p>{darkMode ? 'ENGINEERED WITH ⚡ BY THE NEURAL TEAM' : 'Made with ❤️ by our team'}</p>
                 </div>
               </div>
             </div>
