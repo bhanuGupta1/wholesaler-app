@@ -1,4 +1,4 @@
-// src/App.jsx - FIXED: Remove broken permission checks, let components handle permissions
+
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -29,12 +29,14 @@ const OrderDetails = lazy(() => import('./pages/Orders/OrderDetails'));
 const InvoicePage = lazy(() => import('./pages/Orders/InvoicePage'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+
+// Support and feedback pages
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 const SupportCenter = lazy(() => import('./pages/SupportCenter'));
 const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
@@ -76,17 +78,17 @@ function App() {
                     <GuestDashboard />
                   </Layout>
                 } />
-<Route
-  path="/qr-tools"
-  element={
-    <ProtectedRoute>
-      <Layout>
-        <QRPage />
-      </Layout>
-    </ProtectedRoute>
-  }
-/>
 
+                {/* QR Tools - Protected route */}
+                <Route path="/qr-tools" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <QRPage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Product catalog routes - Public access */}
                 <Route path="/catalog" element={
                   <Layout>
                     <ProductCatalog />
@@ -126,6 +128,15 @@ function App() {
                       <Checkout />
                     </Layout>
                   </NoShoppingRedirect>
+                } />
+
+                {/* Feedback Page - Protected route for authenticated users */}
+                <Route path="/feedback" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <FeedbackPage />
+                    </Layout>
+                  </ProtectedRoute>
                 } />
 
                 {/* Role-specific dashboard routes with access control */}
@@ -188,7 +199,7 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Inventory routes - Let components handle permissions */}
+                {/* Inventory routes - Let components handle permissions */}
                 <Route path="/inventory" element={
                   <ProtectedRoute>
                     <Layout>
@@ -205,7 +216,7 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Add Product route - Let component handle permissions */}
+                {/* Add Product route - Let component handle permissions */}
                 <Route path="/add-product" element={
                   <ProtectedRoute>
                     <Layout>
@@ -223,32 +234,36 @@ function App() {
                   </ProtectedRoute>
                 } />
 
+                {/* Support and Information Pages - Public access */}
                 <Route path="/about-us" element={
-  <Layout>
-    <AboutUs />
-  </Layout>
-} />
-<Route path="/documentation" element={
-  <Layout>
-    <Documentation />
-  </Layout>
-} />
-<Route path="/privacy-policy" element={
-  <Layout>
-    <PrivacyPolicy />
-  </Layout>
-} />
-<Route path="/support-center" element={
-  <Layout>
-    <SupportCenter />
-  </Layout>
-} />
-<Route path="/order-processing" element={
-  <Layout>
-    <OrderProcessing />
-  </Layout>
-} />
+                  <Layout>
+                    <AboutUs />
+                  </Layout>
+                } />
 
+                <Route path="/documentation" element={
+                  <Layout>
+                    <Documentation />
+                  </Layout>
+                } />
+
+                <Route path="/privacy-policy" element={
+                  <Layout>
+                    <PrivacyPolicy />
+                  </Layout>
+                } />
+
+                <Route path="/support-center" element={
+                  <Layout>
+                    <SupportCenter />
+                  </Layout>
+                } />
+
+                <Route path="/order-processing" element={
+                  <Layout>
+                    <OrderProcessing />
+                  </Layout>
+                } />
                 
                 <Route path="/orders/:id" element={
                   <ProtectedRoute>
@@ -350,10 +365,21 @@ function App() {
                               
                               <Link to="/manager/settings" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
                                 <div className="flex items-center">
-                                  <div className="text-3xl mr-4">⚙️</div>
+                                  <div className="text-3xl mr-4">⚙</div>
                                   <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h3>
                                     <p className="text-gray-600 dark:text-gray-400">System configuration</p>
+                                  </div>
+                                </div>
+                              </Link>
+
+                              {/* Add Feedback Management for Managers */}
+                              <Link to="/manager/feedback" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                  <div className="text-3xl mr-4">💬</div>
+                                  <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Feedback Management</h3>
+                                    <p className="text-gray-600 dark:text-gray-400">Review customer feedback</p>
                                   </div>
                                 </div>
                               </Link>
@@ -364,6 +390,7 @@ function App() {
                         <Route path="users" element={<UserApprovalDashboard />} />
                         <Route path="inventory" element={<Inventory />} />
                         <Route path="orders" element={<UserSpecificOrders />} />
+                        <Route path="feedback" element={<FeedbackPage />} />
                         
                         <Route path="analytics" element={
                           <div className="p-8">
@@ -428,14 +455,13 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* FIXED: Business-specific routes - Let components handle permissions */}
+                {/* Business-specific routes - Let components handle permissions */}
                 <Route path="/business/*" element={
                   <ProtectedRoute requiredRole="business">
                     <Layout>
                       <Routes>
                         <Route index element={<BusinessDashboard />} />
                         
-                        {/* FIXED: Seller routes - Let components handle permissions */}
                         <Route path="products" element={
                           <ProtectedRoute>
                             <Inventory />
@@ -457,6 +483,9 @@ function App() {
                         <Route path="orders" element={
                           <UserSpecificOrders />
                         } />
+
+                        {/* Add feedback access for business users */}
+                        <Route path="feedback" element={<FeedbackPage />} />
                         
                         <Route path="analytics" element={
                           <div className="p-8">
@@ -536,4 +565,4 @@ function App() {
   );
 }
 
-export default App;
+export default App

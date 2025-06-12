@@ -1,1 +1,682 @@
+/* src/index.css - Main stylesheet with proper import order and CONSISTENT FONTS */
+
+/* Import Fonts for Both Themes - ENHANCED WITH CONSISTENT FUTURISTIC FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Import Theme Styles FIRST */
+@import './styles/cyberpunk.css';
+@import './styles/neumorphism.css';
+
+/* Import Tailwind CSS */
 @import "tailwindcss";
+
+/* ==============================================
+   GLOBAL BASE STYLES (THEME AWARE) - UPDATED WITH CONSISTENT FONTS
+   ============================================== */
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* UPDATED: Base body styles - now uses consistent futuristic fonts for both themes */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Rajdhani', 'Exo 2', 'Segoe UI', 'Roboto', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+/* UPDATED: Dark theme (Cyberpunk) body styles - enhanced with consistent fonts */
+.dark body,
+body.dark {
+  background: #000;
+  color: #fff;
+  font-family: 'Rajdhani', 'Orbitron', 'Exo 2', monospace !important;
+}
+
+/* UPDATED: Light theme (Neumorphism) body styles - now uses same fonts as dark */
+.light body,
+body.light,
+body:not(.dark) {
+  background: #f0f0f3;
+  color: #333;
+  font-family: 'Rajdhani', 'Orbitron', 'Exo 2', sans-serif !important;
+}
+
+/* UPDATED: Enhanced typography hierarchy with consistent fonts */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', 'Rajdhani', 'Exo 2', monospace !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* UPDATED: Dark theme typography - enhanced */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+.cyberpunk-title, 
+.cyber-title {
+  font-family: 'Orbitron', 'Rajdhani', 'Courier New', monospace !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* UPDATED: Light theme typography - now matches dark theme fonts */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6,
+.neumorph-title {
+  font-family: 'Orbitron', 'Rajdhani', 'Exo 2', monospace !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* UPDATED: Code and monospace elements */
+code, pre, .font-mono {
+  font-family: 'Orbitron', 'Rajdhani', 'Courier New', 'Monaco', monospace !important;
+  font-weight: 500;
+}
+
+/* UPDATED: Buttons use consistent fonts */
+.cyber-btn,
+.neumorph-btn,
+button,
+.btn {
+  font-family: 'Rajdhani', 'Orbitron', monospace !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* UPDATED: Navigation and UI elements */
+.cyber-nav-link,
+.neumorph-nav-link,
+nav a,
+.nav-link {
+  font-family: 'Rajdhani', 'Orbitron', monospace !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ==============================================
+   THEME-AWARE SCROLLBAR STYLING
+   ============================================== */
+
+/* Dark theme scrollbars (Cyberpunk) */
+.dark ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 6px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #00FFFF, #FF00FF);
+  border-radius: 6px;
+  border: 2px solid rgba(0, 0, 0, 0.8);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #00FFFF, #FFFF00);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Light theme scrollbars (Neumorphism) */
+.light ::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.light ::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #f0f0f3;
+  border-radius: 6px;
+}
+
+.light ::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 6px;
+  border: 2px solid #f0f0f3;
+}
+
+.light ::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #667eea, #f093fb);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+.light ::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+  background: #f0f0f3;
+}
+
+/* Firefox scrollbars */
+.dark html {
+  scrollbar-width: thin;
+  scrollbar-color: #00FFFF rgba(0, 0, 0, 0.8);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #667eea #f0f0f3;
+}
+
+/* ==============================================
+   ENHANCED THEME-AWARE SELECTION STYLING
+   ============================================== */
+
+/* Dark theme selection (Cyberpunk) */
+.dark ::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+.dark ::-moz-selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+/* UPDATED: Light theme selection with futuristic feel */
+.light ::selection,
+::selection {
+  background: rgba(102, 126, 234, 0.3);
+  color: #333;
+  text-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+}
+
+.light ::-moz-selection,
+::-moz-selection {
+  background: rgba(102, 126, 234, 0.3);
+  color: #333;
+  text-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+}
+
+/* ==============================================
+   THEME-AWARE FOCUS STYLES (ACCESSIBILITY)
+   ============================================== */
+
+/* Dark theme focus */
+.dark *:focus {
+  outline: 2px solid #00FFFF;
+  outline-offset: 2px;
+}
+
+/* Light theme focus */
+.light *:focus,
+*:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Remove default focus for elements that have custom focus styles */
+.cyber-btn:focus,
+.cyber-nav-link:focus,
+.cyber-close-btn:focus,
+.cyber-fab-button:focus,
+.neumorph-btn:focus,
+.neumorph-nav-link:focus,
+.neumorph-close-btn:focus,
+.neumorph-fab-button:focus {
+  outline: none;
+}
+
+/* ==============================================
+   UPDATED THEME-AWARE FORM ELEMENTS WITH CONSISTENT FONTS
+   ============================================== */
+
+/* UPDATED: Dark theme form elements with consistent fonts */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark textarea,
+.dark select {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  font-family: 'Rajdhani', 'Orbitron', monospace !important;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="number"]:focus,
+.dark input[type="search"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #00FFFF;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #666;
+  font-style: normal;
+  font-family: 'Rajdhani', monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+  accent-color: #00FFFF;
+}
+
+/* UPDATED: Light theme form elements with consistent fonts */
+.light input[type="text"],
+.light input[type="email"],
+.light input[type="password"],
+.light input[type="number"],
+.light input[type="search"],
+.light textarea,
+.light select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  background: #f0f0f3;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #333;
+  font-family: 'Rajdhani', 'Orbitron', monospace !important;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 
+    inset 8px 8px 16px rgba(163, 177, 198, 0.6),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.light input[type="text"]:focus,
+.light input[type="email"]:focus,
+.light input[type="password"]:focus,
+.light input[type="number"]:focus,
+.light input[type="search"]:focus,
+.light textarea:focus,
+.light select:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 
+    inset 12px 12px 20px rgba(163, 177, 198, 0.7),
+    inset -12px -12px 20px rgba(255, 255, 255, 0.9);
+}
+
+.light input::placeholder,
+.light textarea::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #888;
+  font-weight: 400;
+  font-family: 'Rajdhani', monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.light input[type="checkbox"],
+.light input[type="radio"],
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #667eea;
+}
+
+/* ==============================================
+   ENHANCED THEME-AWARE UTILITY CLASSES
+   ============================================== */
+
+/* UPDATED: Dark theme utilities with enhanced fonts */
+.dark .text-glow {
+  text-shadow: 0 0 10px currentColor;
+  font-family: 'Orbitron', monospace !important;
+}
+
+.dark .text-glow-strong {
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor;
+  font-family: 'Orbitron', monospace !important;
+}
+
+.dark .bg-cyber {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.dark .bg-cyber-glow {
+  background: linear-gradient(45deg, 
+    rgba(0, 255, 255, 0.1), 
+    rgba(255, 0, 255, 0.1),
+    rgba(0, 255, 255, 0.1)
+  );
+}
+
+.dark .border-cyber {
+  border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.dark .border-cyber-glow {
+  border: 2px solid #00FFFF;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+/* UPDATED: Light theme utilities with enhanced fonts and effects */
+.light .text-glow,
+.text-glow {
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    -1px -1px 2px rgba(255, 255, 255, 0.9),
+    0 0 12px rgba(102, 126, 234, 0.3);
+  font-family: 'Orbitron', monospace !important;
+}
+
+.light .text-glow-strong,
+.text-glow-strong {
+  text-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.15),
+    -2px -2px 4px rgba(255, 255, 255, 0.9),
+    0 0 20px rgba(102, 126, 234, 0.4);
+  font-family: 'Orbitron', monospace !important;
+}
+
+.light .bg-cyber,
+.bg-cyber {
+  background: #f0f0f3;
+  box-shadow: 
+    inset 8px 8px 16px rgba(163, 177, 198, 0.6),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.light .bg-cyber-glow,
+.bg-cyber-glow {
+  background: linear-gradient(45deg, 
+    rgba(102, 126, 234, 0.1), 
+    rgba(240, 147, 251, 0.1),
+    rgba(102, 126, 234, 0.1)
+  );
+}
+
+.light .border-cyber,
+.border-cyber {
+  border: 1px solid rgba(163, 177, 198, 0.3);
+}
+
+.light .border-cyber-glow,
+.border-cyber-glow {
+  border: 2px solid #667eea;
+  box-shadow: 
+    4px 4px 8px rgba(163, 177, 198, 0.6),
+    -4px -4px 8px rgba(255, 255, 255, 0.8);
+}
+
+/* ==============================================
+   ANIMATION UTILITIES (THEME AWARE)
+   ============================================== */
+
+/* Dark theme animations */
+.dark .animate-glow {
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+.dark .animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.dark .animate-matrix {
+  animation: matrixFlow 20s linear infinite;
+}
+
+/* Light theme animations */
+.light .animate-glow,
+.animate-glow {
+  animation: neumorph-pulse 2s ease-in-out infinite alternate;
+}
+
+.light .animate-float,
+.animate-float {
+  animation: neumorph-float 6s ease-in-out infinite;
+}
+
+@keyframes neumorph-pulse {
+  from { 
+    box-shadow: 
+      8px 8px 16px rgba(163, 177, 198, 0.6),
+      -8px -8px 16px rgba(255, 255, 255, 0.8);
+  }
+  to { 
+    box-shadow: 
+      12px 12px 20px rgba(163, 177, 198, 0.7),
+      -12px -12px 20px rgba(255, 255, 255, 0.9);
+  }
+}
+
+@keyframes matrixFlow {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ==============================================
+   RESPONSIVE HELPERS
+   ============================================== */
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ==============================================
+   RESPONSIVE FONT SIZING
+   ============================================== */
+
+/* Mobile font adjustments */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.01em;
+  }
+  
+  .cyber-btn,
+  .neumorph-btn {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+}
+
+/* Large screen enhancements */
+@media (min-width: 1200px) {
+  body {
+    font-size: 16px;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.03em;
+  }
+}
+
+/* ==============================================
+   PRINT STYLES
+   ============================================== */
+
+@media print {
+  /* Hide theme effects when printing */
+  .cyberpunk-grid,
+  .scanlines,
+  .cyber-loading-spinner,
+  .neumorph-loading-spinner,
+  .hologram-float,
+  canvas {
+    display: none !important;
+  }
+  
+  /* Simplify colors for printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .cyber-btn,
+  .cyber-card,
+  .neumorph-btn,
+  .neumorph-card,
+  .feature-card {
+    border: 1px solid #000 !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .cyber-glow,
+  .text-glow,
+  .text-glow-strong {
+    text-shadow: none !important;
+  }
+}
+
+/* ==============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================== */
+
+/* Will-change for animated elements */
+.cyberpunk-grid,
+.scanlines,
+.neumorph-grid,
+canvas,
+.cyber-loading-spinner,
+.neumorph-loading-spinner {
+  will-change: transform, opacity;
+}
+
+/* Hardware acceleration for smooth animations */
+.cyber-btn,
+.cyber-card,
+.cyber-nav-link,
+.neumorph-btn,
+.neumorph-card,
+.neumorph-nav-link {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ==============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cyber-btn,
+  .neumorph-btn {
+    border-width: 3px;
+  }
+  
+  .cyber-glow {
+    text-shadow: 
+      0 0 3px currentColor,
+      0 0 6px currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .cyberpunk-grid,
+  .scanlines,
+  .neumorph-grid {
+    animation: none;
+  }
+}
+
+/* ==============================================
+   ENHANCED THEME TRANSITION EFFECTS
+   ============================================== */
+
+/* Smooth theme transitions with font consistency */
+body,
+.cyber-btn,
+.neumorph-btn,
+input,
+textarea,
+select,
+h1, h2, h3, h4, h5, h6 {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Theme-specific root styles */
+:root {
+  --transition-speed: 0.3s;
+  --font-primary: 'Orbitron', 'Rajdhani', monospace;
+  --font-secondary: 'Rajdhani', 'Exo 2', sans-serif;
+  --font-ui: 'Rajdhani', 'Orbitron', monospace;
+}
+
+.dark {
+  --bg-primary: #000;
+  --text-primary: #fff;
+  --accent-primary: #00FFFF;
+}
+
+.light {
+  --bg-primary: #f0f0f3;
+  --text-primary: #333;
+  --accent-primary: #667eea;
+}

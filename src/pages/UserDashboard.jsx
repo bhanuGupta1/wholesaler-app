@@ -1,4 +1,4 @@
-// src/pages/UserDashboard.jsx - Fixed to show only user's actual orders
+// src/pages/UserDashboard.jsx - ENHANCED: Fully integrated with new theme system
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
@@ -18,6 +18,54 @@ const UserDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // ENHANCED: Get theme classes for consistent styling
+  const getThemeClasses = () => ({
+    // Enhanced Buttons with premium effects
+    btnPrimary: darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary neon-border',
+    btnSecondary: darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn neumorph-btn-secondary neumorph-elevated',
+    btnOutline: darkMode ? 'cyber-btn cyber-btn-outline' : 'neumorph-btn neumorph-btn-outline neumorph-subtle',
+    btnGhost: darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn neumorph-btn-ghost neumorph-breathing',
+    btnSuccess: darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn neumorph-btn-success neumorph-elevated',
+    
+    // Enhanced Cards with premium glass effects
+    card: darkMode ? 'cyber-card' : 'neumorph-card neumorph-breathing',
+    cardGlow: darkMode ? 'card-glow' : 'neumorph-card-glow',
+    featureCard: darkMode ? 'feature-card' : 'neumorph-feature-card neumorph-elevated',
+    
+    // Enhanced Text with advanced effects
+    title: darkMode ? 'cyberpunk-title' : 'neumorph-title',
+    titleGlow: darkMode ? 'cyber-glow' : 'neumorph-text-shadow',
+    titleEmbossed: darkMode ? 'cyber-glow' : 'neumorph-embossed',
+    gradientText: darkMode ? 'holographic-text' : 'neumorph-gradient-text',
+    description: darkMode ? 'text-gray-300' : 'text-gray-600 neumorph-text-shadow',
+    
+    // Enhanced Text colors with premium effects
+    textPrimary: darkMode ? 'text-cyan-400' : 'text-blue-600',
+    textSecondary: darkMode ? 'text-purple-400' : 'text-purple-600',
+    textAccent: darkMode ? 'text-yellow-400' : 'text-green-600',
+    textMuted: darkMode ? 'text-gray-400' : 'text-gray-500',
+    textBase: darkMode ? 'text-gray-200' : 'text-gray-900',
+    
+    // Enhanced Containers with glass morphism
+    container: 'relative z-1',
+    section: 'py-12 relative z-1',
+    glassContainer: darkMode ? 'bg-black/80 backdrop-blur-15' : 'neumorph-glass-strong neumorph-elevated',
+    premiumContainer: darkMode ? 'bg-black/90 backdrop-blur-20' : 'neumorph-holographic neumorph-elevated',
+    
+    // Enhanced stats cards
+    statsCard: darkMode ? 'cyber-card border-cyan-900/30' : 'neumorph-card neumorph-subtle neumorph-breathing',
+    
+    // Enhanced loading effects
+    loadingContainer: darkMode ? 'bg-black/90 backdrop-blur-20' : 'neumorph-glass-strong neumorph-breathing',
+    loadingSpinner: darkMode ? 'cyber-loading-spinner' : 'neumorph-loading-spinner',
+    
+    // Enhanced dashboard and main cards
+    dashboardCard: darkMode ? 'cyber-dashboard-card' : 'neumorph-dashboard-card neumorph-breathing',
+    mainCard: darkMode ? 'cyber-card border-cyan-900/30' : 'neumorph-card neumorph-elevated neumorph-breathing'
+  });
+
+  const theme = getThemeClasses();
 
   useEffect(() => {
     async function fetchUserData() {
@@ -157,23 +205,51 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* ENHANCED: Premium loading with advanced glass morphism */}
+        <div className={`relative z-10 text-center max-w-2xl mx-auto px-4 ${!darkMode ? 'p-16 rounded-3xl neumorph-glass-strong neumorph-elevated neumorph-breathing' : ''}`}>
+          {/* ENHANCED: Add quantum glow effect for light mode */}
+          {!darkMode && <div className="neumorph-card-glow"></div>}
+          
+          <div className={`${theme.loadingSpinner} mb-8 mx-auto`}></div>
+          <h1 className={`text-4xl font-bold mb-6 ${theme.title}`}>
+            <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+              {darkMode ? 'LOADING' : 'LOADING'}
+            </span>
+            <br />
+            <span className={`${theme.textSecondary} ${theme.gradientText}`}>
+              {darkMode ? 'DASHBOARD' : 'DASHBOARD'}
+            </span>
+          </h1>
+          <div className={`${theme.gradientText} text-lg`}>
+            {darkMode ? 'Accessing neural interface...' : 'Preparing your tactical command center...'}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-        <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            Try Again
-          </button>
+      <div className={`container mx-auto px-4 py-8 ${theme.textBase}`}>
+        <div className={`text-center py-12 ${theme.mainCard} max-w-2xl mx-auto`}>
+          {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+          <div className="relative z-10">
+            <div className="text-6xl mb-6">⚠️</div>
+            <h2 className={`text-2xl font-bold mb-4 ${theme.title}`}>
+              <span className={`${darkMode ? 'text-red-400' : 'text-red-600'} ${theme.titleEmbossed}`}>
+                {darkMode ? 'SYSTEM ERROR' : 'SYSTEM ERROR'}
+              </span>
+            </h2>
+            <p className={`${darkMode ? 'text-red-300' : 'text-red-600'} mb-6`}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className={theme.btnPrimary}
+            >
+              <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Retry Connection</span>
+              {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -181,276 +257,342 @@ const UserDashboard = () => {
 
   if (!user) {
     return (
-      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-        <div className="text-center py-12">
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            Please log in to view your dashboard.
-          </p>
-          <Link 
-            to="/login" 
-            className="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            Log In
-          </Link>
+      <div className={`container mx-auto px-4 py-8 ${theme.textBase}`}>
+        <div className={`text-center py-12 ${theme.mainCard} max-w-2xl mx-auto`}>
+          {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+          <div className="relative z-10">
+            <div className="text-6xl mb-6">🔒</div>
+            <h2 className={`text-2xl font-bold mb-4 ${theme.title}`}>
+              <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                {darkMode ? 'ACCESS DENIED' : 'ACCESS REQUIRED'}
+              </span>
+            </h2>
+            <p className={`${theme.description} mb-6`}>
+              {darkMode ? 'Neural authentication required to access dashboard.' : 'Please authenticate to access your tactical command center.'}
+            </p>
+            <Link to="/login" className={theme.btnPrimary}>
+              <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                {darkMode ? 'Initialize Login' : 'Authenticate'}
+              </span>
+              {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`container mx-auto px-4 py-8 max-w-6xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-      {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          Welcome back, {user?.displayName || user?.email?.split('@')[0] || 'User'}!
-        </h1>
-        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Here's an overview of your shopping activity
-        </p>
-      </div>
-
-      {/* User Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                Total Orders
-              </p>
-              <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                {userStats.totalOrders}
-              </p>
-            </div>
-            <div className={`text-3xl p-3 rounded-full bg-blue-${darkMode ? '900/30' : '100'}`}>
-              📋
-            </div>
-          </div>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                Total Spent
-              </p>
-              <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                ${userStats.totalSpent.toFixed(2)}
-              </p>
-            </div>
-            <div className={`text-3xl p-3 rounded-full bg-green-${darkMode ? '900/30' : '100'}`}>
-              💰
-            </div>
-          </div>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                Pending Orders
-              </p>
-              <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                {userStats.pendingOrders}
-              </p>
-            </div>
-            <div className={`text-3xl p-3 rounded-full bg-yellow-${darkMode ? '900/30' : '100'}`}>
-              ⏳
-            </div>
-          </div>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                Completed
-              </p>
-              <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                {userStats.completedOrders}
-              </p>
-            </div>
-            <div className={`text-3xl p-3 rounded-full bg-indigo-${darkMode ? '900/30' : '100'}`}>
-              ✅
-            </div>
-          </div>
+    <div className={`container mx-auto px-4 py-8 max-w-7xl ${theme.textBase}`}>
+      {/* ENHANCED: Welcome Header with Premium Effects */}
+      <div className={`mb-12 ${theme.premiumContainer} ${!darkMode ? 'p-8 rounded-3xl' : ''}`}>
+        {!darkMode && <div className="neumorph-cta-glow"></div>}
+        <div className="relative z-10">
+          <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.title}`}>
+            <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+              {darkMode ? 'WELCOME BACK,' : 'WELCOME BACK,'}
+            </span>
+            <br />
+            <span className={`${theme.textSecondary} ${theme.gradientText}`} data-text={user?.displayName || user?.email?.split('@')[0] || 'OPERATOR'}>
+              {user?.displayName || user?.email?.split('@')[0] || 'OPERATOR'}
+            </span>
+          </h1>
+          <p className={`text-xl ${theme.description}`}>
+            {darkMode 
+              ? 'Neural interface active. Your personal command center is online.'
+              : 'Tactical command center operational. Your enhanced dashboard is fully armed and ready for deployment.'
+            }
+          </p>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* My Orders - Takes up 2/3 of the space */}
-        <div className="lg:col-span-2">
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>My Recent Orders</h2>
-              {userStats.totalOrders > 5 && (
-                <Link 
-                  to="/orders" 
-                  className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}
-                >
-                  View All ({userStats.totalOrders}) →
-                </Link>
-              )}
-            </div>
-            
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {userStats.myOrders.length > 0 ? (
-                userStats.myOrders.slice(0, 5).map((order) => (
-                  <div key={order.id} className={`p-6 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center">
-                          <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                            Order #{order.id.slice(0, 8)}
-                          </h3>
-                          <span className={`ml-3 px-2 py-1 rounded-full text-xs font-medium ${
-                            order.status === 'completed' 
-                              ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                              : order.status === 'pending' 
-                                ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                                : order.status === 'processing'
-                                  ? darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
-                                  : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                        <div className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {order.createdAt.toLocaleDateString()} • {order.itemCount} items
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-lg font-bold ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                          ${order.total.toFixed(2)}
-                        </div>
-                        <Link 
-                          to={`/orders/${order.id}`}
-                          className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center">
-                  <div className={`text-4xl mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>📦</div>
-                  <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-300' : 'text-gray-900'} mb-2`}>
-                    No orders yet
-                  </h3>
-                  <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-                    You haven't placed any orders yet. Start shopping to see your orders here!
+      {/* ENHANCED: User Stats Cards with Premium Effects */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        {[
+          { 
+            title: 'Total Orders', 
+            value: userStats.totalOrders, 
+            icon: '📋', 
+            color: darkMode ? 'text-cyan-400' : 'text-blue-600',
+            bgColor: darkMode ? 'bg-cyan-900/30' : 'bg-blue-100',
+            description: darkMode ? 'Combat missions' : 'Tactical operations'
+          },
+          { 
+            title: 'Total Spent', 
+            value: `$${userStats.totalSpent.toFixed(2)}`, 
+            icon: '💰', 
+            color: darkMode ? 'text-green-400' : 'text-green-600',
+            bgColor: darkMode ? 'bg-green-900/30' : 'bg-green-100',
+            description: darkMode ? 'Credits invested' : 'Capital deployed'
+          },
+          { 
+            title: 'Pending Orders', 
+            value: userStats.pendingOrders, 
+            icon: '⏳', 
+            color: darkMode ? 'text-yellow-400' : 'text-yellow-600',
+            bgColor: darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100',
+            description: darkMode ? 'In processing' : 'Active missions'
+          },
+          { 
+            title: 'Completed', 
+            value: userStats.completedOrders, 
+            icon: '✅', 
+            color: darkMode ? 'text-purple-400' : 'text-purple-600',
+            bgColor: darkMode ? 'bg-purple-900/30' : 'bg-purple-100',
+            description: darkMode ? 'Successful ops' : 'Mission success'
+          }
+        ].map((stat, index) => (
+          <div key={index} className={`${theme.statsCard} p-8`}>
+            {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`text-4xl p-4 rounded-2xl ${stat.bgColor} ${!darkMode ? 'neumorph-subtle' : ''}`}>
+                  {stat.icon}
+                </div>
+                <div className="text-right">
+                  <p className={`text-3xl font-bold ${stat.color} ${theme.titleEmbossed}`}>
+                    {stat.value}
                   </p>
-                  <Link 
-                    to="/products"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Browse Products
-                  </Link>
                 </div>
-              )}
+              </div>
+              <div>
+                <p className={`text-sm ${theme.textMuted} uppercase tracking-wider font-semibold ${theme.title}`}>
+                  {stat.title}
+                </p>
+                <p className={`text-xs ${theme.textMuted} mt-1`}>
+                  {stat.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ENHANCED: Main Content Grid with Premium Glass */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* ENHANCED: My Orders - Premium Glass Card */}
+        <div className="lg:col-span-2">
+          <div className={`${theme.mainCard} overflow-hidden`}>
+            {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+            <div className="relative z-10">
+              <div className={`px-8 py-6 border-b ${darkMode ? 'border-cyan-900/30' : 'border-gray-200'} flex justify-between items-center`}>
+                <h2 className={`text-2xl font-bold ${theme.title}`}>
+                  <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                    {darkMode ? 'RECENT MISSIONS' : 'RECENT ORDERS'}
+                  </span>
+                </h2>
+                {userStats.totalOrders > 5 && (
+                  <Link 
+                    to="/orders" 
+                    className={`text-sm font-medium ${theme.textSecondary} hover:${theme.textPrimary} transition-colors ${!darkMode ? 'neumorph-text-shadow' : ''}`}
+                  >
+                    View All ({userStats.totalOrders}) →
+                  </Link>
+                )}
+              </div>
+              
+              <div className={`divide-y ${darkMode ? 'divide-cyan-900/30' : 'divide-gray-200'}`}>
+                {userStats.myOrders.length > 0 ? (
+                  userStats.myOrders.slice(0, 5).map((order) => (
+                    <div key={order.id} className={`p-8 ${darkMode ? 'hover:bg-cyan-900/10' : 'hover:bg-blue-50/50'} transition-all duration-300`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <h3 className={`text-lg font-bold ${theme.textBase} ${theme.title}`}>
+                              {darkMode ? 'Mission' : 'Order'} #{order.id.slice(0, 8)}
+                            </h3>
+                            <span className={`ml-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                              order.status === 'completed' 
+                                ? darkMode ? 'bg-green-900/30 text-green-400 border border-green-600' : 'bg-green-100 text-green-800 border border-green-300'
+                                : order.status === 'pending' 
+                                  ? darkMode ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-600' : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                                  : order.status === 'processing'
+                                    ? darkMode ? 'bg-blue-900/30 text-blue-400 border border-blue-600' : 'bg-blue-100 text-blue-800 border border-blue-300'
+                                    : darkMode ? 'bg-red-900/30 text-red-400 border border-red-600' : 'bg-red-100 text-red-800 border border-red-300'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <div className={`mt-2 text-sm ${theme.textMuted} ${!darkMode ? 'neumorph-text-shadow' : ''}`}>
+                            {order.createdAt.toLocaleDateString()} • {order.itemCount} items
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-xl font-bold ${theme.textBase} ${theme.titleEmbossed}`}>
+                            ${order.total.toFixed(2)}
+                          </div>
+                          <Link 
+                            to={`/orders/${order.id}`}
+                            className={`text-sm ${theme.textSecondary} hover:${theme.textPrimary} font-medium transition-colors`}
+                          >
+                            View Details →
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center">
+                    <div className={`text-6xl mb-6 ${theme.textMuted}`}>📦</div>
+                    <h3 className={`text-xl font-bold ${theme.textBase} mb-3 ${theme.title}`}>
+                      {darkMode ? 'NO MISSIONS DEPLOYED' : 'NO ORDERS YET'}
+                    </h3>
+                    <p className={`${theme.description} mb-6`}>
+                      {darkMode 
+                        ? 'You have not initiated any missions yet. Begin operations to see your mission history here.'
+                        : 'You haven\'t placed any orders yet. Start shopping to see your tactical orders here!'
+                      }
+                    </p>
+                    <Link to="/products" className={theme.btnPrimary}>
+                      <span className="text-xl">🛒</span>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                        {darkMode ? 'Browse Arsenal' : 'Browse Products'}
+                      </span>
+                      {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar - Quick Actions & Account Info */}
+        {/* ENHANCED: Right Sidebar - Premium Effects */}
         <div className="space-y-8">
-          {/* Quick Actions */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Quick Actions</h2>
-            </div>
-            <div className="p-6 space-y-3">
-              <Link 
-                to="/products" 
-                className="block w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors text-center font-medium"
-              >
-                🛒 Browse Products
-              </Link>
-              <Link 
-                to="/cart" 
-                className="block w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors text-center font-medium"
-              >
-                🛍️ View Cart
-              </Link>
-              <Link 
-                to="/orders" 
-                className="block w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center font-medium"
-              >
-                📋 My Orders
-              </Link>
-              <Link 
-                to="/create-order" 
-                className={`block w-full border-2 ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} py-3 px-4 rounded-lg transition-colors text-center font-medium`}
-              >
-                ➕ New Order
-              </Link>
+          {/* ENHANCED: Quick Actions with Premium Glass */}
+          <div className={`${theme.mainCard}`}>
+            {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+            <div className="relative z-10">
+              <div className={`px-8 py-6 border-b ${darkMode ? 'border-cyan-900/30' : 'border-gray-200'}`}>
+                <h2 className={`text-xl font-bold ${theme.title}`}>
+                  <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                    {darkMode ? 'QUICK ACCESS' : 'QUICK ACTIONS'}
+                  </span>
+                </h2>
+              </div>
+              <div className="p-8 space-y-4">
+                <Link to="/products" className={`${theme.btnPrimary} w-full justify-center`}>
+                  <span className="text-xl">🛒</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                    {darkMode ? 'Browse Arsenal' : 'Browse Products'}
+                  </span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+                </Link>
+                
+                <Link to="/cart" className={`${theme.btnSecondary} w-full justify-center`}>
+                  <span className="text-xl">🛍️</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                    {darkMode ? 'Command Cart' : 'View Cart'}
+                  </span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+                </Link>
+                
+                <Link to="/orders" className={`${theme.btnSuccess} w-full justify-center`}>
+                  <span className="text-xl">📋</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                    {darkMode ? 'Mission History' : 'My Orders'}
+                  </span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+                </Link>
+                
+                <Link to="/create-order" className={`${theme.btnOutline} w-full justify-center`}>
+                  <span className="text-xl">➕</span>
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>
+                    {darkMode ? 'Deploy Mission' : 'New Order'}
+                  </span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
+                </Link>
+              </div>
             </div>
           </div>
 
-          {/* Account Summary */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-            <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-              <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Account Summary</h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <div className={`h-12 w-12 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center text-lg font-bold`}>
-                    {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="ml-3">
-                    <div className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                      {user?.displayName || user?.email?.split('@')[0] || 'User'}
+          {/* ENHANCED: Account Summary with Premium Glass */}
+          <div className={`${theme.mainCard}`}>
+            {darkMode ? <div className="card-glow"></div> : <div className="neumorph-card-glow"></div>}
+            <div className="relative z-10">
+              <div className={`px-8 py-6 border-b ${darkMode ? 'border-cyan-900/30' : 'border-gray-200'}`}>
+                <h2 className={`text-xl font-bold ${theme.title}`}>
+                  <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                    {darkMode ? 'OPERATOR PROFILE' : 'ACCOUNT SUMMARY'}
+                  </span>
+                </h2>
+              </div>
+              <div className="p-8">
+                <div className="space-y-6">
+                  <div className="flex items-center">
+                    <div className={`h-16 w-16 rounded-full ${darkMode ? 'bg-cyan-900/30 border-2 border-cyan-600' : 'bg-blue-100 border-2 border-blue-300 neumorph-subtle'} flex items-center justify-center text-xl font-bold ${theme.textPrimary}`}>
+                      {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {user?.email}
+                    <div className="ml-4">
+                      <div className={`font-bold text-lg ${theme.textBase} ${theme.titleEmbossed}`}>
+                        {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                      </div>
+                      <div className={`text-sm ${theme.textMuted}`}>
+                        {user?.email}
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Account Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                    }`}>
-                      Active
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Member Since</span>
-                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {user?.metadata?.creationTime ? 
-                        new Date(user.metadata.creationTime).getFullYear() : 
-                        new Date().getFullYear()
-                      }
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>User Role</span>
-                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} capitalize`}>
-                      Customer
-                    </span>
+                  
+                  <div className={`pt-6 border-t ${darkMode ? 'border-cyan-900/30' : 'border-gray-200'}`}>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm ${theme.textMuted} uppercase tracking-wider font-semibold`}>
+                          {darkMode ? 'Operator Status' : 'Account Status'}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                          darkMode ? 'bg-green-900/30 text-green-400 border border-green-600' : 'bg-green-100 text-green-800 border border-green-300'
+                        }`}>
+                          {darkMode ? 'ACTIVE' : 'ACTIVE'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm ${theme.textMuted} uppercase tracking-wider font-semibold`}>
+                          {darkMode ? 'Recruit Date' : 'Member Since'}
+                        </span>
+                        <span className={`text-sm ${theme.textBase} font-medium`}>
+                          {user?.metadata?.creationTime ? 
+                            new Date(user.metadata.creationTime).getFullYear() : 
+                            new Date().getFullYear()
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm ${theme.textMuted} uppercase tracking-wider font-semibold`}>
+                          {darkMode ? 'Security Level' : 'User Role'}
+                        </span>
+                        <span className={`text-sm ${theme.textBase} font-medium uppercase`}>
+                          {darkMode ? 'CUSTOMER' : 'CUSTOMER'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Shopping Tips */}
-          <div className={`${darkMode ? 'bg-gradient-to-br from-indigo-900 to-purple-900' : 'bg-gradient-to-br from-indigo-50 to-purple-50'} rounded-xl p-6 border ${darkMode ? 'border-indigo-800' : 'border-indigo-100'}`}>
-            <h3 className={`text-lg font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>💡 Shopping Tip</h3>
-            <p className={`text-sm ${darkMode ? 'text-indigo-200' : 'text-indigo-700'} mb-4`}>
-              Save money by buying in bulk! Many of our products offer quantity discounts for larger orders.
-            </p>
-            <Link 
-              to="/products" 
-              className={`text-sm font-medium ${darkMode ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-600 hover:text-indigo-800'}`}
-            >
-              Explore Bulk Pricing →
-            </Link>
+          {/* ENHANCED: Premium Tips Card with Holographic Effects */}
+          <div className={`${darkMode ? 'cyber-cta-card' : 'neumorph-cta-card neumorph-holographic'} p-8`}>
+            {darkMode ? <div className="cta-glow"></div> : <div className="neumorph-cta-glow"></div>}
+            <div className="relative z-10">
+              <h3 className={`text-lg font-bold mb-4 ${theme.title}`}>
+                <span className={`${theme.textAccent} ${theme.titleEmbossed}`}>
+                  {darkMode ? '⚡ TACTICAL TIP' : '💡 SHOPPING TIP'}
+                </span>
+              </h3>
+              <p className={`text-sm ${theme.description} mb-6`}>
+                {darkMode 
+                  ? 'Maximize your combat efficiency by deploying bulk orders! Many arsenal items offer tactical discounts for large-scale operations.'
+                  : 'Save money by buying in bulk! Many of our products offer quantity discounts for larger orders.'
+                }
+              </p>
+              <Link 
+                to="/products" 
+                className={`text-sm font-medium ${theme.textSecondary} hover:${theme.textPrimary} transition-colors`}
+              >
+                {darkMode ? 'Explore Arsenal →' : 'Explore Bulk Pricing →'}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
