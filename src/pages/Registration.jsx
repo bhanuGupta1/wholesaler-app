@@ -1,4 +1,4 @@
-// src/pages/Registration.jsx - Enhanced to match Login design
+// src/pages/Registration.jsx - Enhanced with BETTER CONTRAST + Home Link
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -446,8 +446,8 @@ const Registration = () => {
           }`}></div>
           
           <div className="relative z-10 space-y-8 animate-fadeInLeft">
-            {/* Animated Logo */}
-            <div className="flex items-center group">
+            {/* Animated Logo - NOW CLICKABLE */}
+            <Link to="/home" className="flex items-center group cursor-pointer">
               <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-12 w-12 transition-all duration-300 group-hover:scale-110`}>
                 {darkMode && <div className="logo-glow"></div>}
                 <svg className="h-8 w-8 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -460,7 +460,7 @@ const Registration = () => {
               }`}>
                 WHOLESALER
               </h1>
-            </div>
+            </Link>
             
             {/* Animated Title */}
             <div className="space-y-4">
@@ -520,16 +520,18 @@ const Registration = () => {
           </div>
           
           <div className="w-full max-w-md relative z-10 space-y-6 py-8">
-            {/* Mobile Logo */}
+            {/* Mobile Logo - NOW CLICKABLE */}
             <div className="md:hidden flex items-center justify-center animate-fadeInDown">
-              <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-10 w-10`}>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                </svg>
-              </div>
-              <h1 className={`text-2xl font-bold ml-3 ${
-                darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
-              }`}>WHOLESALER</h1>
+              <Link to="/home" className="flex items-center group cursor-pointer">
+                <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-10 w-10`}>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  </svg>
+                </div>
+                <h1 className={`text-2xl font-bold ml-3 transition-all duration-300 group-hover:scale-105 ${
+                  darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>WHOLESALER</h1>
+              </Link>
             </div>
             
             {/* Registration Title */}
@@ -545,7 +547,7 @@ const Registration = () => {
               </h2>
             </div>
             
-            {/* Demo Accounts - Enhanced Animation */}
+            {/* Demo Accounts - Enhanced Animation with BETTER CONTRAST */}
             <div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} transition-all duration-500 hover:scale-105 animate-slideInRight`}>
               {darkMode && <div className="card-glow"></div>}
               <div className="p-4">
@@ -557,7 +559,11 @@ const Registration = () => {
                   </p>
                   <button 
                     onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} text-xs transition-all duration-300 hover:scale-110`}
+                    className={`${
+                      darkMode 
+                        ? 'bg-cyan-900/30 border-2 border-cyan-500 text-cyan-200 hover:bg-cyan-800/40 hover:text-cyan-100' 
+                        : 'bg-blue-100 border-2 border-blue-400 text-blue-700 hover:bg-blue-200 hover:text-blue-800'
+                    } text-xs px-3 py-1 rounded font-bold transition-all duration-300 hover:scale-110`}
                   >
                     <span>{showDemoAccounts ? 'HIDE' : 'SHOW'}</span>
                   </button>
@@ -576,8 +582,11 @@ const Registration = () => {
                       <button 
                         key={account.type}
                         onClick={() => fillDemoAccount(account.type)}
-                        className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} text-xs 
-                          transition-all duration-300 hover:scale-105 animate-slideInLeft`}
+                        className={`${
+                          darkMode 
+                            ? 'bg-gray-800 border-2 border-cyan-600 text-cyan-200 hover:bg-gray-700 hover:border-cyan-400 hover:text-cyan-100' 
+                            : 'bg-gray-100 border-2 border-blue-300 text-blue-700 hover:bg-gray-200 hover:border-blue-500 hover:text-blue-800'
+                        } text-xs px-2 py-1 rounded font-bold transition-all duration-300 hover:scale-105 animate-slideInLeft`}
                         style={{ animationDelay: `${i * 100}ms` }}
                       >
                         <span>{account.label}</span>
@@ -608,7 +617,7 @@ const Registration = () => {
               </div>
             )}
 
-            {/* Registration Form */}
+            {/* Registration Form with IMPROVED CONTRAST */}
             <form className="space-y-4 animate-slideInUp" onSubmit={handleSubmit}>
               {/* Name fields */}
               <div className="grid grid-cols-2 gap-3">
@@ -625,8 +634,8 @@ const Registration = () => {
                     onChange={handleChange}
                     className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                     }`}
                     placeholder={darkMode ? "JOHN" : "John"}
                     required
@@ -646,8 +655,8 @@ const Registration = () => {
                     onChange={handleChange}
                     className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                     }`}
                     placeholder={darkMode ? "DOE" : "Doe"}
                     required
@@ -669,15 +678,15 @@ const Registration = () => {
                   onChange={handleChange}
                   className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                     darkMode 
-                      ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                      : 'neumorph-input'
+                      ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                      : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                   }`}
                   placeholder={darkMode ? "neural.id@corp.net" : "you@example.com"}
                   required
                 />
               </div>
 
-              {/* Account Type */}
+              {/* Account Type with IMPROVED CONTRAST */}
               <div className="group">
                 <label className={`block text-sm font-bold mb-2 ${
                   darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
@@ -690,22 +699,28 @@ const Registration = () => {
                   onChange={handleChange}
                   className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                     darkMode 
-                      ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                      : 'neumorph-input'
+                      ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg' 
+                      : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg'
                   }`}
                 >
-                  <option value="user">{darkMode ? 'STANDARD USER (INSTANT)' : 'Regular User (Immediate Access)'}</option>
-                  <option value="business">{darkMode ? 'BUSINESS ENTITY (APPROVAL REQ)' : 'Business Account (Requires Approval)'}</option>
-                  <option value="manager">{darkMode ? 'MANAGEMENT PROTOCOL (APPROVAL REQ)' : 'Manager Account (Requires Approval)'}</option>
+                  <option value="user" className={darkMode ? 'bg-gray-900 text-cyan-100' : 'bg-gray-50 text-gray-900'}>
+                    {darkMode ? 'STANDARD USER (INSTANT)' : 'Regular User (Immediate Access)'}
+                  </option>
+                  <option value="business" className={darkMode ? 'bg-gray-900 text-cyan-100' : 'bg-gray-50 text-gray-900'}>
+                    {darkMode ? 'BUSINESS ENTITY (APPROVAL REQ)' : 'Business Account (Requires Approval)'}
+                  </option>
+                  <option value="manager" className={darkMode ? 'bg-gray-900 text-cyan-100' : 'bg-gray-50 text-gray-900'}>
+                    {darkMode ? 'MANAGEMENT PROTOCOL (APPROVAL REQ)' : 'Manager Account (Requires Approval)'}
+                  </option>
                 </select>
                 {formData.accountType !== 'user' && (
-                  <p className={`text-xs mt-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                  <p className={`text-xs mt-1 font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
                     ⚠️ {darkMode ? 'REQUIRES ADMIN NEURAL VERIFICATION' : 'Requires admin approval'}
                   </p>
                 )}
               </div>
 
-              {/* Business Type (conditional) */}
+              {/* Business Type (conditional) with IMPROVED CONTRAST */}
               {formData.accountType === 'business' && (
                 <div className="group">
                   <label className={`block text-sm font-bold mb-2 ${
@@ -719,12 +734,16 @@ const Registration = () => {
                     onChange={handleChange}
                     className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg'
                     }`}
                   >
-                    <option value="buyer">{darkMode ? 'BUYER PROTOCOL' : 'Buyer (Purchase Products)'}</option>
-                    <option value="seller">{darkMode ? 'SELLER PROTOCOL' : 'Seller (Sell Products)'}</option>
+                    <option value="buyer" className={darkMode ? 'bg-gray-900 text-cyan-100' : 'bg-gray-50 text-gray-900'}>
+                      {darkMode ? 'BUYER PROTOCOL' : 'Buyer (Purchase Products)'}
+                    </option>
+                    <option value="seller" className={darkMode ? 'bg-gray-900 text-cyan-100' : 'bg-gray-50 text-gray-900'}>
+                      {darkMode ? 'SELLER PROTOCOL' : 'Seller (Sell Products)'}
+                    </option>
                   </select>
                 </div>
               )}
@@ -744,8 +763,8 @@ const Registration = () => {
                     onChange={handleChange}
                     className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                     }`}
                     placeholder={darkMode ? "NEURAL CORP LTD" : "Your Business Name"}
                   />
@@ -766,8 +785,8 @@ const Registration = () => {
                   onChange={handleChange}
                   className={`w-full py-2 px-3 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                     darkMode 
-                      ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                      : 'neumorph-input'
+                      ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                      : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                   }`}
                   placeholder={darkMode ? "+1-555-NEURAL" : "+1 (555) 123-4567"}
                 />
@@ -789,8 +808,8 @@ const Registration = () => {
                       onChange={handleChange}
                       className={`w-full py-2 px-3 pr-10 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                         darkMode 
-                          ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                          : 'neumorph-input'
+                          ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                          : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                       }`}
                       placeholder="••••••••••••••••"
                       required
@@ -798,7 +817,9 @@ const Registration = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                        darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-gray-600 hover:text-gray-800'
+                      }`}
                     >
                       {showPassword ? '👁️' : '🔒'}
                     </button>
@@ -819,8 +840,8 @@ const Registration = () => {
                       onChange={handleChange}
                       className={`w-full py-2 px-3 pr-10 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                         darkMode 
-                          ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                          : 'neumorph-input'
+                          ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                          : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                       }`}
                       placeholder="••••••••••••••••"
                       required
@@ -828,7 +849,9 @@ const Registration = () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                        darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-gray-600 hover:text-gray-800'
+                      }`}
                     >
                       {showConfirmPassword ? '👁️' : '🔒'}
                     </button>
@@ -846,9 +869,11 @@ const Registration = () => {
                     darkMode ? 'text-cyan-500' : 'text-blue-500'
                   }`}
                 />
-                <label className={`ml-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <label className={`ml-2 text-sm font-medium ${
+                  darkMode ? 'text-cyan-200' : 'text-gray-700'
+                }`}>
                   I agree to the{' '}
-                  <span className={`font-medium ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+                  <span className={`font-bold ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
                     {darkMode ? 'Neural Terms & Privacy Matrix' : 'Terms & Privacy Policy'}
                   </span>
                 </label>
@@ -872,7 +897,9 @@ const Registration = () => {
             
             {/* Sign In Link */}
             <div className="text-center animate-fadeInUp">
-              <p className={`text-sm mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm mb-3 font-medium ${
+                darkMode ? 'text-cyan-200' : 'text-gray-700'
+              }`}>
                 {darkMode ? 'Already have neural access?' : 'Already have an account?'}
               </p>
               <Link to="/login" className={`${
