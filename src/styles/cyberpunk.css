@@ -1,0 +1,1179 @@
+/* cyberpunk.css - Complete Cyberpunk Styling System */
+
+/* ==============================================
+   BASE LAYOUT STYLES
+   ============================================== */
+.cyberpunk-layout-wrapper {
+  min-height: 100vh;
+  background: #000;
+  color: #fff;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.cyberpunk-layout-content {
+  background: transparent;
+}
+
+.cyberpunk-login-wrapper {
+  min-height: 100vh;
+  background: #000;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ==============================================
+   BACKGROUND EFFECTS
+   ============================================== */
+
+/* Grid Background */
+.cyberpunk-grid {
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  width: 100%;
+  height: 100%;
+  animation: gridMove 25s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(40px, 40px); }
+}
+
+/* Scanlines Effect */
+.scanlines {
+  background: linear-gradient(
+    transparent 49%,
+    rgba(0, 255, 255, 0.02) 50%,
+    transparent 51%
+  );
+  background-size: 100% 3px;
+  width: 100%;
+  height: 100%;
+  animation: scanlineMove 0.08s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 3px; }
+}
+
+/* ==============================================
+   TYPOGRAPHY EFFECTS
+   ============================================== */
+
+/* Cyberpunk Title */
+.cyberpunk-title {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  position: relative;
+}
+
+/* Cyber Glow Effect */
+.cyber-glow {
+  text-shadow: 
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 15px currentColor,
+    0 0 20px currentColor;
+  animation: pulseGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from {
+    text-shadow: 
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 15px currentColor,
+      0 0 20px currentColor;
+  }
+  to {
+    text-shadow: 
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 30px currentColor,
+      0 0 40px currentColor;
+  }
+}
+
+/* Hacker Text with Glitch Effect */
+.hacker-text {
+  position: relative;
+}
+
+.hacker-text::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 2px;
+  width: 100%;
+  color: #FF00FF;
+  z-index: -1;
+  animation: glitch 0.3s infinite;
+}
+
+.hacker-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 100%;
+  color: #00FFFF;
+  z-index: -1;
+  animation: glitch 0.3s infinite reverse;
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+/* Holographic Text */
+.holographic-text {
+  background: linear-gradient(45deg, #00FFFF, #FF00FF, #FFFF00, #00FFFF);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holographicShift 3s ease-in-out infinite;
+}
+
+@keyframes holographicShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Typewriter Text */
+.typewriter-text {
+  overflow: hidden;
+  border-right: 2px solid #00FFFF;
+  white-space: nowrap;
+  margin: 0 auto;
+  animation: typing 3s steps(80, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: #00FFFF; }
+}
+
+/* ==============================================
+   ENHANCED BUTTONS
+   ============================================== */
+.cyber-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.cyber-btn:hover::before {
+  left: 100%;
+}
+
+/* Button Variants */
+.cyber-btn-primary {
+  border-color: #00FFFF;
+  color: #00FFFF;
+}
+
+.cyber-btn-primary:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 20px #00FFFF;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-secondary {
+  border-color: #00FF88;
+  color: #00FF88;
+}
+
+.cyber-btn-secondary:hover {
+  background: rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 20px #00FF88;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-success {
+  border-color: #FFFF00;
+  color: #FFFF00;
+}
+
+.cyber-btn-success:hover {
+  background: rgba(255, 255, 0, 0.1);
+  box-shadow: 0 0 20px #FFFF00;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-ghost {
+  border-color: #999;
+  color: #999;
+}
+
+.cyber-btn-ghost:hover {
+  border-color: #00FFFF;
+  color: #00FFFF;
+  box-shadow: 0 0 20px #00FFFF;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-outline {
+  border-color: #FF00FF;
+  color: #FF00FF;
+}
+
+.cyber-btn-outline:hover {
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: 0 0 20px #FF00FF;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-red {
+  border-color: #FF073A;
+  color: #FF073A;
+}
+
+.cyber-btn-red:hover {
+  background: rgba(255, 7, 58, 0.1);
+  box-shadow: 0 0 20px #FF073A;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-purple {
+  border-color: #9D4EDD;
+  color: #9D4EDD;
+}
+
+.cyber-btn-purple:hover {
+  background: rgba(157, 78, 221, 0.1);
+  box-shadow: 0 0 20px #9D4EDD;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-green {
+  border-color: #00FF41;
+  color: #00FF41;
+}
+
+.cyber-btn-green:hover {
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 20px #00FF41;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-blue {
+  border-color: #0099FF;
+  color: #0099FF;
+}
+
+.cyber-btn-blue:hover {
+  background: rgba(0, 153, 255, 0.1);
+  box-shadow: 0 0 20px #0099FF;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-cyan {
+  border-color: #00FFFF;
+  color: #00FFFF;
+}
+
+.cyber-btn-cyan:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 20px #00FFFF;
+  transform: translateY(-2px);
+}
+
+.cyber-btn-dashboard {
+  border-color: #FFD700;
+  color: #FFD700;
+  font-size: 18px;
+  padding: 20px 40px;
+}
+
+.cyber-btn-dashboard:hover {
+  background: rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 30px #FFD700;
+  transform: translateY(-3px);
+}
+
+/* Button Glow Effect */
+.btn-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cyber-btn:hover .btn-glow {
+  opacity: 0.3;
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+.btn-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==============================================
+   LOADING SPINNER
+   ============================================== */
+.cyber-loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid transparent;
+  border-top: 3px solid #00FFFF;
+  border-right: 3px solid #FF00FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: relative;
+}
+
+.cyber-loading-spinner::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border: 3px solid transparent;
+  border-bottom: 3px solid #FFFF00;
+  border-left: 3px solid #00FF88;
+  border-radius: 50%;
+  animation: spin 1.5s linear infinite reverse;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==============================================
+   STATUS INDICATORS
+   ============================================== */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-online {
+  background: #00FF88;
+  box-shadow: 0 0 10px #00FF88;
+}
+
+.status-quantum {
+  background: #FFFF00;
+  box-shadow: 0 0 10px #FFFF00;
+}
+
+.status-neural {
+  background: #FF00FF;
+  box-shadow: 0 0 10px #FF00FF;
+}
+
+.status-text {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #999;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ==============================================
+   FLOATING HOLOGRAMS
+   ============================================== */
+.hologram-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.hologram-cube, .hologram-pyramid {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, rgba(0, 255, 255, 0.3), rgba(255, 0, 255, 0.3));
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  animation: rotate 10s linear infinite;
+}
+
+.hologram-pyramid {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==============================================
+   ENHANCED CARDS
+   ============================================== */
+.cyber-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cyber-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  padding: 32px;
+  transition: all 0.3s ease;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  overflow: hidden;
+}
+
+.cyber-card:hover {
+  border-color: #00FFFF;
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 255, 255, 0.3);
+}
+
+.card-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #00FFFF, #FF00FF, #FFFF00, #00FFFF);
+  background-size: 400% 400%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: gradientShift 3s ease infinite;
+  z-index: -1;
+}
+
+.cyber-card:hover .card-glow {
+  opacity: 0.7;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.card-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.card-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #00FFFF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card-description {
+  color: #999;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ==============================================
+   FEATURE CARDS
+   ============================================== */
+.feature-card {
+  text-align: center;
+  padding: 40px 24px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  border-color: #00FFFF;
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(0, 255, 255, 0.2);
+}
+
+.feature-icon {
+  position: relative;
+  display: inline-flex;
+  margin-bottom: 24px;
+  color: #00FFFF;
+}
+
+.icon-glow {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover .icon-glow {
+  opacity: 1;
+}
+
+/* ==============================================
+   DASHBOARD CARD
+   ============================================== */
+.cyber-dashboard-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+  overflow: hidden;
+}
+
+.dashboard-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(0, 255, 255, 0.1));
+  opacity: 0.5;
+}
+
+.dashboard-icon {
+  filter: drop-shadow(0 0 20px currentColor);
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+/* ==============================================
+   CTA CARD
+   ============================================== */
+.cyber-cta-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.9);
+  border: 3px solid rgba(0, 255, 255, 0.5);
+  clip-path: polygon(0 0, calc(100% - 40px) 0, 100% 40px, 100% 100%, 40px 100%, 0 calc(100% - 40px));
+  overflow: hidden;
+}
+
+.cta-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1), rgba(255, 255, 0, 0.1));
+  background-size: 400% 400%;
+  animation: ctaGlow 4s ease infinite;
+}
+
+@keyframes ctaGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ==============================================
+   NAVBAR STYLES
+   ============================================== */
+   
+.cyber-navbar-wrapper {
+  position: relative;
+  background: rgba(0, 0, 0, 0.9);
+  border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.cyber-navbar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(0, 255, 255, 0.1), 
+    rgba(255, 0, 255, 0.1), 
+    rgba(0, 255, 255, 0.1)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cyber-navbar-scrolled .cyber-navbar-glow {
+  opacity: 1;
+}
+
+.cyber-navbar-scrolled {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+/* ==============================================
+   FAB BUTTON
+   ============================================== */
+.cyber-fab-button {
+  width: 56px;
+  height: 56px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00FFFF;
+  border-radius: 50%;
+  color: #00FFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cyber-fab-button:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 25px #00FFFF;
+  transform: scale(1.1);
+}
+
+.fab-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.cyber-fab-button:hover .fab-glow {
+  opacity: 0.7;
+}
+
+/* ==============================================
+   SIDEBAR STYLES
+   ============================================== */
+.cyber-sidebar {
+  background: rgba(0, 0, 0, 0.95);
+  border-right: 2px solid rgba(0, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, 
+    rgba(0, 255, 255, 0.05), 
+    rgba(255, 0, 255, 0.05),
+    rgba(0, 255, 255, 0.05)
+  );
+  opacity: 0.8;
+}
+
+.sidebar-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Logo */
+.cyber-logo {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 255, 255, 0.2);
+  border: 2px solid #00FFFF;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00FFFF;
+}
+
+.logo-glow {
+  position: absolute;
+  inset: -2px;
+  background: #00FFFF;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.cyber-logo:hover .logo-glow {
+  opacity: 0.3;
+}
+
+/* Close Button */
+.cyber-close-btn {
+  color: #999;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cyber-close-btn:hover {
+  color: #00FFFF;
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+
+/* User Card */
+.cyber-user-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.user-card-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF);
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.cyber-user-card:hover .user-card-glow {
+  opacity: 0.5;
+}
+
+.user-avatar {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 255, 255, 0.2);
+  border: 2px solid #00FFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #00FFFF;
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -2px;
+  background: #00FFFF;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.user-avatar:hover .avatar-glow {
+  opacity: 0.3;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #00FFFF;
+  font-size: 14px;
+  margin: 0;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 10px;
+  color: #FF00FF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* Navigation Links */
+.cyber-nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #999;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.cyber-nav-link:hover,
+.cyber-nav-link.active {
+  color: #00FFFF;
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+}
+
+.nav-link-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #00FFFF, #FF00FF, #00FFFF);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.cyber-nav-link:hover .nav-link-glow,
+.cyber-nav-link.active .nav-link-glow {
+  opacity: 0.2;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+/* Sign Out Button */
+.cyber-signout-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: rgba(255, 7, 58, 0.1);
+  border: 2px solid #FF073A;
+  border-radius: 8px;
+  color: #FF073A;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.cyber-signout-btn:hover {
+  background: rgba(255, 7, 58, 0.2);
+  box-shadow: 0 0 20px #FF073A;
+  transform: translateY(-2px);
+}
+
+.signout-glow {
+  position: absolute;
+  inset: 0;
+  background: #FF073A;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.cyber-signout-btn:hover .signout-glow {
+  opacity: 0.1;
+}
+
+/* ==============================================
+   FOOTER STYLES
+   ============================================== */
+.cyber-footer {
+  background: rgba(0, 0, 0, 0.95);
+  border-top: 2px solid rgba(0, 255, 255, 0.3);
+  padding: 40px 0 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(0, 255, 255, 0.05), 
+    rgba(255, 0, 255, 0.05),
+    rgba(0, 255, 255, 0.05)
+  );
+  opacity: 0.8;
+}
+
+.footer-content {
+  position: relative;
+  z-index: 1;
+}
+
+.footer-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00FFFF;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-shadow: 0 0 10px #00FFFF;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-link {
+  display: block;
+  color: #999;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 4px 0;
+  transition: all 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #00FFFF;
+  text-shadow: 0 0 10px #00FFFF;
+  transform: translateX(5px);
+}
+
+.footer-contact {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.contact-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  color: #00FFFF;
+}
+
+.cyber-social-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.social-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid #00FFFF;
+  border-radius: 8px;
+  color: #00FFFF;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.social-link:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 15px #00FFFF;
+  transform: translateY(-2px);
+}
+
+.social-glow {
+  position: absolute;
+  inset: -2px;
+  background: #00FFFF;
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.social-link:hover .social-glow {
+  opacity: 0.3;
+}
+
+.footer-bottom {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-copyright {
+  color: #666;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-made-by {
+  color: #999;
+  font-size: 12px;
+}
+
+/* ==============================================
+   MAIN CONTENT AREA
+   ============================================== */
+.main-content-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  min-height: 400px;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+@media (max-width: 768px) {
+  .cyberpunk-title {
+    font-size: 3rem;
+  }
+  
+  .cyber-btn {
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+  
+  .cyber-card {
+    padding: 24px;
+  }
+  
+  .card-icon {
+    font-size: 36px;
+  }
+  
+  .card-title {
+    font-size: 20px;
+  }
+  
+  .footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 768px) {
+  .footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* ==============================================
+   UTILITY CLASSES
+   ============================================== */
+.cyber-title {
+  font-family: 'Orbitron', 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Enhanced focus states for accessibility */
+.cyber-btn:focus,
+.cyber-nav-link:focus,
+.cyber-close-btn:focus,
+.cyber-fab-button:focus {
+  outline: 2px solid #00FFFF;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .cyberpunk-grid,
+  .scanlines,
+  .cyber-loading-spinner,
+  .hologram-float {
+    display: none;
+  }
+  
+  .cyber-btn,
+  .cyber-card,
+  .feature-card {
+    border: 1px solid #000;
+    background: white;
+    color: black;
+  }
+}
