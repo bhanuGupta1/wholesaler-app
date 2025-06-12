@@ -1,6 +1,8 @@
-// src/pages/Login.jsx - ENHANCED with MORE ANIMATIONS
+// src/pages/Login.jsx - ENHANCED with BETTER CONTRAST + Forgot Password + Home Link
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { useTheme } from '../context/ThemeContext';
@@ -21,6 +23,9 @@ const Login = () => {
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   // Enhanced Matrix Rain with more animations
   useEffect(() => {
@@ -229,6 +234,36 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      await sendPasswordResetEmail(auth, forgotPasswordEmail);
+      setResetEmailSent(true);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      switch (error.code) {
+        case 'auth/user-not-found':
+          setError('No account found with this email address');
+          break;
+        case 'auth/invalid-email':
+          setError('Please enter a valid email address');
+          break;
+        default:
+          setError('Failed to send reset email. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const useTestAccount = (role) => {
     const accounts = {
       admin: 'admin@wholesaler.com',
@@ -239,6 +274,125 @@ const Login = () => {
     };
     setCredentials({ email: accounts[role], password: 'password123' });
   };
+
+  // Forgot Password Modal
+  if (showForgotPassword) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center relative overflow-hidden transition-all duration-1000 ${
+        darkMode ? 'bg-black' : 'bg-gradient-to-br from-gray-50 to-blue-50'
+      }`}>
+        
+        {/* Background Effects */}
+        <canvas ref={matrixCanvasRef} className="fixed inset-0 z-0" style={{ 
+          opacity: darkMode ? 0.3 : 0.2,
+          filter: `blur(1px)`
+        }} />
+        <canvas ref={particleCanvasRef} className="fixed inset-0 z-1" style={{ opacity: 0.5 }} />
+        
+        {resetEmailSent ? (
+          <div className={`max-w-md w-full mx-4 p-8 rounded-xl shadow-lg text-center transition-all duration-700 animate-bounceIn ${
+            darkMode ? 'cyber-card' : 'neumorph-card'
+          }`}>
+            {darkMode && <div className="card-glow"></div>}
+            <div className="text-6xl mb-4 animate-bounce">📧</div>
+            <h2 className={`text-2xl font-bold mb-4 ${
+              darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-blue-600'
+            }`}>
+              {darkMode ? 'RESET SIGNAL SENT!' : 'Reset Email Sent!'}
+            </h2>
+            <p className={`mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Check your email for password reset instructions.
+            </p>
+            <button
+              onClick={() => {
+                setShowForgotPassword(false);
+                setResetEmailSent(false);
+                setForgotPasswordEmail('');
+              }}
+              className={`${
+                darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary'
+              } w-full py-3 transition-all duration-300 hover:scale-105`}
+            >
+              <span>{darkMode ? 'RETURN TO TERMINAL' : 'Back to Login'}</span>
+            </button>
+          </div>
+        ) : (
+          <div className={`max-w-md w-full mx-4 p-8 rounded-xl shadow-lg transition-all duration-700 animate-slideInUp ${
+            darkMode ? 'cyber-card' : 'neumorph-card'
+          }`}>
+            {darkMode && <div className="card-glow"></div>}
+            
+            <div className="text-center mb-6">
+              <h2 className={`text-2xl font-bold mb-2 ${
+                darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-blue-600'
+              }`}>
+                {darkMode ? 'RESET ACCESS KEY' : 'Reset Password'}
+              </h2>
+              <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                {darkMode ? 'Enter your neural ID to receive reset instructions' : 'Enter your email to receive reset instructions'}
+              </p>
+            </div>
+
+            {error && (
+              <div className={`mb-4 p-3 rounded border ${
+                darkMode ? 'bg-red-900/20 border-red-600 text-red-400' : 'bg-red-100 border-red-400 text-red-600'
+              }`}>
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>
+                  {darkMode ? 'NEURAL ID' : 'Email Address'}
+                </label>
+                <input
+                  type="email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  className={`w-full py-3 px-4 font-mono transition-all duration-300 focus:scale-105 ${
+                    darkMode 
+                      ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                      : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
+                  }`}
+                  placeholder={darkMode ? "neural.id@corp.net" : "your@email.com"}
+                  required
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setError('');
+                    setForgotPasswordEmail('');
+                  }}
+                  className={`${
+                    darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'
+                  } flex-1 py-3 transition-all duration-300 hover:scale-105`}
+                >
+                  <span>{darkMode ? 'CANCEL' : 'Cancel'}</span>
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`${
+                    darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary'
+                  } flex-1 py-3 transition-all duration-300 hover:scale-105 ${loading ? 'animate-spin' : ''}`}
+                >
+                  <span>{loading ? (darkMode ? 'SENDING...' : 'Sending...') : (darkMode ? 'SEND RESET' : 'Send Reset')}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-all duration-1000 ${
@@ -282,8 +436,8 @@ const Login = () => {
           }`}></div>
           
           <div className="relative z-10 space-y-8 animate-fadeInLeft">
-            {/* Animated Logo */}
-            <div className="flex items-center group">
+            {/* Animated Logo - NOW CLICKABLE */}
+            <Link to="/home" className="flex items-center group cursor-pointer">
               <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-12 w-12 transition-all duration-300 group-hover:scale-110`}>
                 {darkMode && <div className="logo-glow"></div>}
                 <svg className="h-8 w-8 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -296,7 +450,7 @@ const Login = () => {
               }`}>
                 WHOLESALER
               </h1>
-            </div>
+            </Link>
             
             {/* Animated Title */}
             <div className="space-y-4">
@@ -356,16 +510,18 @@ const Login = () => {
           </div>
           
           <div className="w-full max-w-md relative z-10 space-y-8">
-            {/* Mobile Logo */}
+            {/* Mobile Logo - NOW CLICKABLE */}
             <div className="md:hidden flex items-center justify-center animate-fadeInDown">
-              <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-10 w-10`}>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                </svg>
-              </div>
-              <h1 className={`text-2xl font-bold ml-3 ${
-                darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
-              }`}>WHOLESALER</h1>
+              <Link to="/home" className="flex items-center group cursor-pointer">
+                <div className={`${darkMode ? 'cyber-logo' : 'neumorph-logo'} h-10 w-10`}>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  </svg>
+                </div>
+                <h1 className={`text-2xl font-bold ml-3 transition-all duration-300 group-hover:scale-105 ${
+                  darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>WHOLESALER</h1>
+              </Link>
             </div>
             
             {/* Login Title */}
@@ -379,7 +535,7 @@ const Login = () => {
               </h2>
             </div>
             
-            {/* Demo Accounts - Enhanced Animation */}
+            {/* Demo Accounts - Enhanced Animation with BETTER CONTRAST */}
             <div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} transition-all duration-500 hover:scale-105 animate-slideInRight`}>
               {darkMode && <div className="card-glow"></div>}
               <div className="p-6">
@@ -391,7 +547,11 @@ const Login = () => {
                   </p>
                   <button 
                     onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} text-xs transition-all duration-300 hover:scale-110`}
+                    className={`${
+                      darkMode 
+                        ? 'bg-cyan-900/30 border-2 border-cyan-500 text-cyan-200 hover:bg-cyan-800/40 hover:text-cyan-100' 
+                        : 'bg-blue-100 border-2 border-blue-400 text-blue-700 hover:bg-blue-200 hover:text-blue-800'
+                    } text-xs px-3 py-1 rounded font-bold transition-all duration-300 hover:scale-110`}
                   >
                     <span>{showDemoAccounts ? 'HIDE' : 'SHOW'}</span>
                   </button>
@@ -411,8 +571,11 @@ const Login = () => {
                       <button 
                         key={account.role}
                         onClick={() => useTestAccount(account.role)}
-                        className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} w-full text-xs 
-                          transition-all duration-300 hover:scale-105 animate-slideInLeft`}
+                        className={`${
+                          darkMode 
+                            ? 'bg-gray-800 border-2 border-cyan-600 text-cyan-200 hover:bg-gray-700 hover:border-cyan-400 hover:text-cyan-100' 
+                            : 'bg-gray-100 border-2 border-blue-300 text-blue-700 hover:bg-gray-200 hover:border-blue-500 hover:text-blue-800'
+                        } w-full text-xs px-3 py-2 rounded font-bold transition-all duration-300 hover:scale-105 animate-slideInLeft`}
                         style={{ animationDelay: `${i * 100}ms` }}
                       >
                         <span>{account.emoji} {account.label}</span>
@@ -443,7 +606,7 @@ const Login = () => {
               </div>
             )}
 
-            {/* Login Form */}
+            {/* Login Form with IMPROVED CONTRAST */}
             <form className="space-y-6 animate-slideInUp" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div className="group">
@@ -459,8 +622,8 @@ const Login = () => {
                     onChange={handleChange}
                     className={`w-full py-3 px-4 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                     }`}
                     placeholder={darkMode ? "neural.id@corp.net" : "your@email.com"}
                     required
@@ -480,8 +643,8 @@ const Login = () => {
                     onChange={handleChange}
                     className={`w-full py-3 px-4 font-mono transition-all duration-300 group-hover:scale-105 focus:scale-105 ${
                       darkMode 
-                        ? 'bg-gray-800 border-cyan-600 text-white focus:border-cyan-400 rounded-lg border-2' 
-                        : 'neumorph-input'
+                        ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                        : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
                     }`}
                     placeholder="••••••••••••••••"
                     required
@@ -499,16 +662,22 @@ const Login = () => {
                       darkMode ? 'text-cyan-500' : 'text-blue-500'
                     }`}
                   />
-                  <span className={`ml-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span className={`ml-2 text-sm font-medium ${
+                    darkMode ? 'text-cyan-200' : 'text-gray-700'
+                  }`}>
                     {darkMode ? 'MAINTAIN CONNECTION' : 'Remember me'}
                   </span>
                 </label>
 
-                <Link to="/forgot-password" className={`text-sm transition-all duration-300 hover:scale-105 ${
-                  darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-indigo-600 hover:text-indigo-800'
-                }`}>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className={`text-sm font-medium transition-all duration-300 hover:scale-105 ${
+                    darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-indigo-600 hover:text-indigo-800'
+                  }`}
+                >
                   {darkMode ? 'RESET ACCESS' : 'Forgot password?'}
-                </Link>
+                </button>
               </div>
 
               <button
@@ -528,7 +697,9 @@ const Login = () => {
             
             {/* Registration Link */}
             <div className="text-center animate-fadeInUp">
-              <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm mb-4 font-medium ${
+                darkMode ? 'text-cyan-200' : 'text-gray-700'
+              }`}>
                 {darkMode ? 'Need neural access?' : 'Need an account?'}
               </p>
               <Link to="/register" className={`${
@@ -593,10 +764,16 @@ const Login = () => {
         .animate-spin-slow { animation: spin-slow 3s linear infinite; }
         .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
         .animate-fadeIn { animation: fadeIn 1s ease-out; }
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
         
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
