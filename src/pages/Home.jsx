@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - Fixed with proper Theme Toggle Support
+// src/pages/Home.jsx - ENHANCED: Fully utilizing advanced neumorphism features
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -7,10 +7,9 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const Home = () => {
-  const { darkMode } = useTheme(); // Added theme support
+  const { darkMode } = useTheme();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -19,335 +18,328 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Get role-specific dashboard info with theme-adaptive colors
+  // Get role-specific dashboard info
   const getDashboardInfo = () => {
     if (!user) return null;
-    
     const { accountType, businessType } = user;
-
-    switch (accountType) {
-      case 'admin':
-        return {
-          title: 'Admin Dashboard',
-          description: 'Manage users, system settings, and monitor platform health',
-          route: '/admin-dashboard',
-          icon: '⚙️',
-          color: darkMode ? 'cyber-btn-red' : 'bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg'
-        };
-      case 'manager':
-        return {
-          title: 'Manager Dashboard',
-          description: 'Oversee team performance and business metrics',
-          route: '/manager-dashboard',
-          icon: '📊',
-          color: darkMode ? 'cyber-btn-purple' : 'bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg'
-        };
-      case 'business':
-        if (businessType === 'seller') {
-          return {
-            title: 'Seller Dashboard',
-            description: 'Manage products, inventory, and track sales performance',
-            route: '/business-dashboard',
-            icon: '🏪',
-            color: darkMode ? 'cyber-btn-green' : 'bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg'
-          };
-        } else {
-          return {
-            title: 'Buyer Dashboard',
-            description: 'Browse products, manage orders, and track purchases',
-            route: '/business-dashboard',
-            icon: '🛒',
-            color: darkMode ? 'cyber-btn-blue' : 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg'
-          };
-        }
-      case 'user':
-        return {
-          title: 'User Dashboard',
-          description: 'Manage your orders and view your activity',
-          route: '/user-dashboard',
-          icon: '👤',
-          color: darkMode ? 'cyber-btn-cyan' : 'bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg'
-        };
-      default:
-        return null;
+    const dashboards = {
+      admin: { title: 'Admin Dashboard', route: '/admin-dashboard', icon: '⚙️' },
+      manager: { title: 'Manager Dashboard', route: '/manager-dashboard', icon: '📊' },
+      user: { title: 'User Dashboard', route: '/user-dashboard', icon: '👤' }
+    };
+    
+    if (accountType === 'business') {
+      return businessType === 'seller' 
+        ? { title: 'Seller Dashboard', route: '/business-dashboard', icon: '🏪' }
+        : { title: 'Buyer Dashboard', route: '/business-dashboard', icon: '🛒' };
     }
+    
+    return dashboards[accountType] || null;
   };
 
+  // ENHANCED: Fully utilizing advanced neumorphism classes
+  const getThemeClasses = () => ({
+    // Enhanced Buttons with premium effects
+    btnPrimary: darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary neon-border',
+    btnSecondary: darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn neumorph-btn-secondary neumorph-elevated',
+    btnOutline: darkMode ? 'cyber-btn cyber-btn-outline' : 'neumorph-btn neumorph-btn-outline neumorph-subtle',
+    btnGhost: darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn neumorph-btn-ghost neumorph-breathing',
+    btnSuccess: darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn neumorph-btn-success neumorph-elevated',
+    
+    // Enhanced Cards with premium glass effects
+    card: darkMode ? 'cyber-card' : 'neumorph-card neumorph-breathing',
+    cardGlow: darkMode ? 'card-glow' : 'neumorph-card-glow',
+    featureCard: darkMode ? 'feature-card' : 'neumorph-feature-card neumorph-elevated',
+    
+    // Enhanced Text with advanced effects
+    title: darkMode ? 'cyberpunk-title' : 'neumorph-title',
+    titleGlow: darkMode ? 'cyber-glow' : 'neumorph-text-shadow',
+    titleEmbossed: darkMode ? 'cyber-glow' : 'neumorph-embossed',
+    titleDebossed: darkMode ? 'text-gray-600' : 'neumorph-debossed',
+    holographicText: darkMode ? 'holographic-text' : 'neumorph-holographic-text',
+    gradientText: darkMode ? 'holographic-text' : 'neumorph-gradient-text',
+    description: darkMode ? 'text-gray-300' : 'text-gray-600 neumorph-text-shadow',
+    
+    // Enhanced Text colors with premium effects
+    textPrimary: darkMode ? 'text-cyan-400' : 'text-blue-600',
+    textSecondary: darkMode ? 'text-purple-400' : 'text-purple-600',
+    textAccent: darkMode ? 'text-yellow-400' : 'text-green-600',
+    
+    // Enhanced Containers with glass morphism
+    container: 'relative z-1',
+    section: 'py-20 relative z-1',
+    glassContainer: darkMode ? '' : 'neumorph-glass-strong neumorph-elevated',
+    premiumContainer: darkMode ? '' : 'neumorph-holographic neumorph-elevated',
+    
+    // NEW: Premium loading effects
+    loadingContainer: darkMode ? '' : 'neumorph-glass-strong neumorph-breathing',
+    loadingSpinner: darkMode ? 'cyber-loading-spinner' : 'neumorph-loading-spinner',
+    
+    // NEW: Premium status indicators
+    statusContainer: darkMode ? '' : 'neumorph-glass neumorph-subtle',
+    
+    // NEW: Enhanced dashboard and CTA cards
+    dashboardCard: darkMode ? 'cyber-dashboard-card' : 'neumorph-dashboard-card neumorph-breathing',
+    ctaCard: darkMode ? 'cyber-cta-card' : 'neumorph-cta-card neumorph-holographic'
+  });
+
+  const theme = getThemeClasses();
   const dashboardInfo = getDashboardInfo();
 
   if (loading) {
     return (
-      <div className={`fixed inset-0 z-50 flex items-center justify-center ${darkMode ? 'bg-black' : 'bg-gray-100'}`}>
-        {/* Loading Background Effects - Only show in dark mode */}
-        {darkMode && (
-          <div className="absolute inset-0">
-            <div className="cyberpunk-grid opacity-20"></div>
-            <div className="scanlines"></div>
-          </div>
-        )}
-        
-        {/* Loading Content */}
-        <div className="relative z-10 text-center max-w-2xl mx-auto px-4">
-          {/* Main Loading Spinner */}
-          <div className={`${darkMode ? 'cyber-loading-spinner' : 'animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 mx-auto'} mb-8`}></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* ENHANCED: Premium loading with advanced glass morphism */}
+        <div className={`relative z-10 text-center max-w-2xl mx-auto px-4 ${!darkMode ? 'p-16 rounded-3xl neumorph-glass-strong neumorph-elevated neumorph-breathing' : ''}`}>
+          {/* ENHANCED: Add quantum glow effect for light mode */}
+          {!darkMode && <div className="neumorph-card-glow"></div>}
           
-          {/* Loading Title */}
-          <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${darkMode ? 'cyberpunk-title' : 'font-bold'}`}>
-            <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>INITIALIZING</span>
+          <div className={`${theme.loadingSpinner} mb-8 mx-auto`}></div>
+          <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${theme.title}`}>
+            <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+              {darkMode ? 'INITIALIZING' : 'LOADING'}
+            </span>
             <br />
-            <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>NEURAL INTERFACE</span>
+            <span className={`${theme.textSecondary} ${theme.titleDebossed}`}>
+              {darkMode ? 'NEURAL INTERFACE' : 'PLATFORM'}
+            </span>
           </h1>
-          
-          {/* Loading Progress */}
-          <div className="mb-8">
-            <div className={`w-full rounded-full h-2 mb-4 overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-gray-300'}`}>
-              <div className={`h-full rounded-full animate-pulse ${darkMode ? 'bg-gradient-to-r from-cyan-400 to-yellow-400' : 'bg-gradient-to-r from-blue-500 to-yellow-500'}`}></div>
-            </div>
-            <div className={`font-mono text-lg animate-pulse ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-              Loading quantum matrices...
-            </div>
+          <div className={`${theme.holographicText} text-lg`}>
+            {darkMode ? 'Establishing secure connection...' : 'Preparing your enhanced experience...'}
           </div>
-          
-          {/* Loading Messages */}
-          <div className={`space-y-2 font-mono text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            <div className="typewriter-loading">Connecting to neural network...</div>
-            <div className="typewriter-loading" style={{animationDelay: '1s'}}>Synchronizing data streams...</div>
-            <div className="typewriter-loading" style={{animationDelay: '2s'}}>Activating cyberpunk protocols...</div>
-          </div>
-          
-          {/* Floating Loading Elements - Only show in dark mode */}
-          {darkMode && (
-            <>
-              <div className="absolute top-10 left-10 hologram-float">
-                <div className="w-6 h-6 bg-cyan-400 opacity-30 rotate-45 animate-spin"></div>
-              </div>
-              <div className="absolute top-20 right-10 hologram-float" style={{animationDelay: '1s'}}>
-                <div className="w-4 h-4 bg-yellow-400 opacity-30 rounded-full animate-bounce"></div>
-              </div>
-              <div className="absolute bottom-20 left-20 hologram-float" style={{animationDelay: '2s'}}>
-                <div className="w-5 h-5 bg-purple-400 opacity-30 triangle animate-pulse"></div>
-              </div>
-            </>
-          )}
         </div>
-        
-        {/* Loading Page Styles */}
-        <style jsx>{`
-          .typewriter-loading {
-            overflow: hidden;
-            border-right: 2px solid ${darkMode ? '#00FFFF' : '#0066CC'};
-            white-space: nowrap;
-            margin: 0 auto;
-            animation: typing 2s steps(40, end), blink-caret 1s step-end infinite;
-            opacity: 0;
-            animation-fill-mode: forwards;
-          }
-          
-          .triangle {
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 17px solid currentColor;
-            background: none;
-          }
-          
-          @keyframes typing {
-            from { 
-              width: 0;
-              opacity: 1;
-            }
-            to { 
-              width: 100%;
-              opacity: 1;
-            }
-          }
-          
-          @keyframes blink-caret {
-            from, to { border-color: transparent; }
-            50% { border-color: ${darkMode ? '#00FFFF' : '#0066CC'}; }
-          }
-        `}</style>
       </div>
     );
   }
 
   return (
-    <>
-      {/* Override any wrapper backgrounds */}
-      <style>{`
-        .main-content-wrapper {
-          background: transparent !important;
-          border: none !important;
-          backdrop-filter: none !important;
-        }
-      `}</style>
-      
-      {/* HERO SECTION */}
-      <section className="min-h-screen flex items-center justify-center relative">
+    <div className="min-h-screen">
+      {/* ENHANCED HERO SECTION with Premium Effects */}
+      <section className="min-h-screen flex items-center justify-center relative z-1">
+        {/* ENHANCED: Add wave effects for light mode */}
+        {!darkMode && (
+          <div className="neumorph-waves">
+            <div className="neumorph-wave"></div>
+            <div className="neumorph-wave"></div>
+            <div className="neumorph-wave"></div>
+          </div>
+        )}
+        
         <div className="text-center max-w-6xl mx-auto px-4">
-          {/* Title with theme-adaptive styling */}
           <div className="mb-12 relative">
-            <h1 className={`text-6xl md:text-9xl font-bold mb-6 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
+            {/* ENHANCED: Premium title with advanced effects */}
+            <h1 className={`text-6xl md:text-9xl font-bold mb-6 ${theme.title} ${!darkMode ? 'neumorph-breathing' : ''}`}>
               {user ? (
                 <>
-                  <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>WELCOME BACK</span>
+                  <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                    {darkMode ? 'WELCOME BACK' : 'WELCOME BACK'}
+                  </span>
                   <br />
-                  <span className={`${darkMode ? 'text-purple-400 cyber-glow hacker-text' : 'text-purple-700'}`} data-text={user.displayName || user.email?.split('@')[0] || 'USER'}>
+                  <span 
+                    className={`${theme.textSecondary} ${theme.titleGlow} ${darkMode ? 'hacker-text' : 'neumorph-holographic-text'}`} 
+                    data-text={user.displayName || user.email?.split('@')[0] || 'USER'}
+                  >
                     {user.displayName || user.email?.split('@')[0] || 'USER'}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>WHOLESALER</span>
+                  <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                    {darkMode ? 'WHOLESALER' : 'WHOLESALER'}
+                  </span>
                   <br />
-                  <span className={darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}>2077</span>
+                  <span className={`${theme.textSecondary} ${theme.holographicText}`}>
+                    {darkMode ? '2077' : 'PLATFORM'}
+                  </span>
                 </>
               )}
             </h1>
             
-            {/* Subtitle */}
-            <div className={`text-2xl md:text-4xl mb-8 ${darkMode ? 'text-gray-300 holographic-text' : 'text-gray-600'}`}>
-              NEURAL COMMERCE PLATFORM
+            {/* ENHANCED: Premium subtitle with quantum effects */}
+            <div className={`text-2xl md:text-4xl mb-8 ${theme.gradientText} ${!darkMode ? 'neumorph-breathing' : ''}`}>
+              {darkMode ? 'NEURAL COMMERCE PLATFORM' : 'TACTICAL BUSINESS COMMAND CENTER'}
             </div>
           </div>
 
-          {/* Description */}
-          <p className={`text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed ${darkMode ? 'text-gray-300 typewriter-text' : 'text-gray-700'}`}>
-            {user 
-              ? 'Neural interface activated. Your wholesale management systems are online.'
-              : 'Next-generation wholesale platform powered by quantum neural networks.'
-            }
-          </p>
+          {/* ENHANCED: Premium description with glass container */}
+          <div className={`${!darkMode ? 'neumorph-glass p-8 rounded-2xl mb-12 neumorph-subtle' : 'mb-12'}`}>
+            <p className={`text-xl md:text-2xl max-w-4xl mx-auto leading-relaxed ${theme.description}`}>
+              {user 
+                ? darkMode 
+                  ? 'Neural interface activated. Your wholesale management systems are online.'
+                  : 'Command center operational. Your tactical business management systems are fully armed and ready for deployment.'
+                : darkMode
+                  ? 'Next-generation wholesale platform powered by quantum neural networks.'
+                  : 'Deploy the ultimate business warfare platform with military-grade precision tools designed for tactical market domination.'
+              }
+            </p>
+          </div>
           
-          {/* Action Buttons */}
+          {/* ENHANCED: Premium action buttons with advanced effects */}
           <div className="flex flex-wrap gap-6 justify-center mb-16">
             {user ? (
-              // Authenticated User Buttons
               <>
-                <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/products" className={theme.btnPrimary}>
                   <span className="text-xl">🛒</span>
-                  <span>Browse Products</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Browse Products</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
-                <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/cart" className={theme.btnSecondary}>
                   <span className="text-xl">🛍️</span>
-                  <span>Shopping Cart</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Shopping Cart</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
                 {dashboardInfo && (
-                  <Link to={dashboardInfo.route} className={darkMode ? `cyber-btn ${dashboardInfo.color}` : `${dashboardInfo.color} font-semibold transition-colors inline-flex items-center gap-2`}>
+                  <Link to={dashboardInfo.route} className={theme.btnPrimary}>
                     <span className="text-xl">{dashboardInfo.icon}</span>
-                    <span>{dashboardInfo.title}</span>
-                    {darkMode && <div className="btn-glow"></div>}
+                    <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>{dashboardInfo.title}</span>
+                    {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                   </Link>
                 )}
               </>
             ) : (
-              // Guest User Buttons
               <>
-                <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/products" className={theme.btnPrimary}>
                   <span className="text-xl">🛒</span>
-                  <span>Browse Products</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Browse Products</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
-                <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/cart" className={theme.btnSecondary}>
                   <span className="text-xl">🛍️</span>
-                  <span>Shopping Cart</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Shopping Cart</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
-                <Link to="/guest-dashboard" className={darkMode ? "cyber-btn cyber-btn-ghost" : "bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/guest-dashboard" className={theme.btnGhost}>
                   <span className="text-xl">👁️</span>
-                  <span>Guest View</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Recon Mode</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
-                <Link to="/login" className={darkMode ? "cyber-btn cyber-btn-outline" : "border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/login" className={theme.btnOutline}>
                   <span className="text-xl">🔑</span>
-                  <span>Sign In</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Sign In</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
                 
-                <Link to="/register" className={darkMode ? "cyber-btn cyber-btn-success" : "bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"}>
+                <Link to="/register" className={theme.btnSuccess}>
                   <span className="text-xl">✨</span>
-                  <span>Get Started Free</span>
-                  {darkMode && <div className="btn-glow"></div>}
+                  <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Deploy Free</span>
+                  {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                 </Link>
               </>
             )}
           </div>
 
-          {/* System Status */}
-          <div className="flex justify-center space-x-12 text-sm">
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-green-400 shadow-glow' : 'bg-green-500'} animate-pulse`}></div>
-              <span className={`font-mono font-semibold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>SECURE</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-yellow-400 shadow-glow' : 'bg-yellow-500'} animate-pulse`}></div>
-              <span className={`font-mono font-semibold ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>QUANTUM</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${darkMode ? 'bg-purple-400 shadow-glow' : 'bg-purple-500'} animate-pulse`}></div>
-              <span className={`font-mono font-semibold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>NEURAL</span>
-            </div>
+          {/* ENHANCED: Premium Status Indicators with glass morphism */}
+          <div className={`flex justify-center space-x-12 text-sm ${theme.statusContainer} ${!darkMode ? 'p-8 rounded-2xl inline-flex' : ''}`}>
+            {!darkMode && <div className="neumorph-card-glow"></div>}
+            {(darkMode ? ['SECURE', 'QUANTUM', 'NEURAL'] : ['SECURE', 'TACTICAL', 'ARMED']).map((status, i) => (
+              <div key={status} className="flex items-center gap-3">
+                <div className={`w-4 h-4 rounded-full ${!darkMode ? 'neumorph-status-dot' : ''} ${
+                  darkMode 
+                    ? `bg-${['green', 'yellow', 'purple'][i]}-400 shadow-lg shadow-${['green', 'yellow', 'purple'][i]}-400/50 animate-pulse`
+                    : `bg-${['green', 'blue', 'purple'][i]}-500 shadow-lg`
+                }`}></div>
+                <span className={`font-bold ${
+                  darkMode 
+                    ? `font-mono text-${['green', 'yellow', 'purple'][i]}-400`
+                    : `text-${['green', 'blue', 'purple'][i]}-600 neumorph-embossed`
+                }`}>
+                  {status}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Floating Holograms - Only show in dark mode */}
-        {darkMode && (
+        {/* ENHANCED: Premium floating elements with more variety */}
+        {darkMode ? (
           <>
-            <div className="absolute top-20 left-20 hologram-float">
+            <div className="absolute top-20 left-20 hologram-float opacity-50">
               <div className="hologram-cube"></div>
             </div>
-            <div className="absolute bottom-20 right-20 hologram-float" style={{animationDelay: '2s'}}>
+            <div className="absolute bottom-20 right-20 hologram-float opacity-50" style={{animationDelay: '2s'}}>
               <div className="hologram-pyramid"></div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* ENHANCED: More floating shapes with premium effects */}
+            <div className="absolute top-20 left-20 neumorph-float opacity-80">
+              <div className="neumorph-floating-shape neumorph-floating-cube neumorph-elevated"></div>
+            </div>
+            <div className="absolute bottom-20 right-20 neumorph-float opacity-80" style={{animationDelay: '2s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-sphere neumorph-elevated"></div>
+            </div>
+            <div className="absolute top-1/2 right-10 neumorph-float opacity-70" style={{animationDelay: '4s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-diamond neumorph-elevated"></div>
+            </div>
+            <div className="absolute top-1/3 left-1/4 neumorph-float opacity-60" style={{animationDelay: '6s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-hexagon neumorph-elevated"></div>
+            </div>
+            <div className="absolute bottom-1/3 left-20 neumorph-float opacity-70" style={{animationDelay: '8s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-triangle neumorph-elevated"></div>
+            </div>
+            <div className="absolute top-1/4 right-1/3 neumorph-float opacity-50" style={{animationDelay: '10s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-cube neumorph-elevated"></div>
+            </div>
+            <div className="absolute bottom-1/4 left-1/3 neumorph-float opacity-65" style={{animationDelay: '12s'}}>
+              <div className="neumorph-floating-shape neumorph-floating-sphere neumorph-elevated"></div>
+            </div>
+            
+            {/* ENHANCED: Premium particle system */}
+            <div className="neumorph-particles-container">
+              <div className="neumorph-particle" style={{animationDelay: '0s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '2s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '4s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '6s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '8s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '10s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '12s'}}></div>
+              <div className="neumorph-particle" style={{animationDelay: '14s'}}></div>
             </div>
           </>
         )}
       </section>
 
-      {/* QUICK ACCESS SECTION FOR LOGGED-IN USERS */}
+      {/* ENHANCED QUICK ACCESS SECTION with Premium Glass */}
       {user && (
-        <section className="py-20 relative">
-          <div className="container mx-auto px-4">
-            <h2 className={`text-5xl font-bold text-center mb-16 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
-              <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>QUICK ACCESS</span>
-              <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}> TERMINAL</span>
+        <section className={theme.section}>
+          <div className={`container mx-auto px-4 ${theme.premiumContainer} ${!darkMode ? 'py-20 rounded-3xl' : ''}`}>
+            {!darkMode && <div className="neumorph-cta-glow"></div>}
+            
+            <h2 className={`text-5xl font-bold text-center mb-16 ${theme.title}`}>
+              <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                {darkMode ? 'QUICK ACCESS' : 'TACTICAL ACCESS'}
+              </span>
+              <span className={`${theme.textSecondary} ${theme.holographicText}`}>
+                {darkMode ? ' TERMINAL' : ' COMMAND'}
+              </span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
-                { to: '/orders', icon: '📋', title: 'My Orders', desc: 'View and manage your orders' },
+                { to: '/orders', icon: '📋', title: 'My Orders', desc: 'Advanced command management with tactical tracking protocols' },
                 { 
                   to: user.accountType === 'business' && user.businessType === 'seller' ? '/inventory' : '/create-order', 
                   icon: user.accountType === 'business' && user.businessType === 'seller' ? '📦' : '➕', 
-                  title: user.accountType === 'business' && user.businessType === 'seller' ? 'My Inventory' : 'New Order', 
-                  desc: user.accountType === 'business' && user.businessType === 'seller' ? 'Manage your products' : 'Create a new order quickly' 
+                  title: user.accountType === 'business' && user.businessType === 'seller' ? 'My Arsenal' : 'Deploy Order', 
+                  desc: user.accountType === 'business' && user.businessType === 'seller' ? 'Strategic product deployment system' : 'Launch orders with tactical AI assistance' 
                 },
-                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our catalog' },
-                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'Review your cart items' }
+                { to: '/products', icon: '🛒', title: 'Browse Arsenal', desc: 'Explore our tactical equipment ecosystem' },
+                { to: '/cart', icon: '🛍️', title: 'Command Cart', desc: 'Strategic cart with intel-based recommendations' }
               ].map((item, index) => (
                 <Link key={index} to={item.to} className="group">
-                  <div className={`p-6 rounded-lg transition-all duration-300 group-hover:scale-105 ${
-                    darkMode 
-                      ? 'cyber-card' 
-                      : 'bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
-                  }`}>
-                    {darkMode && <div className="card-glow"></div>}
-                    <div className={darkMode ? 'card-content' : 'text-center'}>
-                      <div className={`text-4xl mb-4 ${darkMode ? 'card-icon' : 'filter drop-shadow-lg'}`}>{item.icon}</div>
-                      <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'card-title' : 'text-gray-900 dark:text-white'}`}>{item.title}</h3>
-                      <p className={darkMode ? 'card-description' : 'text-gray-600 dark:text-gray-400'}>{item.desc}</p>
+                  <div className={`${theme.card} neumorph-elevated`}>
+                    <div className={theme.cardGlow}></div>
+                    <div className="card-content neumorph-card-content">
+                      <div className={`text-5xl mb-6 ${darkMode ? 'card-icon' : 'neumorph-card-icon'}`}>{item.icon}</div>
+                      <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'card-title' : 'neumorph-card-title'}`}>{item.title}</h3>
+                      <p className={`${darkMode ? 'card-description' : 'neumorph-card-description'}`}>{item.desc}</p>
                     </div>
                   </div>
                 </Link>
@@ -357,32 +349,34 @@ const Home = () => {
         </section>
       )}
 
-      {/* SHOPPING SECTION FOR GUESTS */}
+      {/* ENHANCED SHOPPING SECTION FOR GUESTS with Premium Effects */}
       {!user && (
-        <section className="py-20 relative">
-          <div className="container mx-auto px-4">
-            <h2 className={`text-5xl font-bold text-center mb-16 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
-              <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>START</span>
-              <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> SHOPPING</span>
+        <section className={theme.section}>
+          <div className={`container mx-auto px-4 ${theme.premiumContainer} ${!darkMode ? 'py-20 rounded-3xl' : ''}`}>
+            {!darkMode && <div className="neumorph-cta-glow"></div>}
+            
+            <h2 className={`text-5xl font-bold text-center mb-16 ${theme.title}`}>
+              <span className={`${theme.textAccent} ${theme.titleEmbossed}`}>
+                {darkMode ? 'START' : 'BEGIN YOUR'}
+              </span>
+              <span className={`${theme.textPrimary} ${theme.holographicText}`}>
+                {darkMode ? ' SHOPPING' : ' MISSION'}
+              </span>
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {[
-                { to: '/products', icon: '🛒', title: 'Browse Products', desc: 'Explore our product catalog' },
-                { to: '/cart', icon: '🛍️', title: 'Shopping Cart', desc: 'View your selected items' },
-                { to: '/guest-dashboard', icon: '👁️', title: 'Guest View', desc: 'Browse as a guest user' }
+                { to: '/products', icon: '🛒', title: 'Explore Arsenal', desc: 'Discover our tactical-enhanced product catalog with strategic AI intel' },
+                { to: '/cart', icon: '🛍️', title: 'Command Cart', desc: 'Experience tactical shopping with predictive battle analytics and precision features' },
+                { to: '/guest-dashboard', icon: '👁️', title: 'Recon Mission', desc: 'Preview our platform capabilities with full reconnaissance access and tactical demo features' }
               ].map((item, index) => (
                 <Link key={index} to={item.to} className="group">
-                  <div className={`p-6 rounded-lg transition-all duration-300 group-hover:scale-105 ${
-                    darkMode 
-                      ? 'cyber-card' 
-                      : 'bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
-                  }`}>
-                    {darkMode && <div className="card-glow"></div>}
-                    <div className={darkMode ? 'card-content' : 'text-center'}>
-                      <div className={`text-4xl mb-4 ${darkMode ? 'card-icon' : 'filter drop-shadow-lg'}`}>{item.icon}</div>
-                      <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'card-title' : 'text-gray-900 dark:text-white'}`}>{item.title}</h3>
-                      <p className={darkMode ? 'card-description' : 'text-gray-600 dark:text-gray-400'}>{item.desc}</p>
+                  <div className={`${theme.card} neumorph-elevated`}>
+                    <div className={theme.cardGlow}></div>
+                    <div className="card-content neumorph-card-content">
+                      <div className={`text-5xl mb-6 ${darkMode ? 'card-icon' : 'neumorph-card-icon'}`}>{item.icon}</div>
+                      <h3 className={`text-xl font-bold mb-3 ${darkMode ? 'card-title' : 'neumorph-card-title'}`}>{item.title}</h3>
+                      <p className={`${darkMode ? 'card-description' : 'neumorph-card-description'}`}>{item.desc}</p>
                     </div>
                   </div>
                 </Link>
@@ -392,92 +386,91 @@ const Home = () => {
         </section>
       )}
 
-      {/* FEATURES SECTION */}
-      <section className="py-20 relative">
+      {/* ENHANCED FEATURES SECTION with Premium Glass */}
+      <section className={theme.section}>
         <div className="container mx-auto px-4">
-          <h2 className={`text-5xl font-bold text-center mb-4 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
-            <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-600'}>{user ? 'PLATFORM' : 'WHY CHOOSE'}</span>
-            <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}> {user ? 'FEATURES' : 'US?'}</span>
+          <h2 className={`text-5xl font-bold text-center mb-4 ${theme.title}`}>
+            <span className={`${theme.textSecondary} ${theme.titleEmbossed}`}>
+              {user ? (darkMode ? 'PLATFORM' : 'PLATFORM') : (darkMode ? 'WHY CHOOSE' : 'WHY CHOOSE')}
+            </span>
+            <span className={`${theme.textPrimary} ${theme.holographicText}`}>
+              {user ? (darkMode ? ' FEATURES' : ' FEATURES') : (darkMode ? ' US?' : ' US?')}
+            </span>
           </h2>
           
-          <p className={`text-xl text-center mb-16 max-w-4xl mx-auto ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Advanced quantum algorithms power your business operations
-          </p>
+          {/* ENHANCED: Premium description container */}
+          <div className={`${!darkMode ? 'neumorph-glass-strong p-8 rounded-2xl mb-16' : 'mb-16'}`}>
+            <p className={`text-xl text-center max-w-4xl mx-auto ${theme.description}`}>
+              {darkMode 
+                ? 'Advanced quantum algorithms power your business operations'
+                : 'Cutting-edge quantum technology and intuitive neumorphic design converge to revolutionize your business operations with unprecedented efficiency'
+              }
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
               { 
                 icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10', 
-                title: 'Real-time Inventory', 
-                desc: 'Track your products with real-time updates and low stock alerts',
+                title: 'Tactical Inventory', 
+                desc: 'Military-grade tracking systems with advanced reconnaissance, strategic analytics, and battlefield-ready stock deployment',
                 color: darkMode ? 'text-cyan-400' : 'text-blue-600'
               },
               { 
                 icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 
-                title: 'Order Processing', 
-                desc: 'Streamlined order management from creation to fulfillment',
+                title: 'Command Processing', 
+                desc: 'Automated warfare protocols with tactical AI optimization, strategic routing, and precision order execution systems',
                 color: darkMode ? 'text-green-400' : 'text-green-600'
               },
               { 
                 icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 
-                title: 'Analytics & Reports', 
-                desc: 'Detailed insights to help you make informed business decisions',
+                title: 'Battle Analytics', 
+                desc: 'Strategic intelligence powered by advanced combat algorithms, predictive warfare modeling, and real-time tactical operations data',
                 color: darkMode ? 'text-purple-400' : 'text-purple-600'
               }
             ].map((feature, index) => (
-              <div key={index} className={`text-center p-8 transition-all duration-300 hover:scale-105 ${
-                darkMode 
-                  ? 'feature-card' 
-                  : 'bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 dark:border-gray-700'
-              }`}>
-                <div className={`inline-flex mb-6 ${feature.color}`}>
+              <div key={index} className={`${theme.featureCard} neon-border`}>
+                <div className={`inline-flex mb-6 ${feature.color} neumorph-feature-icon`}>
                   {darkMode && <div className="icon-glow"></div>}
+                  {!darkMode && <div className="neumorph-icon-glow"></div>}
                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
                   </svg>
                 </div>
-                <h3 className={`text-2xl font-bold mb-4 ${feature.color}`}>{feature.title}</h3>
-                <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {feature.desc}
-                </p>
+                <h3 className={`text-2xl font-bold mb-4 ${feature.color} ${!darkMode ? 'neumorph-embossed' : ''}`}>{feature.title}</h3>
+                <p className={`text-lg ${theme.description}`}>{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ROLE-SPECIFIC DASHBOARD INFO */}
+      {/* ENHANCED ROLE-SPECIFIC DASHBOARD INFO with Premium Effects */}
       {user && dashboardInfo && (
-        <section className="py-20 relative">
+        <section className={theme.section}>
           <div className="container mx-auto px-4">
-            <div className={`max-w-6xl mx-auto rounded-lg p-12 ${
-              darkMode 
-                ? 'cyber-dashboard-card' 
-                : 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-xl'
-            }`}>
-              {darkMode && <div className="dashboard-glow"></div>}
-              <div className="md:flex md:items-center md:justify-between">
+            <div className={`max-w-6xl mx-auto ${theme.dashboardCard}`}>
+              {darkMode ? <div className="dashboard-glow"></div> : <div className="neumorph-dashboard-glow"></div>}
+              <div className="md:flex md:items-center md:justify-between relative z-10">
                 <div className="md:flex-1">
                   <div className="flex items-center mb-6">
-                    <span className={`text-6xl mr-6 ${darkMode ? 'dashboard-icon' : 'filter drop-shadow-lg'}`}>{dashboardInfo.icon}</span>
+                    <span className={`text-6xl mr-6 ${darkMode ? 'dashboard-icon' : 'neumorph-dashboard-icon'}`}>
+                      {dashboardInfo.icon}
+                    </span>
                     <div>
-                      <h2 className={`text-4xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                      <h2 className={`text-4xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-800 neumorph-embossed'} ${theme.title}`}>
                         Your {dashboardInfo.title}
                       </h2>
-                      <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
-                        {dashboardInfo.description}
+                      <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600 neumorph-text-shadow'}`}>
+                        Access your personalized command center with advanced tactical features and strategic automation systems
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-6 md:mt-0">
-                  <Link to={dashboardInfo.route} className={
-                    darkMode 
-                      ? "cyber-btn cyber-btn-dashboard" 
-                      : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  }>
-                    <span>Go to Dashboard</span>
-                    {darkMode && <div className="btn-glow"></div>}
+                  <Link to={dashboardInfo.route} className={`${darkMode ? 'cyber-btn cyber-btn-dashboard' : 'neumorph-btn neumorph-btn-dashboard neon-border'} text-lg px-8 py-4`}>
+                    <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Access Dashboard</span>
+                    {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                   </Link>
                 </div>
               </div>
@@ -486,74 +479,57 @@ const Home = () => {
         </section>
       )}
 
-      {/* CTA SECTION */}
-      <section className="py-20 relative">
+      {/* ENHANCED CTA SECTION with Premium Holographic Effects */}
+      <section className={theme.section}>
         <div className="container mx-auto px-4 text-center">
-          <div className={`max-w-6xl mx-auto rounded-lg p-16 ${
-            darkMode 
-              ? 'cyber-cta-card' 
-              : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 border border-gray-200 dark:border-gray-600 shadow-2xl'
-          }`}>
-            {darkMode && <div className="cta-glow"></div>}
+          <div className={`max-w-6xl mx-auto ${theme.ctaCard}`}>
+            {darkMode ? <div className="cta-glow"></div> : <div className="neumorph-cta-glow"></div>}
             <div className="relative z-10">
-              {user ? (
-                <div>
-                  <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
-                    <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>READY TO BOOST</span>
-                    <br />
-                    <span className={darkMode ? 'text-purple-400 cyber-glow' : 'text-purple-700'}>YOUR PRODUCTIVITY?</span>
-                  </h2>
-                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
-                    Explore all the features available in your dashboard
-                  </p>
-                  <div className="flex flex-wrap gap-6 justify-center">
-                    <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
-                      <span>Start Shopping</span>
-                      {darkMode && <div className="btn-glow"></div>}
+              <h2 className={`text-5xl font-bold mb-8 ${theme.title}`}>
+                <span className={`${theme.textPrimary} ${theme.titleEmbossed}`}>
+                  {darkMode ? 'READY TO GET' : 'READY TO DEPLOY'}
+                </span>
+                <br />
+                <span className={`${theme.textSecondary} ${theme.holographicText}`}>
+                  {darkMode ? 'STARTED?' : 'THE ARSENAL?'}
+                </span>
+              </h2>
+              <p className={`text-xl mb-12 ${theme.description} ${!darkMode ? 'neumorph-text-shadow' : ''}`}>
+                {user 
+                  ? 'Unlock the full potential of your business with our advanced tactical platform features and AI-powered combat systems'
+                  : 'Join thousands of elite commanders already dominating their markets with our revolutionary tactical-enhanced battle platform'
+                }
+              </p>
+              <div className="flex flex-wrap gap-6 justify-center">
+                {user ? (
+                  <>
+                    <Link to="/products" className={`${theme.btnPrimary} neon-border`}>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Deploy Arsenal</span>
+                      {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
-                    <Link to="/cart" className={darkMode ? "cyber-btn cyber-btn-secondary" : "bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
-                      <span>View Cart</span>
-                      {darkMode && <div className="btn-glow"></div>}
+                    <Link to="/cart" className={theme.btnSecondary}>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>View Command</span>
+                      {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
-                    {dashboardInfo && (
-                      <Link to={dashboardInfo.route} className={
-                        darkMode 
-                          ? `cyber-btn ${dashboardInfo.color}` 
-                          : `${dashboardInfo.color} font-bold text-lg transition-all duration-300`
-                      }>
-                        <span>Go to {dashboardInfo.title}</span>
-                        {darkMode && <div className="btn-glow"></div>}
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'cyberpunk-title' : 'font-extrabold'}`}>
-                    <span className={darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}>READY TO GET</span>
-                    <br />
-                    <span className={darkMode ? 'text-cyan-400 cyber-glow' : 'text-blue-600'}>STARTED?</span>
-                  </h2>
-                  <p className={`text-xl mb-12 ${darkMode ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}>
-                    Join thousands of businesses already using our platform
-                  </p>
-                  <div className="flex flex-wrap gap-6 justify-center">
-                    <Link to="/products" className={darkMode ? "cyber-btn cyber-btn-success" : "bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
-                      <span>Browse Products</span>
-                      {darkMode && <div className="btn-glow"></div>}
+                  </>
+                ) : (
+                  <>
+                    <Link to="/products" className={`${theme.btnSuccess} neon-border`}>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Explore Platform</span>
+                      {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
-                    <Link to="/register" className={darkMode ? "cyber-btn cyber-btn-primary" : "bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300"}>
-                      <span>Start Free Trial</span>
-                      {darkMode && <div className="btn-glow"></div>}
+                    <Link to="/register" className={`${theme.btnPrimary} neon-border`}>
+                      <span className={darkMode ? 'btn-text' : 'neumorph-btn-text'}>Start Your Journey</span>
+                      {darkMode ? <div className="btn-glow"></div> : <div className="neumorph-btn-glow"></div>}
                     </Link>
-                  </div>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
