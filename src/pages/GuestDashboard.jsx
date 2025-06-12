@@ -1,398 +1,577 @@
-// src/pages/GuestDashboard.jsx - Updated with product detail links
-import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '../firebase/config';
+// src/pages/GuestDashboard.jsx - 🎯 FUNCTIONAL GUEST DASHBOARD with PROPER ACCESS
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Link } from 'react-router-dom'; // Add this import
+import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from '../components/common/ThemeToggle';
-
-// ProductCard Component with hover effects and theme support
-const ProductCard = ({ product, darkMode }) => {
-  return (
-    <div className={`border rounded-lg p-4 shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-      darkMode ? 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-white' : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-900'
-    }`}>
-      {/* Make the image clickable to product details */}
-      <Link to={`/products/${product.id}`} className="block">
-        <div className={`h-48 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} flex items-center justify-center rounded-md mb-4 overflow-hidden`}>
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="object-cover h-full w-full hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            // SVG placeholder
-            <svg className="w-16 h-16" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
-              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          )}
-        </div>
-      </Link>
-
-      {/* Make the product name clickable to product details */}
-      <Link to={`/products/${product.id}`}>
-        <h3 className={`font-bold text-lg mb-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          {product.name}
-        </h3>
-      </Link>
-      
-      <p className={`text-sm mb-2 line-clamp-2 h-10 overflow-hidden ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-        {product.description || 'No description available'}
-      </p>
-      <div className="flex items-center justify-between mt-4">
-        <span className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          ${Number(product.price).toFixed(2)}
-        </span>
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          product.stock > 10 
-            ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-            : product.stock > 0
-              ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-              : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-        }`}>
-          {product.stock > 10 
-            ? 'In Stock' 
-            : product.stock > 0 
-              ? 'Low Stock' 
-              : 'Out of Stock'}
-        </span>
-      </div>
-      <div className="flex space-x-2 mt-4">
-        {/* View Details Button */}
-        <Link 
-          to={`/products/${product.id}`}
-          className={`flex-1 py-2 px-4 rounded font-medium text-center border transition-colors ${
-            darkMode 
-              ? 'border-indigo-500 text-indigo-400 hover:bg-indigo-500 hover:text-white' 
-              : 'border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white'
-          }`}
-        >
-          View Details
-        </Link>
-        {/* Add to Cart Button */}
-        <button 
-          className={`flex-1 py-2 px-4 rounded font-medium ${
-            product.stock > 0 
-              ? darkMode 
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-              : darkMode 
-                ? 'bg-gray-600 cursor-not-allowed text-gray-300' 
-                : 'bg-gray-300 cursor-not-allowed text-gray-500'
-          }`}
-          disabled={product.stock <= 0}
-        >
-          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Featured Product Component
-const FeaturedProduct = ({ product, darkMode }) => {
-  if (!product) return null;
-  
-  return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 rounded-lg overflow-hidden border ${
-      darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-    } shadow-lg p-6 mb-10`}>
-      {/* Make the featured product image clickable */}
-      <Link to={`/products/${product.id}`} className="block">
-        <div className={`h-80 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg overflow-hidden flex items-center justify-center hover:scale-105 transition-transform duration-300`}>
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-          ) : (
-            <svg className="w-24 h-24" fill={darkMode ? "#4B5563" : "#D1D5DB"} viewBox="0 0 24 24">
-              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          )}
-        </div>
-      </Link>
-      <div className="flex flex-col justify-center">
-        <div className={`px-3 py-1 rounded-full text-sm font-medium w-fit mb-2 ${
-          darkMode ? 'bg-indigo-900/30 text-indigo-400' : 'bg-indigo-100 text-indigo-700'
-        }`}>
-          Featured Product
-        </div>
-        {/* Make the featured product title clickable */}
-        <Link to={`/products/${product.id}`}>
-          <h2 className={`text-2xl font-bold mb-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            {product.name}
-          </h2>
-        </Link>
-        <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-          {product.description || 'No description available'}
-        </p>
-        <div className="flex items-center space-x-4 mb-6">
-          <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            ${Number(product.price).toFixed(2)}
-          </span>
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            product.stock > 10 
-              ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-              : product.stock > 0
-                ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-          }`}>
-            {product.stock > 10 
-              ? 'In Stock' 
-              : product.stock > 0 
-                ? 'Low Stock' 
-                : 'Out of Stock'}
-          </span>
-        </div>
-        <div className="flex space-x-4">
-          <button 
-            className={`py-2 px-6 rounded-lg font-medium ${
-              product.stock > 0 
-                ? darkMode 
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                : darkMode 
-                  ? 'bg-gray-600 cursor-not-allowed text-gray-300' 
-                  : 'bg-gray-300 cursor-not-allowed text-gray-500'
-            }`}
-            disabled={product.stock <= 0}
-          >
-            {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-          </button>
-          {/* View Details Button for Featured Product */}
-          <Link 
-            to={`/products/${product.id}`}
-            className={`py-2 px-6 rounded-lg font-medium transition-colors ${
-              darkMode
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-            }`}
-          >
-            View Details
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
+import SecretInvasionBackground from '../components/common/SecretInvasionBackground';
 
 const GuestDashboard = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [featuredProduct, setFeaturedProduct] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortOption, setSortOption] = useState('default');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { darkMode } = useTheme();
+  const { user } = useAuth();
+  
+  // Animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [hoveredFeature, setHoveredFeature] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch products from Firestore
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        
-        // Create base query
-        const productsRef = collection(db, 'products');
-        
-        // Add filters if necessary
-        let productsQuery = productsRef;
-        if (selectedCategory) {
-          productsQuery = query(productsRef, where('category', '==', selectedCategory));
-        }
-        
-        // Execute query
-        const productsSnapshot = await getDocs(productsQuery);
-        let productsData = productsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        
-        // Extract unique categories
-        const uniqueCategories = [...new Set(productsData.map(product => product.category).filter(Boolean))];
-        setCategories(uniqueCategories);
-        
-        // Apply search filter (client-side since Firestore doesn't support LIKE)
-        if (searchTerm.trim()) {
-          const searchLower = searchTerm.toLowerCase();
-          productsData = productsData.filter(product => 
-            product.name?.toLowerCase().includes(searchLower) ||
-            product.description?.toLowerCase().includes(searchLower) ||
-            product.category?.toLowerCase().includes(searchLower)
-          );
-        }
-        
-        // Apply sorting
-        if (sortOption === 'price_asc') {
-          productsData.sort((a, b) => (a.price || 0) - (b.price || 0));
-        } else if (sortOption === 'price_desc') {
-          productsData.sort((a, b) => (b.price || 0) - (a.price || 0));
-        } else if (sortOption === 'name_asc') {
-          productsData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-        } else if (sortOption === 'name_desc') {
-          productsData.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
-        }
-        
-        // Set featured product (pick the first one or one with an image)
-        const productWithImage = productsData.find(product => product.imageUrl);
-        setFeaturedProduct(productWithImage || productsData[0] || null);
-        
-        // Set all products
-        setProducts(productsData);
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to load products:', err);
-        setError('Failed to load products. Please try again later.');
-        setLoading(false);
-      }
+  // Get theme prefix
+  const themePrefix = darkMode ? 'cyber' : 'neumorph';
+  const layoutPrefix = darkMode ? 'cyberpunk' : 'neumorph';
+
+  // Guest accessible features with REAL functionality
+  const guestFeatures = [
+    {
+      icon: '🛍️',
+      title: darkMode ? 'PRODUCT MATRIX' : 'Browse Products',
+      description: darkMode 
+        ? 'Explore our complete product database with advanced search protocols and real-time inventory data.'
+        : 'Browse our complete product catalog with advanced search and filtering options.',
+      action: 'Browse Now',
+      link: '/catalog',
+      color: darkMode ? 'cyan' : 'blue',
+      available: true
+    },
+    {
+      icon: '📱',
+      title: darkMode ? 'QR PROTOCOLS' : 'QR Code Tools',
+      description: darkMode 
+        ? 'Access quantum QR generation and scanning tools for instant product identification and data transfer.'
+        : 'Generate and scan QR codes for products, inventory tracking, and quick access tools.',
+      action: 'Open QR Tools',
+      link: '/qr-tools',
+      color: darkMode ? 'purple' : 'indigo',
+      available: true
+    },
+    {
+      icon: '🏢',
+      title: darkMode ? 'NEURAL CORP INFO' : 'Company Information',
+      description: darkMode 
+        ? 'Learn about our quantum wholesale network, corporate history, and neural technology stack.'
+        : 'Discover our company story, mission, values, and wholesale solutions.',
+      action: 'Learn More',
+      link: '/about-us',
+      color: darkMode ? 'green' : 'teal',
+      available: true
+    },
+    {
+      icon: '💬',
+      title: darkMode ? 'SUPPORT MATRIX' : 'Help & Support',
+      description: darkMode 
+        ? 'Access our comprehensive support database and connect with neural support specialists.'
+        : 'Get help, browse our knowledge base, and contact our support team.',
+      action: 'Get Help',
+      link: '/support-center',
+      color: darkMode ? 'yellow' : 'orange',
+      available: true
+    },
+    {
+      icon: '📊',
+      title: darkMode ? 'DEMO NEURAL NET' : 'Platform Demo',
+      description: darkMode 
+        ? 'Experience a simulated neural interface showcasing our wholesale management capabilities.'
+        : 'Try our interactive demo to see platform features and capabilities.',
+      action: 'Try Demo',
+      link: '/demo',
+      color: darkMode ? 'pink' : 'purple',
+      available: false, // Demo not yet implemented
+      comingSoon: true
+    },
+    {
+      icon: '📋',
+      title: darkMode ? 'FEEDBACK LOOP' : 'Feedback & Suggestions',
+      description: darkMode 
+        ? 'Submit feedback data to help improve our neural network algorithms and user experience.'
+        : 'Share your feedback and suggestions to help us improve our platform.',
+      action: 'Give Feedback',
+      link: '/feedback',
+      color: darkMode ? 'indigo' : 'blue',
+      available: true
     }
-    
-    fetchProducts();
-  }, [selectedCategory, searchTerm, sortOption]);
+  ];
+
+  // Quick access items for authenticated users
+  const quickAccess = [
+    {
+      title: darkMode ? 'NEURAL ACCESS' : 'Sign In',
+      description: darkMode ? 'Login to your neural account' : 'Access your account',
+      link: '/login',
+      icon: '🔑',
+      color: darkMode ? 'cyan' : 'blue'
+    },
+    {
+      title: darkMode ? 'REQUEST ACCESS' : 'Create Account',
+      description: darkMode ? 'Request neural network access' : 'Join our platform',
+      link: '/register',
+      icon: '✨',
+      color: darkMode ? 'purple' : 'indigo'
+    },
+    {
+      title: darkMode ? 'GUEST EXPLORATION' : 'Continue as Guest',
+      description: darkMode ? 'Explore without neural access' : 'Browse without signing up',
+      link: '/catalog',
+      icon: '👁️',
+      color: darkMode ? 'green' : 'teal'
+    }
+  ];
+
+  // Popular product categories for quick browsing
+  const productCategories = [
+    { name: 'Electronics', icon: '📱', count: '2,847 items' },
+    { name: 'Home & Garden', icon: '🏠', count: '1,923 items' },
+    { name: 'Health & Beauty', icon: '💄', count: '1,456 items' },
+    { name: 'Sports & Outdoors', icon: '⚽', count: '987 items' },
+    { name: 'Automotive', icon: '🚗', count: '756 items' },
+    { name: 'Industrial', icon: '🏭', count: '654 items' }
+  ];
+
+  // Recent updates/news
+  const recentUpdates = [
+    {
+      title: darkMode ? 'Neural Network v2.0 Launch' : 'Platform Update 2.0',
+      description: darkMode ? 'Enhanced quantum processing capabilities' : 'New features and improvements',
+      date: '2024-03-15',
+      type: 'update'
+    },
+    {
+      title: darkMode ? 'New QR Protocol Integration' : 'Enhanced QR Tools',
+      description: darkMode ? 'Advanced scanning and generation protocols' : 'Improved QR code functionality',
+      date: '2024-03-10',
+      type: 'feature'
+    },
+    {
+      title: darkMode ? 'Security Matrix Enhanced' : 'Security Updates',
+      description: darkMode ? 'Quantum encryption improvements' : 'Enhanced platform security',
+      date: '2024-03-05',
+      type: 'security'
+    }
+  ];
+
+  // Auto-slide functionality for hero
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % 3);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Entrance animation
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (user) {
+      const dashboardPath = user.accountType === 'admin' ? '/admin-dashboard' :
+                           user.accountType === 'manager' ? '/manager-dashboard' :
+                           user.accountType === 'business' ? '/business-dashboard' :
+                           '/user-dashboard';
+      navigate(dashboardPath, { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleCategoryClick = (category) => {
+    navigate(`/catalog?category=${encodeURIComponent(category.name.toLowerCase())}`);
+  };
 
   return (
-    <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-      {/* Hero Section with Toggle */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className={`text-3xl md:text-4xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Welcome to Wholesaler
-          </h1>
-          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Browse our premium inventory and find quality products at wholesale prices
-          </p>
-        </div>
-        <ThemeToggle className="ml-4" />
-      </div>
+    <div className={`${layoutPrefix}-layout-wrapper min-h-screen relative overflow-hidden transition-all duration-1000 ${
+      isVisible ? 'opacity-100' : 'opacity-0'
+    }`}>
       
-      {/* Featured Product */}
-      {featuredProduct && <FeaturedProduct product={featuredProduct} darkMode={darkMode} />}
-      
-      {/* Filters and Search */}
-      <div className={`mb-8 p-4 rounded-lg shadow-md ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="col-span-2">
-            <label htmlFor="search" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              Search Products
-            </label>
-            <div className="relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                id="search"
-                className={`focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm rounded-md ${
-                  darkMode ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' : 'border-gray-300'
-                }`}
-                placeholder="Search by name, description or category"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* Category Filter */}
-          <div>
-            <label htmlFor="category" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              Category
-            </label>
-            <select
-              id="category"
-              className={`mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-100' : 'border-gray-300'
-              } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Sort Options */}
-          <div>
-            <label htmlFor="sort" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              Sort By
-            </label>
-            <select
-              id="sort"
-              className={`mt-1 block w-full pl-3 pr-10 py-2 text-base rounded-md ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-100' : 'border-gray-300'
-              } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-            >
-              <option value="default">Default</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="name_asc">Name: A to Z</option>
-              <option value="name_desc">Name: Z to A</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      {/* Loading and Error States */}
-      {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${darkMode ? 'border-indigo-400' : 'border-indigo-500'}`}></div>
-        </div>
-      )}
-      
-      {error && (
-        <div className={`${darkMode ? 'bg-red-900/30 border-red-800 text-red-400' : 'bg-red-50 border-red-400 text-red-700'} p-4 rounded-lg mb-8 border-l-4`}>
-          {error}
-        </div>
-      )}
-      
-      {/* Product Grid */}
-      {!loading && !error && (
+      {/* SECRET INVASION BACKGROUND - Always enabled with reduced intensity */}
+      <SecretInvasionBackground 
+        intensity={0.4} 
+        enableGlitch={darkMode} 
+      />
+
+      {/* Theme-specific background effects - SUBTLE */}
+      {darkMode ? (
         <>
-          {products.length === 0 ? (
-            <div className={`text-center py-12 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 mx-auto ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
-              <h3 className={`mt-4 text-lg font-medium ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>No products found</h3>
-              <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Try changing your search criteria or check back later for new products.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {products.map(product => (
-                <ProductCard key={product.id} product={product} darkMode={darkMode} />
-              ))}
-            </div>
-          )}
+          <div className="fixed inset-0 z-2 opacity-10 pointer-events-none">
+            <div className="cyberpunk-grid"></div>
+          </div>
+          <div className="fixed inset-0 z-3 pointer-events-none opacity-30">
+            <div className="scanlines"></div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="fixed inset-0 z-2 opacity-15 pointer-events-none">
+            <div className="neumorph-grid"></div>
+          </div>
+          <div className="fixed inset-0 z-3 opacity-8 pointer-events-none">
+            <div className="neumorph-gradient"></div>
+          </div>
         </>
       )}
-      
-      {/* Sign In Prompt */}
-      <div className={`mt-16 p-6 rounded-lg shadow-md border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-        <div className="md:flex md:items-center md:justify-between">
-          <div className="md:flex-1">
-            <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Create an Account</h2>
-            <p className={`mt-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Register to access wholesale pricing, place orders, and manage your inventory.
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <a 
-              href="/login" 
-              className={`inline-block px-6 py-3 rounded-lg font-medium text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-            >
-              Sign Up Now
-            </a>
-          </div>
-        </div>
+
+      {/* Enhanced Theme Toggle */}
+      <div className="fixed top-6 right-6 z-50 animate-bounceIn">
+        <ThemeToggle />
       </div>
+
+      {/* Main Content */}
+      <div className="relative z-10">
+        
+        {/* Enhanced Hero Section with Search */}
+        <section className="relative min-h-screen flex items-center justify-center">
+          <div className="container mx-auto px-4 py-20 relative z-10">
+            <div className="max-w-6xl mx-auto text-center">
+              
+              {/* Main Hero Content */}
+              <div className="space-y-8 animate-slideInUp">
+                <h1 className={`text-5xl md:text-7xl font-bold leading-tight ${
+                  darkMode ? 'cyber-title cyber-glow text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>
+                  {darkMode ? 'NEURAL WHOLESALE' : 'MEGA WHOLESALE'}
+                  <br />
+                  <span className={darkMode ? 'text-purple-400' : 'text-indigo-600'}>
+                    {darkMode ? 'NETWORK' : 'MARKETPLACE'}
+                  </span>
+                </h1>
+                
+                <p className={`text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed ${
+                  darkMode ? 'text-cyan-200' : 'text-gray-700'
+                }`}>
+                  {darkMode 
+                    ? 'Access the quantum-powered wholesale network. Browse products, generate QR codes, and explore our neural marketplace — no registration required.'
+                    : 'Explore our intelligent wholesale marketplace. Browse products, use QR tools, and discover smart trading solutions — start immediately.'
+                  }
+                </p>
+
+                {/* Enhanced Search Bar */}
+                <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+                  <div className={`${themePrefix}-card p-2 flex gap-2 transition-all duration-300 hover:scale-105`}>
+                    {darkMode && <div className="card-glow"></div>}
+                    {!darkMode && <div className="neumorph-card-glow"></div>}
+                    
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={darkMode ? "Search neural product matrix..." : "Search products, categories, or keywords..."}
+                      className={`flex-1 px-6 py-4 text-lg font-medium transition-all duration-300 focus:scale-105 ${
+                        darkMode 
+                          ? 'bg-gray-900 border-2 border-cyan-600 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700' 
+                          : 'bg-gray-50 border-2 border-blue-300 text-gray-900 focus:border-blue-500 rounded-lg placeholder-gray-500'
+                      }`}
+                    />
+                    <button
+                      type="submit"
+                      className={`${themePrefix}-btn ${themePrefix}-btn-primary px-8 py-4 group transition-all duration-300 hover:scale-110`}
+                    >
+                      <svg className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Quick Access Buttons */}
+                <div className="flex flex-wrap justify-center gap-4 mt-8">
+                  {quickAccess.map((item, index) => (
+                    <Link
+                      key={index}
+                      to={item.link}
+                      className={`${themePrefix}-btn ${themePrefix}-btn-outline group transition-all duration-300 hover:scale-110`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <span className="text-2xl mr-2 group-hover:scale-125 transition-transform duration-300">
+                        {item.icon}
+                      </span>
+                      <span className="font-bold">{item.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Categories Section */}
+        <section className={`py-16 relative ${
+          darkMode ? 'bg-black/50' : 'bg-white/70'
+        } backdrop-blur-lg`}>
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              
+              <div className="text-center mb-12 animate-slideInUp">
+                <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                  darkMode ? 'cyber-title cyber-glow text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>
+                  {darkMode ? 'PRODUCT CATEGORIES' : 'Browse by Category'}
+                </h2>
+                <p className={`text-lg ${
+                  darkMode ? 'text-cyan-200' : 'text-gray-700'
+                }`}>
+                  {darkMode ? 'Explore our quantum-organized product matrix' : 'Find products organized by category'}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {productCategories.map((category, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleCategoryClick(category)}
+                    className={`${themePrefix}-card p-6 text-center group transition-all duration-300 hover:scale-110 animate-slideInUp`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {darkMode && <div className="card-glow"></div>}
+                    {!darkMode && <div className="neumorph-card-glow"></div>}
+                    
+                    <div className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-300">
+                      {category.icon}
+                    </div>
+                    <h3 className={`font-bold text-sm mb-1 ${
+                      darkMode ? 'text-cyan-400' : 'text-blue-600'
+                    }`}>
+                      {category.name}
+                    </h3>
+                    <p className={`text-xs ${
+                      darkMode ? 'text-cyan-200' : 'text-gray-600'
+                    }`}>
+                      {category.count}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Guest Features Section */}
+        <section className="py-16 relative">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              
+              <div className="text-center mb-12 animate-slideInUp">
+                <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                  darkMode ? 'cyber-title cyber-glow text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>
+                  {darkMode ? 'AVAILABLE PROTOCOLS' : 'What You Can Access'}
+                </h2>
+                <p className={`text-lg ${
+                  darkMode ? 'text-cyan-200' : 'text-gray-700'
+                }`}>
+                  {darkMode ? 'All neural protocols available to guest users' : 'Everything available without registration'}
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {guestFeatures.map((feature, index) => (
+                  <div 
+                    key={index}
+                    className={`${themePrefix}-card group transition-all duration-500 hover:scale-105 animate-slideInUp relative ${
+                      !feature.available ? 'opacity-60' : ''
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    onMouseEnter={() => setHoveredFeature(index)}
+                    onMouseLeave={() => setHoveredFeature(null)}
+                  >
+                    {darkMode && <div className="card-glow"></div>}
+                    {!darkMode && <div className="neumorph-card-glow"></div>}
+                    
+                    <div className="p-6 relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-4xl group-hover:scale-125 transition-transform duration-300">
+                          {feature.icon}
+                        </span>
+                        {feature.comingSoon && (
+                          <span className={`text-xs px-2 py-1 rounded font-bold ${
+                            darkMode ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-600' : 'bg-orange-100 text-orange-600 border border-orange-300'
+                          }`}>
+                            COMING SOON
+                          </span>
+                        )}
+                      </div>
+                      
+                      <h3 className={`text-xl font-bold mb-3 ${
+                        darkMode ? 'cyber-title text-cyan-400' : 'neumorph-title text-blue-600'
+                      } ${hoveredFeature === index ? 'cyber-glow' : ''}`}>
+                        {feature.title}
+                      </h3>
+                      
+                      <p className={`mb-6 leading-relaxed ${
+                        darkMode ? 'text-cyan-200' : 'text-gray-600'
+                      }`}>
+                        {feature.description}
+                      </p>
+                      
+                      {feature.available ? (
+                        <Link
+                          to={feature.link}
+                          className={`${themePrefix}-btn ${themePrefix}-btn-primary w-full transition-all duration-300 hover:scale-105`}
+                        >
+                          <span className="font-bold">{feature.action}</span>
+                        </Link>
+                      ) : (
+                        <button
+                          disabled
+                          className={`${themePrefix}-btn w-full opacity-50 cursor-not-allowed ${
+                            darkMode ? 'bg-gray-800 border-gray-600 text-gray-400' : 'bg-gray-200 border-gray-300 text-gray-500'
+                          }`}
+                        >
+                          <span className="font-bold">Coming Soon</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Updates Section */}
+        <section className={`py-16 relative ${
+          darkMode ? 'bg-black/50' : 'bg-white/70'
+        } backdrop-blur-lg`}>
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              
+              <div className="text-center mb-12 animate-slideInUp">
+                <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                  darkMode ? 'cyber-title cyber-glow text-cyan-400' : 'neumorph-title text-blue-600'
+                }`}>
+                  {darkMode ? 'NEURAL NETWORK UPDATES' : 'Recent Updates'}
+                </h2>
+                <p className={`text-lg ${
+                  darkMode ? 'text-cyan-200' : 'text-gray-700'
+                }`}>
+                  {darkMode ? 'Latest enhancements to the neural network' : 'Stay updated with our latest improvements'}
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                {recentUpdates.map((update, index) => (
+                  <div 
+                    key={index}
+                    className={`${themePrefix}-card p-6 group transition-all duration-300 hover:scale-105 animate-slideInUp`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {darkMode && <div className="card-glow"></div>}
+                    {!darkMode && <div className="neumorph-card-glow"></div>}
+                    
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className={`text-lg font-bold mb-2 ${
+                          darkMode ? 'text-cyan-400' : 'text-blue-600'
+                        }`}>
+                          {update.title}
+                        </h3>
+                        <p className={`mb-2 ${
+                          darkMode ? 'text-cyan-200' : 'text-gray-600'
+                        }`}>
+                          {update.description}
+                        </p>
+                        <p className={`text-sm ${
+                          darkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {new Date(update.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-3 py-1 rounded font-bold ml-4 ${
+                        update.type === 'update' ? (darkMode ? 'bg-cyan-900/50 text-cyan-400' : 'bg-blue-100 text-blue-600') :
+                        update.type === 'feature' ? (darkMode ? 'bg-purple-900/50 text-purple-400' : 'bg-purple-100 text-purple-600') :
+                        (darkMode ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-600')
+                      }`}>
+                        {update.type.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-16 relative">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className={`${themePrefix}-cta-card text-center p-12 transition-all duration-500 hover:scale-105 animate-slideInUp`}>
+                {darkMode && <div className="cta-glow"></div>}
+                {!darkMode && <div className="neumorph-cta-glow"></div>}
+                
+                <div className="relative z-10 space-y-6">
+                  <div className="text-5xl animate-bounce mb-6">
+                    {darkMode ? '🚀' : '✨'}
+                  </div>
+                  
+                  <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+                    darkMode ? 'cyber-title cyber-glow text-cyan-400' : 'neumorph-title text-blue-600'
+                  }`}>
+                    {darkMode ? 'READY FOR FULL NEURAL ACCESS?' : 'Ready for the Full Experience?'}
+                  </h2>
+                  
+                  <p className={`text-lg leading-relaxed mb-6 ${
+                    darkMode ? 'text-cyan-200' : 'text-gray-700'
+                  }`}>
+                    {darkMode 
+                      ? 'Unlock advanced neural protocols, personalized dashboards, and premium wholesale management features.'
+                      : 'Create an account to unlock personalized dashboards, advanced features, and premium wholesale tools.'
+                    }
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link 
+                      to="/register" 
+                      className={`${themePrefix}-btn ${themePrefix}-btn-primary ${themePrefix}-btn-dashboard group transition-all duration-300 hover:scale-110`}
+                    >
+                      {darkMode && <div className="btn-glow"></div>}
+                      {!darkMode && <div className="neumorph-btn-glow"></div>}
+                      <span className="btn-text font-bold text-lg">
+                        {darkMode ? 'REQUEST NEURAL ACCESS' : 'Create Free Account'}
+                      </span>
+                      <svg className="btn-icon ml-3 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </Link>
+                    
+                    <Link 
+                      to="/catalog" 
+                      className={`${themePrefix}-btn ${themePrefix}-btn-outline group transition-all duration-300 hover:scale-110`}
+                    >
+                      <span className="btn-text font-bold text-lg">
+                        {darkMode ? 'CONTINUE EXPLORATION' : 'Keep Browsing'}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.05); }
+          70% { transform: scale(0.9); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-slideInUp { animation: slideInUp 0.6s ease-out; }
+        .animate-bounceIn { animation: bounceIn 0.8s ease-out; }
+      `}</style>
     </div>
   );
 };
