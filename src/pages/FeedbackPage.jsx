@@ -413,7 +413,7 @@ const FeedbackPage = () => {
                     <p className="text-sm text-blue-700 dark:text-blue-300">
                       {feedback.adminResponse}
                     </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <p className="text-xs text-blue-600 dark:te-*+blue-400 mt-1">
                       {formatDate(feedback.adminResponseAt)}
                     </p>
                   </div>
