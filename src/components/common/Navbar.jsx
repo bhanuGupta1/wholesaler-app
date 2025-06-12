@@ -1,4 +1,4 @@
-// src/components/common/Navbar.jsx - ENHANCED: Full theme integration with animations
+// src/components/common/Navbar.jsx - ENHANCED with Inline Dropdowns + Better Colors
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,6 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { canAccessCart, canCreateOrders } from '../../utils/accessControl';
 import ThemeToggle from './ThemeToggle';
 import CheckoutFlowSelector from './CheckoutFlowSelector';
+import SecretInvasionBackground from './SecretInvasionBackground';
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
@@ -31,7 +32,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   // Check permissions
   const userCanAccessCart = canAccessCart(user);
   const userCanCreateOrders = canCreateOrders(user);
-  const userCanAccessQR = true; // QR tools available to everyone
   
   // Handle scroll effects
   useEffect(() => {
@@ -88,27 +88,54 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         : ''
     }`}>
       
-      {/* Theme-aware navbar wrapper */}
+      {/* SecretInvasion Background Integration - ENHANCED */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <SecretInvasionBackground 
+          intensity={0.8} 
+          enableGlitch={darkMode} 
+        />
+      </div>
+      
+      {/* Theme-aware navbar wrapper with ENHANCED EFFECTS */}
       <div className={`${themePrefix}-navbar-wrapper relative overflow-hidden`}>
-        {/* Background glow effects */}
-        {darkMode && <div className="cyber-navbar-glow"></div>}
-        {!darkMode && <div className="neumorph-navbar-glow"></div>}
+        {/* Enhanced Background glow effects */}
+        {darkMode && <div className="cyber-navbar-glow animate-pulse"></div>}
+        {!darkMode && <div className="neumorph-navbar-glow animate-pulse"></div>}
         
-        {/* Top Bar with enhanced styling */}
-        <div className={`py-2 px-4 transition-all duration-300 ${
+        {/* Additional animated grid overlay */}
+        <div className={`absolute inset-0 opacity-10 pointer-events-none ${
+          darkMode ? 'cyberpunk-grid' : 'neumorph-grid'
+        }`}></div>
+        
+        {/* Scanning effect for dark mode */}
+        {darkMode && (
+          <div className="absolute inset-0 opacity-5 pointer-events-none">
+            <div className="scanlines"></div>
+          </div>
+        )}
+        
+        {/* Enhanced Top Bar with BEAUTIFUL TEAL/EMERALD GRADIENT */}
+        <div className={`py-3 px-4 transition-all duration-500 backdrop-blur-md relative overflow-hidden ${
           darkMode 
-            ? 'bg-gray-900/95 backdrop-blur-md border-b border-cyan-500/30' 
-            : 'bg-indigo-800/95 backdrop-blur-md border-b border-indigo-300/30'
+            ? 'bg-gradient-to-r from-gray-900/95 via-cyan-900/20 to-gray-900/95 border-b border-cyan-500/30' 
+            : 'bg-gradient-to-r from-teal-600/90 via-emerald-600/85 to-green-600/90 border-b border-teal-300/50'
         }`}>
-          <div className="container mx-auto flex items-center justify-between text-sm">
+          {/* Animated background pattern */}
+          <div className={`absolute inset-0 opacity-5 ${
+            darkMode ? 'animate-pulse' : 'animate-pulse'
+          }`}>
+            <div className={darkMode ? 'cyberpunk-grid' : 'neumorph-grid'}></div>
+          </div>
+          
+          <div className="container mx-auto flex items-center justify-between text-sm relative z-10">
             <p className={`hidden md:block font-medium transition-all duration-300 ${
               darkMode 
-                ? 'text-cyan-200 cyber-glow animate-pulse' 
-                : 'text-indigo-100 neumorph-text-shadow'
+                ? 'text-cyan-200 cyber-glow' 
+                : 'text-white neumorph-text-shadow'
             }`}>
               {darkMode 
-                ? 'NEURAL WHOLESALER | QUANTUM INVENTORY MANAGEMENT WITH QR PROTOCOLS' 
-                : 'Wholesaler | Premium Inventory Management with QR Tools'
+                ? '🚀 NEURAL WHOLESALER | QUANTUM INVENTORY MANAGEMENT WITH QR PROTOCOLS' 
+                : '✨ MEGA WHOLESALER | Premium Inventory Management with QR Tools'
               }
             </p>
             <div className="flex items-center space-x-3">
@@ -118,26 +145,26 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 { to: "/qr-tools", text: darkMode ? "QR PROTOCOLS" : "QR Tools", icon: "📱" }
               ].map((item, i) => (
                 <div key={i} className="flex items-center">
-                  {i > 0 && <span className={`${darkMode ? 'text-cyan-500' : 'text-indigo-300'}`}>|</span>}
+                  {i > 0 && <span className={`${darkMode ? 'text-cyan-500' : 'text-teal-200'}`}>|</span>}
                   {item.to ? (
                     <Link 
                       to={item.to} 
-                      className={`ml-3 transition-all duration-300 hover:scale-105 flex items-center ${
+                      className={`ml-3 transition-all duration-300 hover:scale-110 flex items-center group ${
                         darkMode 
                           ? 'text-cyan-300 hover:text-cyan-100 hover:text-glow' 
-                          : 'text-indigo-100 hover:text-white'
+                          : 'text-white hover:text-teal-100'
                       }`}
                     >
-                      {item.icon && <span className="mr-1 animate-pulse">{item.icon}</span>}
+                      {item.icon && <span className="mr-1 group-hover:scale-125 transition-transform duration-300">{item.icon}</span>}
                       <span className="font-medium">{item.text}</span>
                     </Link>
                   ) : (
                     <a 
                       href={item.href} 
-                      className={`ml-3 transition-all duration-300 hover:scale-105 ${
+                      className={`ml-3 transition-all duration-300 hover:scale-110 ${
                         darkMode 
                           ? 'text-cyan-300 hover:text-cyan-100 hover:text-glow' 
-                          : 'text-indigo-100 hover:text-white'
+                          : 'text-white hover:text-teal-100'
                       }`}
                     >
                       <span className="font-medium">{item.text}</span>
@@ -149,26 +176,42 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
         
-        {/* Main Navigation with enhanced styling */}
-        <nav className={`relative z-10 transition-all duration-500 ${
+        {/* Enhanced Main Navigation with TEAL/EMERALD COLORS */}
+        <nav className={`relative z-10 transition-all duration-500 backdrop-blur-lg overflow-hidden ${
           darkMode 
-            ? 'bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-lg' 
-            : 'bg-gradient-to-r from-indigo-700/95 to-indigo-600/95 backdrop-blur-lg'
+            ? 'bg-gradient-to-r from-gray-900/95 via-cyan-900/10 to-gray-900/95' 
+            : 'bg-gradient-to-r from-teal-700/95 via-emerald-700/90 to-green-700/95'
         }`}>
-          <div className="container mx-auto px-4 py-4">
+          {/* Floating particles effect */}
+          <div className={`absolute inset-0 opacity-20 pointer-events-none ${
+            darkMode ? 'animate-pulse' : 'animate-pulse'
+          }`}>
+            <div className={darkMode ? 'cyberpunk-grid' : 'neumorph-grid'}></div>
+          </div>
+          
+          {/* Subtle scanning lines for cyberpunk */}
+          {darkMode && (
+            <div className="absolute inset-0 opacity-3 pointer-events-none">
+              <div className="scanlines"></div>
+            </div>
+          )}
+          
+          <div className="container mx-auto px-4 py-4 relative z-20">
             <div className="flex justify-between items-center">
               
-              {/* Enhanced Logo with theme styling */}
+              {/* Enhanced Logo with TEAL THEME */}
               <div className="flex items-center space-x-3 group">
-                <div className={`${themePrefix}-logo transition-all duration-500 group-hover:scale-110 relative overflow-hidden`}>
+                <div className={`${themePrefix}-logo transition-all duration-300 group-hover:scale-110 relative overflow-hidden w-12 h-12 ${
+                  darkMode ? '' : 'bg-teal-400 border-4 border-teal-600'
+                }`}>
                   {darkMode && <div className="logo-glow"></div>}
                   {!darkMode && <div className="neumorph-logo-glow"></div>}
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
-                    className={`h-8 w-8 transition-all duration-700 ${
+                    className={`h-8 w-8 transition-all duration-300 ${
                       darkMode 
-                        ? 'text-cyan-400 animate-spin-slow' 
-                        : 'text-indigo-600 hover:animate-pulse'
+                        ? 'text-cyan-400' 
+                        : 'text-white'
                     }`} 
                     viewBox="0 0 20 20" 
                     fill="currentColor"
@@ -179,47 +222,23 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </div>
                 <Link 
                   to="/" 
-                  className={`transition-all duration-500 group-hover:scale-105 ${
+                  className={`transition-all duration-300 group-hover:scale-110 ${
                     darkMode 
-                      ? 'cyber-title text-cyan-400 cyber-glow text-2xl' 
-                      : 'neumorph-title text-white text-2xl'
+                      ? 'cyber-title text-cyan-400 cyber-glow text-3xl' 
+                      : 'neumorph-title text-white text-3xl'
                   } font-bold hover:transform hover:rotate-1`}
+                  style={{
+                    textShadow: darkMode ? 'none' : '2px 2px 4px rgba(0,0,0,0.7)'
+                  }}
                 >
-                  {darkMode ? 'NEURAL WHOLESALER' : 'Wholesaler'}
+                  {darkMode ? 'NEURAL WHOLESALER' : 'MEGA WHOLESALER'}
                 </Link>
-              </div>
-              
-              {/* Enhanced Search Bar */}
-              <div className="hidden md:flex flex-1 max-w-2xl mx-6">
-                <div className={`relative w-full ${themePrefix}-search-container`}>
-                  <input 
-                    type="text" 
-                    placeholder={darkMode 
-                      ? "NEURAL SEARCH: PRODUCTS, ORDERS, ENTITIES, QR PROTOCOLS..." 
-                      : "Search products, orders, customers, or scan QR codes..."
-                    }
-                    className={`w-full py-3 pl-4 pr-12 font-medium transition-all duration-500 focus:scale-105 ${
-                      darkMode 
-                        ? 'bg-gray-900/80 border-2 border-cyan-600/50 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700 backdrop-blur-md cyber-glow' 
-                        : 'bg-white/90 border-2 border-indigo-300 text-gray-800 focus:border-indigo-500 rounded-lg placeholder-gray-500 backdrop-blur-md neumorph-inset'
-                    }`}
-                  />
-                  <button className={`absolute right-0 top-0 bottom-0 px-4 transition-all duration-300 hover:scale-110 ${
-                    darkMode 
-                      ? 'bg-cyan-600 hover:bg-cyan-500 text-black rounded-r-lg cyber-btn-glow' 
-                      : 'bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg neumorph-elevated'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </div>
               </div>
               
               {/* Enhanced Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-6">
                 
-                {/* Navigation Links with theme styling */}
+                {/* Navigation Links with enhanced styling and consistent animations */}
                 {[
                   { to: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: darkMode ? 'NEURAL HUB' : 'Dashboard' },
                   { to: '/catalog', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', label: darkMode ? 'PRODUCT MATRIX' : 'Catalog' },
@@ -237,7 +256,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                           : 'text-white border-b-2 border-white neumorph-text-shadow'
                         : darkMode 
                           ? 'text-cyan-200 hover:text-cyan-100 hover:cyber-glow' 
-                          : 'text-indigo-100 hover:text-white hover:neumorph-text-shadow'
+                          : 'text-teal-100 hover:text-white hover:neumorph-text-shadow'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 transition-transform duration-300 group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,7 +268,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 ))}
                 
                 <div className={`h-8 w-px transition-all duration-300 ${
-                  darkMode ? 'bg-cyan-500/50' : 'bg-indigo-300/50'
+                  darkMode ? 'bg-cyan-500/50' : 'bg-teal-300/50'
                 }`}></div>
                 
                 {/* Enhanced Cart Dropdown */}
@@ -257,133 +276,28 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <div className="relative" ref={cartDropdownRef}>
                     <button 
                       onClick={() => setCartDropdownOpen(!cartDropdownOpen)}
-                      className={`${themePrefix}-btn ${themePrefix}-btn-primary relative transition-all duration-300 hover:scale-110 group`}
+                      className={`relative transition-all duration-300 hover:scale-110 group inline-flex items-center gap-2 px-6 py-3 font-bold text-lg rounded-lg ${
+                        darkMode 
+                          ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/25' 
+                          : 'bg-teal-500 hover:bg-teal-400 text-white border-2 border-teal-600 shadow-lg shadow-teal-500/50'
+                      }`}
+                      style={{
+                        textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                      }}
                     >
-                      {darkMode && <div className="btn-glow"></div>}
-                      {!darkMode && <div className="neumorph-btn-glow"></div>}
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:animate-bounce transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
                       </svg>
-                      <span className="font-bold">{darkMode ? 'CART MATRIX' : 'Cart'}</span>
+                      <span>{darkMode ? 'CART MATRIX' : 'Cart'}</span>
                       {itemCount > 0 && (
-                        <span className={`absolute -top-2 -right-2 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse ${
-                          darkMode ? 'bg-red-500 shadow-red-500/50 shadow-lg' : 'bg-red-500'
-                        }`}>
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-bounce">
                           {itemCount > 99 ? '99+' : itemCount}
                         </span>
                       )}
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-300 ${cartDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
-                    
-                    {/* Enhanced Cart Dropdown */}
-                    {cartDropdownOpen && (
-                      <div className={`absolute right-0 mt-3 w-80 ${
-                        darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
-                      } rounded-xl shadow-2xl py-2 z-50 transform transition-all duration-300 origin-top-right scale-100 animate-slideInDown`}>
-                        {darkMode && <div className="card-glow"></div>}
-                        
-                        <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                          <h3 className={`text-lg font-bold ${
-                            darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-gray-900'
-                          }`}>
-                            {darkMode ? 'CART MATRIX' : 'Shopping Cart'} ({itemCount})
-                          </h3>
-                          {cartTotal > 0 && (
-                            <p className={`text-sm font-medium ${darkMode ? 'text-cyan-200' : 'text-gray-500'}`}>
-                              Total: ${cartTotal.toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                        
-                        {cart.length === 0 ? (
-                          <div className="px-4 py-6 text-center">
-                            <div className="text-4xl mb-2 animate-bounce">🛒</div>
-                            <p className={`text-sm font-medium ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
-                              {darkMode ? 'CART MATRIX EMPTY' : 'Your cart is empty'}
-                            </p>
-                            <Link
-                              to="/catalog"
-                              onClick={() => setCartDropdownOpen(false)}
-                              className={`mt-3 inline-block transition-all duration-300 hover:scale-105 ${
-                                darkMode ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' : 'text-indigo-600 hover:text-indigo-800'
-                              } text-sm hover:underline font-bold`}
-                            >
-                              {darkMode ? 'BROWSE PRODUCTS' : 'Browse Products'}
-                            </Link>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Cart Items */}
-                            <div className="max-h-60 overflow-y-auto">
-                              {cart.slice(0, 3).map((item) => (
-                                <div key={item.id} className={`px-4 py-3 transition-all duration-300 ${
-                                  darkMode ? 'hover:bg-cyan-900/20' : 'hover:bg-gray-50'
-                                }`}>
-                                  <div className="flex items-center space-x-3">
-                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                                      darkMode ? 'bg-gray-800 border border-cyan-600/50' : 'bg-gray-200'
-                                    }`}>
-                                      {item.imageUrl ? (
-                                        <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
-                                      ) : (
-                                        <span className="text-lg">📦</span>
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className={`text-sm font-bold truncate ${
-                                        darkMode ? 'text-cyan-100' : 'text-gray-900'
-                                      }`}>
-                                        {item.name}
-                                      </p>
-                                      <p className={`text-xs font-medium ${
-                                        darkMode ? 'text-cyan-300' : 'text-gray-500'
-                                      }`}>
-                                        Qty: {item.quantity} × ${item.price.toFixed(2)}
-                                      </p>
-                                    </div>
-                                    <div className={`text-sm font-bold ${
-                                      darkMode ? 'text-cyan-400 cyber-glow' : 'text-gray-900'
-                                    }`}>
-                                      ${(item.price * item.quantity).toFixed(2)}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                              
-                              {cart.length > 3 && (
-                                <div className={`px-4 py-2 text-center border-t ${
-                                  darkMode ? 'border-cyan-700/50 text-cyan-300' : 'border-gray-200 text-gray-500'
-                                }`}>
-                                  <span className="text-sm font-medium">
-                                    +{cart.length - 3} more item{cart.length - 3 !== 1 ? 's' : ''}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Cart Actions */}
-                            <div className={`px-4 py-3 border-t ${
-                              darkMode ? 'border-cyan-700/50' : 'border-gray-200'
-                            } space-y-2`}>
-                              <button
-                                onClick={handleCheckoutFromDropdown}
-                                className={`${themePrefix}-btn ${themePrefix}-btn-primary w-full py-3 transition-all duration-300 hover:scale-105`}
-                              >
-                                <span className="font-bold">
-                                  {darkMode ? 'PROCESS ORDER' : 'Checkout'} (${cartTotal.toFixed(2)})
-                                </span>
-                              </button>
-                              <Link
-                                to="/cart"
-                                onClick={() => setCartDropdownOpen(false)}
-                                className={`${themePrefix}-btn ${themePrefix}-btn-outline w-full py-3 transition-all duration-300 hover:scale-105 block text-center`}
-                              >
-                                <span className="font-bold">{darkMode ? 'VIEW CART MATRIX' : 'View Cart'}</span>
-                              </Link>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
                 
@@ -391,14 +305,19 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 {userCanCreateOrders && (
                   <Link 
                     to="/create-order" 
-                    className={`${themePrefix}-btn ${themePrefix}-btn-success transition-all duration-300 hover:scale-110 group`}
+                    className={`transition-all duration-300 hover:scale-110 group inline-flex items-center gap-2 px-6 py-3 font-bold text-lg rounded-lg ${
+                      darkMode 
+                        ? 'bg-yellow-600 hover:bg-yellow-500 text-black border-2 border-yellow-400 shadow-lg shadow-yellow-500/25' 
+                        : 'bg-emerald-500 hover:bg-emerald-400 text-white border-2 border-emerald-600 shadow-lg shadow-emerald-500/50'
+                    }`}
+                    style={{
+                      textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                    }}
                   >
-                    {darkMode && <div className="btn-glow"></div>}
-                    {!darkMode && <div className="neumorph-btn-glow"></div>}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span className="font-bold">{darkMode ? 'NEW ORDER' : 'New Order'}</span>
+                    <span>{darkMode ? 'NEW ORDER' : 'New Order'}</span>
                   </Link>
                 )}
                 
@@ -412,120 +331,46 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <div className="relative" ref={dropdownRef}>
                     <button 
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:scale-105"
+                      className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:scale-110"
                       aria-expanded={profileDropdownOpen}
                       aria-haspopup="true"
                     >
                       <div className={`h-12 w-12 rounded-full p-0.5 shadow-lg overflow-hidden transition-all duration-300 group-hover:ring-4 ${
                         darkMode 
                           ? 'bg-cyan-600 ring-cyan-400/50 cyber-glow' 
-                          : 'bg-white ring-indigo-400/50 neumorph-elevated'
+                          : 'bg-teal-500 ring-teal-400/50 neumorph-elevated'
                       }`}>
                         <div className={`h-full w-full rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 ${
                           darkMode 
                             ? 'bg-gray-900 text-cyan-400' 
-                            : 'bg-indigo-200 text-indigo-800'
+                            : 'bg-white text-teal-700'
                         }`}>
                           {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
                         </div>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-300 group-hover:rotate-180 ${
-                        darkMode ? 'text-cyan-400' : 'text-white'
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-300 ${profileDropdownOpen ? 'rotate-180' : ''} ${
+                        darkMode ? 'text-cyan-400' : 'text-teal-100'
                       }`} viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </button>
-                    
-                    {/* Enhanced Profile Dropdown */}
-                    {profileDropdownOpen && (
-                      <div className={`absolute right-0 mt-3 w-72 ${
-                        darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
-                      } rounded-xl shadow-2xl py-2 z-50 transform transition-all duration-300 origin-top-right animate-slideInDown`}>
-                        {darkMode && <div className="card-glow"></div>}
-                        
-                        <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                          <p className={`text-sm font-medium ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
-                            {darkMode ? 'NEURAL ACCESS GRANTED' : 'Signed in as'}
-                          </p>
-                          <p className={`text-sm font-bold truncate ${darkMode ? 'text-cyan-100 cyber-glow' : 'text-gray-900'}`}>
-                            {user.email}
-                          </p>
-                          <p className={`text-xs font-bold ${
-                            user.accountType === 'admin' ? 'text-red-400' : 
-                            user.accountType === 'manager' ? 'text-purple-400' : 
-                            'text-green-400'
-                          }`}>
-                            {user.accountType === 'admin' ? '👑 ADMINISTRATOR' : 
-                             user.accountType === 'manager' ? '👔 MANAGER' : 
-                             user.accountType === 'business' ? '🏢 BUSINESS USER' : 
-                             '👤 REGULAR USER'}
-                          </p>
-                        </div>
-                        
-                        <div className="py-1">
-                          {[
-                            { to: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', label: darkMode ? 'NEURAL PROFILE' : 'Your Profile' },
-                            { to: '/settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', label: darkMode ? 'SYSTEM CONFIG' : 'Settings' }
-                          ].map((item) => (
-                            <Link 
-                              key={item.to}
-                              to={item.to} 
-                              className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
-                                darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                              }`}
-                              onClick={() => setProfileDropdownOpen(false)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-12 ${
-                                darkMode ? 'text-cyan-400' : 'text-gray-400'
-                              }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                              </svg>
-                              <span className="font-bold">{item.label}</span>
-                            </Link>
-                          ))}
-                          
-                          {/* QR Tools in Profile Menu */}
-                          <Link 
-                            to="/qr-tools" 
-                            className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
-                              darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                            }`}
-                            onClick={() => setProfileDropdownOpen(false)}
-                          >
-                            <span className="mr-3 text-lg animate-pulse">📱</span>
-                            <span className="font-bold">{darkMode ? 'QR PROTOCOLS' : 'QR Tools'}</span>
-                          </Link>
-                        </div>
-                        
-                        <div className={`py-1 border-t ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                          <button 
-                            onClick={handleSignOut}
-                            className={`flex w-full items-center px-4 py-3 text-sm font-bold transition-all duration-300 hover:scale-105 group ${
-                              darkMode ? 'text-red-400 hover:bg-red-900/30 hover:text-red-300' : 'text-gray-700 hover:bg-red-50 hover:text-red-700'
-                            }`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-180 ${
-                              darkMode ? 'text-red-400' : 'text-gray-400'
-                            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            {darkMode ? 'DISCONNECT' : 'Sign out'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <Link 
                     to="/login" 
-                    className={`${themePrefix}-btn ${themePrefix}-btn-primary transition-all duration-300 hover:scale-110 group`}
+                    className={`transition-all duration-300 hover:scale-110 group inline-flex items-center gap-2 px-6 py-3 font-bold text-lg rounded-lg ${
+                      darkMode 
+                        ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/25' 
+                        : 'bg-green-600 hover:bg-green-500 text-white border-2 border-green-700 shadow-lg shadow-green-600/50'
+                    }`}
+                    style={{
+                      textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                    }}
                   >
-                    {darkMode && <div className="btn-glow"></div>}
-                    {!darkMode && <div className="neumorph-btn-glow"></div>}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
-                    <span className="font-bold">{darkMode ? 'NEURAL ACCESS' : 'Sign In'}</span>
+                    <span>{darkMode ? 'NEURAL ACCESS' : 'Sign In'}</span>
                   </Link>
                 )}
               </div>
@@ -536,15 +381,20 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 {userCanAccessCart && (
                   <Link 
                     to="/cart"
-                    className={`${themePrefix}-fab-button transition-all duration-300 hover:scale-110 relative`}
+                    className={`relative transition-all duration-300 hover:scale-110 w-14 h-14 rounded-full flex items-center justify-center ${
+                      darkMode 
+                        ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400' 
+                        : 'bg-teal-500 hover:bg-teal-400 text-white border-3 border-teal-600'
+                    }`}
+                    style={{
+                      textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                    }}
                   >
-                    {darkMode && <div className="fab-glow"></div>}
-                    {!darkMode && <div className="neumorph-fab-glow"></div>}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
                     </svg>
                     {itemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-bounce">
                         {itemCount > 9 ? '9+' : itemCount}
                       </span>
                     )}
@@ -554,22 +404,33 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 {/* Mobile QR Tools Button */}
                 <Link 
                   to="/qr-tools"
-                  className={`${themePrefix}-fab-button transition-all duration-300 hover:scale-110`}
+                  className={`transition-all duration-300 hover:scale-110 w-14 h-14 rounded-full flex items-center justify-center ${
+                    darkMode 
+                      ? 'bg-purple-600 hover:bg-purple-500 text-white border-2 border-purple-400' 
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-white border-3 border-emerald-600'
+                  }`}
                   title="QR Tools"
+                  style={{
+                    textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                  }}
                 >
-                  {darkMode && <div className="fab-glow"></div>}
-                  {!darkMode && <div className="neumorph-fab-glow"></div>}
-                  <span className="text-lg animate-pulse">📱</span>
+                  <span className="text-lg">📱</span>
                 </Link>
                 
                 <ThemeToggle className="mr-2" />
                 
+                {/* Mobile Menu Toggle */}
                 <button 
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`${themePrefix}-fab-button transition-all duration-300 hover:scale-110`}
+                  className={`transition-all duration-300 hover:scale-110 w-14 h-14 rounded-full flex items-center justify-center ${
+                    darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-cyan-400 border-2 border-gray-600' 
+                      : 'bg-green-600 hover:bg-green-500 text-white border-3 border-green-700'
+                  }`}
+                  style={{
+                    textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                  }}
                 >
-                  {darkMode && <div className="fab-glow"></div>}
-                  {!darkMode && <div className="neumorph-fab-glow"></div>}
                   {mobileMenuOpen ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 transition-transform duration-300 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -582,40 +443,288 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </button>
               </div>
             </div>
-            
-            {/* Enhanced Mobile Search */}
-            {mobileMenuOpen && (
-              <div className="mt-4 md:hidden animate-slideInDown">
-                <div className="relative w-full">
-                  <input 
-                    type="text" 
-                    placeholder={darkMode ? "NEURAL SEARCH..." : "Search..."} 
-                    className={`w-full py-3 pl-4 pr-12 font-medium transition-all duration-300 focus:scale-105 ${
+          </div>
+        </nav>
+        
+        {/* INLINE CART DROPDOWN - EXPANDS NAVBAR */}
+        {cartDropdownOpen && (
+          <div className={`transition-all duration-500 overflow-hidden ${
+            darkMode 
+              ? 'bg-gradient-to-r from-gray-900/98 via-cyan-900/20 to-gray-900/98 border-b border-cyan-500/30' 
+              : 'bg-gradient-to-r from-teal-700/98 via-emerald-700/20 to-green-700/98 border-b border-teal-300/50'
+          } backdrop-blur-lg animate-slideDown`}>
+            <div className="container mx-auto px-4 py-6 relative z-20">
+              <div className="max-w-4xl mx-auto">
+                
+                {/* Cart Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${
                       darkMode 
-                        ? 'bg-gray-900/80 border-2 border-cyan-600/50 text-cyan-100 focus:border-cyan-400 rounded-lg placeholder-cyan-700 backdrop-blur-md' 
-                        : 'bg-white/90 border-2 border-indigo-300 text-gray-800 focus:border-indigo-500 rounded-lg placeholder-gray-500 backdrop-blur-md'
+                        ? 'bg-cyan-600/20 border border-cyan-500/30' 
+                        : 'bg-teal-500/20 border border-teal-400/30'
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${
+                        darkMode ? 'text-cyan-400' : 'text-teal-100'
+                      }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className={`text-2xl font-bold ${
+                        darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-white'
+                      }`}>
+                        {darkMode ? 'CART MATRIX' : 'Shopping Cart'} ({itemCount})
+                      </h3>
+                      {cartTotal > 0 && (
+                        <p className={`text-lg font-medium ${darkMode ? 'text-cyan-200' : 'text-teal-100'}`}>
+                          Total: ${cartTotal.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setCartDropdownOpen(false)}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                      darkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-cyan-400' 
+                        : 'bg-teal-600 hover:bg-teal-500 text-white'
                     }`}
-                  />
-                  <button className={`absolute right-0 top-0 bottom-0 px-3 transition-all duration-300 hover:scale-110 ${
-                    darkMode 
-                      ? 'bg-cyan-600 hover:bg-cyan-500 text-black rounded-r-lg' 
-                      : 'bg-indigo-500 hover:bg-indigo-600 text-white rounded-r-lg'
-                  }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
+                
+                {cart.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4 animate-bounce">🛒</div>
+                    <p className={`text-xl font-medium mb-6 ${darkMode ? 'text-cyan-300' : 'text-teal-100'}`}>
+                      {darkMode ? 'CART MATRIX EMPTY' : 'Your cart is empty'}
+                    </p>
+                    <Link
+                      to="/catalog"
+                      onClick={() => setCartDropdownOpen(false)}
+                      className={`inline-flex items-center gap-2 px-8 py-4 font-bold text-lg rounded-lg transition-all duration-300 hover:scale-105 ${
+                        darkMode 
+                          ? 'bg-cyan-600 hover:bg-cyan-500 text-black' 
+                          : 'bg-teal-500 hover:bg-teal-400 text-white'
+                      }`}
+                    >
+                      <span>{darkMode ? 'BROWSE PRODUCTS' : 'Browse Products'}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    {/* Cart Items Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+                      {cart.map((item) => (
+                        <div key={item.id} className={`p-4 rounded-lg transition-all duration-300 hover:scale-105 ${
+                          darkMode 
+                            ? 'bg-gray-800/50 border border-cyan-600/30 hover:bg-cyan-900/20' 
+                            : 'bg-teal-600/20 border border-teal-400/30 hover:bg-teal-500/30'
+                        }`}>
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${
+                              darkMode ? 'bg-gray-700 border border-cyan-600/50' : 'bg-teal-500/30'
+                            }`}>
+                              {item.imageUrl ? (
+                                <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                              ) : (
+                                <span className="text-2xl">📦</span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-lg font-bold truncate ${
+                                darkMode ? 'text-cyan-100' : 'text-white'
+                              }`}>
+                                {item.name}
+                              </p>
+                              <p className={`text-sm font-medium ${
+                                darkMode ? 'text-cyan-300' : 'text-teal-100'
+                              }`}>
+                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                              </p>
+                              <p className={`text-xl font-bold ${
+                                darkMode ? 'text-cyan-400 cyber-glow' : 'text-white'
+                              }`}>
+                                ${(item.price * item.quantity).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Cart Actions */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <button
+                        onClick={handleCheckoutFromDropdown}
+                        className={`inline-flex items-center justify-center gap-2 px-8 py-4 font-bold text-lg rounded-lg transition-all duration-300 hover:scale-105 ${
+                          darkMode 
+                            ? 'bg-green-600 hover:bg-green-500 text-white border-2 border-green-400' 
+                            : 'bg-green-600 hover:bg-green-500 text-white border-2 border-green-700'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{darkMode ? 'PROCESS ORDER' : 'Checkout'} (${cartTotal.toFixed(2)})</span>
+                      </button>
+                      <Link
+                        to="/cart"
+                        onClick={() => setCartDropdownOpen(false)}
+                        className={`inline-flex items-center justify-center gap-2 px-8 py-4 font-bold text-lg rounded-lg transition-all duration-300 hover:scale-105 ${
+                          darkMode 
+                            ? 'bg-gray-700 hover:bg-gray-600 text-cyan-300 border-2 border-gray-600' 
+                            : 'bg-teal-600 hover:bg-teal-500 text-white border-2 border-teal-700'
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>{darkMode ? 'VIEW FULL CART' : 'View Full Cart'}</span>
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </nav>
+        )}
+        
+        {/* INLINE PROFILE DROPDOWN - EXPANDS NAVBAR */}
+        {profileDropdownOpen && user && (
+          <div className={`transition-all duration-500 overflow-hidden ${
+            darkMode 
+              ? 'bg-gradient-to-r from-gray-900/98 via-cyan-900/20 to-gray-900/98 border-b border-cyan-500/30' 
+              : 'bg-gradient-to-r from-teal-700/98 via-emerald-700/20 to-green-700/98 border-b border-teal-300/50'
+          } backdrop-blur-lg animate-slideDown`}>
+            <div className="container mx-auto px-4 py-6 relative z-20">
+              <div className="max-w-4xl mx-auto">
+                
+                {/* Profile Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-16 h-16 rounded-full p-1 ${
+                      darkMode 
+                        ? 'bg-cyan-600 ring-4 ring-cyan-400/50' 
+                        : 'bg-teal-500 ring-4 ring-teal-400/50'
+                    }`}>
+                      <div className={`h-full w-full rounded-full flex items-center justify-center font-bold text-2xl ${
+                        darkMode 
+                          ? 'bg-gray-900 text-cyan-400' 
+                          : 'bg-white text-teal-700'
+                      }`}>
+                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${darkMode ? 'text-cyan-300' : 'text-teal-200'}`}>
+                        {darkMode ? 'NEURAL ACCESS GRANTED' : 'Signed in as'}
+                      </p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-cyan-100 cyber-glow' : 'text-white'}`}>
+                        {user.email}
+                      </p>
+                      <p className={`text-sm font-bold ${
+                        user.accountType === 'admin' ? 'text-red-400' : 
+                        user.accountType === 'manager' ? 'text-purple-400' : 
+                        'text-green-400'
+                      }`}>
+                        {user.accountType === 'admin' ? '👑 ADMINISTRATOR' : 
+                         user.accountType === 'manager' ? '👔 MANAGER' : 
+                         user.accountType === 'business' ? '🏢 BUSINESS USER' : 
+                         '👤 REGULAR USER'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                      darkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-cyan-400' 
+                        : 'bg-teal-600 hover:bg-teal-500 text-white'
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Profile Menu Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { to: '/profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', label: darkMode ? 'NEURAL PROFILE' : 'Your Profile', color: 'blue' },
+                    { to: '/settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', label: darkMode ? 'SYSTEM CONFIG' : 'Settings', color: 'purple' },
+                    { to: '/qr-tools', icon: '📱', label: darkMode ? 'QR PROTOCOLS' : 'QR Tools', color: 'green', isEmoji: true },
+                    { action: 'signout', icon: 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1', label: darkMode ? 'DISCONNECT' : 'Sign Out', color: 'red' }
+                  ].map((item, index) => (
+                    item.action === 'signout' ? (
+                      <button
+                        key={index}
+                        onClick={handleSignOut}
+                        className={`p-6 rounded-lg transition-all duration-300 hover:scale-105 text-left ${
+                          darkMode 
+                            ? 'bg-red-900/30 hover:bg-red-900/50 border border-red-600/30' 
+                            : 'bg-red-500/20 hover:bg-red-500/30 border border-red-400/30'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                          </svg>
+                          <span className={`font-bold ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                            {item.label}
+                          </span>
+                        </div>
+                      </button>
+                    ) : (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className={`p-6 rounded-lg transition-all duration-300 hover:scale-105 ${
+                          darkMode 
+                            ? 'bg-gray-800/50 hover:bg-cyan-900/20 border border-cyan-600/30' 
+                            : 'bg-teal-600/20 hover:bg-teal-500/30 border border-teal-400/30'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          {item.isEmoji ? (
+                            <span className="text-2xl">{item.icon}</span>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${
+                              darkMode ? 'text-cyan-400' : 'text-teal-100'
+                            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                            </svg>
+                          )}
+                          <span className={`font-bold ${
+                            darkMode ? 'text-cyan-100' : 'text-white'
+                          }`}>
+                            {item.label}
+                          </span>
+                        </div>
+                      </Link>
+                    )
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Enhanced Mobile Menu */}
         {mobileMenuOpen && (
           <div className={`md:hidden ${
             darkMode ? 'cyber-sidebar' : 'neumorph-sidebar'
-          } animate-slideInDown`}>
+          } animate-slideInDown backdrop-blur-lg`}>
             {darkMode && <div className="sidebar-glow"></div>}
             {!darkMode && <div className="neumorph-sidebar-glow"></div>}
             
@@ -626,17 +735,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 { to: '/inventory', label: darkMode ? 'INVENTORY CORE' : 'Inventory' },
                 { to: '/orders', label: darkMode ? 'ORDER STREAM' : 'Orders' },
                 { to: '/qr-tools', label: darkMode ? 'QR PROTOCOLS' : 'QR Tools', icon: '📱' }
-              ].map((item) => (
+              ].map((item, index) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`${themePrefix}-nav-link ${isActive(item.to) ? 'active' : ''} animate-slideInLeft`}
+                  className={`${themePrefix}-nav-link ${isActive(item.to) ? 'active' : ''} animate-slideInLeft transition-all duration-300 hover:scale-110`}
                   onClick={() => setMobileMenuOpen(false)}
-                  style={{ animationDelay: `${Object.keys(item).indexOf('to') * 100}ms` }}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {darkMode && <div className="nav-link-glow"></div>}
                   {!darkMode && <div className="neumorph-nav-link-glow"></div>}
-                  {item.icon && <span className="mr-2 animate-pulse">{item.icon}</span>}
+                  {item.icon && <span className="mr-2 group-hover:scale-125 transition-transform duration-300">{item.icon}</span>}
                   <span className="font-bold">{item.label}</span>
                 </Link>
               ))}
@@ -644,7 +753,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               {userCanCreateOrders && (
                 <Link
                   to="/create-order"
-                  className={`${themePrefix}-nav-link animate-slideInLeft`}
+                  className={`${themePrefix}-nav-link animate-slideInLeft transition-all duration-300 hover:scale-110`}
                   onClick={() => setMobileMenuOpen(false)}
                   style={{ animationDelay: '500ms' }}
                 >
@@ -662,7 +771,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                     {darkMode && <div className="user-card-glow"></div>}
                     {!darkMode && <div className="neumorph-user-card-glow"></div>}
                     
-                    <div className={`${darkMode ? 'user-avatar' : 'neumorph-user-avatar'}`}>
+                    <div className={`${darkMode ? 'user-avatar' : 'neumorph-user-avatar'} transition-all duration-300 hover:scale-110`}>
                       {darkMode && <div className="avatar-glow"></div>}
                       {!darkMode && <div className="neumorph-avatar-glow"></div>}
                       {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
@@ -691,7 +800,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                       <Link
                         key={item.to}
                         to={item.to}
-                        className={`${themePrefix}-nav-link animate-slideInLeft`}
+                        className={`${themePrefix}-nav-link animate-slideInLeft transition-all duration-300 hover:scale-110`}
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {darkMode && <div className="nav-link-glow"></div>}
@@ -702,7 +811,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                     
                     <button
                       onClick={handleSignOut}
-                      className={`${themePrefix}-signout-btn w-full animate-slideInLeft`}
+                      className={`${themePrefix}-signout-btn w-full animate-slideInLeft transition-all duration-300 hover:scale-110`}
                     >
                       {darkMode && <div className="signout-glow"></div>}
                       {!darkMode && <div className="neumorph-signout-glow"></div>}
@@ -716,10 +825,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               ) : (
                 <Link
                   to="/login"
-                  className={`${themePrefix}-btn ${themePrefix}-btn-primary block text-center py-3 mt-4 animate-fadeInUp`}
+                  className={`animate-fadeInUp transition-all duration-300 hover:scale-110 block text-center py-3 mt-4 font-bold text-sm rounded-lg ${
+                    darkMode 
+                      ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400' 
+                      : 'bg-green-600 hover:bg-green-500 text-white border-2 border-green-700'
+                  }`}
                   onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    textShadow: darkMode ? 'none' : '1px 1px 2px rgba(0,0,0,0.5)'
+                  }}
                 >
-                  <span className="font-bold">{darkMode ? 'NEURAL ACCESS' : 'Sign In'}</span>
+                  {darkMode ? 'NEURAL ACCESS' : 'Sign In'}
                 </Link>
               )}
             </div>
@@ -735,8 +851,21 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         />
       )}
 
-      {/* Custom animations */}
+      {/* Enhanced Custom animations */}
       <style jsx>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+            max-height: 0;
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 500px;
+          }
+        }
+        
         @keyframes slideInDown {
           from {
             opacity: 0;
@@ -768,6 +897,10 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.5s ease-out;
         }
         
         .animate-slideInDown {
