@@ -1,4 +1,3 @@
-
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -45,6 +44,150 @@ const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
 // User-specific components
 const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
 
+// Startup Animation Component
+const StartupAnimation = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
+  const [displayText, setDisplayText] = useState('');
+  const [bootStage, setBootStage] = useState(0);
+
+  const bootMessages = [
+    'INITIALIZING WHOLESALER SYSTEM...',
+    'LOADING COMPONENTS...',
+    'CONNECTING TO SERVERS...',
+    'SYSTEM READY'
+  ];
+
+  // Hacker text effect
+  useEffect(() => {
+    if (bootStage < bootMessages.length) {
+      const targetText = bootMessages[bootStage];
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+      let iterations = 0;
+      
+      const interval = setInterval(() => {
+        setDisplayText(
+          targetText
+            .split('')
+            .map((char, index) => {
+              if (index < iterations) {
+                return targetText[index];
+              }
+              return chars[Math.floor(Math.random() * chars.length)];
+            })
+            .join('')
+        );
+
+        if (iterations >= targetText.length) {
+          clearInterval(interval);
+        }
+        iterations += 1 / 3;
+      }, 30);
+
+      return () => clearInterval(interval);
+    }
+  }, [bootStage]);
+
+  // Progress animation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + 2;
+        if (newProgress >= 100) {
+          clearInterval(timer);
+          setTimeout(onComplete, 500);
+          return 100;
+        }
+        
+        const stage = Math.floor(newProgress / 25);
+        if (stage !== bootStage && stage < bootMessages.length) {
+          setBootStage(stage);
+        }
+        
+        return newProgress;
+      });
+    }, 80);
+
+    return () => clearInterval(timer);
+  }, [bootStage, onComplete]);
+
+  return (
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50 overflow-hidden">
+      {/* Background grid effect */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="grid-pattern"></div>
+      </div>
+
+      <div className="text-center space-y-8 relative z-10 max-w-2xl px-8">
+        {/* Logo */}
+        <div className="mb-12">
+          <div className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4 animate-pulse">
+            WHOLESALER
+          </div>
+          <div className="text-sm text-gray-400 font-mono">
+            LOADING PLATFORM...
+          </div>
+        </div>
+
+        {/* Boot Messages */}
+        <div className="h-12 flex items-center justify-center">
+          <div className="text-cyan-400 font-mono text-lg">
+            {displayText}
+            <span className="animate-pulse">_</span>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full max-w-md mx-auto">
+          <div className="flex justify-between text-sm text-gray-400 mb-3">
+            <span className="font-mono">LOADING</span>
+            <span className="font-mono">{progress.toFixed(0)}%</span>
+          </div>
+          <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 transition-all duration-300 rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* System Status */}
+        <div className="flex justify-center space-x-6 text-xs">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-gray-400 font-mono">SECURE</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+            <span className="text-gray-400 font-mono">ONLINE</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+            <span className="text-gray-400 font-mono">READY</span>
+          </div>
+        </div>
+      </div>
+
+      {/* CSS Styles */}
+      <style jsx>{`
+        .grid-pattern {
+          background-image: 
+            linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+          background-size: 20px 20px;
+          width: 100%;
+          height: 100%;
+          animation: gridMove 10s linear infinite;
+        }
+
+        @keyframes gridMove {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(20px, 20px); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex flex-col items-center justify-center min-h-screen">
@@ -54,6 +197,17 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  const [isBooting, setIsBooting] = useState(true);
+
+  const handleBootComplete = () => {
+    setIsBooting(false);
+  };
+
+  // Show startup animation first
+  if (isBooting) {
+    return <StartupAnimation onComplete={handleBootComplete} />;
+  }
+
   return (
     <AuthProvider>
       <ThemeProvider>
@@ -565,4 +719,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
