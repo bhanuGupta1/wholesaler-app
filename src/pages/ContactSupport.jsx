@@ -328,6 +328,77 @@ const ContactSupport = () => {
           </div>
         </div>
 
+        {/* Emergency Support Section */}
+        <div className="mb-12">
+          <div className={`${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border rounded-xl p-6`}>
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <span className="text-red-600 text-xl">🚨</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-red-300' : 'text-red-800'} mb-2`}>
+                  Emergency Support
+                </h3>
+                <p className={`${darkMode ? 'text-red-200' : 'text-red-700'} mb-4`}>
+                  For critical system outages, security incidents, or urgent business-impacting issues that require immediate attention.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className={`${darkMode ? 'bg-red-800/30' : 'bg-red-100'} rounded-lg p-4`}>
+                    <h4 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'} mb-2`}>
+                      Emergency Hotline
+                    </h4>
+                    <a 
+                      href="tel:+6494000911"
+                      className={`text-lg font-bold ${darkMode ? 'text-red-300' : 'text-red-600'} hover:underline`}
+                    >
+                      +64 9 400 0911
+                    </a>
+                    <p className={`text-xs ${darkMode ? 'text-red-300' : 'text-red-600'} mt-1`}>
+                      24/7 Emergency Line
+                    </p>
+                  </div>
+
+                  <div className={`${darkMode ? 'bg-red-800/30' : 'bg-red-100'} rounded-lg p-4`}>
+                    <h4 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'} mb-2`}>
+                      Critical Email
+                    </h4>
+                    <a 
+                      href="mailto:emergency@megawholesaler.co.nz"
+                      className={`text-sm font-bold ${darkMode ? 'text-red-300' : 'text-red-600'} hover:underline break-all`}
+                    >
+                      emergency@megawholesaler.co.nz
+                    </a>
+                    <p className={`text-xs ${darkMode ? 'text-red-300' : 'text-red-600'} mt-1`}>
+                      Monitored 24/7
+                    </p>
+                  </div>
+
+                  <div className={`${darkMode ? 'bg-red-800/30' : 'bg-red-100'} rounded-lg p-4`}>
+                    <h4 className={`font-semibold ${darkMode ? 'text-red-200' : 'text-red-800'} mb-2`}>
+                      Response Time
+                    </h4>
+                    <p className={`text-lg font-bold ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
+                      &lt; 15 minutes
+                    </p>
+                    <p className={`text-xs ${darkMode ? 'text-red-300' : 'text-red-600'} mt-1`}>
+                      Guaranteed response
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`mt-4 p-3 ${darkMode ? 'bg-red-800/20' : 'bg-red-100'} rounded-lg`}>
+                  <p className={`text-sm ${darkMode ? 'text-red-200' : 'text-red-700'}`}>
+                    <strong>What qualifies as emergency:</strong> System-wide outages, security breaches, data loss, payment processing failures, or any issue preventing critical business operations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Ticket Tracking Section */}
         <div className="mb-12">
           <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-8`}>
