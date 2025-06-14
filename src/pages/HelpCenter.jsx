@@ -1,8 +1,68 @@
-import React, { useState } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload } from 'react-icons/fa';
+import React, { useState, useMemo } from 'react';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // FAQ data with categories for filtering
+  const faqData = [
+    {
+      id: 1,
+      category: 'orders',
+      question: 'How do I place an order?',
+      answer: 'Navigate to the Orders section, click "Create New Order", fill in customer information, select products, and submit. Orders are processed immediately and stock is updated automatically.',
+      tags: ['order', 'place', 'create', 'submit']
+    },
+    {
+      id: 2,
+      category: 'inventory',
+      question: 'How do I manage inventory?',
+      answer: 'Go to the Inventory section to add, edit, or delete products. You can bulk upload products via CSV, manage stock levels, and set low stock alerts.',
+      tags: ['inventory', 'stock', 'products', 'manage', 'csv', 'upload']
+    },
+    {
+      id: 3,
+      category: 'account',
+      question: 'Can I use the system without creating an account?',
+      answer: 'Yes! We offer guest access where you can browse products and view orders in read-only mode. However, creating an account unlocks full functionality including order management and inventory control.',
+      tags: ['guest', 'account', 'access', 'browse']
+    },
+    {
+      id: 4,
+      category: 'account',
+      question: "What's the difference between user roles?",
+      answer: 'Admin: Full access to all features including user management and system settings. Manager: Can manage inventory, orders, and view analytics. User: Can place orders and view assigned inventory.',
+      tags: ['roles', 'admin', 'manager', 'user', 'permissions']
+    },
+    {
+      id: 5,
+      category: 'general',
+      question: 'How do I switch between dark and light mode?',
+      answer: 'Click the theme toggle button in the top navigation bar. Your preference will be saved and applied automatically on future visits.',
+      tags: ['theme', 'dark', 'light', 'mode', 'toggle']
+    }
+  ];
+
+  // Filter FAQs based on search and category
+  const filteredFAQs = useMemo(() => {
+    return faqData.filter(faq => {
+      const matchesSearch = searchQuery === '' || 
+        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        faq.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, selectedCategory]);
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+  };
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} py-8`}>
