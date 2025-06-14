@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown, FaHome, FaChevronRight, FaStar, FaRegStar, FaPrint, FaFileExport, FaFilePdf } from 'react-icons/fa';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown, FaHome, FaChevronRight, FaStar, FaRegStar, FaPrint, FaFileExport, FaFilePdf, FaKeyboard, FaBell, FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -18,6 +18,14 @@ const HelpCenter = () => {
   const [feedbackRatings, setFeedbackRatings] = useState({});
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [globalFeedback, setGlobalFeedback] = useState({ rating: 0, comment: '', submitted: false });
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [systemStatus, setSystemStatus] = useState({
+    helpCenter: 'operational',
+    search: 'operational',
+    feedback: 'operational',
+    lastUpdated: new Date().toISOString()
+  });
 
   // Update breadcrumbs based on current state
   const updateBreadcrumbs = (tab, category = null, searchTerm = null) => {
@@ -54,6 +62,58 @@ const HelpCenter = () => {
     updateBreadcrumbs(activeTab, selectedCategory, searchQuery);
   }, [activeTab, selectedCategory, searchQuery]);
 
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl + K to focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector('input[type="text"]')?.focus();
+      }
+      
+      // Cmd/Ctrl + P to print
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        e.preventDefault();
+        printPage();
+      }
+      
+      // Cmd/Ctrl + E to export
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+        e.preventDefault();
+        exportToText();
+      }
+      
+      // Tab switching with numbers
+      if (e.key === '1' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setActiveTab('faq');
+      }
+      if (e.key === '2' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setActiveTab('knowledge');
+      }
+      
+      // Escape to clear search
+      if (e.key === 'Escape' && searchQuery) {
+        clearSearch();
+      }
+      
+      // ? to show keyboard shortcuts
+      if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        setShowKeyboardShortcuts(true);
+      }
+      
+      // Escape to close keyboard shortcuts modal
+      if (e.key === 'Escape' && showKeyboardShortcuts) {
+        setShowKeyboardShortcuts(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchQuery, showKeyboardShortcuts]);
+
   const rateFAQHelpful = (faqId, helpful) => {
     setFeedbackRatings(prev => ({
       ...prev,
@@ -70,11 +130,90 @@ const HelpCenter = () => {
 
   const submitGlobalFeedback = () => {
     setGlobalFeedback(prev => ({ ...prev, submitted: true }));
+    addNotification('Thank you for your feedback! Your input helps us improve.', 'success');
     setTimeout(() => {
       setShowFeedbackForm(false);
       setGlobalFeedback({ rating: 0, comment: '', submitted: false });
     }, 2000);
   };
+
+  const addNotification = (message, type = 'info', duration = 5000) => {
+    const id = Date.now();
+    const notification = { id, message, type, timestamp: new Date() };
+    
+    setNotifications(prev => [...prev, notification]);
+    
+    if (duration > 0) {
+      setTimeout(() => {
+        removeNotification(id);
+      }, duration);
+    }
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'operational': return 'text-green-600';
+      case 'degraded': return 'text-yellow-600';
+      case 'down': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'operational': return FaCheckCircle;
+      case 'degraded': return FaExclamationTriangle;
+      case 'down': return FaTimes;
+      default: return FaInfoCircle;
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'success': return FaCheckCircle;
+      case 'warning': return FaExclamationTriangle;
+      case 'error': return FaTimes;
+      default: return FaInfoCircle;
+    }
+  };
+
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'success': return 'bg-green-50 border-green-200 text-green-800';
+      case 'warning': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+      case 'error': return 'bg-red-50 border-red-200 text-red-800';
+      default: return 'bg-blue-50 border-blue-200 text-blue-800';
+    }
+  };
+
+  // Simulate system status checks
+  React.useEffect(() => {
+    const checkSystemStatus = () => {
+      // Simulate random status checks
+      const services = ['helpCenter', 'search', 'feedback'];
+      const statuses = ['operational', 'operational', 'operational', 'degraded']; // Mostly operational
+      
+      setSystemStatus(prev => ({
+        ...prev,
+        [services[Math.floor(Math.random() * services.length)]]: statuses[Math.floor(Math.random() * statuses.length)],
+        lastUpdated: new Date().toISOString()
+      }));
+    };
+
+    const interval = setInterval(checkSystemStatus, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add notifications for user actions
+  React.useEffect(() => {
+    if (searchQuery && filteredFAQs.length === 0 && filteredKnowledgeBase.length === 0) {
+      addNotification(`No results found for "${searchQuery}". Try different keywords or check our popular content.`, 'warning', 8000);
+    }
+  }, [searchQuery, filteredFAQs.length, filteredKnowledgeBase.length]);
 
   const printPage = () => {
     window.print();
@@ -288,16 +427,99 @@ const HelpCenter = () => {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} py-8`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} py-4 md:py-8`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className={`text-3xl md:text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
             Help Center
           </h1>
-          <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`text-lg md:text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'} max-w-2xl mx-auto`}>
             Find answers to your questions and learn how to use our platform
           </p>
+        </div>
+
+        {/* Notifications */}
+        {notifications.length > 0 && (
+          <div className="fixed top-4 right-4 z-40 space-y-2 max-w-sm">
+            {notifications.map((notification) => {
+              const Icon = getNotificationIcon(notification.type);
+              return (
+                <div
+                  key={notification.id}
+                  className={`p-4 rounded-lg border shadow-lg animate-slide-in ${
+                    darkMode 
+                      ? `bg-gray-800 border-gray-600 text-white`
+                      : getNotificationColor(notification.type)
+                  }`}
+                  role="alert"
+                  aria-live="polite"
+                >
+                  <div className="flex items-start space-x-3">
+                    <Icon className={`mt-0.5 ${
+                      notification.type === 'success' ? 'text-green-600' :
+                      notification.type === 'warning' ? 'text-yellow-600' :
+                      notification.type === 'error' ? 'text-red-600' :
+                      'text-blue-600'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{notification.message}</p>
+                      <p className="text-xs opacity-75 mt-1">
+                        {notification.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => removeNotification(notification.id)}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Dismiss notification"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* System Status Bar */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-4 mb-8`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <FaCheckCircle className="text-green-600" />
+                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  System Status
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-6">
+                {Object.entries(systemStatus).filter(([key]) => key !== 'lastUpdated').map(([service, status]) => {
+                  const Icon = getStatusIcon(status);
+                  return (
+                    <div key={service} className="flex items-center space-x-1">
+                      <Icon className={`text-xs ${getStatusColor(status)}`} />
+                      <span className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} capitalize`}>
+                        {service.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Last updated: {new Date(systemStatus.lastUpdated).toLocaleTimeString()}
+              </p>
+              <button 
+                onClick={() => addNotification('System status refreshed', 'info', 3000)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Breadcrumb Navigation */}
@@ -387,49 +609,49 @@ const HelpCenter = () => {
         </div>
 
         {/* Analytics & Popular Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-8 md:mb-12">
           {/* Help Center Stats */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
-            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-4 md:p-6 order-3 xl:order-1`}>
+            <h3 className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3 md:mb-4 flex items-center`}>
               📊 Help Center Stats
             </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Articles</span>
-                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{knowledgeBase.length}</span>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="text-center">
+                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{knowledgeBase.length}</div>
+                <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Articles</div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>FAQ Items</span>
-                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{faqData.length}</span>
+              <div className="text-center">
+                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{faqData.length}</div>
+                <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>FAQ Items</div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Views</span>
-                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{totalViews.toLocaleString()}</span>
+              <div className="text-center">
+                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{totalViews.toLocaleString()}</div>
+                <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Views</div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Categories</span>
-                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>4</span>
+              <div className="text-center">
+                <div className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>4</div>
+                <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Categories</div>
               </div>
             </div>
           </div>
 
           {/* Most Popular FAQs */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
-            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-4 md:p-6 order-1 xl:order-2`}>
+            <h3 className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3 md:mb-4 flex items-center`}>
               🔥 Popular FAQs
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {popularFAQs.map((faq, index) => (
-                <div key={faq.id} className="flex items-start space-x-3">
-                  <span className={`text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                <div key={faq.id} className="flex items-start space-x-2 md:space-x-3">
+                  <span className={`text-xs md:text-sm font-bold w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
                     index === 1 ? 'bg-gray-100 text-gray-800' :
                     'bg-orange-100 text-orange-800'
                   }`}>
                     {index + 1}
                   </span>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs md:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
                       {faq.question}
                     </p>
                     <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
@@ -442,22 +664,22 @@ const HelpCenter = () => {
           </div>
 
           {/* Most Popular Articles */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
-            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-4 md:p-6 order-2 xl:order-3 md:col-span-2 xl:col-span-1`}>
+            <h3 className={`text-base md:text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3 md:mb-4 flex items-center`}>
               📚 Popular Articles
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {popularArticles.map((article, index) => (
-                <div key={article.id} className="flex items-start space-x-3">
-                  <span className={`text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                <div key={article.id} className="flex items-start space-x-2 md:space-x-3">
+                  <span className={`text-xs md:text-sm font-bold w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
                     index === 1 ? 'bg-gray-100 text-gray-800' :
                     'bg-orange-100 text-orange-800'
                   }`}>
                     {index + 1}
                   </span>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs md:text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
                       {article.title}
                     </p>
                     <div className="flex justify-between items-center mt-1">
@@ -481,20 +703,23 @@ const HelpCenter = () => {
         <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6 mb-8`}>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} aria-hidden="true" />
               <input
                 type="text"
-                placeholder="Search help articles, FAQs, and guides..."
+                placeholder="Search help articles, FAQs, and guides... (Ctrl+K)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                   darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
                 }`}
+                aria-label="Search help center content"
+                aria-describedby="search-description"
               />
               {searchQuery && (
                 <button
                   onClick={clearSearch}
                   className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                  aria-label="Clear search"
                 >
                   <FaTimes />
                 </button>
@@ -507,6 +732,7 @@ const HelpCenter = () => {
               className={`px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                 darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
               }`}
+              aria-label="Filter by category"
             >
               <option value="all">All Categories</option>
               <option value="orders">Orders</option>
@@ -514,17 +740,36 @@ const HelpCenter = () => {
               <option value="account">Account</option>
               <option value="general">General</option>
             </select>
+
+            <button
+              onClick={() => setShowKeyboardShortcuts(true)}
+              className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300'
+              }`}
+              aria-label="Show keyboard shortcuts"
+              title="Keyboard shortcuts (? key)"
+            >
+              <FaKeyboard className="mr-2" />
+              Shortcuts
+            </button>
+          </div>
+          
+          <div id="search-description" className="sr-only">
+            Use this search box to find help articles, FAQs, and guides. You can also use Ctrl+K to focus this field.
           </div>
           
           {(searchQuery || selectedCategory !== 'all') && (
             <div className="mt-4 flex items-center justify-between">
-              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Found {filteredFAQs.length} result{filteredFAQs.length !== 1 ? 's' : ''}
+              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} role="status" aria-live="polite">
+                Found {activeTab === 'faq' ? filteredFAQs.length : filteredKnowledgeBase.length} result{(activeTab === 'faq' ? filteredFAQs.length : filteredKnowledgeBase.length) !== 1 ? 's' : ''}
               </span>
               {(searchQuery || selectedCategory !== 'all') && (
                 <button
                   onClick={clearSearch}
                   className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                  aria-label="Clear all filters"
                 >
                   Clear filters
                 </button>
@@ -1004,6 +1249,89 @@ const HelpCenter = () => {
             </div>
           </div>
         </div>
+
+        {/* Keyboard Shortcuts Modal */}
+        {showKeyboardShortcuts && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowKeyboardShortcuts(false)}>
+            <div 
+              className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-xl max-w-md w-full mx-4 p-6`}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-labelledby="shortcuts-title"
+              aria-modal="true"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 id="shortcuts-title" className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Keyboard Shortcuts
+                </h3>
+                <button
+                  onClick={() => setShowKeyboardShortcuts(false)}
+                  className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                  aria-label="Close shortcuts modal"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Search</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Ctrl + K
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Print page</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Ctrl + P
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Export content</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Ctrl + E
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Switch to FAQ</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Ctrl + 1
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Switch to Knowledge Base</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Ctrl + 2
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Clear search</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    Escape
+                  </kbd>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Show shortcuts</span>
+                  <kbd className={`px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                    ?
+                  </kbd>
+                </div>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Press <kbd className={`px-1 py-0.5 text-xs rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>Escape</kbd> to close this dialog
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
