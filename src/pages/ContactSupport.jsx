@@ -194,6 +194,63 @@ const ContactSupport = () => {
           </div>
         </div>
 
+        {/* Ticket Tracking Section */}
+        <div className="mb-12">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-8`}>
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
+              Your Support Tickets
+            </h2>
+            
+            {tickets.length > 0 ? (
+              <div className="space-y-4">
+                {tickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-4 hover:shadow-md transition-shadow`}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <span className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {ticket.id}
+                          </span>
+                          <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(ticket.status)}`}>
+                            {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                          </span>
+                          <span className={`text-sm font-medium capitalize ${getPriorityColor(ticket.priority)}`}>
+                            {ticket.priority} Priority
+                          </span>
+                        </div>
+                        <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-2`}>
+                          {ticket.subject}
+                        </h3>
+                        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} space-x-4`}>
+                          <span>Created: {ticket.created}</span>
+                          <span>Last Update: {ticket.lastUpdate}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 md:mt-0 md:ml-4">
+                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                  No support tickets yet.
+                </p>
+                <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                  Submit a support request below to get started.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Contact Form */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
