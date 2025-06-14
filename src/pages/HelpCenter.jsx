@@ -5,6 +5,61 @@ const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activeTab, setActiveTab] = useState('faq');
+
+  // Knowledge base articles
+  const knowledgeBase = [
+    {
+      id: 1,
+      title: 'Getting Started with Mega Wholesaler',
+      category: 'general',
+      summary: 'Learn the basics of using our platform for inventory and order management.',
+      content: 'This comprehensive guide will walk you through...',
+      tags: ['getting started', 'basics', 'tutorial'],
+      readTime: '5 min read'
+    },
+    {
+      id: 2,
+      title: 'Advanced Inventory Management',
+      category: 'inventory',
+      summary: 'Master advanced features for efficient inventory control.',
+      content: 'Advanced inventory management techniques...',
+      tags: ['inventory', 'advanced', 'management'],
+      readTime: '12 min read'
+    },
+    {
+      id: 3,
+      title: 'Order Processing Best Practices',
+      category: 'orders',
+      summary: 'Optimize your order workflow for maximum efficiency.',
+      content: 'Best practices for processing orders quickly...',
+      tags: ['orders', 'workflow', 'best practices'],
+      readTime: '8 min read'
+    },
+    {
+      id: 4,
+      title: 'Understanding User Roles and Permissions',
+      category: 'account',
+      summary: 'Learn about different user roles and their capabilities.',
+      content: 'User roles and permissions explained...',
+      tags: ['roles', 'permissions', 'users'],
+      readTime: '6 min read'
+    }
+  ];
+
+  // Filter knowledge base articles
+  const filteredKnowledgeBase = useMemo(() => {
+    return knowledgeBase.filter(article => {
+      const matchesSearch = searchQuery === '' || 
+        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        article.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, selectedCategory]);
 
   // FAQ data with categories for filtering
   const faqData = [
