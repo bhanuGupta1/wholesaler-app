@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown } from 'react-icons/fa';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -7,6 +7,24 @@ const HelpCenter = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('faq');
   const [expandedFAQs, setExpandedFAQs] = useState(new Set([1])); // First FAQ expanded by default
+  const [viewCounts, setViewCounts] = useState({
+    faq: { 1: 245, 2: 189, 3: 167, 4: 134, 5: 98 },
+    articles: { 1: 523, 2: 387, 3: 298, 4: 201 }
+  });
+
+  // Popular content based on view counts
+  const popularFAQs = faqData
+    .map(faq => ({ ...faq, views: viewCounts.faq[faq.id] || 0 }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 3);
+
+  const popularArticles = knowledgeBase
+    .map(article => ({ ...article, views: viewCounts.articles[article.id] || 0 }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 3);
+
+  const totalViews = Object.values(viewCounts.faq).reduce((sum, count) => sum + count, 0) +
+                   Object.values(viewCounts.articles).reduce((sum, count) => sum + count, 0);
 
   const toggleFAQ = (faqId) => {
     const newExpanded = new Set(expandedFAQs);
@@ -14,8 +32,26 @@ const HelpCenter = () => {
       newExpanded.delete(faqId);
     } else {
       newExpanded.add(faqId);
+      // Track view when FAQ is expanded
+      setViewCounts(prev => ({
+        ...prev,
+        faq: {
+          ...prev.faq,
+          [faqId]: (prev.faq[faqId] || 0) + 1
+        }
+      }));
     }
     setExpandedFAQs(newExpanded);
+  };
+
+  const trackArticleView = (articleId) => {
+    setViewCounts(prev => ({
+      ...prev,
+      articles: {
+        ...prev.articles,
+        [articleId]: (prev.articles[articleId] || 0) + 1
+      }
+    }));
   };
 
   const expandAllFAQs = () => {
@@ -203,6 +239,97 @@ const HelpCenter = () => {
           </div>
         </div>
 
+        {/* Analytics & Popular Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {/* Help Center Stats */}
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+              📊 Help Center Stats
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Articles</span>
+                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{knowledgeBase.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>FAQ Items</span>
+                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{faqData.length}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Views</span>
+                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{totalViews.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Categories</span>
+                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>4</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Most Popular FAQs */}
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+              🔥 Popular FAQs
+            </h3>
+            <div className="space-y-3">
+              {popularFAQs.map((faq, index) => (
+                <div key={faq.id} className="flex items-start space-x-3">
+                  <span className={`text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                    index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                    index === 1 ? 'bg-gray-100 text-gray-800' :
+                    'bg-orange-100 text-orange-800'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
+                      {faq.question}
+                    </p>
+                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                      {faq.views} views
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Most Popular Articles */}
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 flex items-center`}>
+              📚 Popular Articles
+            </h3>
+            <div className="space-y-3">
+              {popularArticles.map((article, index) => (
+                <div key={article.id} className="flex items-start space-x-3">
+                  <span className={`text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                    index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                    index === 1 ? 'bg-gray-100 text-gray-800' :
+                    'bg-orange-100 text-orange-800'
+                  }`}>
+                    {index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} line-clamp-2`}>
+                      {article.title}
+                    </p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {article.views} views
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {article.readTime}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Search Section */}
         <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6 mb-8`}>
           <div className="flex flex-col md:flex-row gap-4">
@@ -322,9 +449,22 @@ const HelpCenter = () => {
                           onClick={() => toggleFAQ(faq.id)}
                           className={`w-full px-6 py-4 text-left flex justify-between items-center hover:${darkMode ? 'bg-gray-600' : 'bg-gray-100'} transition-colors`}
                         >
-                          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} pr-4`}>
-                            {faq.question}
-                          </h3>
+                          <div className="flex-1 pr-4">
+                            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {faq.question}
+                            </h3>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center`}>
+                                <FaEye className="mr-1" />
+                                {viewCounts.faq[faq.id] || 0} views
+                              </span>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {faq.category}
+                              </span>
+                            </div>
+                          </div>
                           <FaChevronDown className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} transition-transform duration-200 ${
                             expandedFAQs.has(faq.id) ? 'transform rotate-180' : ''
                           }`} />
@@ -390,16 +530,26 @@ const HelpCenter = () => {
                 {filteredKnowledgeBase.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredKnowledgeBase.map((article) => (
-                      <div key={article.id} className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer`}>
+                      <div 
+                        key={article.id} 
+                        onClick={() => trackArticleView(article.id)}
+                        className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer`}
+                      >
                         <div className="flex justify-between items-start mb-3">
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
                           }`}>
                             {article.category}
                           </span>
-                          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {article.readTime}
-                          </span>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center`}>
+                              <FaEye className="mr-1" />
+                              {viewCounts.articles[article.id] || 0}
+                            </span>
+                            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {article.readTime}
+                            </span>
+                          </div>
                         </div>
                         <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
                           {article.title}
