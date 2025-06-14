@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane, FaUser, FaRobot, FaPaperclip, FaTimes, FaFileAlt, FaStar, FaRegStar } from 'react-icons/fa';
+import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane, FaUser, FaRobot, FaPaperclip, FaTimes, FaFileAlt, FaStar, FaRegStar, FaBell, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaWifi, FaWifiSlash } from 'react-icons/fa';
 
 const ContactSupport = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -28,6 +28,13 @@ const ContactSupport = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
+  const [notifications, setNotifications] = useState([]);
+  const [supportStatus, setSupportStatus] = useState({
+    online: true,
+    responseTime: '< 2 hours',
+    agentsAvailable: 12,
+    queueLength: 3
+  });
 
   // Keyboard shortcuts for contact support
   useEffect(() => {
@@ -198,6 +205,7 @@ const ContactSupport = () => {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      addNotification('Please fix the form errors before submitting', 'error');
       return;
     }
     
@@ -212,6 +220,7 @@ const ContactSupport = () => {
       console.log('Form submitted:', { ...formData, attachments });
       
       setSubmitSuccess(true);
+      addNotification('Support ticket submitted successfully! We\'ll get back to you soon.', 'success');
       setFormData({
         name: '',
         email: '',
@@ -226,10 +235,70 @@ const ContactSupport = () => {
       
     } catch (error) {
       setFormErrors({ submit: 'Failed to submit support ticket. Please try again.' });
+      addNotification('Failed to submit support ticket. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const addNotification = (message, type = 'info', duration = 5000) => {
+    const id = Date.now();
+    const notification = { id, message, type, timestamp: new Date() };
+    
+    setNotifications(prev => [...prev, notification]);
+    
+    if (duration > 0) {
+      setTimeout(() => {
+        removeNotification(id);
+      }, duration);
+    }
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'success': return FaCheckCircle;
+      case 'warning': return FaExclamationTriangle;
+      case 'error': return FaTimes;
+      default: return FaInfoCircle;
+    }
+  };
+
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'success': return 'bg-green-50 border-green-200 text-green-800';
+      case 'warning': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+      case 'error': return 'bg-red-50 border-red-200 text-red-800';
+      default: return 'bg-blue-50 border-blue-200 text-blue-800';
+    }
+  };
+
+  // Simulate support status updates
+  useEffect(() => {
+    const updateSupportStatus = () => {
+      setSupportStatus(prev => ({
+        ...prev,
+        agentsAvailable: Math.floor(Math.random() * 15) + 5,
+        queueLength: Math.floor(Math.random() * 8),
+        responseTime: Math.random() > 0.7 ? '< 4 hours' : '< 2 hours'
+      }));
+    };
+
+    const interval = setInterval(updateSupportStatus, 45000); // Update every 45 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add welcome notification
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      addNotification('Welcome to our support center! We\'re here to help you with any questions.', 'info', 8000);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const sendChatMessage = () => {
     if (newMessage.trim() === '') return;
@@ -287,6 +356,105 @@ const ContactSupport = () => {
           <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Get in touch with our support team for personalized assistance
           </p>
+        </div>
+
+        {/* Notifications */}
+        {notifications.length > 0 && (
+          <div className="fixed top-4 right-4 z-40 space-y-2 max-w-sm">
+            {notifications.map((notification) => {
+              const Icon = getNotificationIcon(notification.type);
+              return (
+                <div
+                  key={notification.id}
+                  className={`p-4 rounded-lg border shadow-lg animate-slide-in ${
+                    darkMode 
+                      ? `bg-gray-800 border-gray-600 text-white`
+                      : getNotificationColor(notification.type)
+                  }`}
+                  role="alert"
+                  aria-live="polite"
+                >
+                  <div className="flex items-start space-x-3">
+                    <Icon className={`mt-0.5 ${
+                      notification.type === 'success' ? 'text-green-600' :
+                      notification.type === 'warning' ? 'text-yellow-600' :
+                      notification.type === 'error' ? 'text-red-600' :
+                      'text-blue-600'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{notification.message}</p>
+                      <p className="text-xs opacity-75 mt-1">
+                        {notification.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => removeNotification(notification.id)}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Dismiss notification"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Support Status Banner */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg p-4 mb-8`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                {supportStatus.online ? (
+                  <FaWifi className="text-green-600" />
+                ) : (
+                  <FaWifiSlash className="text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Support Status: {supportStatus.online ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-6">
+                <div className="text-center">
+                  <p className={`text-lg font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                    {supportStatus.agentsAvailable}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Agents Available
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <p className={`text-lg font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    {supportStatus.queueLength}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    In Queue
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <p className={`text-lg font-bold ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                    {supportStatus.responseTime}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Avg Response
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <button 
+                onClick={() => addNotification('Support status refreshed', 'info', 3000)}
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Refresh Status
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Contact Information Cards */}
