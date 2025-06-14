@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown, FaHome, FaChevronRight } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -11,6 +11,45 @@ const HelpCenter = () => {
     faq: { 1: 245, 2: 189, 3: 167, 4: 134, 5: 98 },
     articles: { 1: 523, 2: 387, 3: 298, 4: 201 }
   });
+  const [breadcrumbs, setBreadcrumbs] = useState([
+    { label: 'Home', href: '/', icon: FaHome },
+    { label: 'Help Center', href: '/help-center', active: true }
+  ]);
+
+  // Update breadcrumbs based on current state
+  const updateBreadcrumbs = (tab, category = null, searchTerm = null) => {
+    let newBreadcrumbs = [
+      { label: 'Home', href: '/', icon: FaHome },
+      { label: 'Help Center', href: '/help-center' }
+    ];
+
+    if (tab === 'faq') {
+      newBreadcrumbs.push({ label: 'FAQ', active: true });
+    } else if (tab === 'knowledge') {
+      newBreadcrumbs.push({ label: 'Knowledge Base', active: true });
+    }
+
+    if (category && category !== 'all') {
+      newBreadcrumbs.push({ 
+        label: category.charAt(0).toUpperCase() + category.slice(1), 
+        active: true 
+      });
+    }
+
+    if (searchTerm) {
+      newBreadcrumbs.push({ 
+        label: `Search: "${searchTerm}"`, 
+        active: true 
+      });
+    }
+
+    setBreadcrumbs(newBreadcrumbs);
+  };
+
+  // Update breadcrumbs when tab, category, or search changes
+  React.useEffect(() => {
+    updateBreadcrumbs(activeTab, selectedCategory, searchQuery);
+  }, [activeTab, selectedCategory, searchQuery]);
 
   // Popular content based on view counts
   const popularFAQs = faqData
@@ -185,6 +224,40 @@ const HelpCenter = () => {
           <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Find answers to your questions and learn how to use our platform
           </p>
+        </div>
+
+        {/* Breadcrumb Navigation */}
+        <div className="mb-8">
+          <nav className="flex items-center space-x-2 text-sm">
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={index}>
+                {index > 0 && (
+                  <FaChevronRight className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                )}
+                <div className="flex items-center">
+                  {crumb.icon && (
+                    <crumb.icon className={`mr-1 text-xs ${
+                      crumb.active 
+                        ? darkMode ? 'text-indigo-400' : 'text-indigo-600'
+                        : darkMode ? 'text-gray-400' : 'text-gray-500'
+                    }`} />
+                  )}
+                  {crumb.active ? (
+                    <span className={`font-medium ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <a
+                      href={crumb.href}
+                      className={`hover:underline ${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {crumb.label}
+                    </a>
+                  )}
+                </div>
+              </React.Fragment>
+            ))}
+          </nav>
         </div>
 
         {/* Quick Help Cards */}
