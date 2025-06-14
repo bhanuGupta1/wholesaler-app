@@ -126,6 +126,63 @@ const HelpCenter = () => {
               Guides and resources
             </p>
           </div>
+          </div>
+        </div>
+
+        {/* Search Section */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-6 mb-8`}>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <FaSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <input
+                type="text"
+                placeholder="Search help articles, FAQs, and guides..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full pl-10 pr-10 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                }`}
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <FaTimes />
+                </button>
+              )}
+            </div>
+            
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className={`px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="all">All Categories</option>
+              <option value="orders">Orders</option>
+              <option value="inventory">Inventory</option>
+              <option value="account">Account</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+          
+          {(searchQuery || selectedCategory !== 'all') && (
+            <div className="mt-4 flex items-center justify-between">
+              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Found {filteredFAQs.length} result{filteredFAQs.length !== 1 ? 's' : ''}
+              </span>
+              {(searchQuery || selectedCategory !== 'all') && (
+                <button
+                  onClick={clearSearch}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* FAQ Section */}
@@ -134,56 +191,201 @@ const HelpCenter = () => {
             Frequently Asked Questions
           </h2>
           
-          <div className="space-y-6">
-            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                How do I place an order?
-              </h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Navigate to the Orders section, click "Create New Order", fill in customer information, 
-                select products, and submit. Orders are processed immediately and stock is updated automatically.
+          {filteredFAQs.length > 0 ? (
+            <div className="space-y-6">
+              {filteredFAQs.map((faq, index) => (
+                <div key={faq.id} className={`${index < filteredFAQs.length - 1 ? `border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6` : ''}`}>
+                  <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                    {faq.question}
+                  </h3>
+                  <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {faq.answer}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {faq.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                No results found for your search.
               </p>
+              <button
+                onClick={clearSearch}
+                className="text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Clear search and show all FAQs
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* User Guides Section */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-8 mb-12`}>
+          <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
+            User Guides & Tutorials
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                  <FaBook className="text-blue-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Getting Started
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Complete guide to setting up your account and navigating the platform for the first time.
+              </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Creating your account
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Dashboard overview
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Basic navigation
+                </a>
+              </div>
             </div>
 
-            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                How do I manage inventory?
-              </h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Go to the Inventory section to add, edit, or delete products. You can bulk upload products 
-                via CSV, manage stock levels, and set low stock alerts.
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-green-100 p-2 rounded-lg mr-3">
+                  <FaBook className="text-green-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Inventory Management
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Learn how to add, edit, and manage your product inventory effectively.
               </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Adding new products
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Bulk CSV upload
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Stock level management
+                </a>
+              </div>
             </div>
 
-            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                Can I use the system without creating an account?
-              </h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Yes! We offer guest access where you can browse products and view orders in read-only mode. 
-                However, creating an account unlocks full functionality including order management and inventory control.
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-purple-100 p-2 rounded-lg mr-3">
+                  <FaBook className="text-purple-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Order Processing
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Master the order workflow from creation to fulfillment and invoice generation.
               </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Creating orders
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Order status management
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Invoice generation
+                </a>
+              </div>
             </div>
 
-            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                What's the difference between user roles?
-              </h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                <strong>Admin:</strong> Full access to all features including user management and system settings.<br />
-                <strong>Manager:</strong> Can manage inventory, orders, and view analytics.<br />
-                <strong>User:</strong> Can place orders and view assigned inventory.
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-orange-100 p-2 rounded-lg mr-3">
+                  <FaVideo className="text-orange-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Video Tutorials
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Watch step-by-step video guides for visual learners.
               </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Platform overview (5 min)
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Inventory setup (8 min)
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Order workflow (12 min)
+                </a>
+              </div>
             </div>
 
-            <div>
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                How do I switch between dark and light mode?
-              </h3>
-              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Click the theme toggle button in the top navigation bar. Your preference will be saved 
-                and applied automatically on future visits.
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-2 rounded-lg mr-3">
+                  <FaDownload className="text-red-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Download Resources
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Downloadable guides, templates, and cheat sheets for offline reference.
               </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → CSV import template
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Quick reference guide
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → User manual (PDF)
+                </a>
+              </div>
+            </div>
+
+            <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}>
+              <div className="flex items-center mb-4">
+                <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                  <FaQuestionCircle className="text-indigo-600" />
+                </div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Troubleshooting
+                </h3>
+              </div>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                Common issues and their solutions to help you resolve problems quickly.
+              </p>
+              <div className="space-y-2">
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Login issues
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Performance problems
+                </a>
+                <a href="#" className="block text-indigo-600 hover:text-indigo-800 text-sm">
+                  → Data sync issues
+                </a>
+              </div>
             </div>
           </div>
         </div>
