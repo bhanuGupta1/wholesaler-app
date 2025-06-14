@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
-import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane, FaUser, FaRobot } from 'react-icons/fa';
 
 const ContactSupport = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
+  const [showLiveChat, setShowLiveChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      type: 'bot',
+      message: 'Hello! How can I help you today?',
+      timestamp: new Date()
+    }
+  ]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatEndRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +37,51 @@ const ContactSupport = () => {
     console.log('Form submitted:', formData);
     alert('Support ticket submitted successfully!');
   };
+
+  const sendChatMessage = () => {
+    if (newMessage.trim() === '') return;
+
+    const userMessage = {
+      id: chatMessages.length + 1,
+      type: 'user',
+      message: newMessage,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setNewMessage('');
+
+    // Simulate bot response
+    setTimeout(() => {
+      const botResponse = {
+        id: chatMessages.length + 2,
+        type: 'bot',
+        message: getBotResponse(newMessage),
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, botResponse]);
+    }, 1000);
+  };
+
+  const getBotResponse = (message) => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('order') || lowerMessage.includes('place')) {
+      return "To place an order, go to the Orders section and click 'Create New Order'. You'll need to fill in customer information and select products.";
+    } else if (lowerMessage.includes('inventory') || lowerMessage.includes('stock')) {
+      return "For inventory management, navigate to the Inventory section where you can add, edit, or delete products and manage stock levels.";
+    } else if (lowerMessage.includes('account') || lowerMessage.includes('login')) {
+      return "You can browse as a guest or create an account for full access. Account creation is free and gives you complete access to all features.";
+    } else if (lowerMessage.includes('help') || lowerMessage.includes('support')) {
+      return "I'm here to help! You can also check our Help Center for detailed guides or submit a support ticket for personalized assistance.";
+    } else {
+      return "Thanks for your message! For detailed assistance, please check our Help Center or submit a support ticket, and our team will get back to you.";
+    }
+  };
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} py-8`}>
@@ -257,6 +314,85 @@ const ContactSupport = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Live Chat Widget */}
+        <div className="fixed bottom-6 right-6 z-50">
+          {!showLiveChat ? (
+            <button
+              onClick={() => setShowLiveChat(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition-all duration-200 transform hover:scale-105"
+            >
+              <FaComments className="text-xl" />
+            </button>
+          ) : (
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow-xl w-80 h-96 flex flex-col`}>
+              {/* Chat Header */}
+              <div className="bg-indigo-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <div className="flex items-center">
+                  <FaComments className="mr-2" />
+                  <span className="font-medium">Live Chat</span>
+                </div>
+                <button
+                  onClick={() => setShowLiveChat(false)}
+                  className="text-white hover:text-gray-200"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-xs p-3 rounded-lg ${
+                      msg.type === 'user'
+                        ? 'bg-indigo-600 text-white'
+                        : darkMode
+                          ? 'bg-gray-700 text-gray-100'
+                          : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      <div className="flex items-start space-x-2">
+                        {msg.type === 'bot' && (
+                          <FaRobot className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        )}
+                        {msg.type === 'user' && (
+                          <FaUser className="mt-1 text-white" />
+                        )}
+                        <p className="text-sm">{msg.message}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                    placeholder="Type your message..."
+                    className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm ${
+                      darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  />
+                  <button
+                    onClick={sendChatMessage}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors"
+                  >
+                    <FaPaperPlane className="text-sm" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
