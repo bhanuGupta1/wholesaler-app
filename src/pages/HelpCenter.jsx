@@ -1,11 +1,30 @@
 import React, { useState, useMemo } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeTab, setActiveTab] = useState('faq');
+  const [expandedFAQs, setExpandedFAQs] = useState(new Set([1])); // First FAQ expanded by default
+
+  const toggleFAQ = (faqId) => {
+    const newExpanded = new Set(expandedFAQs);
+    if (newExpanded.has(faqId)) {
+      newExpanded.delete(faqId);
+    } else {
+      newExpanded.add(faqId);
+    }
+    setExpandedFAQs(newExpanded);
+  };
+
+  const expandAllFAQs = () => {
+    setExpandedFAQs(new Set(filteredFAQs.map(faq => faq.id)));
+  };
+
+  const collapseAllFAQs = () => {
+    setExpandedFAQs(new Set());
+  };
 
   // Knowledge base articles
   const knowledgeBase = [
@@ -275,32 +294,76 @@ const HelpCenter = () => {
           <div className="p-8">
             {activeTab === 'faq' ? (
               <div>
-                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
-                  Frequently Asked Questions
-                </h2>
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Frequently Asked Questions
+                  </h2>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={expandAllFAQs}
+                      className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1 rounded border border-indigo-300 hover:border-indigo-400 transition-colors"
+                    >
+                      Expand All
+                    </button>
+                    <button
+                      onClick={collapseAllFAQs}
+                      className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1 rounded border border-indigo-300 hover:border-indigo-400 transition-colors"
+                    >
+                      Collapse All
+                    </button>
+                  </div>
+                </div>
                 
                 {filteredFAQs.length > 0 ? (
-                  <div className="space-y-6">
-                    {filteredFAQs.map((faq, index) => (
-                      <div key={faq.id} className={`${index < filteredFAQs.length - 1 ? `border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6` : ''}`}>
-                        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                          {faq.question}
-                        </h3>
-                        <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {faq.answer}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {faq.tags.map(tag => (
-                            <span
-                              key={tag}
-                              className={`px-2 py-1 text-xs rounded-full ${
-                                darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-                              }`}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                  <div className="space-y-4">
+                    {filteredFAQs.map((faq) => (
+                      <div key={faq.id} className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg overflow-hidden`}>
+                        <button
+                          onClick={() => toggleFAQ(faq.id)}
+                          className={`w-full px-6 py-4 text-left flex justify-between items-center hover:${darkMode ? 'bg-gray-600' : 'bg-gray-100'} transition-colors`}
+                        >
+                          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} pr-4`}>
+                            {faq.question}
+                          </h3>
+                          <FaChevronDown className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} transition-transform duration-200 ${
+                            expandedFAQs.has(faq.id) ? 'transform rotate-180' : ''
+                          }`} />
+                        </button>
+                        
+                        {expandedFAQs.has(faq.id) && (
+                          <div className="px-6 pb-4 border-t border-gray-200 dark:border-gray-600">
+                            <div className="pt-4">
+                              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+                                {faq.answer}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {faq.tags.map(tag => (
+                                  <span
+                                    key={tag}
+                                    className={`px-2 py-1 text-xs rounded-full ${
+                                      darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
+                                    }`}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                              
+                              {/* Helpful buttons */}
+                              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 flex items-center space-x-4">
+                                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  Was this helpful?
+                                </span>
+                                <button className="text-sm text-green-600 hover:text-green-800 font-medium">
+                                  👍 Yes
+                                </button>
+                                <button className="text-sm text-red-600 hover:text-red-800 font-medium">
+                                  👎 No
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
