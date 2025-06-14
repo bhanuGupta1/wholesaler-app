@@ -23,6 +23,10 @@ const ContactSupport = () => {
     message: ''
   });
 
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   const [tickets, setTickets] = useState([
     {
       id: 'TICK-001',
@@ -67,13 +71,78 @@ const ContactSupport = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.subject.trim()) {
+      errors.subject = 'Subject is required';
+    }
+    
+    if (!formData.message.trim()) {
+      errors.message = 'Message is required';
+    } else if (formData.message.trim().length < 10) {
+      errors.message = 'Message must be at least 10 characters long';
+    }
+    
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement form submission logic
-    console.log('Form submitted:', formData);
-    alert('Support ticket submitted successfully!');
+    
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setFormErrors({});
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // TODO: Implement actual form submission logic
+      console.log('Form submitted:', formData);
+      
+      setSubmitSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        priority: 'medium',
+        message: ''
+      });
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(false), 5000);
+      
+    } catch (error) {
+      setFormErrors({ submit: 'Failed to submit support ticket. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const sendChatMessage = () => {
@@ -258,6 +327,30 @@ const ContactSupport = () => {
               <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
                 Send us a Message
               </h2>
+
+              {submitSuccess && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="text-green-600 mr-3">✓</div>
+                    <div>
+                      <h3 className="text-green-800 font-medium">Support ticket submitted successfully!</h3>
+                      <p className="text-green-700 text-sm">We'll get back to you within our response time guidelines.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {formErrors.submit && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="text-red-600 mr-3">⚠</div>
+                    <div>
+                      <h3 className="text-red-800 font-medium">Submission failed</h3>
+                      <p className="text-red-700 text-sm">{formErrors.submit}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -272,10 +365,17 @@ const ContactSupport = () => {
                       onChange={handleInputChange}
                       required
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                        formErrors.name 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900'
                       }`}
                       placeholder="Enter your full name"
                     />
+                    {formErrors.name && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -289,10 +389,17 @@ const ContactSupport = () => {
                       onChange={handleInputChange}
                       required
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                        formErrors.email 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900'
                       }`}
                       placeholder="Enter your email address"
                     />
+                    {formErrors.email && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                    )}
                   </div>
                 </div>
 
@@ -308,10 +415,17 @@ const ContactSupport = () => {
                       onChange={handleInputChange}
                       required
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                        formErrors.subject 
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                            : 'bg-white border-gray-300 text-gray-900'
                       }`}
                       placeholder="Brief description of your issue"
                     />
+                    {formErrors.subject && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.subject}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -345,17 +459,36 @@ const ContactSupport = () => {
                     required
                     rows="6"
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
+                      formErrors.message 
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                        : darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900'
                     }`}
                     placeholder="Please describe your issue in detail..."
                   ></textarea>
+                  {formErrors.message && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.message}</p>
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  disabled={isSubmitting}
+                  className={`w-full py-3 px-6 rounded-lg font-medium transition-colors duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                    isSubmitting 
+                      ? 'bg-gray-400 cursor-not-allowed text-white' 
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  }`}
                 >
-                  Send Message
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </div>
+                  ) : (
+                    'Send Message'
+                  )}
                 </button>
               </form>
             </div>
