@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown, FaHome, FaChevronRight } from 'react-icons/fa';
+import { FaQuestionCircle, FaBook, FaVideo, FaDownload, FaSearch, FaTimes, FaChevronDown, FaEye, FaThumbsUp, FaThumbsDown, FaHome, FaChevronRight, FaStar, FaRegStar, FaPrint, FaFileExport, FaFilePdf } from 'react-icons/fa';
 
 const HelpCenter = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -15,6 +15,9 @@ const HelpCenter = () => {
     { label: 'Home', href: '/', icon: FaHome },
     { label: 'Help Center', href: '/help-center', active: true }
   ]);
+  const [feedbackRatings, setFeedbackRatings] = useState({});
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [globalFeedback, setGlobalFeedback] = useState({ rating: 0, comment: '', submitted: false });
 
   // Update breadcrumbs based on current state
   const updateBreadcrumbs = (tab, category = null, searchTerm = null) => {
@@ -50,6 +53,77 @@ const HelpCenter = () => {
   React.useEffect(() => {
     updateBreadcrumbs(activeTab, selectedCategory, searchQuery);
   }, [activeTab, selectedCategory, searchQuery]);
+
+  const rateFAQHelpful = (faqId, helpful) => {
+    setFeedbackRatings(prev => ({
+      ...prev,
+      [`faq-${faqId}`]: helpful
+    }));
+  };
+
+  const rateArticleHelpful = (articleId, helpful) => {
+    setFeedbackRatings(prev => ({
+      ...prev,
+      [`article-${articleId}`]: helpful
+    }));
+  };
+
+  const submitGlobalFeedback = () => {
+    setGlobalFeedback(prev => ({ ...prev, submitted: true }));
+    setTimeout(() => {
+      setShowFeedbackForm(false);
+      setGlobalFeedback({ rating: 0, comment: '', submitted: false });
+    }, 2000);
+  };
+
+  const printPage = () => {
+    window.print();
+  };
+
+  const exportToPDF = () => {
+    // In a real implementation, you would use a library like jsPDF or html2pdf
+    alert('PDF export functionality would be implemented here using a library like jsPDF');
+  };
+
+  const exportToText = () => {
+    let content = `MEGA WHOLESALER HELP CENTER\n`;
+    content += `============================\n\n`;
+    
+    if (activeTab === 'faq') {
+      content += `FREQUENTLY ASKED QUESTIONS\n`;
+      content += `=========================\n\n`;
+      
+      filteredFAQs.forEach((faq, index) => {
+        content += `${index + 1}. ${faq.question}\n`;
+        content += `${'-'.repeat(faq.question.length)}\n`;
+        content += `${faq.answer}\n`;
+        content += `Tags: ${faq.tags.join(', ')}\n\n`;
+      });
+    } else {
+      content += `KNOWLEDGE BASE ARTICLES\n`;
+      content += `======================\n\n`;
+      
+      filteredKnowledgeBase.forEach((article, index) => {
+        content += `${index + 1}. ${article.title}\n`;
+        content += `${'-'.repeat(article.title.length)}\n`;
+        content += `Category: ${article.category}\n`;
+        content += `Read Time: ${article.readTime}\n`;
+        content += `Summary: ${article.summary}\n`;
+        content += `Tags: ${article.tags.join(', ')}\n\n`;
+      });
+    }
+    
+    content += `Generated on: ${new Date().toLocaleDateString()}\n`;
+    content += `Total items: ${activeTab === 'faq' ? filteredFAQs.length : filteredKnowledgeBase.length}\n`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `help-center-${activeTab}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Popular content based on view counts
   const popularFAQs = faqData
@@ -464,31 +538,89 @@ const HelpCenter = () => {
 
         {/* Tab Navigation */}
         <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border mb-8`}>
-          <div className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setActiveTab('faq')}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === 'faq'
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
-                  : darkMode
-                    ? 'text-gray-400 hover:text-gray-200'
-                    : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              FAQ
-            </button>
-            <button
-              onClick={() => setActiveTab('knowledge')}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === 'knowledge'
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
-                  : darkMode
-                    ? 'text-gray-400 hover:text-gray-200'
-                    : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Knowledge Base
-            </button>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setActiveTab('faq')}
+                className={`py-2 px-4 text-center font-medium transition-colors rounded-l-lg ${
+                  activeTab === 'faq'
+                    ? 'bg-indigo-600 text-white'
+                    : darkMode
+                      ? 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                FAQ
+              </button>
+              <button
+                onClick={() => setActiveTab('knowledge')}
+                className={`py-2 px-4 text-center font-medium transition-colors rounded-r-lg ${
+                  activeTab === 'knowledge'
+                    ? 'bg-indigo-600 text-white'
+                    : darkMode
+                      ? 'text-gray-400 hover:text-gray-200 bg-gray-700 hover:bg-gray-600'
+                      : 'text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                Knowledge Base
+              </button>
+            </div>
+
+            {/* Export/Print Controls */}
+            <div className="flex items-center space-x-2 mt-4 lg:mt-0">
+              <button
+                onClick={printPage}
+                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  darkMode 
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-600' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300'
+                }`}
+                title="Print this page"
+              >
+                <FaPrint className="mr-2" />
+                Print
+              </button>
+              
+              <div className="relative group">
+                <button
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-600' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300'
+                  }`}
+                >
+                  <FaFileExport className="mr-2" />
+                  Export
+                  <FaChevronDown className="ml-1 text-xs" />
+                </button>
+                
+                {/* Export Dropdown */}
+                <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 ${
+                  darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                }`}>
+                  <div className="py-2">
+                    <button
+                      onClick={exportToPDF}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center transition-colors ${
+                        darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FaFilePdf className="mr-2 text-red-500" />
+                      Export as PDF
+                    </button>
+                    <button
+                      onClick={exportToText}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center transition-colors ${
+                        darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FaFileAlt className="mr-2 text-gray-500" />
+                      Export as Text
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="p-8">
@@ -567,11 +699,27 @@ const HelpCenter = () => {
                                 <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                   Was this helpful?
                                 </span>
-                                <button className="text-sm text-green-600 hover:text-green-800 font-medium">
-                                  👍 Yes
+                                <button 
+                                  onClick={() => rateFAQHelpful(faq.id, true)}
+                                  className={`text-sm font-medium flex items-center transition-colors ${
+                                    feedbackRatings[`faq-${faq.id}`] === true
+                                      ? 'text-green-600'
+                                      : 'text-gray-500 hover:text-green-600'
+                                  }`}
+                                >
+                                  <FaThumbsUp className="mr-1" /> 
+                                  Yes {feedbackRatings[`faq-${faq.id}`] === true && '✓'}
                                 </button>
-                                <button className="text-sm text-red-600 hover:text-red-800 font-medium">
-                                  👎 No
+                                <button 
+                                  onClick={() => rateFAQHelpful(faq.id, false)}
+                                  className={`text-sm font-medium flex items-center transition-colors ${
+                                    feedbackRatings[`faq-${faq.id}`] === false
+                                      ? 'text-red-600'
+                                      : 'text-gray-500 hover:text-red-600'
+                                  }`}
+                                >
+                                  <FaThumbsDown className="mr-1" /> 
+                                  No {feedbackRatings[`faq-${faq.id}`] === false && '✓'}
                                 </button>
                               </div>
                             </div>
@@ -606,7 +754,7 @@ const HelpCenter = () => {
                       <div 
                         key={article.id} 
                         onClick={() => trackArticleView(article.id)}
-                        className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer`}
+                        className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer relative group`}
                       >
                         <div className="flex justify-between items-start mb-3">
                           <span className={`px-2 py-1 text-xs rounded-full ${
@@ -630,7 +778,7 @@ const HelpCenter = () => {
                         <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} text-sm mb-4`}>
                           {article.summary}
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 mb-4">
                           {article.tags.map(tag => (
                             <span
                               key={tag}
@@ -641,6 +789,41 @@ const HelpCenter = () => {
                               {tag}
                             </span>
                           ))}
+                        </div>
+
+                        {/* Article feedback */}
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-600">
+                          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Was this helpful?
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                rateArticleHelpful(article.id, true);
+                              }}
+                              className={`text-xs transition-colors ${
+                                feedbackRatings[`article-${article.id}`] === true
+                                  ? 'text-green-600'
+                                  : 'text-gray-400 hover:text-green-600'
+                              }`}
+                            >
+                              <FaThumbsUp />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                rateArticleHelpful(article.id, false);
+                              }}
+                              className={`text-xs transition-colors ${
+                                feedbackRatings[`article-${article.id}`] === false
+                                  ? 'text-red-600'
+                                  : 'text-gray-400 hover:text-red-600'
+                              }`}
+                            >
+                              <FaThumbsDown />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
