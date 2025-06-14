@@ -23,6 +23,44 @@ const ContactSupport = () => {
     message: ''
   });
 
+  const [tickets, setTickets] = useState([
+    {
+      id: 'TICK-001',
+      subject: 'Unable to upload CSV file',
+      status: 'open',
+      priority: 'high',
+      created: '2025-06-10',
+      lastUpdate: '2025-06-12'
+    },
+    {
+      id: 'TICK-002',
+      subject: 'Question about user roles',
+      status: 'resolved',
+      priority: 'medium',
+      created: '2025-06-08',
+      lastUpdate: '2025-06-09'
+    }
+  ]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'open': return 'bg-red-100 text-red-800 border-red-200';
+      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'resolved': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'urgent': return 'text-red-600';
+      case 'high': return 'text-orange-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-green-600';
+      default: return 'text-gray-600';
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
