@@ -240,50 +240,141 @@ const HelpCenter = () => {
           )}
         </div>
 
-        {/* FAQ Section */}
-        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-8 mb-12`}>
-          <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
-            Frequently Asked Questions
-          </h2>
-          
-          {filteredFAQs.length > 0 ? (
-            <div className="space-y-6">
-              {filteredFAQs.map((faq, index) => (
-                <div key={faq.id} className={`${index < filteredFAQs.length - 1 ? `border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6` : ''}`}>
-                  <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
-                    {faq.question}
-                  </h3>
-                  <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {faq.answer}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {faq.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {tag}
-                      </span>
+          )}
+        </div>
+
+        {/* Tab Navigation */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border mb-8`}>
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('faq')}
+              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                activeTab === 'faq'
+                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  : darkMode
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              FAQ
+            </button>
+            <button
+              onClick={() => setActiveTab('knowledge')}
+              className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+                activeTab === 'knowledge'
+                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  : darkMode
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Knowledge Base
+            </button>
+          </div>
+
+          <div className="p-8">
+            {activeTab === 'faq' ? (
+              <div>
+                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
+                  Frequently Asked Questions
+                </h2>
+                
+                {filteredFAQs.length > 0 ? (
+                  <div className="space-y-6">
+                    {filteredFAQs.map((faq, index) => (
+                      <div key={faq.id} className={`${index < filteredFAQs.length - 1 ? `border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6` : ''}`}>
+                        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                          {faq.question}
+                        </h3>
+                        <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {faq.answer}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {faq.tags.map(tag => (
+                            <span
+                              key={tag}
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-                No results found for your search.
-              </p>
-              <button
-                onClick={clearSearch}
-                className="text-indigo-600 hover:text-indigo-800 font-medium"
-              >
-                Clear search and show all FAQs
-              </button>
-            </div>
-          )}
+                ) : (
+                  <div className="text-center py-8">
+                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                      No results found for your search.
+                    </p>
+                    <button
+                      onClick={clearSearch}
+                      className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    >
+                      Clear search and show all FAQs
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
+                  Knowledge Base Articles
+                </h2>
+                
+                {filteredKnowledgeBase.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {filteredKnowledgeBase.map((article) => (
+                      <div key={article.id} className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer`}>
+                        <div className="flex justify-between items-start mb-3">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
+                          }`}>
+                            {article.category}
+                          </span>
+                          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {article.readTime}
+                          </span>
+                        </div>
+                        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                          {article.title}
+                        </h3>
+                        <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} text-sm mb-4`}>
+                          {article.summary}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {article.tags.map(tag => (
+                            <span
+                              key={tag}
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
+                              }`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                      No articles found for your search.
+                    </p>
+                    <button
+                      onClick={clearSearch}
+                      className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    >
+                      Clear search and show all articles
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* User Guides Section */}
