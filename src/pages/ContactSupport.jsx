@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane, FaUser, FaRobot } from 'react-icons/fa';
+import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane, FaUser, FaRobot, FaPaperclip, FaTimes, FaFileAlt } from 'react-icons/fa';
 
 const ContactSupport = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
@@ -26,6 +26,8 @@ const ContactSupport = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [attachments, setAttachments] = useState([]);
+  const fileInputRef = useRef(null);
 
   const [tickets, setTickets] = useState([
     {
@@ -55,6 +57,22 @@ const ContactSupport = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'urgent': return 'text-red-600';
@@ -65,7 +83,53 @@ const ContactSupport = () => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        setFormErrors(prev => ({
+          ...prev,
+          attachments: `File "${file.name}" is too large. Maximum size is 10MB.`
+        }));
+        return false;
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        setFormErrors(prev => ({
+          ...prev,
+          attachments: `File type "${file.type}" is not supported.`
+        }));
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      setAttachments(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+      setFormErrors(prev => ({ ...prev, attachments: '' }));
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -123,8 +187,8 @@ const ContactSupport = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // TODO: Implement actual form submission logic
-      console.log('Form submitted:', formData);
+      // TODO: Implement actual form submission logic with file uploads
+      console.log('Form submitted:', { ...formData, attachments });
       
       setSubmitSuccess(true);
       setFormData({
@@ -134,6 +198,7 @@ const ContactSupport = () => {
         priority: 'medium',
         message: ''
       });
+      setAttachments([]);
       
       // Hide success message after 5 seconds
       setTimeout(() => setSubmitSuccess(false), 5000);
@@ -470,6 +535,79 @@ const ContactSupport = () => {
                   {formErrors.message && (
                     <p className="mt-1 text-sm text-red-600">{formErrors.message}</p>
                   )}
+                </div>
+
+                {/* File Attachments */}
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Attachments (Optional)
+                  </label>
+                  <div className="space-y-4">
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                        darkMode 
+                          ? 'border-gray-600 hover:border-gray-500 bg-gray-700 hover:bg-gray-600' 
+                          : 'border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100'
+                      }`}
+                    >
+                      <FaPaperclip className={`mx-auto mb-2 text-2xl ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Click to attach files or drag and drop
+                      </p>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                        Supported: Images, PDF, Word documents (Max 10MB each, 5 files total)
+                      </p>
+                    </div>
+                    
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.doc,.docx"
+                      className="hidden"
+                    />
+
+                    {/* Display attached files */}
+                    {attachments.length > 0 && (
+                      <div className="space-y-2">
+                        {attachments.map((file, index) => (
+                          <div
+                            key={index}
+                            className={`flex items-center justify-between p-3 rounded-lg border ${
+                              darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FaFileAlt className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                              <div>
+                                <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  {file.name}
+                                </p>
+                                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  {formatFileSize(file.size)}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachment(index)}
+                              className={`p-1 rounded-full hover:bg-red-100 transition-colors ${
+                                darkMode ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20' : 'text-gray-500 hover:text-red-600'
+                              }`}
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {formErrors.attachments && (
+                      <p className="text-sm text-red-600">{formErrors.attachments}</p>
+                    )}
+                  </div>
                 </div>
 
                 <button
