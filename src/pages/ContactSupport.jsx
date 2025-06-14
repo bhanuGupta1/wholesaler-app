@@ -3,6 +3,28 @@ import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
 
 const ContactSupport = () => {
   const [darkMode] = useState(false); // Will be connected to your theme context
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    priority: 'medium',
+    message: ''
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // TODO: Implement form submission logic
+    console.log('Form submitted:', formData);
+    alert('Support ticket submitted successfully!');
+  };
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} py-8`}>
