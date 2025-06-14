@@ -29,6 +29,27 @@ const ContactSupport = () => {
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
 
+  // Keyboard shortcuts for contact support
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd/Ctrl + Enter to submit form
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isSubmitting) {
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }
+      
+      // Escape to close live chat
+      if (e.key === 'Escape' && showLiveChat) {
+        setShowLiveChat(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSubmitting, showLiveChat]);
+
   const [tickets, setTickets] = useState([
     {
       id: 'TICK-001',
@@ -488,112 +509,137 @@ const ContactSupport = () => {
                 </div>
               )}
               
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        formErrors.name 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
-                          : darkMode 
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      placeholder="Enter your full name"
-                    />
-                    {formErrors.name && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
-                    )}
+              <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                <fieldset>
+                  <legend className="sr-only">Contact Information</legend>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="contact-name" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Full Name *
+                      </label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                        aria-describedby={formErrors.name ? 'name-error' : undefined}
+                        aria-invalid={formErrors.name ? 'true' : 'false'}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          formErrors.name 
+                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                            : darkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                              : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="Enter your full name"
+                      />
+                      {formErrors.name && (
+                        <p id="name-error" className="mt-1 text-sm text-red-600" role="alert">
+                          {formErrors.name}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="contact-email" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Email Address *
+                      </label>
+                      <input
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        aria-describedby={formErrors.email ? 'email-error' : undefined}
+                        aria-invalid={formErrors.email ? 'true' : 'false'}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          formErrors.email 
+                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                            : darkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                              : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="Enter your email address"
+                      />
+                      {formErrors.email && (
+                        <p id="email-error" className="mt-1 text-sm text-red-600" role="alert">
+                          {formErrors.email}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        formErrors.email 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
-                          : darkMode 
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      placeholder="Enter your email address"
-                    />
-                    {formErrors.email && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
-                    )}
-                  </div>
-                </div>
+                </fieldset>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Subject *
-                    </label>
-                    <input
-                      type="text"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        formErrors.subject 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
-                          : darkMode 
-                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                            : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      placeholder="Brief description of your issue"
-                    />
-                    {formErrors.subject && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.subject}</p>
-                    )}
+                <fieldset>
+                  <legend className="sr-only">Issue Details</legend>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="contact-subject" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Subject *
+                      </label>
+                      <input
+                        id="contact-subject"
+                        type="text"
+                        name="subject"
+                        value={formData.subject}
+                        onChange={handleInputChange}
+                        required
+                        aria-describedby={formErrors.subject ? 'subject-error' : undefined}
+                        aria-invalid={formErrors.subject ? 'true' : 'false'}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          formErrors.subject 
+                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                            : darkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                              : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="Brief description of your issue"
+                      />
+                      {formErrors.subject && (
+                        <p id="subject-error" className="mt-1 text-sm text-red-600" role="alert">
+                          {formErrors.subject}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="contact-priority" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Priority
+                      </label>
+                      <select
+                        id="contact-priority"
+                        name="priority"
+                        value={formData.priority}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Priority
-                    </label>
-                    <select
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </div>
-                </div>
+                </fieldset>
 
                 <div>
-                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  <label htmlFor="contact-message" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                     Message *
                   </label>
                   <textarea
+                    id="contact-message"
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
                     required
                     rows="6"
+                    aria-describedby={formErrors.message ? 'message-error' : 'message-help'}
+                    aria-invalid={formErrors.message ? 'true' : 'false'}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                       formErrors.message 
                         ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
@@ -603,8 +649,13 @@ const ContactSupport = () => {
                     }`}
                     placeholder="Please describe your issue in detail..."
                   ></textarea>
+                  <div id="message-help" className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Tip: Include screenshots, error messages, or steps to reproduce the issue for faster resolution.
+                  </div>
                   {formErrors.message && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.message}</p>
+                    <p id="message-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {formErrors.message}
+                    </p>
                   )}
                 </div>
 
@@ -684,6 +735,7 @@ const ContactSupport = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
+                  aria-describedby="submit-help"
                   className={`w-full py-3 px-6 rounded-lg font-medium transition-colors duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                     isSubmitting 
                       ? 'bg-gray-400 cursor-not-allowed text-white' 
@@ -692,13 +744,17 @@ const ContactSupport = () => {
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" role="status" aria-label="Submitting"></div>
                       Submitting...
                     </div>
                   ) : (
                     'Send Message'
                   )}
                 </button>
+                
+                <div id="submit-help" className={`text-xs text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Tip: Press Ctrl+Enter to submit this form quickly
+                </div>
               </form>
             </div>
           </div>
@@ -759,27 +815,30 @@ const ContactSupport = () => {
             <button
               onClick={() => setShowLiveChat(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition-all duration-200 transform hover:scale-105"
+              aria-label="Open live chat"
+              title="Start a live chat with support"
             >
-              <FaComments className="text-xl" />
+              <FaComments className="text-xl" aria-hidden="true" />
             </button>
           ) : (
-            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow-xl w-80 h-96 flex flex-col`}>
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-lg shadow-xl w-80 h-96 flex flex-col`} role="dialog" aria-labelledby="chat-title" aria-modal="true">
               {/* Chat Header */}
               <div className="bg-indigo-600 text-white p-4 rounded-t-lg flex justify-between items-center">
                 <div className="flex items-center">
-                  <FaComments className="mr-2" />
-                  <span className="font-medium">Live Chat</span>
+                  <FaComments className="mr-2" aria-hidden="true" />
+                  <span id="chat-title" className="font-medium">Live Chat</span>
                 </div>
                 <button
                   onClick={() => setShowLiveChat(false)}
                   className="text-white hover:text-gray-200"
+                  aria-label="Close live chat"
                 >
                   ×
                 </button>
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+              <div className="flex-1 p-4 overflow-y-auto space-y-3" role="log" aria-live="polite" aria-label="Chat messages">
                 {chatMessages.map((msg) => (
                   <div
                     key={msg.id}
@@ -794,10 +853,10 @@ const ContactSupport = () => {
                     }`}>
                       <div className="flex items-start space-x-2">
                         {msg.type === 'bot' && (
-                          <FaRobot className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                          <FaRobot className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} aria-hidden="true" />
                         )}
                         {msg.type === 'user' && (
-                          <FaUser className="mt-1 text-white" />
+                          <FaUser className="mt-1 text-white" aria-hidden="true" />
                         )}
                         <p className="text-sm">{msg.message}</p>
                       </div>
@@ -816,15 +875,18 @@ const ContactSupport = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
                     placeholder="Type your message..."
+                    aria-label="Type your chat message"
                     className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm ${
                       darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'
                     }`}
                   />
                   <button
                     onClick={sendChatMessage}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors"
+                    disabled={!newMessage.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white p-2 rounded-lg transition-colors"
+                    aria-label="Send message"
                   >
-                    <FaPaperPlane className="text-sm" />
+                    <FaPaperPlane className="text-sm" aria-hidden="true" />
                   </button>
                 </div>
               </div>
