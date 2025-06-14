@@ -67,6 +67,66 @@ const HelpCenter = () => {
             </p>
           </div>
         </div>
+
+        {/* FAQ Section */}
+        <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border p-8 mb-12`}>
+          <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8 text-center`}>
+            Frequently Asked Questions
+          </h2>
+          
+          <div className="space-y-6">
+            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                How do I place an order?
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Navigate to the Orders section, click "Create New Order", fill in customer information, 
+                select products, and submit. Orders are processed immediately and stock is updated automatically.
+              </p>
+            </div>
+
+            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                How do I manage inventory?
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Go to the Inventory section to add, edit, or delete products. You can bulk upload products 
+                via CSV, manage stock levels, and set low stock alerts.
+              </p>
+            </div>
+
+            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                Can I use the system without creating an account?
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Yes! We offer guest access where you can browse products and view orders in read-only mode. 
+                However, creating an account unlocks full functionality including order management and inventory control.
+              </p>
+            </div>
+
+            <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-6`}>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                What's the difference between user roles?
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <strong>Admin:</strong> Full access to all features including user management and system settings.<br />
+                <strong>Manager:</strong> Can manage inventory, orders, and view analytics.<br />
+                <strong>User:</strong> Can place orders and view assigned inventory.
+              </p>
+            </div>
+
+            <div>
+              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+                How do I switch between dark and light mode?
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Click the theme toggle button in the top navigation bar. Your preference will be saved 
+                and applied automatically on future visits.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
