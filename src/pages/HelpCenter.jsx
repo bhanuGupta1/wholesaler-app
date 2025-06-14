@@ -1254,7 +1254,7 @@ const HelpCenter = () => {
         {showKeyboardShortcuts && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowKeyboardShortcuts(false)}>
             <div 
-              className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-xl max-w-md w-full mx-4 p-6`}
+              className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-xl max-w-md w-full mx-4 p-6 animate-slide-in`}
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-labelledby="shortcuts-title"
@@ -1338,3 +1338,4 @@ const HelpCenter = () => {
 };
 
 export default HelpCenter;
+
