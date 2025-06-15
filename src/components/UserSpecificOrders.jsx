@@ -476,7 +476,224 @@ const UserSpecificOrders = () => {
                 Refresh
               </button>
             </div>
+
+
           </div>
+
+           return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Previous components (header, stats, search, filters, bulk actions) remain the same */}
+        {/* ... */}
+
+        {/* Orders Table */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        ) : error ? (
+          <div className={`p-6 rounded-lg ${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border`}>
+            <h2 className="text-xl font-bold mb-2">Error Loading Orders</h2>
+            <p className="text-red-500 mb-4">{error}</p>
+            <button 
+              onClick={fetchOrders} 
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredAndSortedOrders.length === 0 ? (
+          // Empty State
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-12 text-center`}>
+            <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className={`text-lg font-medium ${darkMode ? 'text-gray-300' : 'text-gray-900'} mb-2`}>
+              No orders found
+            </h3>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {searchTerm || Object.values(filters).some(f => f)
+                ? 'Try adjusting your search or filters to find what you\'re looking for.'
+                : canViewAll 
+                  ? 'No orders have been placed yet.'
+                  : 'You haven\'t placed any orders yet.'
+              }
+            </p>
+            {!canViewAll && !searchTerm && !Object.values(filters).some(f => f) && (
+              <Link
+                to="/create-order"
+                className="inline-flex items-center mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Place Your First Order
+              </Link>
+            )}
+          </div>
+        ) : (
+          // Orders Table
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm overflow-hidden`}>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <tr>
+                    {canDelete && (
+                      <th scope="col" className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.size === paginatedOrders.length && paginatedOrders.length > 0}
+                          onChange={handleSelectAll}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                      </th>
+                    )}
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Order ID
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Customer
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Date
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Items
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Total
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Status
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Payment
+                    </th>
+                    <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className={`${darkMode ? 'bg-gray-800 divide-y divide-gray-700' : 'bg-white divide-y divide-gray-200'}`}>
+                  {paginatedOrders.map(order => (
+                    <tr key={order.id} className={`${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
+                      {canDelete && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedOrders.has(order.id)}
+                            onChange={() => handleSelectOrder(order.id)}
+                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                        </td>
+                      )}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                          {order.orderId}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`h-8 w-8 rounded-full ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-600'} flex items-center justify-center font-medium text-sm flex-shrink-0`}>
+                            {order.customerName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="ml-4">
+                            <div className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'} truncate max-w-32`}>
+                              {order.customerName}
+                            </div>
+                            {order.customerEmail && (
+                              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} truncate max-w-32`}>
+                                {order.customerEmail}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          {formatDate(order.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Package className="w-4 h-4 mr-1 text-gray-400" />
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                            {order.itemCount} item{order.itemCount !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                          ${order.total.toFixed(2)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          order.paymentStatus === 'paid' 
+                            ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
+                            : order.paymentStatus === 'failed'
+                            ? darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
+                            : darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Link
+                            to={`/orders/${order.id}`}
+                            className={`inline-flex items-center p-2 border border-transparent rounded-md ${
+                              darkMode 
+                                ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            } transition-colors`}
+                            title="View Order Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className={`inline-flex items-center p-2 border border-transparent rounded-md ${
+                                darkMode 
+                                  ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
+                                  : 'text-red-600 hover:text-red-800 hover:bg-red-100'
+                              } transition-colors`}
+                              title="Delete Order"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          
+                          <button
+                            className={`inline-flex items-center p-2 border border-transparent rounded-md ${
+                              darkMode 
+                                ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            } transition-colors`}
+                            title="More Actions"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6">
+          <p>Table view implemented with {paginatedOrders.length} orders displayed.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Next: Card view and pagination implementation
+          </p>
+        </div>
+      </div>
+    </div>
 
           {/* Statistics Cards Dashboard */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
@@ -762,6 +979,7 @@ const UserSpecificOrders = () => {
       ) : (
         <div>Orders loaded: {orders.length}. Filtering and UI refinements coming next...</div>
       )}
+      
     </div>
   );
 };
