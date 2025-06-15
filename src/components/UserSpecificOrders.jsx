@@ -290,6 +290,98 @@ const UserSpecificOrders = () => {
     }
   };
 
+    // Add preference management
+  const [userPreferences, setUserPreferences] = useState({
+    viewMode: 'table',
+    itemsPerPage: 10,
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
+
+  // Load user preferences on mount
+  useEffect(() => {
+    const savedPreferences = localStorage.getItem('ordersViewPreferences');
+    if (savedPreferences) {
+      try {
+        const parsed = JSON.parse(savedPreferences);
+        setUserPreferences(parsed);
+        setViewMode(parsed.viewMode);
+        setItemsPerPage(parsed.itemsPerPage);
+        setSortBy(parsed.sortBy);
+        setSortOrder(parsed.sortOrder);
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    }
+  }, []);
+
+  // Save preferences when they change
+  const savePreferences = (newPreferences) => {
+    const updatedPrefs = { ...userPreferences, ...newPreferences };
+    setUserPreferences(updatedPrefs);
+    localStorage.setItem('ordersViewPreferences', JSON.stringify(updatedPrefs));
+  };
+
+  // Enhanced view mode handler with preferences
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    savePreferences({ viewMode: mode });
+  };
+
+  // Enhanced items per page handler
+  const handleItemsPerPageChange = (items) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+    savePreferences({ itemsPerPage: items });
+  };
+
+  // Enhanced sort handlers
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy);
+    savePreferences({ sortBy: newSortBy });
+  };
+
+  const handleSortOrderChange = () => {
+    const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newOrder);
+    savePreferences({ sortOrder: newOrder });
+  };
+
+  // Add smooth transitions for view mode changes
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const smoothViewModeChange = (mode) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      handleViewModeChange(mode);
+      setIsTransitioning(false);
+    }, 150);
+  };
+
+  // URL state management for bookmarking
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlViewMode = urlParams.get('view');
+    const urlPage = urlParams.get('page');
+    
+    if (urlViewMode && ['table', 'card'].includes(urlViewMode)) {
+      setViewMode(urlViewMode);
+    }
+    if (urlPage && !isNaN(parseInt(urlPage))) {
+      setCurrentPage(parseInt(urlPage));
+    }
+  }, []);
+
+  // Update URL when view state changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('view', viewMode);
+    urlParams.set('page', currentPage.toString());
+    
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [viewMode, currentPage]);
+
   // Delete single order with permission control
   const handleDeleteOrder = async (orderId) => {
     if (!canDelete) return; // Permission check
