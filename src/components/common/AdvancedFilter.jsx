@@ -204,4 +204,93 @@ const AdvancedFilter = ({
     </div>
   );
 };
+export const orderFilterConfig = [
+  {
+    name: 'status',
+    type: 'select',
+    label: 'Order Status',
+    options: [
+      { value: 'pending', label: 'Pending' },
+      { value: 'processing', label: 'Processing' },
+      { value: 'completed', label: 'Completed' },
+      { value: 'cancelled', label: 'Cancelled' }
+    ]
+  },
+  {
+    name: 'paymentStatus',
+    type: 'select',
+    label: 'Payment Status',
+    options: [
+      { value: 'pending', label: 'Pending' },
+      { value: 'paid', label: 'Paid' },
+      { value: 'failed', label: 'Failed' },
+      { value: 'refunded', label: 'Refunded' }
+    ]
+  },
+  {
+    name: 'dateRange',
+    type: 'dateRange',
+    label: 'Date Range'
+  },
+  {
+    name: 'amount',
+    type: 'range',
+    label: 'Amount Range',
+    min: 0,
+    step: 0.01,
+    placeholders: ['Min Amount', 'Max Amount']
+  },
+  {
+    name: 'customDateFrom',
+    type: 'date',
+    label: 'From Date'
+  },
+  {
+    name: 'customDateTo',
+    type: 'date',
+    label: 'To Date'
+  }
+];
+
+export const productFilterConfig = [
+  {
+    name: 'category',
+    type: 'select',
+    label: 'Category',
+    options: [] // Will be populated dynamically
+  },
+  {
+    name: 'stockStatus',
+    type: 'select',
+    label: 'Stock Status',
+    options: [
+      { value: 'in_stock', label: 'In Stock' },
+      { value: 'low_stock', label: 'Low Stock (≤10)' },
+      { value: 'out_of_stock', label: 'Out of Stock' }
+    ]
+  },
+  {
+    name: 'price',
+    type: 'range',
+    label: 'Price Range',
+    min: 0,
+    step: 0.01,
+    placeholders: ['Min Price', 'Max Price']
+  },
+  {
+    name: 'featured',
+    type: 'select',
+    label: 'Featured',
+    options: [
+      { value: 'true', label: 'Featured Only' },
+      { value: 'false', label: 'Not Featured' }
+    ]
+  },
+  {
+    name: 'tags',
+    type: 'multiselect',
+    label: 'Tags',
+    options: [] // Will be populated dynamically
+  }
+];
 
