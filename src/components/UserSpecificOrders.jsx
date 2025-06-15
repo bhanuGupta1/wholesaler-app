@@ -267,6 +267,140 @@ const UserSpecificOrders = () => {
       <div>Filtering logic implemented. UI components coming next...</div>
     </div>
 
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Notification area (for future use) */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
+            notification.type === 'success' 
+              ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+              : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+          }`}>
+            {notification.message}
+          </div>
+        )}
+
+        {/* Enhanced Header */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {canViewAll ? 'All Orders' : 'My Orders'}
+              </h1>
+              <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {canViewAll 
+                  ? 'Manage and view all customer orders' 
+                  : 'View and track your personal orders'
+                }
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={fetchOrders}
+                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                  darkMode 
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Statistics Cards Dashboard */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            {[
+              { 
+                label: 'Total Orders', 
+                value: orderStats.total, 
+                icon: Package, 
+                color: 'blue',
+                description: 'All orders'
+              },
+              { 
+                label: 'Pending', 
+                value: orderStats.pending, 
+                icon: Clock, 
+                color: 'yellow',
+                description: 'Awaiting processing'
+              },
+              { 
+                label: 'Completed', 
+                value: orderStats.completed, 
+                icon: CheckSquare, 
+                color: 'green',
+                description: 'Successfully completed'
+              },
+              { 
+                label: 'Total Value', 
+                value: `$${orderStats.totalValue.toFixed(2)}`, 
+                icon: DollarSign, 
+                color: 'purple',
+                description: 'Total revenue'
+              }
+            ].map((stat, index) => (
+              <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <div className="flex items-center">
+                  <div className={`p-2 rounded-lg ${
+                    stat.color === 'blue' ? darkMode ? 'bg-blue-900/30' : 'bg-blue-100' :
+                    stat.color === 'yellow' ? darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100' :
+                    stat.color === 'green' ? darkMode ? 'bg-green-900/30' : 'bg-green-100' :
+                    darkMode ? 'bg-purple-900/30' : 'bg-purple-100'
+                  }`}>
+                    <stat.icon className={`w-5 h-5 ${
+                      stat.color === 'blue' ? darkMode ? 'text-blue-400' : 'text-blue-600' :
+                      stat.color === 'yellow' ? darkMode ? 'text-yellow-400' : 'text-yellow-600' :
+                      stat.color === 'green' ? darkMode ? 'text-green-400' : 'text-green-600' :
+                      darkMode ? 'text-purple-400' : 'text-purple-600'
+                    }`} />
+                  </div>
+                  <div className="ml-4">
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {stat.label}
+                    </p>
+                    <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {stat.value}
+                    </p>
+                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                      {stat.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading and Error States */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        ) : error ? (
+          <div className={`p-6 rounded-lg ${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border`}>
+            <h2 className="text-xl font-bold mb-2">Error Loading Orders</h2>
+            <p className="text-red-500 mb-4">{error}</p>
+            <button 
+              onClick={fetchOrders} 
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p>Statistics dashboard implemented. Search and filter UI coming next...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Debug: {orders.length} total orders loaded, {filteredAndSortedOrders.length} after filtering
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+
       {/* Filters Toggle */}
       <div className="flex items-center justify-between mb-4">
         <button
