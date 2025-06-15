@@ -248,6 +248,26 @@ const UserSpecificOrders = () => {
     setOrderStats(stats);
   };
 
+  // Add responsive breakpoint detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Auto-switch to card view on mobile
+  useEffect(() => {
+    if (isMobile && viewMode === 'table') {
+      setViewMode('card');
+    }
+  }, [isMobile]);
+
   const handleSelectOrder = (orderId) => {
     if (!canDelete) return; // Permission check
     
