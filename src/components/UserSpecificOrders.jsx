@@ -234,6 +234,75 @@ const UserSpecificOrders = () => {
     setOrderStats(stats);
   };
 
+  const handleSelectOrder = (orderId) => {
+    if (!canDelete) return; // Permission check
+    
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (!canDelete) return; // Permission check
+    
+    if (selectedOrders.size === paginatedOrders.length && paginatedOrders.length > 0) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(paginatedOrders.map(order => order.id)));
+    }
+  };
+
+  // Delete single order with permission control
+  const handleDeleteOrder = async (orderId) => {
+    if (!canDelete) return; // Permission check
+    
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'orders', orderId));
+      setOrders(prev => prev.filter(order => order.id !== orderId));
+      setNotification({ message: 'Order deleted successfully', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      setNotification({ message: 'Failed to delete order', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  // Bulk delete with permission control
+  const handleBulkDelete = async () => {
+    if (!canDelete || selectedOrders.size === 0) return; // Permission check
+    
+    if (!confirm(`Are you sure you want to delete ${selectedOrders.size} selected order(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const deletePromises = Array.from(selectedOrders).map(orderId => 
+        deleteDoc(doc(db, 'orders', orderId))
+      );
+      
+      await Promise.all(deletePromises);
+      
+      setOrders(prev => prev.filter(order => !selectedOrders.has(order.id)));
+      setSelectedOrders(new Set());
+      setNotification({ message: `${selectedOrders.size} order(s) deleted successfully`, type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error deleting orders:', error);
+      setNotification({ message: 'Failed to delete some orders', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+
   return (
 
     
