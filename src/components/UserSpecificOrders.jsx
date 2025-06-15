@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo } from 'react';
+import { collection, getDocs, query, where, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { canViewAllOrders } from '../utils/accessControl';
-import { X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Filter, ChevronDown, ChevronUp, Package, RefreshCw, Download, Eye, Trash2, MoreVertical, Clock, CheckSquare, DollarSign } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const UserSpecificOrders = () => {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ const UserSpecificOrders = () => {
   
   const userRole = user?.accountType || 'user';
   const canViewAll = canViewAllOrders(user);
+  const canDelete = ['admin', 'manager'].includes(userRole);
   
   // State management
   const [orders, setOrders] = useState([]);
@@ -27,8 +29,15 @@ const UserSpecificOrders = () => {
     customDateFrom: '',
     customDateTo: ''
   });
-  
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  
   const [orderStats, setOrderStats] = useState({
     total: 0,
     pending: 0,
@@ -193,10 +202,15 @@ const UserSpecificOrders = () => {
           id: doc.id,
           orderId: data.orderId || `#ORD-${doc.id.substring(0, 8).toUpperCase()}`,
           customerName: data.customerName || 'Unknown Customer',
+          customerEmail: data.customerEmail || '',
           total: data.total || 0,
           status: data.status || 'pending',
           paymentStatus: data.paymentStatus || 'pending',
           createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+          items: data.items || [],
+          itemCount: data.items?.length || 0,
+          shippingAddress: data.shippingAddress || {},
+          paymentInfo: data.paymentInfo || {}
         };
       });
 
@@ -275,7 +289,32 @@ const UserSpecificOrders = () => {
       setTimeout(() => setNotification(null), 3000);
     }
   };
- const [exporting, setExporting] = useState(false);
+
+  // Bulk delete with permission control
+  const handleBulkDelete = async () => {
+    if (!canDelete || selectedOrders.size === 0) return; // Permission check
+    
+    if (!confirm(`Are you sure you want to delete ${selectedOrders.size} selected order(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const deletePromises = Array.from(selectedOrders).map(orderId => 
+        deleteDoc(doc(db, 'orders', orderId))
+      );
+      
+      await Promise.all(deletePromises);
+      
+      setOrders(prev => prev.filter(order => !selectedOrders.has(order.id)));
+      setSelectedOrders(new Set());
+      setNotification({ message: `${selectedOrders.size} order(s) deleted successfully`, type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error deleting orders:', error);
+      setNotification({ message: 'Failed to delete some orders', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
 
   // CSV Export functionality
   const exportOrders = async () => {
@@ -375,69 +414,11 @@ const UserSpecificOrders = () => {
         return darkMode ? 'bg-gray-900/30 text-gray-400' : 'bg-gray-100 text-gray-800';
     }
   };
-  // Bulk delete with permission control
-  const handleBulkDelete = async () => {
-    if (!canDelete || selectedOrders.size === 0) return; // Permission check
-    
-    if (!confirm(`Are you sure you want to delete ${selectedOrders.size} selected order(s)? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const deletePromises = Array.from(selectedOrders).map(orderId => 
-        deleteDoc(doc(db, 'orders', orderId))
-      );
-      
-      await Promise.all(deletePromises);
-      
-      setOrders(prev => prev.filter(order => !selectedOrders.has(order.id)));
-      setSelectedOrders(new Set());
-      setNotification({ message: `${selectedOrders.size} order(s) deleted successfully`, type: 'success' });
-      setTimeout(() => setNotification(null), 3000);
-    } catch (error) {
-      console.error('Error deleting orders:', error);
-      setNotification({ message: 'Failed to delete some orders', type: 'error' });
-      setTimeout(() => setNotification(null), 3000);
-    }
-  };
-
 
   return (
-
-    
-    <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          {canViewAll ? 'All Orders' : 'My Orders'}
-        </h1>
-        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {canViewAll ? 'Manage and process all customer orders' : 'View and track your personal orders'}
-        </p>
-      </div>
-       <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-          {canViewAll ? 'All Orders' : 'My Orders'}
-        </h1>
-        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {canViewAll 
-            ? 'Manage and process all customer orders' 
-            : 'View and track your personal orders'
-          }
-        </p>
-        
-        {/* Debug info for filtering */}
-        <div className="mt-2 text-xs text-gray-500">
-          Total: {orders.length} | Filtered: {filteredAndSortedOrders.length} | Page: {paginatedOrders.length}
-        </div>
-      </div>
-      
-      <div>Filtering logic implemented. UI components coming next...</div>
-    </div>
-
-      <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Notification area (for future use) */}
+        {/* Notification */}
         {notification && (
           <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
             notification.type === 'success' 
@@ -448,7 +429,7 @@ const UserSpecificOrders = () => {
           </div>
         )}
 
-        {/* Enhanced Header */}
+        {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -466,25 +447,129 @@ const UserSpecificOrders = () => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={fetchOrders}
+                disabled={loading}
                 className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-                  darkMode 
-                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  loading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
+              
+              <button
+                onClick={exportOrders}
+                disabled={exporting || filteredAndSortedOrders.length === 0}
+                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                  exporting || filteredAndSortedOrders.length === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Download className={`w-4 h-4 mr-2 ${exporting ? 'animate-pulse' : ''}`} />
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </button>
             </div>
-
-
           </div>
+        </div>
 
-           return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Previous components (header, stats, search, filters, bulk actions) remain the same */}
-        {/* ... */}
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          {[
+            { 
+              label: 'Total Orders', 
+              value: orderStats.total, 
+              icon: Package, 
+              color: 'blue',
+              description: 'All orders'
+            },
+            { 
+              label: 'Pending', 
+              value: orderStats.pending, 
+              icon: Clock, 
+              color: 'yellow',
+              description: 'Awaiting processing'
+            },
+            { 
+              label: 'Completed', 
+              value: orderStats.completed, 
+              icon: CheckSquare, 
+              color: 'green',
+              description: 'Successfully completed'
+            },
+            { 
+              label: 'Total Value', 
+              value: `$${orderStats.totalValue.toFixed(2)}`, 
+              icon: DollarSign, 
+              color: 'purple',
+              description: 'Total revenue'
+            }
+          ].map((stat, index) => (
+            <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className="flex items-center">
+                <div className={`p-2 rounded-lg ${
+                  stat.color === 'blue' ? darkMode ? 'bg-blue-900/30' : 'bg-blue-100' :
+                  stat.color === 'yellow' ? darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100' :
+                  stat.color === 'green' ? darkMode ? 'bg-green-900/30' : 'bg-green-100' :
+                  darkMode ? 'bg-purple-900/30' : 'bg-purple-100'
+                }`}>
+                  <stat.icon className={`w-5 h-5 ${
+                    stat.color === 'blue' ? darkMode ? 'text-blue-400' : 'text-blue-600' :
+                    stat.color === 'yellow' ? darkMode ? 'text-yellow-400' : 'text-yellow-600' :
+                    stat.color === 'green' ? darkMode ? 'text-green-400' : 'text-green-600' :
+                    darkMode ? 'text-purple-400' : 'text-purple-600'
+                  }`} />
+                </div>
+                <div className="ml-4">
+                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {stat.label}
+                  </p>
+                  <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {stat.value}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    {stat.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedOrders.size > 0 && canDelete && (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-4 mb-6 border border-indigo-200`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {selectedOrders.size} order{selectedOrders.size !== 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setSelectedOrders(new Set())}
+                  className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Clear Selection
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Orders Table */}
         {loading ? (
@@ -685,301 +770,7 @@ const UserSpecificOrders = () => {
             </div>
           </div>
         )}
-
-        <div className="mt-6">
-          <p>Table view implemented with {paginatedOrders.length} orders displayed.</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Next: Card view and pagination implementation
-          </p>
-        </div>
       </div>
-    </div>
-
-          {/* Statistics Cards Dashboard */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-            {[
-              { 
-                label: 'Total Orders', 
-                value: orderStats.total, 
-                icon: Package, 
-                color: 'blue',
-                description: 'All orders'
-              },
-              { 
-                label: 'Pending', 
-                value: orderStats.pending, 
-                icon: Clock, 
-                color: 'yellow',
-                description: 'Awaiting processing'
-              },
-              { 
-                label: 'Completed', 
-                value: orderStats.completed, 
-                icon: CheckSquare, 
-                color: 'green',
-                description: 'Successfully completed'
-              },
-              { 
-                label: 'Total Value', 
-                value: `$${orderStats.totalValue.toFixed(2)}`, 
-                icon: DollarSign, 
-                color: 'purple',
-                description: 'Total revenue'
-              }
-            ].map((stat, index) => (
-              <div key={index} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                <div className="flex items-center">
-                  <div className={`p-2 rounded-lg ${
-                    stat.color === 'blue' ? darkMode ? 'bg-blue-900/30' : 'bg-blue-100' :
-                    stat.color === 'yellow' ? darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100' :
-                    stat.color === 'green' ? darkMode ? 'bg-green-900/30' : 'bg-green-100' :
-                    darkMode ? 'bg-purple-900/30' : 'bg-purple-100'
-                  }`}>
-                    <stat.icon className={`w-5 h-5 ${
-                      stat.color === 'blue' ? darkMode ? 'text-blue-400' : 'text-blue-600' :
-                      stat.color === 'yellow' ? darkMode ? 'text-yellow-400' : 'text-yellow-600' :
-                      stat.color === 'green' ? darkMode ? 'text-green-400' : 'text-green-600' :
-                      darkMode ? 'text-purple-400' : 'text-purple-600'
-                    }`} />
-                  </div>
-                  <div className="ml-4">
-                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {stat.label}
-                    </p>
-                    <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {stat.value}
-                    </p>
-                    <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                      {stat.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-         <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Previous notification, header, statistics, and search components remain the same */}
-        {/* ... */}
-
-        {/* Bulk Actions Bar - Only show if user has delete permissions and orders are selected */}
-        {selectedOrders.size > 0 && canDelete && (
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-4 mb-6 border border-indigo-200`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {selectedOrders.size} order{selectedOrders.size !== 1 ? 's' : ''} selected
-              </span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setSelectedOrders(new Set())}
-                  className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
-                    darkMode 
-                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Clear Selection
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete Selected
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Permission Debug (for development - can be removed in production) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className={`mb-4 p-3 rounded border ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-100 border-gray-300'}`}>
-            <p className="text-xs">
-              <strong>Permission Debug:</strong> canDelete: {canDelete ? '✅' : '❌'} | 
-              canViewAll: {canViewAll ? '✅' : '❌'} | 
-              userRole: {userRole} | 
-              selectedOrders: {selectedOrders.size}
-            </p>
-          </div>
-        )}
-
-        {/* Export functionality */}
-        <div className="mb-6 flex justify-end">
-          <button
-            onClick={() => {
-              // Export functionality (to be implemented in next commit)
-              console.log('Export orders:', filteredAndSortedOrders);
-            }}
-            className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-              darkMode 
-                ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export Orders
-          </button>
-        </div>
-
-        <div>
-          <p>Bulk actions implemented with permission control.</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Bulk operations available for: {canDelete ? 'Admin/Manager users' : 'No permission'}
-          </p>
-          <p className="text-sm text-gray-500">
-            Orders ready for display: {paginatedOrders.length} of {filteredAndSortedOrders.length}
-          </p>
-        </div>
-      </div>
-    </div>
-     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Notification */}
-        {notification && (
-          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
-            notification.type === 'success' 
-              ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
-              : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
-          }`}>
-            {notification.message}
-          </div>
-        )}
-
-        {/* Enhanced Header with Export */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {canViewAll ? 'All Orders' : 'My Orders'}
-              </h1>
-              <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {canViewAll 
-                  ? 'Manage and view all customer orders' 
-                  : 'View and track your personal orders'
-                }
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={fetchOrders}
-                disabled={loading}
-                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-                  loading
-                    ? 'opacity-50 cursor-not-allowed'
-                    : darkMode 
-                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-              
-              <button
-                onClick={exportOrders}
-                disabled={exporting || filteredAndSortedOrders.length === 0}
-                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-                  exporting || filteredAndSortedOrders.length === 0
-                    ? 'opacity-50 cursor-not-allowed'
-                    : darkMode 
-                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Download className={`w-4 h-4 mr-2 ${exporting ? 'animate-pulse' : ''}`} />
-                {exporting ? 'Exporting...' : 'Export CSV'}
-              </button>
-            </div>
-          </div>
-
-          {/* Statistics Cards - Previous implementation remains */}
-          {/* ... statistics cards code ... */}
-        </div>
-
-        {/* Previous search, filters, and bulk actions remain the same */}
-        {/* ... */}
-
-        <div>
-          <p>Export functionality implemented.</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Ready to export: {filteredAndSortedOrders.length} orders
-          </p>
-          <p className="text-sm text-gray-500">
-            Next: Table view implementation
-          </p>
-        </div>
-      </div>
-    </div>
-
-        {/* Loading and Error States */}
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-          </div>
-        ) : error ? (
-          <div className={`p-6 rounded-lg ${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border`}>
-            <h2 className="text-xl font-bold mb-2">Error Loading Orders</h2>
-            <p className="text-red-500 mb-4">{error}</p>
-            <button 
-              onClick={fetchOrders} 
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <div>
-            <p>Statistics dashboard implemented. Search and filter UI coming next...</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Debug: {orders.length} total orders loaded, {filteredAndSortedOrders.length} after filtering
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-
-      {/* Filters Toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
-            showFilters
-              ? 'bg-indigo-600 text-white border-indigo-600'
-              : darkMode
-                ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          <Filter className="w-4 h-4 mr-2" />
-          Filters
-          {showFilters ? <ChevronUp className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-        </button>
-      </div>
-
-      {/* Orders List */}
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-        </div>
-      ) : error ? (
-        <div className={`p-6 rounded-lg ${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border`}>
-          <h2 className="text-xl font-bold mb-2">Error Loading Orders</h2>
-          <p className="text-red-500 mb-4">{error}</p>
-          <button 
-            onClick={fetchOrders} 
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      ) : (
-        <div>Orders loaded: {orders.length}. Filtering and UI refinements coming next...</div>
-      )}
-      
     </div>
   );
 };
