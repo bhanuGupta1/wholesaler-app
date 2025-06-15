@@ -29,6 +29,9 @@ import {
   Clock
 } from 'lucide-react';
 
+// src/components/UserSpecificOrders.jsx - Commit 2: Enhanced state management
+// ... (previous imports remain the same)
+
 const UserSpecificOrders = () => {
   const { user } = useAuth();
   const { darkMode } = useTheme();
@@ -44,15 +47,45 @@ const UserSpecificOrders = () => {
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
   
-  // Keep original search and status filter
+  // Enhanced search and filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Advanced filters state
+  const [filters, setFilters] = useState({
+    status: '',
+    dateRange: '',
+    minAmount: '',
+    maxAmount: '',
+    paymentStatus: '',
+    customDateFrom: '',
+    customDateTo: ''
+  });
 
-  // TODO: Add enhanced state in next commits
+  // Pagination and view state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'card'
+  
+  // Selection for bulk operations (admin only)
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+
+  // Statistics state
+  const [orderStats, setOrderStats] = useState({
+    total: 0,
+    pending: 0,
+    completed: 0,
+    cancelled: 0,
+    totalValue: 0
+  });
+
+  // TODO: Add data fetching and processing logic in next commits
   
   return (
     <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-      {/* Existing header structure maintained */}
       <div className="mb-8">
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           {canViewAll ? 'All Orders' : 'My Orders'}
@@ -65,8 +98,7 @@ const UserSpecificOrders = () => {
         </p>
       </div>
       
-      {/* TODO: Add enhanced features in subsequent commits */}
-      <div>Enhanced features coming in next commits...</div>
+      <div>State management enhanced. Data fetching coming next...</div>
     </div>
   );
 };
