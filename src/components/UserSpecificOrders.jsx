@@ -37,6 +37,135 @@ const UserSpecificOrders = () => {
     totalValue: 0
   });
 
+  const filteredAndSortedOrders = useMemo(() => {
+    let filtered = orders.filter(order => {
+      // Multi-field search functionality
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = !searchTerm || 
+        order.customerName.toLowerCase().includes(searchLower) ||
+        order.orderId.toLowerCase().includes(searchLower) ||
+        order.customerEmail.toLowerCase().includes(searchLower) ||
+        order.items.some(item => item.productName?.toLowerCase().includes(searchLower));
+
+      if (!matchesSearch) return false;
+
+      // Status filter
+      if (filters.status && order.status !== filters.status) return false;
+
+      // Payment status filter
+      if (filters.paymentStatus && order.paymentStatus !== filters.paymentStatus) return false;
+
+      // Amount range filter
+      if (filters.minAmount && order.total < parseFloat(filters.minAmount)) return false;
+      if (filters.maxAmount && order.total > parseFloat(filters.maxAmount)) return false;
+
+      // Smart date range filtering
+      if (filters.dateRange) {
+        const now = new Date();
+        let startDate;
+        
+        switch (filters.dateRange) {
+          case 'today':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+          case 'week':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'quarter':
+            startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+            break;
+          case 'year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+        }
+        
+        if (startDate && order.createdAt < startDate) return false;
+      }
+
+      // Custom date range filtering
+      if (filters.customDateFrom) {
+        const fromDate = new Date(filters.customDateFrom);
+        if (order.createdAt < fromDate) return false;
+      }
+      if (filters.customDateTo) {
+        const toDate = new Date(filters.customDateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (order.createdAt > toDate) return false;
+      }
+
+      return true;
+    });
+
+    // Advanced sorting logic
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'createdAt':
+          aValue = a.createdAt.getTime();
+          bValue = b.createdAt.getTime();
+          break;
+        case 'customerName':
+          aValue = a.customerName.toLowerCase();
+          bValue = b.customerName.toLowerCase();
+          break;
+        case 'total':
+          aValue = a.total;
+          bValue = b.total;
+          break;
+        case 'status':
+          aValue = a.status.toLowerCase();
+          bValue = b.status.toLowerCase();
+          break;
+        case 'orderId':
+          aValue = a.orderId.toLowerCase();
+          bValue = b.orderId.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [orders, searchTerm, filters, sortBy, sortOrder]);
+
+  // Pagination logic with memoized performance
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedOrders, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredAndSortedOrders.length / itemsPerPage);
+
+  // Filter management functions
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      dateRange: '',
+      minAmount: '',
+      maxAmount: '',
+      paymentStatus: '',
+      customDateFrom: '',
+      customDateTo: ''
+    });
+    setSearchTerm('');
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     fetchOrders();
   }, [user, canViewAll]);
