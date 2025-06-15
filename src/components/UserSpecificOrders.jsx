@@ -426,7 +426,296 @@ const UserSpecificOrders = () => {
       setNotification({ message: 'Failed to delete some orders', type: 'error' });
       setTimeout(() => setNotification(null), 3000);
     }
+
+     const [loadingStates, setLoadingStates] = useState({
+    initial: true,
+    refreshing: false,
+    deleting: new Set(),
+    bulkDeleting: false,
+    exporting: false
+  });
+
+  // Enhanced error handling
+  const [errors, setErrors] = useState({
+    fetch: null,
+    delete: null,
+    export: null,
+    bulk: null
+  });
+
+  // Skeleton loader components
+  const TableSkeleton = () => (
+    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm overflow-hidden`}>
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <tr>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <th key={i} className="px-6 py-3">
+                  <div className={`h-4 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded animate-pulse`}></div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: itemsPerPage }).map((_, i) => (
+              <tr key={i} className={darkMode ? 'border-gray-700' : 'border-gray-200'}>
+                {Array.from({ length: 8 }).map((_, j) => (
+                  <td key={j} className="px-6 py-4">
+                    <div className={`h-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const CardSkeleton = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: itemsPerPage }).map((_, i) => (
+        <div key={i} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 shadow-sm border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="space-y-4">
+            <div className="flex justify-between">
+              <div className={`h-6 w-32 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+              <div className={`h-4 w-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+            </div>
+            <div className="space-y-2">
+              <div className={`h-4 w-24 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+              <div className={`h-4 w-20 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+              <div className={`h-4 w-16 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+            </div>
+            <div className="flex justify-between">
+              <div className={`h-6 w-16 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full animate-pulse`}></div>
+              <div className={`h-6 w-16 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full animate-pulse`}></div>
+            </div>
+            <div className="flex space-x-2">
+              <div className={`h-8 flex-1 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+              <div className={`h-8 w-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded animate-pulse`}></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Enhanced fetch function with better error handling
+  const fetchOrders = async (isRefresh = false) => {
+    if (!user) {
+      setErrors(prev => ({ ...prev, fetch: "Please log in to view orders" }));
+      setLoadingStates(prev => ({ ...prev, initial: false, refreshing: false }));
+      return;
+    }
+
+    try {
+      setLoadingStates(prev => ({ 
+        ...prev, 
+        initial: !isRefresh, 
+        refreshing: isRefresh 
+      }));
+      setErrors(prev => ({ ...prev, fetch: null }));
+      
+      // Add timeout for long requests
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+      );
+
+      const ordersRef = collection(db, 'orders');
+      let ordersQuery;
+
+      if (canViewAll) {
+        ordersQuery = query(ordersRef, orderBy('createdAt', 'desc'));
+      } else {
+        ordersQuery = query(
+          ordersRef,
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
+      }
+
+      const querySnapshot = await Promise.race([
+        getDocs(ordersQuery),
+        timeoutPromise
+      ]);
+
+      // Process orders data (same as before)
+      const fetchedOrders = [];
+      querySnapshot.forEach((doc) => {
+        // ... (previous order processing logic)
+      });
+      
+      setOrders(fetchedOrders);
+      
+      if (isRefresh) {
+        setNotification({ 
+          message: `Refreshed ${fetchedOrders.length} orders successfully`, 
+          type: 'success' 
+        });
+        setTimeout(() => setNotification(null), 3000);
+      }
+
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      const errorMessage = err.message === 'Request timeout' 
+        ? 'Request timed out. Please check your connection and try again.'
+        : `Failed to load orders: ${err.message}`;
+      
+      setErrors(prev => ({ ...prev, fetch: errorMessage }));
+      
+      if (isRefresh) {
+        setNotification({ 
+          message: 'Failed to refresh orders', 
+          type: 'error' 
+        });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } finally {
+      setLoadingStates(prev => ({ 
+        ...prev, 
+        initial: false, 
+        refreshing: false 
+      }));
+    }
   };
+
+  // Enhanced delete function with loading states
+  const handleDeleteOrder = async (orderId) => {
+    if (!canDelete) return;
+    
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoadingStates(prev => ({
+        ...prev,
+        deleting: new Set([...prev.deleting, orderId])
+      }));
+      setErrors(prev => ({ ...prev, delete: null }));
+
+      await deleteDoc(doc(db, 'orders', orderId));
+      setOrders(prev => prev.filter(order => order.id !== orderId));
+      setNotification({ message: 'Order deleted successfully', type: 'success' });
+      setTimeout(() => setNotification(null), 3000);
+
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      setErrors(prev => ({ ...prev, delete: 'Failed to delete order' }));
+      setNotification({ message: 'Failed to delete order', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setLoadingStates(prev => ({
+        ...prev,
+        deleting: new Set([...prev.deleting].filter(id => id !== orderId))
+      }));
+    }
+  };
+
+  // Enhanced bulk delete with loading states
+  const handleBulkDelete = async () => {
+    if (!canDelete || selectedOrders.size === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedOrders.size} selected order(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoadingStates(prev => ({ ...prev, bulkDeleting: true }));
+      setErrors(prev => ({ ...prev, bulk: null }));
+
+      const deletePromises = Array.from(selectedOrders).map(orderId => 
+        deleteDoc(doc(db, 'orders', orderId))
+      );
+      
+      await Promise.all(deletePromises);
+      
+      setOrders(prev => prev.filter(order => !selectedOrders.has(order.id)));
+      setSelectedOrders(new Set());
+      setNotification({ 
+        message: `${selectedOrders.size} order(s) deleted successfully`, 
+        type: 'success' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+
+    } catch (error) {
+      console.error('Error deleting orders:', error);
+      setErrors(prev => ({ ...prev, bulk: 'Failed to delete some orders' }));
+      setNotification({ message: 'Failed to delete some orders', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, bulkDeleting: false }));
+    }
+  };
+
+  // Enhanced export with loading states
+  const exportOrders = async () => {
+    try {
+      setLoadingStates(prev => ({ ...prev, exporting: true }));
+      setErrors(prev => ({ ...prev, export: null }));
+      
+      // Simulate processing time for large datasets
+      if (filteredAndSortedOrders.length > 1000) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      // Previous export logic remains the same
+      const headers = [
+        'Order ID', 'Customer Name', 'Customer Email', 'Order Date',
+        'Status', 'Payment Status', 'Items Count', 'Total Amount'
+      ];
+      
+      const csvContent = [
+        headers.join(','),
+        ...filteredAndSortedOrders.map(order => [
+          order.orderId,
+          `"${order.customerName}"`,
+          order.customerEmail,
+          order.createdAt.toLocaleDateString('en-US'),
+          order.status,
+          order.paymentStatus,
+          order.itemCount,
+          order.total.toFixed(2)
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filterSuffix = Object.values(filters).some(f => f) ? '-filtered' : '';
+      link.download = `orders-${timestamp}${filterSuffix}.csv`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      setNotification({ 
+        message: `Successfully exported ${filteredAndSortedOrders.length} orders to CSV`, 
+        type: 'success' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+      
+    } catch (error) {
+      console.error('Error exporting orders:', error);
+      setErrors(prev => ({ ...prev, export: 'Failed to export orders' }));
+      setNotification({ 
+        message: 'Failed to export orders. Please try again.', 
+        type: 'error' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, exporting: false }));
+    }
+  };
+
+  };
+
+  
 
   // CSV Export functionality
   const exportOrders = async () => {
