@@ -275,7 +275,106 @@ const UserSpecificOrders = () => {
       setTimeout(() => setNotification(null), 3000);
     }
   };
+ const [exporting, setExporting] = useState(false);
 
+  // CSV Export functionality
+  const exportOrders = async () => {
+    try {
+      setExporting(true);
+      
+      // Create comprehensive CSV headers
+      const headers = [
+        'Order ID',
+        'Customer Name', 
+        'Customer Email',
+        'Order Date',
+        'Status',
+        'Payment Status',
+        'Items Count',
+        'Total Amount',
+        'Shipping Address',
+        'Payment Method'
+      ];
+      
+      // Generate CSV content from filtered orders
+      const csvContent = [
+        headers.join(','),
+        ...filteredAndSortedOrders.map(order => [
+          order.orderId,
+          `"${order.customerName}"`, // Quoted to handle commas in names
+          order.customerEmail,
+          order.createdAt.toLocaleDateString('en-US'),
+          order.status,
+          order.paymentStatus,
+          order.itemCount,
+          order.total.toFixed(2),
+          `"${order.shippingAddress?.address || 'N/A'}"`,
+          order.paymentInfo?.paymentMethod || 'N/A'
+        ].join(','))
+      ].join('\n');
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp and filter info
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filterSuffix = Object.values(filters).some(f => f) ? '-filtered' : '';
+      link.download = `orders-${timestamp}${filterSuffix}.csv`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      // Show success notification
+      setNotification({ 
+        message: `Successfully exported ${filteredAndSortedOrders.length} orders to CSV`, 
+        type: 'success' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+      
+    } catch (error) {
+      console.error('Error exporting orders:', error);
+      setNotification({ 
+        message: 'Failed to export orders. Please try again.', 
+        type: 'error' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Utility function to format date for display
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  // Status color utility function
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
+      case 'processing':
+        return darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+        return darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800';
+      default:
+        return darkMode ? 'bg-gray-900/30 text-gray-400' : 'bg-gray-100 text-gray-800';
+    }
+  };
   // Bulk delete with permission control
   const handleBulkDelete = async () => {
     if (!canDelete || selectedOrders.size === 0) return; // Permission check
@@ -515,6 +614,85 @@ const UserSpecificOrders = () => {
           </p>
           <p className="text-sm text-gray-500">
             Orders ready for display: {paginatedOrders.length} of {filteredAndSortedOrders.length}
+          </p>
+        </div>
+      </div>
+    </div>
+     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Notification */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
+            notification.type === 'success' 
+              ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+              : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+          }`}>
+            {notification.message}
+          </div>
+        )}
+
+        {/* Enhanced Header with Export */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {canViewAll ? 'All Orders' : 'My Orders'}
+              </h1>
+              <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {canViewAll 
+                  ? 'Manage and view all customer orders' 
+                  : 'View and track your personal orders'
+                }
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={fetchOrders}
+                disabled={loading}
+                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                  loading
+                    ? 'opacity-50 cursor-not-allowed'
+                    : darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              
+              <button
+                onClick={exportOrders}
+                disabled={exporting || filteredAndSortedOrders.length === 0}
+                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                  exporting || filteredAndSortedOrders.length === 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Download className={`w-4 h-4 mr-2 ${exporting ? 'animate-pulse' : ''}`} />
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </button>
+            </div>
+          </div>
+
+          {/* Statistics Cards - Previous implementation remains */}
+          {/* ... statistics cards code ... */}
+        </div>
+
+        {/* Previous search, filters, and bulk actions remain the same */}
+        {/* ... */}
+
+        <div>
+          <p>Export functionality implemented.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Ready to export: {filteredAndSortedOrders.length} orders
+          </p>
+          <p className="text-sm text-gray-500">
+            Next: Table view implementation
           </p>
         </div>
       </div>
