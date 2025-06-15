@@ -235,6 +235,8 @@ const UserSpecificOrders = () => {
   };
 
   return (
+
+    
     <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
       <div className="mb-8">
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -244,6 +246,26 @@ const UserSpecificOrders = () => {
           {canViewAll ? 'Manage and process all customer orders' : 'View and track your personal orders'}
         </p>
       </div>
+       <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+      <div className="mb-8">
+        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          {canViewAll ? 'All Orders' : 'My Orders'}
+        </h1>
+        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {canViewAll 
+            ? 'Manage and process all customer orders' 
+            : 'View and track your personal orders'
+          }
+        </p>
+        
+        {/* Debug info for filtering */}
+        <div className="mt-2 text-xs text-gray-500">
+          Total: {orders.length} | Filtered: {filteredAndSortedOrders.length} | Page: {paginatedOrders.length}
+        </div>
+      </div>
+      
+      <div>Filtering logic implemented. UI components coming next...</div>
+    </div>
 
       {/* Filters Toggle */}
       <div className="flex items-center justify-between mb-4">
