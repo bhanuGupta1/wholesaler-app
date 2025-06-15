@@ -443,6 +443,83 @@ const UserSpecificOrders = () => {
           </div>
         </div>
 
+         <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Previous notification, header, statistics, and search components remain the same */}
+        {/* ... */}
+
+        {/* Bulk Actions Bar - Only show if user has delete permissions and orders are selected */}
+        {selectedOrders.size > 0 && canDelete && (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-4 mb-6 border border-indigo-200`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {selectedOrders.size} order{selectedOrders.size !== 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setSelectedOrders(new Set())}
+                  className={`px-3 py-2 text-sm border rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Clear Selection
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Permission Debug (for development - can be removed in production) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className={`mb-4 p-3 rounded border ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-100 border-gray-300'}`}>
+            <p className="text-xs">
+              <strong>Permission Debug:</strong> canDelete: {canDelete ? '✅' : '❌'} | 
+              canViewAll: {canViewAll ? '✅' : '❌'} | 
+              userRole: {userRole} | 
+              selectedOrders: {selectedOrders.size}
+            </p>
+          </div>
+        )}
+
+        {/* Export functionality */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => {
+              // Export functionality (to be implemented in next commit)
+              console.log('Export orders:', filteredAndSortedOrders);
+            }}
+            className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+              darkMode 
+                ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Orders
+          </button>
+        </div>
+
+        <div>
+          <p>Bulk actions implemented with permission control.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Bulk operations available for: {canDelete ? 'Admin/Manager users' : 'No permission'}
+          </p>
+          <p className="text-sm text-gray-500">
+            Orders ready for display: {paginatedOrders.length} of {filteredAndSortedOrders.length}
+          </p>
+        </div>
+      </div>
+    </div>
+
         {/* Loading and Error States */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
