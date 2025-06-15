@@ -477,7 +477,110 @@ const UserSpecificOrders = () => {
             </div>
           </div>
         </div>
+  <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-4 mt-6`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+              Show:
+            </span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1 border rounded ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300'
+              }`}
+            >
+              <option value={5}>5 per page</option>
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+            </select>
+          </div>
 
+          <div className="flex items-center space-x-4">
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedOrders.length)} of {filteredAndSortedOrders.length} orders
+            </span>
+            
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 text-sm border rounded transition-colors ${
+                  currentPage === 1
+                    ? darkMode 
+                      ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                    : darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                First
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 text-sm border rounded transition-colors ${
+                  currentPage === 1
+                    ? darkMode 
+                      ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                    : darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <span className={`px-3 py-1 text-sm border rounded ${
+                darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-300 bg-gray-50 text-gray-900'
+              }`}>
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 text-sm border rounded transition-colors ${
+                  currentPage === totalPages
+                    ? darkMode 
+                      ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                    : darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Next
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 text-sm border rounded transition-colors ${
+                  currentPage === totalPages
+                    ? darkMode 
+                      ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                    : darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           {[
