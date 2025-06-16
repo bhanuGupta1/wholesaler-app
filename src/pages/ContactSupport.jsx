@@ -3,8 +3,8 @@ import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane,
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 
-// ADD THESE FIREBASE IMPORTS - ONLY ADDITION!
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+// FIREBASE IMPORTS
+import { addDoc, collection, serverTimestamp, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const ContactSupport = () => {
@@ -40,29 +40,10 @@ const ContactSupport = () => {
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Support Tickets (Mock Data - would come from API)
-  const [tickets] = useState([
-    {
-      id: 'TICK-2024-001',
-      subject: 'Login Issues with New Account',
-      category: 'account',
-      status: 'resolved',
-      priority: 'high',
-      created: '2024-06-10',
-      lastUpdate: '2024-06-12',
-      description: 'Unable to login after creating new account'
-    },
-    {
-      id: 'TICK-2024-002',
-      subject: 'Question about Order Process',
-      category: 'orders',
-      status: 'in-progress',
-      priority: 'medium',
-      created: '2024-06-14',
-      lastUpdate: '2024-06-15',
-      description: 'Need help understanding the order workflow'
-    }
-  ]);
+  // REAL TICKETS FROM FIREBASE (not mock data)
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [ticketsError, setTicketsError] = useState(null);
 
   // Quick Issue Categories
   const issueCategories = [
@@ -102,6 +83,50 @@ const ContactSupport = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  // FETCH USER'S REAL TICKETS FROM FIREBASE
+  useEffect(() => {
+    if (activeTab === 'tickets' && user) {
+      fetchUserTickets();
+    }
+  }, [activeTab, user]);
+
+  const fetchUserTickets = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingTickets(true);
+      setTicketsError(null);
+
+      // Query only tickets belonging to current user
+      const ticketsRef = collection(db, 'supportTickets');
+      const userTicketsQuery = query(
+        ticketsRef,
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+
+      const querySnapshot = await getDocs(userTicketsQuery);
+      const userTickets = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        userTickets.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        });
+      });
+
+      setTickets(userTickets);
+    } catch (error) {
+      console.error('Error fetching user tickets:', error);
+      setTicketsError('Failed to load your tickets. Please try again.');
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
   // Form Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -122,7 +147,7 @@ const ContactSupport = () => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ENHANCED: Save to Firebase Database
+  // ENHANCED: Save to Firebase Database AND refresh tickets
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -168,6 +193,11 @@ const ContactSupport = () => {
       });
       setAttachments([]);
 
+      // REFRESH USER TICKETS if on tickets tab
+      if (activeTab === 'tickets') {
+        await fetchUserTickets();
+      }
+
       setTimeout(() => setShowSuccess(false), 5000);
 
     } catch (error) {
@@ -182,7 +212,7 @@ const sendChatMessage = () => {
   if (newMessage.trim() === '') return;
 
   const userMessage = {
-    id: Date.now() + Math.random(), // Better unique ID generation
+    id: Date.now() + Math.random(),
     type: 'user',
     message: newMessage,
     timestamp: new Date()
@@ -192,8 +222,7 @@ const sendChatMessage = () => {
   setNewMessage('');
   setIsTyping(true);
 
-  // Simulate bot response with more realistic timing
-  const responseDelay = Math.random() * 1000 + 1000; // 1-2 seconds
+  const responseDelay = Math.random() * 1000 + 1000;
   setTimeout(() => {
     setIsTyping(false);
     const botResponse = {
@@ -537,22 +566,32 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'resolved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'closed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'open': return darkMode ? 'bg-red-900/20 text-red-400 border-red-800' : 'bg-red-100 text-red-800 border-red-200';
+      case 'in_progress': return darkMode ? 'bg-yellow-900/20 text-yellow-400 border-yellow-800' : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'resolved': return darkMode ? 'bg-green-900/20 text-green-400 border-green-800' : 'bg-green-100 text-green-800 border-green-200';
+      case 'closed': return darkMode ? 'bg-gray-900/20 text-gray-400 border-gray-800' : 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return darkMode ? 'bg-blue-900/20 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-800 border-blue-200';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'urgent': return 'text-red-600';
-      case 'high': return 'text-orange-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
+      case 'urgent': return darkMode ? 'text-red-400' : 'text-red-600';
+      case 'high': return darkMode ? 'text-orange-400' : 'text-orange-600';
+      case 'medium': return darkMode ? 'text-yellow-400' : 'text-yellow-600';
+      case 'low': return darkMode ? 'text-green-400' : 'text-green-600';
+      default: return darkMode ? 'text-gray-400' : 'text-gray-600';
     }
+  };
+
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
   return (
@@ -645,6 +684,12 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                 >
                   <Icon className="text-lg" />
                   <span>{tab.label}</span>
+                  {/* Show count for tickets */}
+                  {tab.id === 'tickets' && tickets.length > 0 && (
+                    <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full ml-1">
+                      {tickets.length}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -659,12 +704,18 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                 </h2>
 
                 {showSuccess && (
-                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className={`mb-6 p-4 rounded-lg border ${
+                    darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'
+                  }`}>
                     <div className="flex items-center">
-                      <FaCheckCircle className="text-green-600 mr-3 text-xl" />
+                      <FaCheckCircle className={`mr-3 text-xl ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
                       <div>
-                        <h3 className="text-green-800 font-medium">Ticket submitted successfully!</h3>
-                        <p className="text-green-700 text-sm">We'll get back to you within 24 hours. Your ticket has been saved to our database.</p>
+                        <h3 className={`font-medium ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
+                          Ticket submitted successfully!
+                        </h3>
+                        <p className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+                          We'll get back to you within 24 hours. Your ticket has been saved and will appear in "My Tickets".
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -883,71 +934,142 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
               </div>
             )}
 
-            {/* My Tickets Tab */}
+            {/* REAL My Tickets Tab with Firebase Data */}
             {activeTab === 'tickets' && (
               <div>
-                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
-                  Your Support Tickets
-                </h2>
-                
-                {tickets.length > 0 ? (
-                  <div className="space-y-4">
-                    {tickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                          <div className="flex items-center space-x-4">
-                            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {ticket.id}
-                            </h3>
-                            <span className={`px-3 py-1 text-xs rounded-full border font-medium ${getStatusColor(ticket.status)}`}>
-                              {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
-                            </span>
-                            <span className={`text-sm font-medium capitalize ${getPriorityColor(ticket.priority)}`}>
-                              {ticket.priority} Priority
-                            </span>
-                          </div>
-                          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-2 md:mt-0`}>
-                            Created: {ticket.created}
-                          </div>
-                        </div>
-                        
-                        <h4 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-2`}>
-                          {ticket.subject}
-                        </h4>
-                        <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
-                          {ticket.description}
-                        </p>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Last updated: {ticket.lastUpdate}
-                          </span>
-                          <button className="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                            View Details →
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Your Support Tickets
+                  </h2>
+                  <button
+                    onClick={fetchUserTickets}
+                    className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                      darkMode 
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
+
+                {/* Loading State */}
+                {loadingTickets && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Loading your tickets...</p>
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <FaHistory className={`mx-auto text-6xl mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-                    <h3 className={`text-xl font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
-                      No tickets yet
-                    </h3>
-                    <p className={`${darkMode ? 'text-gray-500' : 'text-gray-600'} mb-4`}>
-                      You haven't submitted any support tickets.
-                    </p>
-                    <button
-                      onClick={() => setActiveTab('contact')}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium"
+                )}
+
+                {/* Error State */}
+                {ticketsError && (
+                  <div className={`p-4 rounded-lg border mb-6 ${
+                    darkMode ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                    <p>{ticketsError}</p>
+                    <button 
+                      onClick={fetchUserTickets}
+                      className="mt-2 text-sm underline hover:no-underline"
                     >
-                      Submit Your First Ticket
+                      Try again
                     </button>
                   </div>
+                )}
+
+                {/* Tickets Display */}
+                {!loadingTickets && !ticketsError && (
+                  <>
+                    {tickets.length > 0 ? (
+                      <div className="space-y-4">
+                        {tickets.map((ticket) => (
+                          <div
+                            key={ticket.id}
+                            className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border rounded-lg p-6 hover:shadow-md transition-shadow`}
+                          >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                              <div className="flex items-center space-x-4">
+                                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  {ticket.ticketId}
+                                </h3>
+                                <span className={`px-3 py-1 text-xs rounded-full border font-medium ${getStatusColor(ticket.status)}`}>
+                                  {ticket.status.replace('_', ' ').charAt(0).toUpperCase() + ticket.status.replace('_', ' ').slice(1)}
+                                </span>
+                                <span className={`text-sm font-medium capitalize ${getPriorityColor(ticket.priority)}`}>
+                                  {ticket.priority} Priority
+                                </span>
+                              </div>
+                              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-2 md:mt-0`}>
+                                Created: {formatDate(ticket.createdAt)}
+                              </div>
+                            </div>
+                            
+                            <div className="mb-2">
+                              <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                                darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
+                              } mr-2`}>
+                                {ticket.category}
+                              </span>
+                            </div>
+                            
+                            <h4 className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'} mb-2`}>
+                              {ticket.subject}
+                            </h4>
+                            <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-4 line-clamp-3`}>
+                              {ticket.message}
+                            </p>
+                            
+                            {/* Show attachments if any */}
+                            {ticket.attachments && ticket.attachments.length > 0 && (
+                              <div className="mb-4">
+                                <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                                  Attachments:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {ticket.attachments.map((attachment, index) => (
+                                    <span key={index} className={`text-xs px-2 py-1 rounded ${
+                                      darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'
+                                    }`}>
+                                      📎 {attachment.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between">
+                              <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Last updated: {formatDate(ticket.updatedAt)}
+                              </span>
+                              <div className="flex space-x-2">
+                                <button className="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                                  View Details →
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <FaHistory className={`mx-auto text-6xl mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                        <h3 className={`text-xl font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                          No tickets yet
+                        </h3>
+                        <p className={`${darkMode ? 'text-gray-500' : 'text-gray-600'} mb-4`}>
+                          You haven't submitted any support tickets.
+                        </p>
+                        <button
+                          onClick={() => setActiveTab('contact')}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium"
+                        >
+                          Submit Your First Ticket
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -974,7 +1096,10 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                         }`}>
                           {faq.category}
                         </span>
-                        <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                        <button 
+                          onClick={() => setActiveTab('contact')}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                        >
                           Still need help? Contact us →
                         </button>
                       </div>
