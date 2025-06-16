@@ -3,6 +3,10 @@ import { FaPhone, FaEnvelope, FaClock, FaMapMarkerAlt, FaComments, FaPaperPlane,
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 
+// ADD THESE FIREBASE IMPORTS - ONLY ADDITION!
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+
 const ContactSupport = () => {
   const { user } = useAuth();
   const { darkMode } = useTheme();
@@ -118,27 +122,60 @@ const ContactSupport = () => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  // ENHANCED: Save to Firebase Database
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Generate unique ticket ID
+      const ticketId = `TKT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      
+      // Create ticket document for Firebase
+      const ticketDoc = {
+        ticketId,
+        userId: user?.uid || 'guest',
+        userEmail: user?.email || 'guest@example.com',
+        userName: user?.displayName || formData.name || 'Guest User',
+        subject: formData.subject,
+        category: formData.category,
+        priority: formData.priority,
+        message: formData.message,
+        status: 'open',
+        attachments: attachments.map(file => ({
+          name: file.name,
+          size: file.size,
+          type: file.type
+        })),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        source: 'web_form'
+      };
 
-    console.log('Support ticket submitted:', { ...formData, attachments, user: user?.email });
-    setShowSuccess(true);
-    setFormData({
-      name: user?.displayName || '',
-      email: user?.email || '',
-      subject: '',
-      category: 'general',
-      priority: 'medium',
-      message: ''
-    });
-    setAttachments([]);
-    setIsSubmitting(false);
+      // Save to Firebase
+      await addDoc(collection(db, 'supportTickets'), ticketDoc);
+      
+      console.log('Support ticket saved to Firebase:', ticketDoc);
+      
+      setShowSuccess(true);
+      setFormData({
+        name: user?.displayName || '',
+        email: user?.email || '',
+        subject: '',
+        category: 'general',
+        priority: 'medium',
+        message: ''
+      });
+      setAttachments([]);
 
-    setTimeout(() => setShowSuccess(false), 5000);
+      setTimeout(() => setShowSuccess(false), 5000);
+
+    } catch (error) {
+      console.error('Error saving ticket to Firebase:', error);
+      alert('Failed to submit ticket. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
 const sendChatMessage = () => {
@@ -497,6 +534,7 @@ Could you tell me more specifically what you need help with? For example, you co
 
 I'm here to make your wholesale experience as smooth as possible! 😊`;
 };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'open': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -626,7 +664,7 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                       <FaCheckCircle className="text-green-600 mr-3 text-xl" />
                       <div>
                         <h3 className="text-green-800 font-medium">Ticket submitted successfully!</h3>
-                        <p className="text-green-700 text-sm">We'll get back to you within 24 hours.</p>
+                        <p className="text-green-700 text-sm">We'll get back to you within 24 hours. Your ticket has been saved to our database.</p>
                       </div>
                     </div>
                   </div>
@@ -835,7 +873,7 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                     {isSubmitting ? (
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Submitting...
+                        Saving to Database...
                       </div>
                     ) : (
                       'Submit Ticket'
@@ -1006,7 +1044,7 @@ I'm here to make your wholesale experience as smooth as possible! 😊`;
                         {msg.type === 'user' && (
                           <FaUser className="mt-1 text-white" />
                         )}
-                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-sm whitespace-pre-line">{msg.message}</p>
                       </div>
                     </div>
                   </div>
