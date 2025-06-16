@@ -141,50 +141,362 @@ const ContactSupport = () => {
     setTimeout(() => setShowSuccess(false), 5000);
   };
 
-  // Chat Handlers
-  const sendChatMessage = () => {
-    if (newMessage.trim() === '') return;
+const sendChatMessage = () => {
+  if (newMessage.trim() === '') return;
 
-    const userMessage = {
-      id: chatMessages.length + 1,
-      type: 'user',
-      message: newMessage,
+  const userMessage = {
+    id: Date.now() + Math.random(), // Better unique ID generation
+    type: 'user',
+    message: newMessage,
+    timestamp: new Date()
+  };
+
+  setChatMessages(prev => [...prev, userMessage]);
+  setNewMessage('');
+  setIsTyping(true);
+
+  // Simulate bot response with more realistic timing
+  const responseDelay = Math.random() * 1000 + 1000; // 1-2 seconds
+  setTimeout(() => {
+    setIsTyping(false);
+    const botResponse = {
+      id: Date.now() + Math.random(),
+      type: 'bot',
+      message: getBotResponse(newMessage),
       timestamp: new Date()
     };
+    setChatMessages(prev => [...prev, botResponse]);
+  }, responseDelay);
+};
 
-    setChatMessages(prev => [...prev, userMessage]);
-    setNewMessage('');
-    setIsTyping(true);
+const getBotResponse = (message) => {
+  const lowerMessage = message.toLowerCase();
+  
+  // Greeting responses
+  if (lowerMessage.match(/^(hi|hello|hey|good morning|good afternoon|good evening)$/)) {
+    return "Hello! 👋 I'm your virtual assistant for the Wholesaler App. I'm here to help you with orders, payments, inventory, and any other questions you might have. How can I assist you today?";
+  }
+  
+  // Affirmative responses
+  if (lowerMessage.match(/^(yes|yeah|yep|ok|okay|sure|sounds good|that helps|thanks|thank you)$/)) {
+    return "Great! I'm happy I could help. Is there anything else you'd like to know about using the Wholesaler App? I can assist with orders, payments, inventory management, or account settings.";
+  }
+  
+  // Negative responses
+  if (lowerMessage.match(/^(no|nope|not really|that's all)$/)) {
+    return "No problem! Feel free to reach out anytime if you have questions. I'm always here to help make your wholesale experience smoother. Have a great day! 😊";
+  }
 
-    // Simulate bot response
-    setTimeout(() => {
-      setIsTyping(false);
-      const botResponse = {
-        id: chatMessages.length + 2,
-        type: 'bot',
-        message: getBotResponse(newMessage),
-        timestamp: new Date()
-      };
-      setChatMessages(prev => [...prev, botResponse]);
-    }, 1500);
-  };
+  // How to place orders
+  if (lowerMessage.includes('how to order') || lowerMessage.includes('place order') || lowerMessage.includes('make order')) {
+    return `Here's how to place an order step by step:
 
-  const getBotResponse = (message) => {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('order') || lowerMessage.includes('purchase')) {
-      return "I can help you with order-related questions! You can check your order status in the Orders section of your dashboard. Would you like me to guide you there?";
-    } else if (lowerMessage.includes('password') || lowerMessage.includes('login')) {
-      return "For login issues, try resetting your password from the login page. If you're still having trouble, I can escalate this to our technical team.";
-    } else if (lowerMessage.includes('inventory') || lowerMessage.includes('product')) {
-      return "For inventory questions, check your permissions with your account administrator. Different user roles have different access levels to products and inventory.";
-    } else if (lowerMessage.includes('help') || lowerMessage.includes('support')) {
-      return "I'm here to help! You can also browse our Help Center for detailed guides, or submit a support ticket for personalized assistance from our team.";
-    } else {
-      return "Thanks for your message! For complex issues, I recommend submitting a support ticket so our team can give you detailed assistance. Is there anything specific I can help you with right now?";
-    }
-  };
+📋 **Placing an Order:**
+1. Go to **Products** or **Inventory** section
+2. Browse or search for items you need
+3. Click **Add to Cart** for each product
+4. Set quantities in your cart
+5. Click **Checkout** when ready
+6. Fill in shipping and billing details
+7. Review your order and confirm
 
+💡 **Pro tip:** You can save frequently ordered items to your favorites for quicker reordering!
+
+Would you like me to explain any specific step in more detail?`;
+  }
+
+  // Payment information
+  if (lowerMessage.includes('payment') || lowerMessage.includes('pay') || lowerMessage.includes('billing') || lowerMessage.includes('credit card')) {
+    return `Here's everything about payments:
+
+💳 **Payment Methods:**
+• Credit/Debit Cards (Visa, MasterCard, Amex)
+• Bank transfers
+• Net payment terms (for approved accounts)
+• PayPal (select accounts)
+
+🔐 **Payment Process:**
+1. During checkout, select your payment method
+2. Enter payment details securely
+3. Review charges and confirm
+4. Receive instant confirmation
+
+💰 **Billing Info:**
+• Invoices are generated automatically
+• Payment receipts sent via email
+• Track payment status in your account
+• Set up auto-payment for recurring orders
+
+Need help with a specific payment issue?`;
+  }
+
+  // Shipping and delivery
+  if (lowerMessage.includes('shipping') || lowerMessage.includes('delivery') || lowerMessage.includes('tracking')) {
+    return `Here's your shipping guide:
+
+🚚 **Shipping Options:**
+• Standard shipping (3-5 business days)
+• Express shipping (1-2 business days)
+• Overnight delivery (next business day)
+• Bulk/freight shipping for large orders
+
+📦 **Tracking Your Order:**
+1. Check **My Orders** in your dashboard
+2. Click on any order for tracking details
+3. Receive tracking numbers via email
+4. Real-time status updates
+
+🏠 **Delivery Details:**
+• Signature required for orders over $500
+• Safe drop-off available
+• Schedule delivery windows
+• Special handling for fragile items
+
+What would you like to know about your delivery?`;
+  }
+
+  // Account and login issues
+  if (lowerMessage.includes('password') || lowerMessage.includes('login') || lowerMessage.includes('account') || lowerMessage.includes('forgot')) {
+    return `I can help with account issues:
+
+🔑 **Login Problems:**
+• Click "Forgot Password" on login page
+• Check your email for reset link
+• Use the temporary password provided
+• Update to a new secure password
+
+👤 **Account Management:**
+• Update profile in Account Settings
+• Manage shipping addresses
+• Set payment preferences
+• View order history
+
+🛡️ **Security Tips:**
+• Use strong, unique passwords
+• Enable two-factor authentication
+• Log out on shared devices
+• Report suspicious activity immediately
+
+Still having trouble accessing your account?`;
+  }
+
+  // Inventory and products
+  if (lowerMessage.includes('inventory') || lowerMessage.includes('product') || lowerMessage.includes('stock') || lowerMessage.includes('catalog')) {
+    return `Here's how to navigate our inventory:
+
+📦 **Finding Products:**
+• Use the search bar for specific items
+• Filter by category, price, or brand
+• Check product availability in real-time
+• View detailed product specifications
+
+📊 **Stock Information:**
+• Green indicator = In stock
+• Yellow indicator = Low stock
+• Red indicator = Out of stock
+• Get notified when items restock
+
+🏷️ **Product Details:**
+• High-resolution product images
+• Wholesale pricing tiers
+• Bulk discount information
+• Technical specifications
+• Customer reviews and ratings
+
+Need help finding a specific product?`;
+  }
+
+  // Pricing and discounts
+  if (lowerMessage.includes('price') || lowerMessage.includes('discount') || lowerMessage.includes('wholesale') || lowerMessage.includes('bulk')) {
+    return `Let me explain our pricing structure:
+
+💰 **Wholesale Pricing:**
+• Tiered pricing based on quantity
+• Volume discounts for bulk orders
+• Special rates for verified businesses
+• Seasonal promotional pricing
+
+🎯 **Discount Programs:**
+• First-time buyer discounts
+• Loyalty program rewards
+• Early payment discounts
+• Referral bonuses
+
+📈 **Bulk Benefits:**
+• Higher quantities = better prices
+• Free shipping on large orders
+• Priority customer support
+• Extended payment terms
+
+Want to know about pricing for specific products?`;
+  }
+
+  // Returns and refunds
+  if (lowerMessage.includes('return') || lowerMessage.includes('refund') || lowerMessage.includes('exchange') || lowerMessage.includes('warranty')) {
+    return `Our return policy is designed to be fair and simple:
+
+↩️ **Return Process:**
+• 30-day return window for most items
+• Items must be unused and in original packaging
+• Start return request in **My Orders**
+• Print prepaid return label
+
+💰 **Refunds:**
+• Full refund for defective items
+• Return shipping covered for our errors
+• Refunds processed within 3-5 business days
+• Original payment method credited
+
+🔄 **Exchanges:**
+• Exchange for different size/color
+• Upgrade to different model (pay difference)
+• Quick exchange process available
+
+🛡️ **Warranty Coverage:**
+• Manufacturer warranties honored
+• Extended warranty options available
+• Detailed warranty terms per product
+
+Need to start a return or have questions about a specific item?`;
+  }
+
+  // Contact and support
+  if (lowerMessage.includes('help') || lowerMessage.includes('support') || lowerMessage.includes('contact') || lowerMessage.includes('phone') || lowerMessage.includes('email')) {
+    return `I'm here to help! Here are all the ways to get support:
+
+🤖 **Instant Help (Me!):**
+• Available 24/7 for quick questions
+• Product information and guidance
+• Order status and tracking
+• Account assistance
+
+📧 **Email Support:**
+• support@wholesaler-app.com
+• Response within 4-6 hours
+• Detailed technical assistance
+• Order modifications and special requests
+
+📞 **Phone Support:**
+• 1-800-WHOLESALE (Mon-Fri, 8AM-6PM)
+• Immediate assistance for urgent issues
+• Speak with product specialists
+• Account managers for business customers
+
+💬 **Live Chat:**
+• Business hours: Mon-Fri, 9AM-5PM
+• Real-time support with human agents
+• Screen sharing for technical issues
+
+What's the best way I can help you right now?`;
+  }
+
+  // Order status and tracking
+  if (lowerMessage.includes('order status') || lowerMessage.includes('where is my order') || lowerMessage.includes('order tracking')) {
+    return `Let me help you track your order:
+
+📋 **Check Order Status:**
+1. Go to **My Orders** in your dashboard
+2. Find your order by order number or date
+3. Click **View Details** for full information
+4. See real-time status updates
+
+📦 **Order Statuses:**
+• **Processing** - We're preparing your order
+• **Shipped** - On its way to you
+• **Out for Delivery** - Arriving today
+• **Delivered** - Successfully delivered
+
+🔍 **Tracking Details:**
+• Carrier information and tracking number
+• Estimated delivery date and time
+• Current location of your package
+• Delivery attempt history
+
+If you have your order number, I can help you look up specific details. What's your order number?`;
+  }
+
+  // Technical issues
+  if (lowerMessage.includes('bug') || lowerMessage.includes('error') || lowerMessage.includes('not working') || lowerMessage.includes('problem')) {
+    return `I'm sorry you're experiencing technical issues. Let me help:
+
+🔧 **Quick Fixes:**
+• Try refreshing the page (Ctrl+F5)
+• Clear your browser cache and cookies
+• Disable browser extensions temporarily
+• Try using an incognito/private window
+
+🌐 **Browser Support:**
+• Chrome, Firefox, Safari, Edge (latest versions)
+• JavaScript must be enabled
+• Pop-up blocker should allow our site
+
+📱 **Mobile Issues:**
+• Update to the latest app version
+• Check your internet connection
+• Restart the app
+• Free up device storage space
+
+🆘 **Still Having Problems?**
+Please describe the specific error message or issue you're seeing, and I'll provide more targeted help or escalate to our technical team.
+
+What exactly is happening when you try to use the app?`;
+  }
+
+  // Business/wholesale specific
+  if (lowerMessage.includes('business account') || lowerMessage.includes('wholesale account') || lowerMessage.includes('tax exempt')) {
+    return `Here's information about business accounts:
+
+🏢 **Business Account Benefits:**
+• Wholesale pricing access
+• Extended payment terms (NET 30/60)
+• Dedicated account manager
+• Priority customer support
+• Bulk order capabilities
+
+📋 **Account Setup:**
+• Business license verification required
+• Tax ID number needed
+• Credit check for payment terms
+• Professional references
+
+💼 **Business Features:**
+• Multi-user account access
+• Approval workflows for orders
+• Custom pricing agreements
+• Purchase order integration
+• Detailed reporting and analytics
+
+🧾 **Tax Benefits:**
+• Tax-exempt status available
+• Resale certificate upload
+• Automated tax calculations
+• Detailed tax reporting
+
+Would you like help setting up a business account or upgrading your current account?`;
+  }
+
+  // General order/purchase questions
+  if (lowerMessage.includes('order') || lowerMessage.includes('purchase') || lowerMessage.includes('buy')) {
+    return "I can help you with all order-related questions! 🛒 Whether you need help placing a new order, tracking an existing one, modifying quantities, or understanding our ordering process, I'm here to assist. \n\nWhat specifically would you like to know about orders? You can ask me about:\n• How to place orders\n• Payment methods\n• Shipping options\n• Order tracking\n• Returns and exchanges";
+  }
+
+  // Default response with suggestions
+  return `I want to make sure I give you the most helpful information! 🤔 
+
+I can assist you with:
+• **Orders** - Placing, tracking, modifying orders
+• **Payments** - Methods, billing, payment issues
+• **Products** - Finding items, pricing, availability
+• **Shipping** - Delivery options, tracking, schedules
+• **Account** - Login help, settings, business accounts
+• **Returns** - Return process, exchanges, refunds
+• **Technical** - App issues, troubleshooting
+
+Could you tell me more specifically what you need help with? For example, you could ask:
+"How do I place an order?" or "What payment methods do you accept?" or "How do I track my order?"
+
+I'm here to make your wholesale experience as smooth as possible! 😊`;
+};
   const getStatusColor = (status) => {
     switch (status) {
       case 'open': return 'bg-blue-100 text-blue-800 border-blue-200';
