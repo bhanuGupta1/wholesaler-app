@@ -1,15 +1,18 @@
-// src/components/common/Layout.jsx - FIXED: Background animations now visible
+// src/components/common/Layout.jsx - COMPLETE INTEGRATION with SecretInvasionBackground
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import Navbar from './Navbar';
 import ThemeToggle from './ThemeToggle';
+import SecretInvasionBackground from './SecretInvasionBackground'; // ← NEW IMPORT
 
 const Layout = ({ children }) => {
   // All original layout state and functionality
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // SecretInvasionBackground enabled by default
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, userRole } = useAuth();
@@ -208,6 +211,12 @@ const Layout = ({ children }) => {
   if (isLoginPage) {
     return (
       <div className={`${layoutPrefix}-login-wrapper`}>
+        {/* Secret Invasion Background always enabled */}
+        <SecretInvasionBackground 
+          intensity={0.7} 
+          enableGlitch={darkMode} 
+        />
+        
         {/* Background effects - only for dark mode */}
         {darkMode && (
           <>
@@ -253,6 +262,12 @@ const Layout = ({ children }) => {
         }
       `}</style>
 
+      {/* SECRET INVASION BACKGROUND - Always enabled */}
+      <SecretInvasionBackground 
+        intensity={darkMode ? 0.8 : 0.6} 
+        enableGlitch={darkMode} 
+      />
+
       {/* BACKGROUND EFFECTS - Theme aware */}
       {darkMode ? (
         <>
@@ -281,10 +296,10 @@ const Layout = ({ children }) => {
         </>
       )}
 
-      {/* LAYOUT CONTENT WITH THEME STYLING - FIXED: Added layout-wrapper class */}
+      {/* LAYOUT CONTENT WITH THEME STYLING */}
       <div className={`${layoutPrefix}-layout-content layout-wrapper relative z-10 min-h-screen flex flex-col`}>
         
-        {/* THEME-AWARE NAVBAR */}
+        {/* THEME-AWARE NAVBAR WITH ENHANCED MODE TOGGLE */}
         <div className={`sticky top-0 z-40 transition-all duration-300 ${
           scrolled 
             ? `${themePrefix}-navbar-scrolled shadow-lg` 
@@ -444,7 +459,7 @@ const Layout = ({ children }) => {
           </div>
         </div>
         
-        {/* MAIN CONTENT - FIXED: Updated z-index and added force-transparent class */}
+        {/* MAIN CONTENT */}
         <main className="flex-grow py-6 px-4 relative z-1">
           <div 
             className={`${darkMode ? 'main-content-wrapper' : 'neumorph-main-content-wrapper'} force-transparent`}
