@@ -3,6 +3,7 @@ import React from 'react';
 const { theme, toggleTheme } = useContext(ThemeContext);
 
 const [notifications, setNotifications] = useState(true);
+const [language, setLanguage] = useState('en');
 
 
 const UserSettings = () => {
@@ -20,6 +21,10 @@ const UserSettings = () => {
   />
   Enable notifications
 </label>
+<select value={language} onChange={(e) => setLanguage(e.target.value)}>
+  <option value="en">English</option>
+  <option value="es">Spanish</option>
+</select>
     </div>
   );
 };
