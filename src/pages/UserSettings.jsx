@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext'; // Import toast context
 
@@ -9,15 +9,28 @@ const UserSettings = () => {
   const [notifications, setNotifications] = useState(true);
   const [language, setLanguage] = useState('en');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Track original settings & detect changes
+  const [originalSettings] = useState({ notifications, language });
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    setHasChanges(
+      notifications !== originalSettings.notifications || language !== originalSettings.language
+    );
+  }, [notifications, language]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!hasChanges) {
+      showToast('No changes detected!', 'warning');
+      return;
+    }
+
     setIsLoading(true);
-
-    // Simulating a delay to represent async operation
     await new Promise(r => setTimeout(r, 1000));
-
     setIsLoading(false);
+
     showToast('Settings saved successfully!', 'success'); // Show success toast notification
   };
 
@@ -53,10 +66,10 @@ const UserSettings = () => {
         <form onSubmit={handleSubmit} className="mt-4">
           <button 
             type="submit" 
-            disabled={isLoading} 
+            disabled={isLoading || !hasChanges} 
             className="px-4 py-2 bg-indigo-600 text-white rounded"
           >
-            {isLoading ? 'Saving...' : 'Save Settings'}
+            {isLoading ? 'Saving...' : hasChanges ? 'Save Settings' : 'No Changes'}
           </button>
         </form>
       </div>
