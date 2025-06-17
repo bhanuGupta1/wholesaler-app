@@ -1,12 +1,9 @@
-import React from 'react';
+import { useContext } from 'react';
+import { ThemeContext } from '../context/ThemeContext';
 
-const UserSettings = () => {
-  return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-indigo-600">Settings</h1>
-      {/* Content will go here */}
-    </div>
-  );
-};
+const { theme, toggleTheme } = useContext(ThemeContext);
 
-export default UserSettings;
+// Add to return:
+<button onClick={toggleTheme}>
+  Switch to {theme === 'dark' ? 'Light' : 'Dark'} Mode
+</button>
