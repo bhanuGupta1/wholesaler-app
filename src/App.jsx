@@ -36,6 +36,9 @@ const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+// Add these lines after the existing lazy imports in App.jsx
+const HelpCenter = lazy(() => import('./pages/HelpCenter'));
+const ContactSupport = lazy(() => import('./pages/ContactSupport'));
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
@@ -266,6 +269,20 @@ function App() {
                     <ProductCatalog />
                   </Layout>
                 } />
+
+                {/* Help Center - Public access */}
+<Route path="/help-center" element={
+  <Layout>
+    <HelpCenter />
+  </Layout>
+} />
+
+{/* Contact Support - Public access */}
+<Route path="/contact-support" element={
+  <Layout>
+    <ContactSupport />
+  </Layout>
+} />
 
                 {/* Shopping routes - restricted for admin/manager */}
                 <Route path="/cart" element={

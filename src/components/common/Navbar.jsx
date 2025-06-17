@@ -384,11 +384,11 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               }
             </p>
             <div className="flex items-center space-x-3">
-              {[
-                { href: "/support-center", text: darkMode ? "HELP MATRIX" : "Help Center" },
-                { href: "/feedback", text: darkMode ? "NEURAL SUPPORT" : "Contact Support" },
-                { to: "/qr-tools", text: darkMode ? "QR PROTOCOLS" : "QR Tools", icon: "📱" }
-              ].map((item, i) => (
+             {[
+  { href: "/help-center", text: darkMode ? "HELP MATRIX" : "Help Center" },
+  { href: "/contact-support", text: darkMode ? "NEURAL SUPPORT" : "Contact Support" },
+  { to: "/qr-tools", text: darkMode ? "QR PROTOCOLS" : "QR Tools", icon: "📱" }
+].map((item, i) => (
                 <div key={i} className="flex items-center">
                   {i > 0 && <span className={`${darkMode ? 'text-cyan-500' : 'text-indigo-200'}`}>|</span>}
                   {item.to ? (
