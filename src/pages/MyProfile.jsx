@@ -23,6 +23,58 @@ const MyProfile = () => {
     photoURL: user?.photoURL || ''
   });
 
+
+
+  // Password form state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  // Load additional user data from Firestore
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setProfileData(prev => ({
+              ...prev,
+              phoneNumber: userData.phoneNumber || '',
+              bio: userData.bio || '',
+              company: userData.company || '',
+              jobTitle: userData.jobTitle || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
+  const tabs = [
+    { id: 'profile', name: 'Profile Information', icon: '👤' },
+    { id: 'security', name: 'Security', icon: '🔒' },
+    { id: 'account', name: 'Account Info', icon: 'ℹ️' }
+  ];
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      // Update Firebase Auth profile
+      await updateProfile(user, {
+        displayName: profileData.displayName,
+        photoURL: profileData.photoURL
+      });
+
   // Load additional user data from Firestore
   useEffect(() => {
     const loadUserData = async () => {
