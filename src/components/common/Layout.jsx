@@ -1,4 +1,4 @@
-// src/components/common/Layout.jsx - COMPLETE INTEGRATION with SecretInvasionBackground
+// src/components/common/Layout.jsx - 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
