@@ -1,10 +1,10 @@
-// src/pages/MyProfile.jsx - Commit 4: Firebase integration and security tab
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { updateProfile, updatePassword } from 'firebase/auth';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import ImageUploader from '../components/common/ImageUploader';
 
 const MyProfile = () => {
   const { user } = useAuth();
@@ -55,12 +55,6 @@ const MyProfile = () => {
 
     loadUserData();
   }, [user]);
-
-  const tabs = [
-    { id: 'profile', name: 'Profile Information', icon: '👤' },
-    { id: 'security', name: 'Security', icon: '🔒' },
-    { id: 'account', name: 'Account Info', icon: 'ℹ️' }
-  ];
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -125,6 +119,19 @@ const MyProfile = () => {
       setLoading(false);
     }
   };
+
+  const handleImageUploaded = (imageUrl) => {
+    setProfileData(prev => ({
+      ...prev,
+      photoURL: imageUrl
+    }));
+  };
+
+  const tabs = [
+    { id: 'profile', name: 'Profile Information', icon: '👤' },
+    { id: 'security', name: 'Security', icon: '🔒' },
+    { id: 'account', name: 'Account Info', icon: 'ℹ️' }
+  ];
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -195,15 +202,18 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Profile Picture (Upload will be added in final commit)
+                      Profile Picture
                     </label>
-                    <div className={`h-24 w-24 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center`}>
-                      {profileData.photoURL ? (
-                        <img src={profileData.photoURL} alt="Profile" className="h-full w-full object-cover rounded-lg" />
-                      ) : (
-                        <span className="text-sm text-gray-500">No image</span>
-                      )}
-                    </div>
+                    <ImageUploader
+                      initialImage={profileData.photoURL}
+                      onImageUploaded={handleImageUploaded}
+                      folder="profile-pictures"
+                      filePrefix="profile"
+                      darkMode={darkMode}
+                      showPreview={true}
+                      previewSize="lg"
+                      autoUpload={true}
+                    />
                   </div>
 
                   <div className="space-y-4">
@@ -390,7 +400,27 @@ const MyProfile = () => {
 
             {/* Account Info Tab */}
             {activeTab === 'account' && (
-              <p className="text-center text-gray-500">Account information will be added in final commit...</p>
+              <div className="space-y-6">
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <h3 className="text-lg font-medium mb-2">Account Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Account Type:</strong> {user?.accountType?.toUpperCase() || 'USER'}</p>
+                    <p><strong>Member Since:</strong> {user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'Recently'}</p>
+                    <p><strong>Last Sign In:</strong> {user?.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString() : 'Recently'}</p>
+                    <p><strong>Email Verified:</strong> {user?.emailVerified ? '✅ Yes' : '❌ No'}</p>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-blue-900/20' : 'bg-blue-50'} border border-blue-200`}>
+                  <h3 className="text-lg font-medium mb-2 text-blue-800 dark:text-blue-200">💡 Tips</h3>
+                  <ul className="text-sm space-y-1 text-blue-700 dark:text-blue-300">
+                    <li>• Keep your profile information up to date</li>
+                    <li>• Use a strong password and change it regularly</li>
+                    <li>• Upload a profile picture to personalize your account</li>
+                    <li>• Contact support if you need help with anything</li>
+                  </ul>
+                </div>
+              </div>
             )}
           </div>
         </div>
