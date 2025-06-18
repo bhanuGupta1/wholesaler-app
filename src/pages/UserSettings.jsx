@@ -1,8 +1,9 @@
-// src/pages/UserSettings.jsx
+
+// src/pages/UserSettings.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore'; // 🔥 CHANGED: Added setDoc, removed updateDoc
 import { db } from '../firebase/config';
 
 const UserSettings = () => {
@@ -58,20 +59,29 @@ const UserSettings = () => {
     loadSettings();
   }, [user]);
 
+  // 🔥 FIXED: Updated save function to use setDoc with merge option
   const handleSaveSettings = async () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    try {
-      await updateDoc(doc(db, 'userSettings', user.uid), {
-        ...settings,
-        updatedAt: new Date()
-      });
+    console.log('Attempting to save settings for user:', user?.uid); // Debug log
 
+    try {
+      // Use setDoc with merge option - this creates the document if it doesn't exist
+      await setDoc(doc(db, 'userSettings', user.uid), {
+        ...settings,
+        updatedAt: new Date(),
+        userId: user.uid, // Add user ID for reference
+        createdAt: new Date() // Will only set if document is new
+      }, { merge: true }); // 🔥 KEY FIX: merge: true creates document if doesn't exist
+
+      console.log('Settings saved successfully!'); // Debug log
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
     } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+      console.error('Detailed error saving settings:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      setMessage({ type: 'error', text: `Failed to save settings: ${error.message}` });
     } finally {
       setLoading(false);
     }
@@ -200,10 +210,9 @@ const UserSettings = () => {
                   }`}
                 >
                   <option value="en">English</option>
-              
-<option value="hi">हिन्दी (Hindi)</option>
-<option value="fr">Français (French)</option>
-<option value="de">Deutsch (German)</option>
+                  <option value="hi">हिन्दी (Hindi)</option>
+                  <option value="fr">Français (French)</option>
+                  <option value="de">Deutsch (German)</option>
                 </select>
               </div>
             </div>
