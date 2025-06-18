@@ -6,6 +6,7 @@
 // ✅ Mobile-friendly (touch, focus management)
 // ✅ Clean API (no event listener hacks)
 // ✅ Production-grade (compound component pattern)
+// ✅ FIXED: No navbar expansion on dropdown open
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -22,7 +23,7 @@ import SecretInvasionBackground from './SecretInvasionBackground';
 
 const DropdownContext = createContext(null);
 
-// Main Dropdown Container
+// Main Dropdown Container - FIXED: Added overflow handling
 const Dropdown = ({ children, onOpenChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef(null);
@@ -81,7 +82,8 @@ const Dropdown = ({ children, onOpenChange }) => {
 
   return (
     <DropdownContext.Provider value={contextValue}>
-      <div className="relative">{children}</div>
+      {/* FIXED: Added static class to prevent layout shifts */}
+      <div className="relative static">{children}</div>
     </DropdownContext.Provider>
   );
 };
@@ -118,7 +120,7 @@ const DropdownTrigger = ({ children, className = '', ...props }) => {
   );
 };
 
-// Dropdown Content
+// Dropdown Content - FIXED: Better positioning and z-index
 const DropdownContent = ({ children, className = '', align = 'right', ...props }) => {
   const { isOpen, contentRef } = useContext(DropdownContext);
 
@@ -133,9 +135,10 @@ const DropdownContent = ({ children, className = '', align = 'right', ...props }
   return (
     <div
       ref={contentRef}
-      className={`absolute top-full mt-2 z-50 ${alignmentClasses[align]} ${className}`}
+      className={`absolute top-full mt-2 z-[9999] min-w-max ${alignmentClasses[align]} ${className}`}
       role="menu"
       aria-orientation="vertical"
+      style={{ position: 'absolute' }}
       {...props}
     >
       <div className="animate-slideDown">
@@ -360,8 +363,8 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         />
       </div>
       
-      {/* Theme-aware navbar wrapper */}
-      <div className={`${themePrefix}-navbar-wrapper relative overflow-hidden`}>
+      {/* FIXED: Theme-aware navbar wrapper with proper overflow handling */}
+      <div className={`${themePrefix}-navbar-wrapper relative overflow-visible`}>
         {/* Background glow effects */}
         {darkMode && <div className="cyber-navbar-glow animate-pulse"></div>}
         {!darkMode && <div className="neumorph-navbar-glow animate-pulse"></div>}
@@ -421,8 +424,8 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
         
-        {/* Main Navigation */}
-        <nav className={`relative z-10 transition-all duration-500 backdrop-blur-lg overflow-hidden ${
+        {/* FIXED: Main Navigation with proper overflow handling */}
+        <nav className={`relative z-10 transition-all duration-500 backdrop-blur-lg overflow-visible ${
           darkMode 
             ? 'bg-gradient-to-r from-gray-900/95 via-cyan-900/10 to-gray-900/95' 
             : 'bg-gradient-to-r from-indigo-700/95 via-blue-700/90 to-purple-700/95'
@@ -467,8 +470,8 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </Link>
               </div>
               
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-6">
+              {/* FIXED: Desktop Navigation with proper container overflow */}
+              <div className="hidden md:flex items-center space-x-6 relative">
                 
                 {/* Dynamic Navigation Links */}
                 {getNavigationLinks().map((link) => (
@@ -496,129 +499,131 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   darkMode ? 'bg-cyan-500/50' : 'bg-indigo-300/50'
                 }`}></div>
                 
-                {/* 🔥 BULLETPROOF CART DROPDOWN */}
+                {/* 🔥 FIXED: BULLETPROOF CART DROPDOWN */}
                 {userCanAccessCart && (
-                  <Dropdown onOpenChange={() => {}}>
-                    <DropdownTrigger className={`relative transition-all duration-300 hover:scale-110 group inline-flex items-center gap-2 px-6 py-3 font-bold text-lg rounded-lg ${
-                      darkMode 
-                        ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/25' 
-                        : 'bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-600 shadow-lg shadow-indigo-500/50'
-                    }`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
-                      </svg>
-                      <span>{darkMode ? 'CART MATRIX' : 'Cart'}</span>
-                      {itemCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-bounce">
-                          {itemCount > 99 ? '99+' : itemCount}
-                        </span>
-                      )}
-                    </DropdownTrigger>
-                    
-                    <DropdownContent className={`w-80 ${
-                      darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
-                    } rounded-xl shadow-2xl py-2`}>
-                      {darkMode && <div className="card-glow"></div>}
-                      
-                      <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                        <h3 className={`text-lg font-bold ${
-                          darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-gray-900'
-                        }`}>
-                          {darkMode ? 'CART MATRIX' : 'Shopping Cart'} ({itemCount})
-                        </h3>
-                        {cartTotal > 0 && (
-                          <p className={`text-sm font-medium ${darkMode ? 'text-cyan-200' : 'text-gray-500'}`}>
-                            Total: ${cartTotal.toFixed(2)}
-                          </p>
+                  <div className="relative">
+                    <Dropdown onOpenChange={() => {}}>
+                      <DropdownTrigger className={`relative transition-all duration-300 hover:scale-110 group inline-flex items-center gap-2 px-6 py-3 font-bold text-lg rounded-lg ${
+                        darkMode 
+                          ? 'bg-cyan-600 hover:bg-cyan-500 text-black border-2 border-cyan-400 shadow-lg shadow-cyan-500/25' 
+                          : 'bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-600 shadow-lg shadow-indigo-500/50'
+                      }`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
+                        </svg>
+                        <span>{darkMode ? 'CART MATRIX' : 'Cart'}</span>
+                        {itemCount > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-bounce">
+                            {itemCount > 99 ? '99+' : itemCount}
+                          </span>
                         )}
-                      </div>
+                      </DropdownTrigger>
                       
-                      {cart.length === 0 ? (
-                        <div className="px-4 py-6 text-center">
-                          <div className="text-4xl mb-2 animate-bounce">🛒</div>
-                          <p className={`text-sm font-medium mb-3 ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
-                            {darkMode ? 'CART MATRIX EMPTY' : 'Your cart is empty'}
-                          </p>
-                          <DropdownItem
-                            onSelect={() => safeNavigate('/catalog')}
-                            className={`inline-block transition-all duration-300 hover:scale-105 px-4 py-2 rounded ${
-                              darkMode ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' : 'text-indigo-600 hover:text-indigo-800'
-                            } text-sm hover:underline font-bold`}
-                          >
-                            {darkMode ? 'BROWSE PRODUCTS' : 'Browse Products'}
-                          </DropdownItem>
+                      <DropdownContent className={`w-80 ${
+                        darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
+                      } rounded-xl shadow-2xl py-2`}>
+                        {darkMode && <div className="card-glow"></div>}
+                        
+                        <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
+                          <h3 className={`text-lg font-bold ${
+                            darkMode ? 'cyber-title text-cyan-400 cyber-glow' : 'neumorph-title text-gray-900'
+                          }`}>
+                            {darkMode ? 'CART MATRIX' : 'Shopping Cart'} ({itemCount})
+                          </h3>
+                          {cartTotal > 0 && (
+                            <p className={`text-sm font-medium ${darkMode ? 'text-cyan-200' : 'text-gray-500'}`}>
+                              Total: ${cartTotal.toFixed(2)}
+                            </p>
+                          )}
                         </div>
-                      ) : (
-                        <>
-                          <div className="max-h-60 overflow-y-auto">
-                            {cart.slice(0, 3).map((item) => (
-                              <div key={item.id} className={`px-4 py-3 transition-all duration-300 ${
-                                darkMode ? 'hover:bg-cyan-900/20' : 'hover:bg-gray-50'
-                              }`}>
-                                <div className="flex items-center space-x-3">
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                                    darkMode ? 'bg-gray-800 border border-cyan-600/50' : 'bg-gray-200'
-                                  }`}>
-                                    {item.imageUrl ? (
-                                      <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
-                                    ) : (
-                                      <span className="text-lg">📦</span>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-sm font-bold truncate ${
-                                      darkMode ? 'text-cyan-100' : 'text-gray-900'
+                        
+                        {cart.length === 0 ? (
+                          <div className="px-4 py-6 text-center">
+                            <div className="text-4xl mb-2 animate-bounce">🛒</div>
+                            <p className={`text-sm font-medium mb-3 ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
+                              {darkMode ? 'CART MATRIX EMPTY' : 'Your cart is empty'}
+                            </p>
+                            <DropdownItem
+                              onSelect={() => safeNavigate('/catalog')}
+                              className={`inline-block transition-all duration-300 hover:scale-105 px-4 py-2 rounded ${
+                                darkMode ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' : 'text-indigo-600 hover:text-indigo-800'
+                              } text-sm hover:underline font-bold`}
+                            >
+                              {darkMode ? 'BROWSE PRODUCTS' : 'Browse Products'}
+                            </DropdownItem>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="max-h-60 overflow-y-auto">
+                              {cart.slice(0, 3).map((item) => (
+                                <div key={item.id} className={`px-4 py-3 transition-all duration-300 ${
+                                  darkMode ? 'hover:bg-cyan-900/20' : 'hover:bg-gray-50'
+                                }`}>
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                                      darkMode ? 'bg-gray-800 border border-cyan-600/50' : 'bg-gray-200'
                                     }`}>
-                                      {item.name}
-                                    </p>
-                                    <p className={`text-xs font-medium ${
-                                      darkMode ? 'text-cyan-300' : 'text-gray-500'
+                                      {item.imageUrl ? (
+                                        <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
+                                      ) : (
+                                        <span className="text-lg">📦</span>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-bold truncate ${
+                                        darkMode ? 'text-cyan-100' : 'text-gray-900'
+                                      }`}>
+                                        {item.name}
+                                      </p>
+                                      <p className={`text-xs font-medium ${
+                                        darkMode ? 'text-cyan-300' : 'text-gray-500'
+                                      }`}>
+                                        Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                      </p>
+                                    </div>
+                                    <div className={`text-sm font-bold ${
+                                      darkMode ? 'text-cyan-400 cyber-glow' : 'text-gray-900'
                                     }`}>
-                                      Qty: {item.quantity} × ${item.price.toFixed(2)}
-                                    </p>
-                                  </div>
-                                  <div className={`text-sm font-bold ${
-                                    darkMode ? 'text-cyan-400 cyber-glow' : 'text-gray-900'
-                                  }`}>
-                                    ${(item.price * item.quantity).toFixed(2)}
+                                      ${(item.price * item.quantity).toFixed(2)}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                              
+                              {cart.length > 3 && (
+                                <div className={`px-4 py-2 text-center border-t ${
+                                  darkMode ? 'border-cyan-700/50 text-cyan-300' : 'border-gray-200 text-gray-500'
+                                }`}>
+                                  <span className="text-sm font-medium">
+                                    +{cart.length - 3} more item{cart.length - 3 !== 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                             
-                            {cart.length > 3 && (
-                              <div className={`px-4 py-2 text-center border-t ${
-                                darkMode ? 'border-cyan-700/50 text-cyan-300' : 'border-gray-200 text-gray-500'
-                              }`}>
-                                <span className="text-sm font-medium">
-                                  +{cart.length - 3} more item{cart.length - 3 !== 1 ? 's' : ''}
+                            <div className={`px-4 py-3 border-t ${
+                              darkMode ? 'border-cyan-700/50' : 'border-gray-200'
+                            } space-y-2`}>
+                              <DropdownItem
+                                onSelect={handleCheckoutFromCart}
+                                className={`${themePrefix}-btn ${themePrefix}-btn-primary w-full py-3 transition-all duration-300 hover:scale-105 rounded text-center`}
+                              >
+                                <span className="font-bold">
+                                  {darkMode ? 'PROCESS ORDER' : 'Checkout'} (${cartTotal.toFixed(2)})
                                 </span>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className={`px-4 py-3 border-t ${
-                            darkMode ? 'border-cyan-700/50' : 'border-gray-200'
-                          } space-y-2`}>
-                            <DropdownItem
-                              onSelect={handleCheckoutFromCart}
-                              className={`${themePrefix}-btn ${themePrefix}-btn-primary w-full py-3 transition-all duration-300 hover:scale-105 rounded text-center`}
-                            >
-                              <span className="font-bold">
-                                {darkMode ? 'PROCESS ORDER' : 'Checkout'} (${cartTotal.toFixed(2)})
-                              </span>
-                            </DropdownItem>
-                            <DropdownItem
-                              onSelect={() => safeNavigate('/cart')}
-                              className={`${themePrefix}-btn ${themePrefix}-btn-outline w-full py-3 transition-all duration-300 hover:scale-105 rounded text-center`}
-                            >
-                              <span className="font-bold">{darkMode ? 'VIEW CART MATRIX' : 'View Cart'}</span>
-                            </DropdownItem>
-                          </div>
-                        </>
-                      )}
-                    </DropdownContent>
-                  </Dropdown>
+                              </DropdownItem>
+                              <DropdownItem
+                                onSelect={() => safeNavigate('/cart')}
+                                className={`${themePrefix}-btn ${themePrefix}-btn-outline w-full py-3 transition-all duration-300 hover:scale-105 rounded text-center`}
+                              >
+                                <span className="font-bold">{darkMode ? 'VIEW CART MATRIX' : 'View Cart'}</span>
+                              </DropdownItem>
+                            </div>
+                          </>
+                        )}
+                      </DropdownContent>
+                    </Dropdown>
+                  </div>
                 )}
                 
                 {/* Create Order button */}
@@ -643,111 +648,113 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                   <ThemeToggle />
                 </div>
                 
-                {/* 🔥 BULLETPROOF USER PROFILE DROPDOWN */}
+                {/* 🔥 FIXED: BULLETPROOF USER PROFILE DROPDOWN */}
                 {user ? (
-                  <Dropdown onOpenChange={() => {}}>
-                    <DropdownTrigger className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:scale-110">
-                      <div className={`h-12 w-12 rounded-full p-0.5 shadow-lg overflow-hidden transition-all duration-300 group-hover:ring-4 ${
-                        darkMode 
-                          ? 'bg-cyan-600 ring-cyan-400/50 cyber-glow' 
-                          : 'bg-indigo-500 ring-indigo-400/50 neumorph-elevated'
-                      }`}>
-                        <div className={`h-full w-full rounded-full flex items-center justify-center font-bold text-lg ${
+                  <div className="relative">
+                    <Dropdown onOpenChange={() => {}}>
+                      <DropdownTrigger className="flex items-center space-x-2 focus:outline-none group transition-all duration-300 hover:scale-110">
+                        <div className={`h-12 w-12 rounded-full p-0.5 shadow-lg overflow-hidden transition-all duration-300 group-hover:ring-4 ${
                           darkMode 
-                            ? 'bg-gray-900 text-cyan-400' 
-                            : 'bg-white text-indigo-700'
+                            ? 'bg-cyan-600 ring-cyan-400/50 cyber-glow' 
+                            : 'bg-indigo-500 ring-indigo-400/50 neumorph-elevated'
                         }`}>
-                          {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                          <div className={`h-full w-full rounded-full flex items-center justify-center font-bold text-lg ${
+                            darkMode 
+                              ? 'bg-gray-900 text-cyan-400' 
+                              : 'bg-white text-indigo-700'
+                          }`}>
+                            {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                          </div>
                         </div>
-                      </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-300 ${
-                        darkMode ? 'text-cyan-400' : 'text-indigo-100'
-                      }`} viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </DropdownTrigger>
-                    
-                    <DropdownContent className={`w-72 ${
-                      darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
-                    } rounded-xl shadow-2xl py-2`}>
-                      {darkMode && <div className="card-glow"></div>}
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-300 ${
+                          darkMode ? 'text-cyan-400' : 'text-indigo-100'
+                        }`} viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </DropdownTrigger>
                       
-                      <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                        <p className={`text-sm font-medium ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
-                          {darkMode ? 'NEURAL ACCESS GRANTED' : 'Signed in as'}
-                        </p>
-                        <p className={`text-sm font-bold truncate ${darkMode ? 'text-cyan-100 cyber-glow' : 'text-gray-900'}`}>
-                          {user.email}
-                        </p>
-                        <p className={`text-xs font-bold ${
-                          user.accountType === 'admin' ? 'text-red-400' : 
-                          user.accountType === 'manager' ? 'text-purple-400' : 
-                          'text-green-400'
-                        }`}>
-                          {user.accountType === 'admin' ? '👑 ADMINISTRATOR' : 
-                           user.accountType === 'manager' ? '👔 MANAGER' : 
-                           user.accountType === 'business' ? '🏢 BUSINESS USER' : 
-                           '👤 REGULAR USER'}
-                        </p>
-                      </div>
-                      
-                      <div className="py-1">
-                        <DropdownItem
-                          onSelect={handleNavigateToProfile}
-                          className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
-                            darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                          }`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-12 ${
-                            darkMode ? 'text-cyan-400' : 'text-gray-400'
-                          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <span className="font-bold">{darkMode ? 'NEURAL PROFILE' : 'Your Profile'}</span>
-                        </DropdownItem>
+                      <DropdownContent className={`w-72 ${
+                        darkMode ? 'cyber-card border-cyan-500/50' : 'neumorph-card'
+                      } rounded-xl shadow-2xl py-2`}>
+                        {darkMode && <div className="card-glow"></div>}
                         
-                        <DropdownItem
-                          onSelect={handleNavigateToSettings}
-                          className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
-                            darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                          }`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-12 ${
-                            darkMode ? 'text-cyan-400' : 'text-gray-400'
-                          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="font-bold">{darkMode ? 'SYSTEM CONFIG' : 'Settings'}</span>
-                        </DropdownItem>
+                        <div className={`px-4 py-3 border-b ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
+                          <p className={`text-sm font-medium ${darkMode ? 'text-cyan-300' : 'text-gray-500'}`}>
+                            {darkMode ? 'NEURAL ACCESS GRANTED' : 'Signed in as'}
+                          </p>
+                          <p className={`text-sm font-bold truncate ${darkMode ? 'text-cyan-100 cyber-glow' : 'text-gray-900'}`}>
+                            {user.email}
+                          </p>
+                          <p className={`text-xs font-bold ${
+                            user.accountType === 'admin' ? 'text-red-400' : 
+                            user.accountType === 'manager' ? 'text-purple-400' : 
+                            'text-green-400'
+                          }`}>
+                            {user.accountType === 'admin' ? '👑 ADMINISTRATOR' : 
+                             user.accountType === 'manager' ? '👔 MANAGER' : 
+                             user.accountType === 'business' ? '🏢 BUSINESS USER' : 
+                             '👤 REGULAR USER'}
+                          </p>
+                        </div>
                         
-                        <DropdownItem
-                          onSelect={handleQRToolsNavigation}
-                          className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
-                            darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                          }`}
-                        >
-                          <span className="mr-3 text-lg animate-pulse">📱</span>
-                          <span className="font-bold">{darkMode ? 'QR PROTOCOLS' : 'QR Tools'}</span>
-                        </DropdownItem>
-                      </div>
-                      
-                      <div className={`py-1 border-t ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
-                        <DropdownItem
-                          onSelect={handleSignOut}
-                          className={`flex w-full items-center px-4 py-3 text-sm font-bold transition-all duration-300 hover:scale-105 group ${
-                            darkMode ? 'text-red-400 hover:bg-red-900/30 hover:text-red-300' : 'text-gray-700 hover:bg-red-50 hover:text-red-700'
-                          }`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-180 ${
-                            darkMode ? 'text-red-400' : 'text-gray-400'
-                          }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          {darkMode ? 'DISCONNECT' : 'Sign out'}
-                        </DropdownItem>
-                      </div>
-                    </DropdownContent>
-                  </Dropdown>
+                        <div className="py-1">
+                          <DropdownItem
+                            onSelect={handleNavigateToProfile}
+                            className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
+                              darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                            }`}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-12 ${
+                              darkMode ? 'text-cyan-400' : 'text-gray-400'
+                            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span className="font-bold">{darkMode ? 'NEURAL PROFILE' : 'Your Profile'}</span>
+                          </DropdownItem>
+                          
+                          <DropdownItem
+                            onSelect={handleNavigateToSettings}
+                            className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
+                              darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                            }`}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-12 ${
+                              darkMode ? 'text-cyan-400' : 'text-gray-400'
+                            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="font-bold">{darkMode ? 'SYSTEM CONFIG' : 'Settings'}</span>
+                          </DropdownItem>
+                          
+                          <DropdownItem
+                            onSelect={handleQRToolsNavigation}
+                            className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-300 hover:scale-105 group ${
+                              darkMode ? 'text-cyan-200 hover:bg-cyan-900/20 hover:text-cyan-100' : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                            }`}
+                          >
+                            <span className="mr-3 text-lg animate-pulse">📱</span>
+                            <span className="font-bold">{darkMode ? 'QR PROTOCOLS' : 'QR Tools'}</span>
+                          </DropdownItem>
+                        </div>
+                        
+                        <div className={`py-1 border-t ${darkMode ? 'border-cyan-700/50' : 'border-gray-200'}`}>
+                          <DropdownItem
+                            onSelect={handleSignOut}
+                            className={`flex w-full items-center px-4 py-3 text-sm font-bold transition-all duration-300 hover:scale-105 group ${
+                              darkMode ? 'text-red-400 hover:bg-red-900/30 hover:text-red-300' : 'text-gray-700 hover:bg-red-50 hover:text-red-700'
+                            }`}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-3 transition-all duration-300 group-hover:rotate-180 ${
+                              darkMode ? 'text-red-400' : 'text-gray-400'
+                            }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            {darkMode ? 'DISCONNECT' : 'Sign out'}
+                          </DropdownItem>
+                        </div>
+                      </DropdownContent>
+                    </Dropdown>
+                  </div>
                 ) : (
                   <Link 
                     to="/login" 
