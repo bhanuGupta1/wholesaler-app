@@ -1,3 +1,4 @@
+// src/pages/UserSettings.jsx 
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -8,10 +9,20 @@ const UserSettings = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  // Basic settings state
+  // Extended settings state
   const [settings, setSettings] = useState({
+    // Display preferences
     language: 'en',
-    compactView: false
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    currency: 'USD',
+    compactView: false,
+    
+    // Notification preferences
+    emailNotifications: true,
+    orderUpdates: true,
+    promotionalEmails: false,
+    weeklyNewsletter: false
   });
 
   const handleSettingChange = (key, value) => {
@@ -126,9 +137,108 @@ const UserSettings = () => {
             </div>
           </SettingCard>
 
+          {/* Regional Settings */}
+          <SettingCard 
+            title="🌍 Regional Settings" 
+            description="Set your location and format preferences"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium mb-2">Timezone</label>
+                <select
+                  value={settings.timezone}
+                  onChange={(e) => handleSettingChange('timezone', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="UTC">UTC</option>
+                  <option value="EST">Eastern Time</option>
+                  <option value="PST">Pacific Time</option>
+                  <option value="CST">Central Time</option>
+                  <option value="MST">Mountain Time</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-medium mb-2">Date Format</label>
+                <select
+                  value={settings.dateFormat}
+                  onChange={(e) => handleSettingChange('dateFormat', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-medium mb-2">Currency</label>
+                <select
+                  value={settings.currency}
+                  onChange={(e) => handleSettingChange('currency', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                  <option value="CAD">CAD ($)</option>
+                  <option value="AUD">AUD ($)</option>
+                </select>
+              </div>
+            </div>
+          </SettingCard>
+
+          {/* Notification Settings */}
+          <SettingCard 
+            title="🔔 Notifications" 
+            description="Choose what notifications you want to receive"
+          >
+            <div className="space-y-4">
+              <ToggleSwitch
+                checked={settings.emailNotifications}
+                onChange={(value) => handleSettingChange('emailNotifications', value)}
+                label="Email Notifications"
+                description="Receive important updates via email"
+              />
+              
+              <ToggleSwitch
+                checked={settings.orderUpdates}
+                onChange={(value) => handleSettingChange('orderUpdates', value)}
+                label="Order Updates"
+                description="Get notified about order status changes"
+              />
+              
+              <ToggleSwitch
+                checked={settings.promotionalEmails}
+                onChange={(value) => handleSettingChange('promotionalEmails', value)}
+                label="Promotional Emails"
+                description="Receive special offers and deals"
+              />
+              
+              <ToggleSwitch
+                checked={settings.weeklyNewsletter}
+                onChange={(value) => handleSettingChange('weeklyNewsletter', value)}
+                label="Weekly Newsletter"
+                description="Get weekly updates and featured products"
+              />
+            </div>
+          </SettingCard>
+
           {/* More settings will be added in next commits */}
           <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border`}>
-            <p className="text-center text-gray-500">More settings sections will be added in next commits...</p>
+            <p className="text-center text-gray-500">Privacy and app preferences will be added in next commits...</p>
           </div>
         </div>
 
