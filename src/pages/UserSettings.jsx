@@ -1,4 +1,4 @@
-// src/pages/UserSettings.jsx 
+// src/pages/UserSettings.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
