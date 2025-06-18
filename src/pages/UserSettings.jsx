@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { doc, setDoc, getDoc } from 'firebase/firestore'; // 🔥 CHANGED: Added setDoc, removed updateDoc
+import { doc, setDoc, getDoc } from 'firebase/firestore'; 
 import { db } from '../firebase/config';
 
 const UserSettings = () => {
@@ -59,7 +59,7 @@ const UserSettings = () => {
     loadSettings();
   }, [user]);
 
-  // 🔥 FIXED: Updated save function to use setDoc with merge option
+
   const handleSaveSettings = async () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
@@ -67,13 +67,13 @@ const UserSettings = () => {
     console.log('Attempting to save settings for user:', user?.uid); // Debug log
 
     try {
-      // Use setDoc with merge option - this creates the document if it doesn't exist
+    
       await setDoc(doc(db, 'userSettings', user.uid), {
         ...settings,
         updatedAt: new Date(),
         userId: user.uid, // Add user ID for reference
         createdAt: new Date() // Will only set if document is new
-      }, { merge: true }); // 🔥 KEY FIX: merge: true creates document if doesn't exist
+      }, { merge: true }); 
 
       console.log('Settings saved successfully!'); // Debug log
       setMessage({ type: 'success', text: 'Settings saved successfully!' });

@@ -13,7 +13,7 @@ import ThemeToggle from './ThemeToggle';
 import CheckoutFlowSelector from './CheckoutFlowSelector';
 import SecretInvasionBackground from './SecretInvasionBackground';
 
-// 🔥 BULLETPROOF DROPDOWN SYSTEM (ShadCN-style)
+// BULLETPROOF DROPDOWN SYSTEM (ShadCN-style)
 // ==============================================
 
 const DropdownContext = createContext(null);
@@ -182,7 +182,7 @@ const DropdownItem = ({ children, onSelect, className = '', disabled = false, ..
   );
 };
 
-// 🔥 MAIN NAVBAR COMPONENT
+// MAIN NAVBAR COMPONENT
 // ==============================================
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
