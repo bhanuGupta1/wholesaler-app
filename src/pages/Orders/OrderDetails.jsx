@@ -17,7 +17,7 @@ const OrderDetails = () => {
   const [error, setError] = useState(null); // Add error state
 
   useEffect(() => {
-    // FIXED: Use the service function instead of manual querying
+    
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);

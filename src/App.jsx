@@ -36,9 +36,12 @@ const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-// Add these lines after the existing lazy imports in App.jsx
+
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
+
+const MyProfile = lazy(() => import('./pages/MyProfile'));
+const UserSettings = lazy(() => import('./pages/UserSettings'));
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
@@ -269,6 +272,22 @@ function App() {
                     <ProductCatalog />
                   </Layout>
                 } />
+                {/* Profile and Settings Routes - Available to all authenticated users */}
+<Route path="/profile" element={
+  <ProtectedRoute>
+    <Layout>
+      <MyProfile />
+    </Layout>
+  </ProtectedRoute>
+} />
+
+<Route path="/settings" element={
+  <ProtectedRoute>
+    <Layout>
+      <UserSettings />
+    </Layout>
+  </ProtectedRoute>
+} />
 
                 {/* Help Center - Public access */}
 <Route path="/help-center" element={
