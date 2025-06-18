@@ -1,8 +1,9 @@
-// src/pages/MyProfile.jsx - Commit 3: Complete profile form with all fields
+// src/pages/MyProfile.jsx - Commit 4: Firebase integration and security tab
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { doc, getDoc } from 'firebase/firestore';
+import { updateProfile, updatePassword } from 'firebase/auth';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const MyProfile = () => {
@@ -22,8 +23,6 @@ const MyProfile = () => {
     jobTitle: '',
     photoURL: user?.photoURL || ''
   });
-
-
 
   // Password form state
   const [passwordData, setPasswordData] = useState({
@@ -75,48 +74,53 @@ const MyProfile = () => {
         photoURL: profileData.photoURL
       });
 
-  // Load additional user data from Firestore
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileData(prev => ({
-              ...prev,
-              phoneNumber: userData.phoneNumber || '',
-              bio: userData.bio || '',
-              company: userData.company || '',
-              jobTitle: userData.jobTitle || ''
-            }));
-          }
-        } catch (error) {
-          console.error('Error loading user data:', error);
-        }
-      }
-    };
+      // Update Firestore document
+      await updateDoc(doc(db, 'users', user.uid), {
+        displayName: profileData.displayName,
+        phoneNumber: profileData.phoneNumber,
+        bio: profileData.bio,
+        company: profileData.company,
+        jobTitle: profileData.jobTitle,
+        photoURL: profileData.photoURL,
+        updatedAt: new Date()
+      });
 
-    loadUserData();
-  }, [user]);
-
-  const tabs = [
-    { id: 'profile', name: 'Profile Information', icon: '👤' },
-    { id: 'security', name: 'Security', icon: '🔒' },
-    { id: 'account', name: 'Account Info', icon: 'ℹ️' }
-  ];
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      // Firebase update logic will be added in next commit
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setMessage({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      await updatePassword(user, passwordData.newPassword);
+      setMessage({ type: 'success', text: 'Password updated successfully!' });
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      setMessage({ type: 'error', text: 'Failed to update password. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -191,7 +195,7 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Profile Picture (Upload coming in next commit)
+                      Profile Picture (Upload will be added in final commit)
                     </label>
                     <div className={`h-24 w-24 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center`}>
                       {profileData.photoURL ? (
@@ -327,11 +331,66 @@ const MyProfile = () => {
               </form>
             )}
 
-            {/* Other tabs placeholder */}
-            {activeTab !== 'profile' && (
-              <p className="text-center text-gray-500">
-                {activeTab === 'security' ? 'Security settings' : 'Account information'} will be added in next commits...
-              </p>
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+              <form onSubmit={handlePasswordUpdate} className="space-y-6 max-w-md">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    required
+                    minLength={6}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                      darkMode
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-red-600 hover:bg-red-700 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {loading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Account Info Tab */}
+            {activeTab === 'account' && (
+              <p className="text-center text-gray-500">Account information will be added in final commit...</p>
             )}
           </div>
         </div>
