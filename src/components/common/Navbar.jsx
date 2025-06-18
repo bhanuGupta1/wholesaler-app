@@ -1,12 +1,7 @@
-// src/components/common/Navbar.jsx - 🏆 PROFESSIONAL-GRADE WITH BULLETPROOF DROPDOWNS
+// src/components/common/Navbar.jsx 
 // 
-// 🔥 MODERN APPROACH: ShadCN/Radix-style dropdown patterns
-// ✅ Zero race conditions by design
-// ✅ Full accessibility (ARIA, keyboard nav, screen readers)
-// ✅ Mobile-friendly (touch, focus management)
-// ✅ Clean API (no event listener hacks)
-// ✅ Production-grade (compound component pattern)
-// ✅ FIXED: No navbar expansion on dropdown open
+//  MODERN APPROACH: ShadCN/Radix-style dropdown patterns
+
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -312,16 +307,13 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 🔥 BULLETPROOF EVENT HANDLERS
-  const handleNavigateToProfile = () => {
-    alert('Profile page not implemented yet');
-    // safeNavigate('/profile');
-  };
+const handleNavigateToProfile = () => {
+  safeNavigate('/profile');
+};
 
-  const handleNavigateToSettings = () => {
-    alert('Settings page not implemented yet');
-    // safeNavigate('/settings');
-  };
+const handleNavigateToSettings = () => {
+  safeNavigate('/settings');
+};
 
   const handleQRToolsNavigation = () => {
     safeNavigate('/qr-tools');
