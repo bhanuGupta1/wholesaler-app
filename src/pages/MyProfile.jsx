@@ -1,7 +1,9 @@
-// src/pages/MyProfile.jsx - Commit 2: Add profile form state and basic structure
+// src/pages/MyProfile.jsx - Commit 3: Complete profile form with all fields
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const MyProfile = () => {
   const { user } = useAuth();
@@ -21,6 +23,31 @@ const MyProfile = () => {
     photoURL: user?.photoURL || ''
   });
 
+  // Load additional user data from Firestore
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setProfileData(prev => ({
+              ...prev,
+              phoneNumber: userData.phoneNumber || '',
+              bio: userData.bio || '',
+              company: userData.company || '',
+              jobTitle: userData.jobTitle || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [user]);
+
   const tabs = [
     { id: 'profile', name: 'Profile Information', icon: '👤' },
     { id: 'security', name: 'Security', icon: '🔒' },
@@ -33,7 +60,7 @@ const MyProfile = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      // Update logic will be added in next commit
+      // Firebase update logic will be added in next commit
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -112,36 +139,124 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Display Name
+                      Profile Picture (Upload coming in next commit)
+                    </label>
+                    <div className={`h-24 w-24 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} flex items-center justify-center`}>
+                      {profileData.photoURL ? (
+                        <img src={profileData.photoURL} alt="Profile" className="h-full w-full object-cover rounded-lg" />
+                      ) : (
+                        <span className="text-sm text-gray-500">No image</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Display Name
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.displayName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="Enter your display name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        disabled
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          darkMode 
+                            ? 'bg-gray-800 border-gray-600 text-gray-400' 
+                            : 'bg-gray-50 border-gray-300 text-gray-500'
+                        } cursor-not-allowed`}
+                      />
+                      <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Email cannot be changed from this screen
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                      Phone Number
                     </label>
                     <input
-                      type="text"
-                      value={profileData.displayName}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, displayName: e.target.value }))}
+                      type="tel"
+                      value={profileData.phoneNumber}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                         darkMode 
                           ? 'bg-gray-700 border-gray-600 text-white' 
                           : 'bg-white border-gray-300 text-gray-900'
                       }`}
-                      placeholder="Enter your display name"
+                      placeholder="Enter your phone number"
                     />
                   </div>
 
                   <div>
                     <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                      Email Address
+                      Company
                     </label>
                     <input
-                      type="email"
-                      value={profileData.email}
-                      disabled
-                      className={`w-full px-3 py-2 border rounded-lg ${
+                      type="text"
+                      value={profileData.company}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                         darkMode 
-                          ? 'bg-gray-800 border-gray-600 text-gray-400' 
-                          : 'bg-gray-50 border-gray-300 text-gray-500'
-                      } cursor-not-allowed`}
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                      placeholder="Enter your company name"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Job Title
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.jobTitle}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    placeholder="Enter your job title"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Bio
+                  </label>
+                  <textarea
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                    rows={4}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    placeholder="Tell us about yourself..."
+                  />
                 </div>
 
                 <div className="flex justify-end">
