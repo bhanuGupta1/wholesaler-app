@@ -36,16 +36,17 @@ const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
-
 const MyProfile = lazy(() => import('./pages/MyProfile'));
 const UserSettings = lazy(() => import('./pages/UserSettings'));
 
 // Admin components
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
+
+// NEW: Deal Management component
+const DealManagement = lazy(() => import('./pages/DealManagement'));
 
 // User-specific components
 const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
@@ -272,36 +273,37 @@ function App() {
                     <ProductCatalog />
                   </Layout>
                 } />
+                
                 {/* Profile and Settings Routes - Available to all authenticated users */}
-<Route path="/profile" element={
-  <ProtectedRoute>
-    <Layout>
-      <MyProfile />
-    </Layout>
-  </ProtectedRoute>
-} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyProfile />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-<Route path="/settings" element={
-  <ProtectedRoute>
-    <Layout>
-      <UserSettings />
-    </Layout>
-  </ProtectedRoute>
-} />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <UserSettings />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
                 {/* Help Center - Public access */}
-<Route path="/help-center" element={
-  <Layout>
-    <HelpCenter />
-  </Layout>
-} />
+                <Route path="/help-center" element={
+                  <Layout>
+                    <HelpCenter />
+                  </Layout>
+                } />
 
-{/* Contact Support - Public access */}
-<Route path="/contact-support" element={
-  <Layout>
-    <ContactSupport />
-  </Layout>
-} />
+                {/* Contact Support - Public access */}
+                <Route path="/contact-support" element={
+                  <Layout>
+                    <ContactSupport />
+                  </Layout>
+                } />
 
                 {/* Shopping routes - restricted for admin/manager */}
                 <Route path="/cart" element={
@@ -362,7 +364,7 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Admin Routes - Admin access only */}
+                {/* Admin Routes - Admin access only - UPDATED WITH DEAL MANAGEMENT */}
                 <Route path="/admin/*" element={
                   <ProtectedRoute requiredRole="admin">
                     <Layout>
@@ -371,6 +373,8 @@ function App() {
                         <Route path="users" element={<UserApprovalDashboard />} />
                         <Route path="approvals" element={<UserApprovalDashboard />} />
                         <Route path="pending-approvals" element={<UserApprovalDashboard />} />
+                        {/* NEW: Deal Management Route */}
+                        <Route path="deals" element={<DealManagement />} />
                         <Route path="*" element={<Navigate to="/admin" replace />} />
                       </Routes>
                     </Layout>
