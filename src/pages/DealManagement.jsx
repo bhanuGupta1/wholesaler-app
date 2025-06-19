@@ -1,24 +1,72 @@
-// src/pages/DealManagement.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  Timestamp,
+  query,
+  orderBy
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 const DealManagement = () => {
   const [deals, setDeals] = useState([]);
   const [newDeal, setNewDeal] = useState({ title: '', discount: '', expires: '' });
+  const [loading, setLoading] = useState(false);
+
+  const dealsRef = collection(db, 'deals');
+
+  const fetchDeals = async () => {
+    setLoading(true);
+    try {
+      const q = query(dealsRef, orderBy('expires', 'asc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setDeals(data);
+    } catch (error) {
+      console.error('Failed to fetch deals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     setNewDeal({ ...newDeal, [e.target.name]: e.target.value });
   };
 
-  const addDeal = () => {
+  const addDeal = async () => {
     if (!newDeal.title || !newDeal.discount || !newDeal.expires) return;
-    setDeals([...deals, { ...newDeal, id: Date.now() }]);
-    setNewDeal({ title: '', discount: '', expires: '' });
+    try {
+      const docRef = await addDoc(dealsRef, {
+        title: newDeal.title,
+        discount: parseFloat(newDeal.discount),
+        expires: Timestamp.fromDate(new Date(newDeal.expires)),
+        createdAt: Timestamp.now()
+      });
+      setNewDeal({ title: '', discount: '', expires: '' });
+      fetchDeals();
+    } catch (error) {
+      console.error('Error adding deal:', error);
+    }
   };
 
-  const deleteDeal = (id) => {
-    setDeals(deals.filter(deal => deal.id !== id));
+  const deleteDeal = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'deals', id));
+      setDeals(prev => prev.filter(d => d.id !== id));
+    } catch (error) {
+      console.error('Error deleting deal:', error);
+    }
   };
+
+  useEffect(() => {
+    fetchDeals();
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -47,7 +95,6 @@ const DealManagement = () => {
           <input
             type="date"
             name="expires"
-            placeholder="Expires On"
             value={newDeal.expires}
             onChange={handleInputChange}
             className="p-2 border rounded"
@@ -64,8 +111,10 @@ const DealManagement = () => {
       {/* Deal List */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
         <h2 className="text-xl font-semibold mb-4">Active Deals</h2>
-        {deals.length === 0 ? (
-          <p className="text-gray-500">No deals added yet.</p>
+        {loading ? (
+          <p className="text-gray-500">Loading deals...</p>
+        ) : deals.length === 0 ? (
+          <p className="text-gray-500">No deals available.</p>
         ) : (
           <ul className="space-y-3">
             {deals.map((deal) => (
@@ -76,7 +125,8 @@ const DealManagement = () => {
                 <div>
                   <p className="font-medium">{deal.title}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {deal.discount}% off • Expires on {deal.expires}
+                    {deal.discount}% off • Expires on{' '}
+                    {deal.expires?.toDate?.().toLocaleDateString() || 'N/A'}
                   </p>
                 </div>
                 <button
