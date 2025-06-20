@@ -78,7 +78,7 @@ const Dropdown = ({ children, onOpenChange }) => {
   return (
     <DropdownContext.Provider value={contextValue}>
       {/* FIXED: Added static class to prevent layout shifts */}
-      <div className="relative static">{children}</div>
+      <div className="relative">{children}</div>
     </DropdownContext.Provider>
   );
 };
