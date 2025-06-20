@@ -392,24 +392,35 @@ const ProductSeeder = () => {
     setSeedingStatus('Seeding products...');
     
     try {
-      // Replace this with your actual API endpoint
-      const response = await fetch('/api/products/seed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ products: sampleProducts }),
-      });
-
-      if (response.ok) {
-        setSeedingStatus(`Successfully seeded ${sampleProducts.length} premium products!`);
-      } else {
-        setSeedingStatus('Error seeding products. Check console for details.');
-        console.error('Seeding failed:', await response.text());
+      // Firebase/Firestore implementation
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      let successCount = 0;
+      
+      for (const product of sampleProducts) {
+        try {
+          await addDoc(collection(db, 'products'), {
+            ...product,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            id: crypto.randomUUID(), // Generate unique ID
+          });
+          successCount++;
+          setSeedingStatus(`Seeding products... ${successCount}/${sampleProducts.length}`);
+        } catch (productError) {
+          console.error(`Error seeding product ${product.name}:`, productError);
+        }
       }
+      
+      setSeedingStatus(`✅ Successfully seeded ${successCount}/${sampleProducts.length} premium products!`);
     } catch (error) {
-      setSeedingStatus('Error seeding products. Check console for details.');
+      setSeedingStatus('❌ Error seeding products. Make sure Firebase is properly configured.');
       console.error('Seeding error:', error);
+      console.error('Make sure you have:');
+      console.error('1. Firebase config in src/firebase/config.js');
+      console.error('2. Firestore initialized and rules set up');
+      console.error('3. "products" collection permissions configured');
     } finally {
       setIsSeeding(false);
     }
@@ -420,20 +431,27 @@ const ProductSeeder = () => {
     setSeedingStatus('Clearing products...');
     
     try {
-      // Replace this with your actual API endpoint
-      const response = await fetch('/api/products/clear', {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setSeedingStatus('Successfully cleared all products!');
-      } else {
-        setSeedingStatus('Error clearing products. Check console for details.');
-        console.error('Clearing failed:', await response.text());
+      const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      let deletedCount = 0;
+      
+      for (const docSnapshot of querySnapshot.docs) {
+        try {
+          await deleteDoc(doc(db, 'products', docSnapshot.id));
+          deletedCount++;
+          setSeedingStatus(`Clearing products... ${deletedCount}/${querySnapshot.docs.length}`);
+        } catch (deleteError) {
+          console.error(`Error deleting product ${docSnapshot.id}:`, deleteError);
+        }
       }
+      
+      setSeedingStatus(`✅ Successfully cleared ${deletedCount} products!`);
     } catch (error) {
-      setSeedingStatus('Error clearing products. Check console for details.');
+      setSeedingStatus('❌ Error clearing products. Check console for details.');
       console.error('Clearing error:', error);
+      console.error('Make sure you have proper Firestore permissions to delete documents');
     } finally {
       setIsSeeding(false);
     }
