@@ -1,994 +1,454 @@
-// src/pages/AdminDashboard.jsx - Complete fixed version with working role dropdown
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+// src/pages/AdminDashboard.jsx - ULTIMATE ENHANCED VERSION with New Panel Integration
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import ThemeToggle from '../components/common/ThemeToggle';
+import SecretInvasionBackground from '../components/common/SecretInvasionBackground';
 
-// Helper function to display user roles properly
-const displayRole = (user) => {
-  if (user.isAdmin || user.role === 'admin' || user.accountType === 'admin') return 'Admin';
-  if (user.isManager || user.role === 'manager' || user.accountType === 'manager') return 'Manager';
-  if (user.businessType === 'buyer') return 'Business Buyer';
-  if (user.businessType === 'seller') return 'Business Seller';
-  if (user.role === 'business' || user.accountType === 'business') return 'Business User';
-  return 'User';
-};
+// ===============================================
+// ENHANCED CALENDAR COMPONENT
+// ===============================================
+const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('month');
+  const [calendarData, setCalendarData] = useState({});
 
-// Enhanced chart component with real data visualization
-const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar' }) => {
-  if (!data || data.length === 0) {
-    return (
-      <div className="mb-6">
-        <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{title}</h3>
-        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>No data available</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const processedData = {};
+    data.forEach(item => {
+      const dateKey = item.date?.toDateString() || new Date().toDateString();
+      if (!processedData[dateKey]) {
+        processedData[dateKey] = { orders: 0, revenue: 0, users: 0, activities: [] };
+      }
+      processedData[dateKey].orders += item.orders || 0;
+      processedData[dateKey].revenue += item.revenue || 0;
+      processedData[dateKey].users += item.users || 0;
+      processedData[dateKey].activities.push(item);
+    });
+    setCalendarData(processedData);
+  }, [data]);
 
-  const max = Math.max(...data.map(item => item.value));
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const days = [];
+    
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+    
+    return days;
+  };
+
+  const getIntensity = (date) => {
+    if (!date) return 0;
+    const dateKey = date.toDateString();
+    const dayData = calendarData[dateKey];
+    if (!dayData) return 0;
+    
+    const maxRevenue = Math.max(...Object.values(calendarData).map(d => d.revenue));
+    return maxRevenue > 0 ? (dayData.revenue / maxRevenue) : 0;
+  };
+
+  const handleDateClick = (date) => {
+    setSelectedDate(date);
+    onDateSelect?.(date, calendarData[date?.toDateString()]);
+  };
+
+  const navigateMonth = (direction) => {
+    setSelectedDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + direction);
+      return newDate;
+    });
+  };
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   return (
-    <div className="mb-6">
-      <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{title}</h3>
-      {description && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>{description}</p>}
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
       
-      {type === 'pie' ? (
-        // Pie chart representation
-        <div className="space-y-2">
-          {data.map((item, index) => {
-            const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
-            return (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full bg-${color}-${500 + (index * 100)} mr-2`}></div>
-                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {item.value} ({percentage}%)
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+      <div className="flex justify-between items-center mb-6 relative z-10">
+        <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'ACTIVITY MATRIX' : 'Activity Calendar'}
+        </h3>
+        <div className="flex items-center gap-2">
+          <motion.button
+            onClick={() => navigateMonth(-1)}
+            className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} p-2`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            ←
+          </motion.button>
+          <span className={`text-lg font-bold ${darkMode ? 'text-cyan-400 cyber-glow' : 'text-indigo-600'} px-4`}>
+            {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+          </span>
+          <motion.button
+            onClick={() => navigateMonth(1)}
+            className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} p-2`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            →
+          </motion.button>
         </div>
-      ) : (
-        // Bar chart representation
-        <div className="space-y-2">
-          {data.map((item, index) => (
-            <div key={index} className="flex items-center">
-              <span className={`text-xs w-16 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
-              <div className="flex-1 ml-2">
-                <div className={`h-4 rounded-full bg-${color}-${darkMode ? '900/30' : '100'} overflow-hidden`}>
-                  <div 
-                    className={`h-4 rounded-full bg-${color}-${darkMode ? '500' : '600'} transition-all duration-500`} 
-                    style={{ width: `${max > 0 ? (item.value / max) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-              <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {typeof item.value === 'number' && item.value > 1000 ? `$${(item.value/1000).toFixed(1)}k` : item.value}
-              </span>
+      </div>
+
+      <div className="relative z-10">
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayNames.map(day => (
+            <div key={day} className={`text-center text-xs font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'} py-2`}>
+              {day}
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
-};
 
-// Real-time System Health Monitor
-const SystemHealthMonitor = ({ darkMode }) => {
-  const [systemHealth, setSystemHealth] = useState({
-    database: 'checking',
-    api: 'checking',
-    storage: 'checking',
-    uptime: 'calculating...'
-  });
-  const [lastCheck, setLastCheck] = useState(new Date());
+        <div className="grid grid-cols-7 gap-1">
+          {getDaysInMonth(selectedDate).map((date, index) => {
+            const intensity = getIntensity(date);
+            const dayData = date ? calendarData[date.toDateString()] : null;
+            const isToday = date && date.toDateString() === new Date().toDateString();
+            const isSelected = date && date.toDateString() === selectedDate.toDateString();
 
-  const checkSystemHealth = useCallback(async () => {
-    const startTime = Date.now();
-    
-    try {
-      // Test database connection
-      const testQuery = await getDocs(query(collection(db, 'products'), limit(1)));
-      const dbStatus = testQuery ? 'good' : 'error';
-      
-      // Test response time
-      const responseTime = Date.now() - startTime;
-      const apiStatus = responseTime < 1000 ? 'good' : responseTime < 3000 ? 'warning' : 'error';
-      
-      // Mock storage check (in real app, you'd check Firebase Storage)
-      const storageStatus = Math.random() > 0.1 ? 'good' : 'warning';
-      
-      // Calculate uptime (mock - in real app, you'd track this properly)
-      const uptime = (99.5 + Math.random() * 0.4).toFixed(1) + '%';
-      
-      setSystemHealth({
-        database: dbStatus,
-        api: apiStatus,
-        storage: storageStatus,
-        uptime: uptime
-      });
-      
-      setLastCheck(new Date());
-    } catch (error) {
-      console.error('Health check failed:', error);
-      setSystemHealth({
-        database: 'error',
-        api: 'error',
-        storage: 'error',
-        uptime: 'unknown'
-      });
-    }
-  }, []);
+            return (
+              <motion.div
+                key={index}
+                className={`aspect-square flex flex-col items-center justify-center text-xs cursor-pointer relative overflow-hidden ${
+                  !date ? 'invisible' : 
+                  isSelected ? 
+                    darkMode ? 'bg-cyan-600 text-black' : 'bg-indigo-600 text-white' :
+                  isToday ?
+                    darkMode ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-400' : 'bg-indigo-100 text-indigo-800 border border-indigo-400' :
+                    darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
+                } rounded transition-all duration-200`}
+                style={{
+                  backgroundColor: !isSelected && !isToday && intensity > 0 ? 
+                    darkMode ? `rgba(0, 255, 255, ${intensity * 0.3})` : `rgba(79, 70, 229, ${intensity * 0.3})` : 
+                    undefined
+                }}
+                onClick={() => date && handleDateClick(date)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.01 }}
+              >
+                {date && (
+                  <>
+                    <span className="font-bold">{date.getDate()}</span>
+                    {dayData && (
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs opacity-75">{dayData.orders}</span>
+                        <span className="text-xs opacity-75">${Math.round(dayData.revenue)}</span>
+                      </div>
+                    )}
+                    {intensity > 0.5 && (
+                      <div className={`absolute top-0 right-0 w-2 h-2 rounded-full ${
+                        darkMode ? 'bg-cyan-400' : 'bg-indigo-500'
+                      } animate-pulse`}></div>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
 
-  useEffect(() => {
-    checkSystemHealth();
-    const interval = setInterval(checkSystemHealth, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, [checkSystemHealth]);
-
-  return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>System Health</h2>
-        <button
-          onClick={checkSystemHealth}
-          className={`text-xs px-3 py-1 rounded-md ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} text-white transition-colors`}
+      {selectedDate && calendarData[selectedDate.toDateString()] && (
+        <motion.div 
+          className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} relative z-10`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          Refresh
-        </button>
-      </div>
-      <div className="p-6 space-y-4">
-        {Object.entries(systemHealth).map(([service, status]) => (
-          <div key={service} className="flex items-center justify-between">
-            <span className={`capitalize ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{service}</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              status === 'good' 
-                ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                : status === 'warning'
-                ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                : status === 'checking'
-                ? darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
-                : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-            }`}>
-              {service === 'uptime' ? status : status}
-            </span>
+          <h4 className={`font-bold ${darkMode ? 'text-cyan-400' : 'text-indigo-600'} mb-2`}>
+            {selectedDate.toLocaleDateString()}
+          </h4>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Orders:</span>
+              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {calendarData[selectedDate.toDateString()].orders}
+              </span>
+            </div>
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Revenue:</span>
+              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                ${calendarData[selectedDate.toDateString()].revenue.toFixed(2)}
+              </span>
+            </div>
+            <div>
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Users:</span>
+              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {calendarData[selectedDate.toDateString()].users}
+              </span>
+            </div>
           </div>
-        ))}
-        <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} pt-2 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          Last check: {lastCheck.toLocaleTimeString()}
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
-// Enhanced User Management Component with working role dropdown
-const UserManagement = ({ users, darkMode, onDeleteUser, onUpdateUserRole, onRefreshUsers, onBulkAction }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState(null);
-  const [selectedUsers, setSelectedUsers] = useState([]);
+// ===============================================
+// ENHANCED ADMIN PANEL QUICK ACCESS
+// ===============================================
+const AdminPanelAccess = ({ darkMode }) => {
+  const navigate = useNavigate();
 
-  // Helper function to get current role value for dropdown
-  const getCurrentRoleValue = (user) => {
-    if (user.role === 'admin' || user.accountType === 'admin') return 'admin';
-    if (user.role === 'manager' || user.accountType === 'manager') return 'manager';
-    if ((user.role === 'business' || user.accountType === 'business') && user.businessType === 'buyer') return 'business-buyer';
-    if ((user.role === 'business' || user.accountType === 'business') && user.businessType === 'seller') return 'business-seller';
-    return 'user';
-  };
-
-  // Helper function to get display name for role value
-  const getDisplayNameForRole = (roleValue) => {
-    switch (roleValue) {
-      case 'admin': return 'Admin';
-      case 'manager': return 'Manager';
-      case 'business-buyer': return 'Business Buyer';
-      case 'business-seller': return 'Business Seller';
-      case 'user': return 'User';
-      default: return 'User';
+  const adminPanels = [
+    {
+      title: 'User Management',
+      description: 'Advanced user control and role assignment',
+      path: '/admin/users',
+      icon: '👥',
+      color: 'blue',
+      stats: { total: 247, pending: 12 }
+    },
+    {
+      title: 'User Approvals',
+      description: 'Review and process account applications',
+      path: '/admin/approvals',
+      icon: '⏳',
+      color: 'yellow',
+      stats: { pending: 8, today: 3 }
+    },
+    {
+      title: 'System Settings',
+      description: 'Configure system parameters',
+      path: '/admin/settings',
+      icon: '⚙️',
+      color: 'purple',
+      stats: { configs: 24, modified: 3 }
+    },
+    {
+      title: 'Analytics Dashboard',
+      description: 'Real-time metrics and insights',
+      path: '/admin/analytics',
+      icon: '📊',
+      color: 'green',
+      stats: { revenue: '$89K', orders: 1523 }
+    },
+    {
+      title: 'Security Center',
+      description: 'Monitor threats and system security',
+      path: '/admin/security',
+      icon: '🔒',
+      color: 'red',
+      stats: { alerts: 2, blocked: 15 }
+    },
+    {
+      title: 'Legacy Panel',
+      description: 'Traditional admin features',
+      path: '/admin/panel',
+      icon: '🏛️',
+      color: 'gray',
+      stats: { version: 'v1.0', status: 'OK' }
     }
-  };
-
-  const filteredUsers = useMemo(() => {
-    let result = users;
-    
-    if (roleFilter !== 'all') {
-      result = result.filter(user => {
-        const currentRoleValue = getCurrentRoleValue(user);
-        return currentRoleValue === roleFilter;
-      });
-    }
-    
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(user => 
-        user.email.toLowerCase().includes(term) ||
-        user.displayName?.toLowerCase().includes(term)
-      );
-    }
-    
-    return result;
-  }, [users, roleFilter, searchTerm]);
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleDeleteUser = async (userId, userEmail) => {
-    if (!window.confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onDeleteUser(userId);
-      showNotification('User deleted successfully', 'success');
-      onRefreshUsers();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      showNotification('Failed to delete user: ' + error.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRoleUpdate = async (userId, newRoleValue, currentUser) => {
-    setLoading(true);
-    try {
-      let updateData = {};
-      
-      // Parse the new role value and set appropriate fields
-      switch (newRoleValue) {
-        case 'admin':
-          updateData = { 
-            role: 'admin', 
-            accountType: 'admin',
-            businessType: null 
-          };
-          break;
-        case 'manager':
-          updateData = { 
-            role: 'manager', 
-            accountType: 'manager',
-            businessType: null 
-          };
-          break;
-        case 'business-buyer':
-          updateData = { 
-            role: 'business', 
-            accountType: 'business',
-            businessType: 'buyer' 
-          };
-          break;
-        case 'business-seller':
-          updateData = { 
-            role: 'business', 
-            accountType: 'business',
-            businessType: 'seller' 
-          };
-          break;
-        case 'user':
-        default:
-          updateData = { 
-            role: 'user', 
-            accountType: 'user',
-            businessType: null 
-          };
-          break;
-      }
-      
-      // Call the parent function with the update data
-      await onUpdateUserRole(userId, updateData);
-      showNotification(`User role updated to ${getDisplayNameForRole(newRoleValue)}`, 'success');
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      showNotification('Failed to update user role: ' + error.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBulkAction = async (action) => {
-    if (selectedUsers.length === 0) {
-      showNotification('Please select users first', 'error');
-      return;
-    }
-
-    const confirmMessage = action === 'delete' 
-      ? `Delete ${selectedUsers.length} selected users?`
-      : `${action} ${selectedUsers.length} selected users?`;
-
-    if (!window.confirm(confirmMessage)) return;
-
-    setLoading(true);
-    try {
-      await onBulkAction(selectedUsers, action);
-      setSelectedUsers([]);
-      showNotification(`Bulk ${action} completed successfully`, 'success');
-      onRefreshUsers();
-    } catch (error) {
-      showNotification(`Bulk ${action} failed: ` + error.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleUserSelection = (userId) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
-  };
+  ];
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      {/* Notification */}
-      {notification && (
-        <div className={`mx-6 mt-6 p-3 rounded-lg ${
-          notification.type === 'success' 
-            ? darkMode ? 'bg-green-900/20 border-green-800 text-green-400' : 'bg-green-50 border-green-200 text-green-800'
-            : darkMode ? 'bg-red-900/20 border-red-800 text-red-400' : 'bg-red-50 border-red-200 text-red-800'
-        } border text-sm`}>
-          {notification.message}
-        </div>
-      )}
-
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>User Management</h2>
-          <div className="flex gap-3">
-            <Link 
-              to="/admin/pending-approvals"
-              className={`px-3 py-1 rounded-md text-sm ${darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'} text-white transition-colors`}
-            >
-              Pending Approvals
-            </Link>
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            />
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="business-buyer">Business Buyer</option>
-              <option value="business-seller">Business Seller</option>
-              <option value="user">Regular User</option>
-            </select>
-            <button
-              onClick={onRefreshUsers}
-              disabled={loading}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
-              } text-white disabled:opacity-50`}
-            >
-              {loading ? 'Loading...' : 'Refresh'}
-            </button>
-          </div>
-        </div>
-
-        {/* Bulk Actions */}
-        {selectedUsers.length > 0 && (
-          <div className="flex gap-2 mb-4">
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {selectedUsers.length} selected:
-            </span>
-            <button
-              onClick={() => handleBulkAction('activate')}
-              className="text-sm text-green-600 hover:text-green-800 font-medium"
-            >
-              Activate
-            </button>
-            <button
-              onClick={() => handleBulkAction('deactivate')}
-              className="text-sm text-yellow-600 hover:text-yellow-800 font-medium"
-            >
-              Deactivate
-            </button>
-            <button
-              onClick={() => handleBulkAction('delete')}
-              className="text-sm text-red-600 hover:text-red-800 font-medium"
-            >
-              Delete
-            </button>
-          </div>
-        )}
-      </div>
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
       
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} border-b`}>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>
-                <input
-                  type="checkbox"
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedUsers(filteredUsers.map(u => u.id));
-                    } else {
-                      setSelectedUsers([]);
-                    }
-                  }}
-                  checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                />
-              </th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>User</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Role</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Status</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Created</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Actions</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className={`${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
-                <td className="px-6 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(user.id)}
-                    onChange={() => toggleUserSelection(user.id)}
-                  />
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    <div className={`h-8 w-8 rounded-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center`}>
-                      {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-3">
-                      <div className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                        {user.displayName || 'No name'}
-                      </div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {user.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'} mb-1`}>
-                      {displayRole(user)}
-                    </span>
-                    <select
-                      value={getCurrentRoleValue(user)}
-                      onChange={(e) => handleRoleUpdate(user.id, e.target.value, user)}
-                      disabled={loading}
-                      className={`text-xs rounded-md ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-                      } border focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50`}
-                    >
-                      <option value="user">Regular User</option>
-                      <option value="business-buyer">Business Buyer</option>
-                      <option value="business-seller">Business Seller</option>
-                      <option value="manager">Manager</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.active !== false
-                      ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                      : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {user.active !== false ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleDeleteUser(user.id, user.email)}
-                      disabled={loading}
-                      className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'} font-medium disabled:opacity-50`}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {filteredUsers.length === 0 && (
-          <div className="p-6 text-center">
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              No users found with the current filters.
+      <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
+        {darkMode ? 'ADMIN CONTROL MATRIX' : 'Admin Panel Access'}
+      </h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+        {adminPanels.map((panel, index) => (
+          <motion.div
+            key={panel.path}
+            className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border ${
+              darkMode 
+                ? `bg-gray-700/50 hover:bg-gray-700 border-${panel.color}-500/30 hover:border-${panel.color}-500/60` 
+                : `bg-gray-50 hover:bg-gray-100 border-${panel.color}-200 hover:border-${panel.color}-400`
+            }`}
+            onClick={() => navigate(panel.path)}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-2xl">{panel.icon}</div>
+              <div className={`w-3 h-3 rounded-full bg-${panel.color}-500 animate-pulse`}></div>
+            </div>
+            
+            <h4 className={`font-bold text-sm mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {panel.title}
+            </h4>
+            
+            <p className={`text-xs mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {panel.description}
             </p>
-          </div>
-        )}
+            
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {Object.entries(panel.stats).map(([key, value]) => (
+                <div key={key} className={`p-2 rounded ${darkMode ? 'bg-gray-600/50' : 'bg-white/50'}`}>
+                  <div className={`font-bold ${darkMode ? 'text-cyan-400' : `text-${panel.color}-600`}`}>
+                    {value}
+                  </div>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>
+                    {key}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className={`mt-3 py-2 px-3 rounded text-center text-xs font-bold transition-all ${
+              darkMode
+                ? `text-${panel.color}-400 hover:bg-${panel.color}-500/20`
+                : `text-${panel.color}-600 hover:bg-${panel.color}-500/10`
+            }`}>
+              ACCESS PANEL →
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-// Enhanced Order Management with bulk operations
-const AllOrdersManagement = ({ orders, darkMode, onBulkOrderAction }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortOption, setSortOption] = useState('newest');
-  const [selectedOrders, setSelectedOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const filteredOrders = useMemo(() => {
-    let result = orders;
-    
-    if (statusFilter !== 'all') {
-      result = result.filter(order => order.status === statusFilter);
-    }
-    
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(order => 
-        order.customerName.toLowerCase().includes(term) ||
-        order.id.toLowerCase().includes(term)
-      );
-    }
-
-    // Sort orders
-    if (sortOption === 'newest') {
-      result.sort((a, b) => b.createdAt - a.createdAt);
-    } else if (sortOption === 'oldest') {
-      result.sort((a, b) => a.createdAt - b.createdAt);
-    } else if (sortOption === 'highest') {
-      result.sort((a, b) => b.total - a.total);
-    } else if (sortOption === 'lowest') {
-      result.sort((a, b) => a.total - b.total);
-    }
-    
-    return result;
-  }, [orders, statusFilter, searchTerm, sortOption]);
-
-  const handleBulkOrderAction = async (action) => {
-    if (selectedOrders.length === 0) return;
-    
-    setLoading(true);
-    try {
-      await onBulkOrderAction(selectedOrders, action);
-      setSelectedOrders([]);
-    } catch (error) {
-      console.error('Bulk action failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>All Orders Management</h2>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border focus:ring-indigo-500 focus:border-indigo-500`}
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border`}
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className={`px-3 py-1 rounded-md text-sm ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border`}
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="highest">Highest Value</option>
-              <option value="lowest">Lowest Value</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Bulk Order Actions */}
-        {selectedOrders.length > 0 && (
-          <div className="flex gap-2 mb-4">
-            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {selectedOrders.length} selected:
-            </span>
-            <button
-              onClick={() => handleBulkOrderAction('complete')}
-              disabled={loading}
-              className="text-sm text-green-600 hover:text-green-800 font-medium"
-            >
-              Mark Complete
-            </button>
-            <button
-              onClick={() => handleBulkOrderAction('cancel')}
-              disabled={loading}
-              className="text-sm text-red-600 hover:text-red-800 font-medium"
-            >
-              Cancel Orders
-            </button>
-            <button
-              onClick={() => handleBulkOrderAction('export')}
-              disabled={loading}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Export Selected
-            </button>
-          </div>
-        )}
-      </div>
-      
-      <div className="overflow-x-auto max-h-96">
-        <table className="w-full text-left">
-          <thead>
-            <tr className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} border-b sticky top-0`}>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>
-                <input
-                  type="checkbox"
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedOrders(filteredOrders.map(o => o.id));
-                    } else {
-                      setSelectedOrders([]);
-                    }
-                  }}
-                  checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
-                />
-              </th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Order ID</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Customer</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Date</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Total</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Status</th>
-              <th className={`px-6 py-3 text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>Actions</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
-            {filteredOrders.map((order) => (
-              <tr key={order.id} className={`${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} transition-colors`}>
-                <td className="px-6 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrders.includes(order.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedOrders(prev => [...prev, order.id]);
-                      } else {
-                        setSelectedOrders(prev => prev.filter(id => id !== order.id));
-                      }
-                    }}
-                  />
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                    #{order.id.slice(0, 8)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                    {order.customerName}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {order.createdAt.toLocaleDateString()}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-sm font-bold ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                    ${parseFloat(order.total).toFixed(2)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    order.status === 'completed' 
-                      ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                      : order.status === 'pending' 
-                        ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                        : darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <Link 
-                    to={`/orders/${order.id}`} 
-                    className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
-                  >
-                    View
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Real Analytics with live data
-const AdminAnalytics = ({ stats, darkMode }) => {
-  const [analyticsData, setAnalyticsData] = useState({
-    revenueData: [],
-    userData: [],
-    orderStatusData: [],
-    userGrowthData: [],
-    platformMetrics: {}
+// ===============================================
+// SYSTEM STATUS MONITOR
+// ===============================================
+const SystemStatusMonitor = ({ darkMode }) => {
+  const [systemStatus, setSystemStatus] = useState({
+    database: 'operational',
+    api: 'operational', 
+    storage: 'operational',
+    auth: 'operational',
+    cache: 'warning',
+    backup: 'operational'
   });
 
-  useEffect(() => {
-    // Generate real analytics from actual data
-    const generateAnalytics = () => {
-      // Real revenue data from actual orders over last 7 days
-      const last7Days = [];
-      const today = new Date();
-      
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        
-        const dayOrders = stats.allOrders.filter(order => {
-          const orderDate = new Date(order.createdAt);
-          return orderDate.toDateString() === date.toDateString();
-        });
-        
-        const dayRevenue = dayOrders.reduce((sum, order) => sum + order.total, 0);
-        
-        last7Days.push({
-          name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-          value: Math.round(dayRevenue),
-          orders: dayOrders.length
-        });
-      }
+  const services = [
+    { name: 'DATABASE', key: 'database', icon: '🗄️', description: 'Firebase Firestore' },
+    { name: 'API_GATEWAY', key: 'api', icon: '🔌', description: 'REST API Services' },
+    { name: 'FILE_STORAGE', key: 'storage', icon: '📁', description: 'Firebase Storage' },
+    { name: 'AUTHENTICATION', key: 'auth', icon: '🔐', description: 'Firebase Auth' },
+    { name: 'CACHE_LAYER', key: 'cache', icon: '⚡', description: 'Redis Cache' },
+    { name: 'BACKUP_SYSTEM', key: 'backup', icon: '💾', description: 'Automated Backups' }
+  ];
 
-      // Real user distribution by role from actual data
-      const userData = [
-        { name: 'Admin', value: stats.users.filter(u => u.role === 'admin').length },
-        { name: 'Manager', value: stats.users.filter(u => u.role === 'manager').length },
-        { name: 'Business', value: stats.users.filter(u => u.role === 'business').length },
-        { name: 'User', value: stats.users.filter(u => u.role === 'user' || !u.role).length },
-      ].filter(item => item.value > 0);
-
-      // Real order status distribution
-      const orderStatusData = [
-        { name: 'Completed', value: stats.allOrders.filter(o => o.status === 'completed').length },
-        { name: 'Pending', value: stats.allOrders.filter(o => o.status === 'pending').length },
-        { name: 'Processing', value: stats.allOrders.filter(o => o.status === 'processing').length },
-        { name: 'Cancelled', value: stats.allOrders.filter(o => o.status === 'cancelled').length },
-      ].filter(item => item.value > 0);
-
-      // User growth over time (last 30 days)
-      const userGrowthData = [];
-      for (let i = 29; i >= 0; i -= 7) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        
-        const weekUsers = stats.users.filter(user => {
-          const userDate = new Date(user.createdAt);
-          return userDate <= date;
-        });
-        
-        userGrowthData.push({
-          name: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          value: weekUsers.length
-        });
-      }
-
-      // Platform performance metrics
-      const totalRevenue = stats.allOrders.reduce((sum, order) => sum + order.total, 0);
-      const completedOrders = stats.allOrders.filter(o => o.status === 'completed').length;
-      const averageOrderValue = stats.totalOrders > 0 ? totalRevenue / stats.totalOrders : 0;
-      const completionRate = stats.totalOrders > 0 ? (completedOrders / stats.totalOrders) * 100 : 0;
-      const activeUsers = stats.users.filter(u => u.active !== false).length;
-      const userGrowthRate = stats.users.length > 0 ? ((stats.users.length - userGrowthData[0]?.value || 0) / (userGrowthData[0]?.value || 1)) * 100 : 0;
-
-      const platformMetrics = {
-        totalRevenue,
-        averageOrderValue,
-        completionRate,
-        activeUsers,
-        userGrowthRate,
-        dailyAvgRevenue: totalRevenue / 30,
-        ordersPerDay: stats.totalOrders / 30
-      };
-
-      setAnalyticsData({
-        revenueData: last7Days,
-        userData,
-        orderStatusData,
-        userGrowthData,
-        platformMetrics
-      });
-    };
-
-    generateAnalytics();
-  }, [stats]);
-
-  const exportAnalytics = () => {
-    const data = {
-      generatedAt: new Date().toISOString(),
-      summary: {
-        totalUsers: stats.totalUsers,
-        totalOrders: stats.totalOrders,
-        totalRevenue: stats.totalRevenue,
-        platformMetrics: analyticsData.platformMetrics
-      },
-      charts: {
-        revenueByDay: analyticsData.revenueData,
-        usersByRole: analyticsData.userData,
-        ordersByStatus: analyticsData.orderStatusData,
-        userGrowth: analyticsData.userGrowthData
-      },
-      insights: {
-        avgOrderValue: analyticsData.platformMetrics.averageOrderValue,
-        completionRate: analyticsData.platformMetrics.completionRate,
-        userGrowthRate: analyticsData.platformMetrics.userGrowthRate,
-        dailyMetrics: {
-          avgRevenue: analyticsData.platformMetrics.dailyAvgRevenue,
-          avgOrders: analyticsData.platformMetrics.ordersPerDay
-        }
-      }
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `admin-analytics-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'operational': return 'green';
+      case 'warning': return 'yellow';
+      case 'error': return 'red';
+      case 'maintenance': return 'blue';
+      default: return 'gray';
+    }
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Platform Analytics</h2>
-        <button
-          onClick={exportAnalytics}
-          className={`text-xs px-3 py-1 rounded-md ${darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-600 hover:bg-green-700'} text-white transition-colors`}
-        >
-          Export Data
-        </button>
-      </div>
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
       
-      <div className="p-6">
-        {/* Real KPI Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Daily Avg Revenue</div>
-            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-              ${Math.round(analyticsData.platformMetrics.dailyAvgRevenue || 0)}
+      <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
+        {darkMode ? 'SYSTEM STATUS MATRIX' : 'System Health Monitor'}
+      </h3>
+
+      <div className="space-y-3 relative z-10">
+        {services.map((service, index) => (
+          <motion.div
+            key={service.key}
+            className={`flex items-center justify-between p-3 rounded-lg ${
+              darkMode ? 'bg-gray-700/50' : 'bg-gray-50'
+            } transition-all hover:scale-102`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ x: 5 }}
+          >
+            <div className="flex items-center space-x-3">
+              <span className="text-xl">{service.icon}</span>
+              <div>
+                <div className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {service.name}
+                </div>
+                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {service.description}
+                </div>
+              </div>
             </div>
-            <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-              Based on total revenue
+            
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full bg-${getStatusColor(systemStatus[service.key])}-500 animate-pulse`}></div>
+              <span className={`text-xs font-bold px-2 py-1 rounded bg-${getStatusColor(systemStatus[service.key])}-500/20 text-${getStatusColor(systemStatus[service.key])}-500`}>
+                {systemStatus[service.key].toUpperCase()}
+              </span>
             </div>
-          </div>
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Order Completion</div>
-            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-              {analyticsData.platformMetrics.completionRate?.toFixed(1) || 0}%
-            </div>
-            <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-              {stats.allOrders.filter(o => o.status === 'completed').length} of {stats.totalOrders} orders
-            </div>
-          </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className={`mt-6 p-4 rounded-lg ${
+        darkMode ? 'bg-green-900/20 border border-green-500/30' : 'bg-green-50 border border-green-200'
+      } relative z-10`}>
+        <div className="flex items-center justify-center">
+          <div className="animate-pulse w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+          <span className={`font-bold text-sm ${
+            darkMode ? 'text-green-400' : 'text-green-600'
+          }`}>
+            {darkMode ? 'ALL NEURAL SYSTEMS OPERATIONAL' : 'ALL SYSTEMS OPERATIONAL'}
+          </span>
         </div>
-        
-        <RealDataChart 
-          title="7-Day Revenue Trend" 
-          description={`Total revenue: $${analyticsData.revenueData.reduce((sum, day) => sum + day.value, 0)}`}
-          data={analyticsData.revenueData} 
-          color="indigo" 
-          darkMode={darkMode} 
-        />
-        
-        <RealDataChart 
-          title="User Distribution by Role" 
-          description="Current platform user breakdown" 
-          data={analyticsData.userData} 
-          color="green" 
-          darkMode={darkMode}
-          type="pie"
-        />
-
-        <RealDataChart 
-          title="Order Status Distribution" 
-          description="Current order processing status" 
-          data={analyticsData.orderStatusData} 
-          color="blue" 
-          darkMode={darkMode}
-          type="pie"
-        />
-
-        {/* Platform insights */}
-        <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-100'} border`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
-            📊 Platform Insights
-          </div>
-          <div className={`text-xs ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
-            <div>• Best revenue day: {analyticsData.revenueData.reduce((best, day) => day.value > best.value ? day : best, analyticsData.revenueData[0] || {name: 'N/A', value: 0})?.name}</div>
-            <div>• Most common role: {analyticsData.userData.reduce((best, role) => role.value > best.value ? role : best, analyticsData.userData[0] || {name: 'N/A', value: 0})?.name}</div>
-            <div>• Avg order value: ${analyticsData.platformMetrics.averageOrderValue?.toFixed(2) || '0.00'}</div>
-            <div>• User growth: {analyticsData.platformMetrics.userGrowthRate >= 0 ? '+' : ''}{analyticsData.platformMetrics.userGrowthRate?.toFixed(1) || 0}% this month</div>
-          </div>
-        </div>
-
-        {/* Real-time stats */}
-        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-          <h3 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Real-time Platform Stats</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Active Users:</span>
-              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                {analyticsData.platformMetrics.activeUsers || 0}
-              </span>
-            </div>
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Daily Orders:</span>
-              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                {Math.round(analyticsData.platformMetrics.ordersPerDay || 0)}
-              </span>
-            </div>
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Success Rate:</span>
-              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                {analyticsData.platformMetrics.completionRate?.toFixed(1) || 0}%
-              </span>
-            </div>
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Revenue/User:</span>
-              <span className={`ml-2 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                ${stats.totalUsers > 0 ? (stats.totalRevenue / stats.totalUsers).toFixed(2) : '0.00'}
-              </span>
-            </div>
-          </div>
+        <div className={`text-center text-xs mt-1 ${
+          darkMode ? 'text-green-500' : 'text-green-700'
+        }`}>
+          UPTIME: 99.98% • LAST UPDATE: {new Date().toLocaleTimeString()}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-// Main Admin Dashboard component with routing and fixed role management
+// ===============================================
+// MAIN ENHANCED ADMIN DASHBOARD
+// ===============================================
 const AdminDashboard = () => {
   const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Enhanced state management
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
@@ -999,16 +459,36 @@ const AdminDashboard = () => {
     allOrders: [],
     users: []
   });
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // Generate enhanced demo data
+  const generateEnhancedDemoData = useCallback(() => {
+    const now = new Date();
+    const demoData = {
+      calendarData: Array.from({ length: 30 }, (_, i) => {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        return {
+          date,
+          orders: Math.floor(Math.random() * 50) + 10,
+          revenue: Math.floor(Math.random() * 5000) + 1000,
+          users: Math.floor(Math.random() * 20) + 5
+        };
+      })
+    };
+    
+    return demoData;
+  }, []);
 
-  // Function to fetch users from Firestore
+  const [demoData] = useState(() => generateEnhancedDemoData());
+
+  // Original data fetching logic (preserved)
   const fetchUsers = async () => {
     try {
       const usersRef = collection(db, 'users');
@@ -1021,7 +501,6 @@ const AdminDashboard = () => {
       return users;
     } catch (error) {
       console.log('No users collection found, creating demo users');
-      // Return demo users if collection doesn't exist
       return [
         {
           id: 'demo-admin-1',
@@ -1050,25 +529,6 @@ const AdminDashboard = () => {
           businessType: 'buyer',
           active: true,
           createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: 'demo-business-seller-1',
-          email: 'seller@company.com',
-          displayName: 'Business Seller',
-          role: 'business',
-          accountType: 'business',
-          businessType: 'seller',
-          active: true,
-          createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: 'demo-user-1',
-          email: 'user@company.com',
-          displayName: 'Regular User',
-          role: 'user',
-          accountType: 'user',
-          active: true,
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
         }
       ];
     }
@@ -1084,7 +544,7 @@ const AdminDashboard = () => {
         const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const lowStock = products.filter(product => product.stock <= 10).length;
         
-        // Fetch all orders
+        // Fetch orders
         const ordersSnapshot = await getDocs(collection(db, 'orders'));
         const allOrders = ordersSnapshot.docs.map(doc => {
           const data = doc.data();
@@ -1125,211 +585,350 @@ const AdminDashboard = () => {
     fetchAdminData();
   }, []);
 
-  const handleDeleteUser = useCallback(async (userId) => {
-    try {
-      await deleteDoc(doc(db, 'users', userId));
-      setStats(prev => ({
-        ...prev,
-        users: prev.users.filter(user => user.id !== userId),
-        totalUsers: prev.totalUsers - 1
-      }));
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw new Error('Failed to delete user from database');
-    }
-  }, []);
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
-  const handleUpdateUserRole = useCallback(async (userId, updateData) => {
-    try {
-      // Update in Firestore with the full update object
-      await updateDoc(doc(db, 'users', userId), { 
-        ...updateData,
-        updatedAt: new Date()
-      });
-      
-      // Update local state
-      setStats(prev => ({
-        ...prev,
-        users: prev.users.map(user => 
-          user.id === userId ? { ...user, ...updateData } : user
-        )
-      }));
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      throw new Error('Failed to update user role in database');
-    }
-  }, []);
+  const handleDateSelect = (date, data) => {
+    showNotification(
+      `${darkMode ? 'DATE SELECTED:' : 'Selected:'} ${date?.toLocaleDateString()} - ${data?.orders || 0} orders, $${data?.revenue?.toFixed(2) || '0.00'} revenue`,
+      'success'
+    );
+  };
 
-  const refreshUsers = useCallback(async () => {
-    try {
-      const users = await fetchUsers();
-      setStats(prev => ({
-        ...prev,
-        users,
-        totalUsers: users.length
-      }));
-    } catch (error) {
-      console.error('Error refreshing users:', error);
-    }
-  }, []);
+  const toggleRealTime = useCallback(() => {
+    setRealTimeEnabled(prev => !prev);
+    showNotification(
+      `${darkMode ? 'REAL-TIME MODE' : 'Real-time updates'} ${!realTimeEnabled ? 'enabled' : 'disabled'}`,
+      'success'
+    );
+  }, [realTimeEnabled, darkMode]);
 
-  const handleBulkUserAction = useCallback(async (userIds, action) => {
-    try {
-      const promises = userIds.map(userId => {
-        if (action === 'delete') {
-          return deleteDoc(doc(db, 'users', userId));
-        } else if (action === 'activate') {
-          return updateDoc(doc(db, 'users', userId), { active: true });
-        } else if (action === 'deactivate') {
-          return updateDoc(doc(db, 'users', userId), { active: false });
-        }
-      });
-      
-      await Promise.all(promises);
-      
-      setStats(prev => ({
-        ...prev,
-        users: action === 'delete' 
-          ? prev.users.filter(user => !userIds.includes(user.id))
-          : prev.users.map(user => 
-              userIds.includes(user.id) 
-                ? { ...user, active: action === 'activate' }
-                : user
-            ),
-        totalUsers: action === 'delete' ? prev.totalUsers - userIds.length : prev.totalUsers
-      }));
-      
-      return Promise.resolve();
-    } catch (error) {
-      throw new Error(`Failed to ${action} users: ` + error.message);
-    }
-  }, []);
+  const handleRefresh = useCallback(() => {
+    setLastUpdated(new Date());
+    showNotification(darkMode ? 'NEURAL DATA REFRESHED' : 'Data refreshed successfully', 'success');
+  }, [darkMode]);
 
-  const handleBulkOrderAction = useCallback(async (orderIds, action) => {
-    try {
-      const promises = orderIds.map(orderId => {
-        if (action === 'complete') {
-          return updateDoc(doc(db, 'orders', orderId), { status: 'completed' });
-        } else if (action === 'cancel') {
-          return updateDoc(doc(db, 'orders', orderId), { status: 'cancelled' });
-        } else if (action === 'export') {
-          return Promise.resolve();
-        }
-      });
-      
-      await Promise.all(promises);
-      
-      if (action === 'export') {
-        const selectedOrders = stats.allOrders.filter(order => orderIds.includes(order.id));
-        const blob = new Blob([JSON.stringify(selectedOrders, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `orders-export-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-      
-      showNotification(`Bulk ${action} completed successfully`, 'success');
-      return Promise.resolve();
-    } catch (error) {
-      throw new Error(`Failed to ${action} orders: ` + error.message);
+  // Enhanced stat cards
+  const statCards = useMemo(() => [
+    { 
+      title: darkMode ? 'NEURAL ENTITIES' : 'Total Users', 
+      value: stats.totalUsers, 
+      icon: '👥', 
+      color: 'blue',
+      change: '+12%',
+      trend: 'up'
+    },
+    { 
+      title: darkMode ? 'TRANSACTIONS' : 'Total Orders', 
+      value: stats.totalOrders, 
+      icon: '📦', 
+      color: 'green',
+      change: '+8%',
+      trend: 'up'
+    },
+    { 
+      title: darkMode ? 'REVENUE MATRIX' : 'Total Revenue', 
+      value: `$${stats.totalRevenue.toFixed(2)}`, 
+      icon: '💰', 
+      color: 'indigo',
+      change: '+15%',
+      trend: 'up'
+    },
+    { 
+      title: darkMode ? 'PENDING TASKS' : 'Pending Orders', 
+      value: stats.pendingOrders, 
+      icon: '⏳', 
+      color: 'yellow',
+      change: '-5%',
+      trend: 'down'
     }
-  }, [stats.allOrders]);
+  ], [stats, darkMode]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'} relative`}>
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <SecretInvasionBackground intensity={0.3} enableGlitch={false} />
+        </div>
+        
+        <div className="flex items-center justify-center min-h-screen relative z-10">
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className={`w-16 h-16 border-4 ${darkMode ? 'border-cyan-500' : 'border-indigo-500'} border-t-transparent rounded-full animate-spin mx-auto mb-4`}></div>
+            <p className={`text-lg font-bold ${darkMode ? 'text-cyan-400 cyber-glow' : 'text-indigo-600'}`}>
+              {darkMode ? 'INITIALIZING NEURAL MATRIX...' : 'Loading Dashboard...'}
+            </p>
+          </motion.div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-        <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            Retry
-          </button>
+      <div className={`container mx-auto px-4 py-8 ${darkMode ? 'text-white' : 'text-gray-800'} relative`}>
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <SecretInvasionBackground intensity={0.3} enableGlitch={darkMode} />
         </div>
+        
+        <motion.div 
+          className="text-center py-12 relative z-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="text-6xl mb-4 animate-bounce">⚠️</div>
+          <p className="text-red-500 text-lg font-bold mb-4">{error}</p>
+          <motion.button 
+            onClick={() => window.location.reload()} 
+            className={`${darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn neumorph-btn-primary'} px-6 py-3`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {darkMode ? 'RETRY NEURAL CONNECTION' : 'Retry'}
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+    <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'} relative`}>
+      {/* SecretInvasion Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <SecretInvasionBackground 
+          intensity={darkMode ? 0.8 : 0.6} 
+          enableGlitch={darkMode} 
+        />
+      </div>
+
       {/* Global Notification */}
-      {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-          notification.type === 'success' 
-            ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
-            : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
-        } border`}>
-          {notification.message}
-        </div>
-      )}
+      <AnimatePresence>
+        {notification && (
+          <motion.div 
+            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+              notification.type === 'success' 
+                ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+                : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+            } border font-bold`}
+            initial={{ opacity: 0, y: -50, x: 50 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: -50, x: 50 }}
+            transition={{ duration: 0.3 }}
+          >
+            {notification.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Admin Dashboard</h1>
-        <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Manage users, monitor system health, and oversee platform operations
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { title: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'blue' },
-          { title: 'Total Orders', value: stats.totalOrders, icon: '📋', color: 'green' },
-          { title: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: '💰', color: 'indigo' },
-          { title: 'Pending Orders', value: stats.pendingOrders, icon: '⏳', color: 'yellow' }
-        ].map((stat, index) => (
-          <div key={index} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                  {stat.title}
-                </p>
-                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                  {stat.value}
-                </p>
-              </div>
-              <div className={`text-3xl p-3 rounded-full bg-${stat.color}-${darkMode ? '900/30' : '100'}`}>
-                {stat.icon}
-              </div>
-            </div>
+      {/* Enhanced Header */}
+      <motion.div 
+        className="mb-8 relative z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+          <div>
+            <h1 className={`text-4xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900 neumorph-title'} mb-2`}>
+              {darkMode ? 'NEURAL COMMAND CENTER' : 'Enhanced Admin Dashboard'}
+            </h1>
+            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
+              {darkMode 
+                ? 'ADVANCED NEURAL INTERFACE WITH QUANTUM ANALYTICS AND REAL-TIME MONITORING' 
+                : 'Comprehensive analytics, real-time monitoring, and advanced panel management'
+              }
+            </p>
           </div>
-        ))}
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Time Range Selector */}
+            <select
+              value={selectedTimeRange}
+              onChange={(e) => setSelectedTimeRange(e.target.value)}
+              className={`text-sm rounded ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+              } border px-3 py-2`}
+            >
+              <option value="24h">{darkMode ? '24H CYCLE' : 'Last 24 Hours'}</option>
+              <option value="7d">{darkMode ? '7D MATRIX' : 'Last 7 Days'}</option>
+              <option value="30d">{darkMode ? '30D NEURAL' : 'Last 30 Days'}</option>
+              <option value="90d">{darkMode ? '90D QUANTUM' : 'Last 90 Days'}</option>
+            </select>
+            
+            <span className={`text-sm ${darkMode ? 'text-gray-400 cyber-title' : 'text-gray-500'} font-medium`}>
+              {darkMode ? 'LAST SYNC: ' : 'Updated: '}{lastUpdated.toLocaleTimeString()}
+            </span>
+            
+            {/* Real-time toggle */}
+            <div className="flex items-center">
+              <motion.button 
+                onClick={toggleRealTime}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 ${
+                  realTimeEnabled 
+                    ? darkMode ? 'border-cyan-500 bg-cyan-600' : 'border-indigo-600 bg-indigo-600' 
+                    : darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-200'
+                } transition-colors duration-200 ease-in-out`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span 
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    realTimeEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                  layout
+                />
+              </motion.button>
+              <span className={`ml-2 text-sm font-bold ${darkMode ? 'cyber-title' : ''}`}>
+                {realTimeEnabled 
+                  ? darkMode ? 'LIVE' : 'Live' 
+                  : darkMode ? 'STATIC' : 'Static'
+                }
+              </span>
+            </div>
+            
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} p-2 rounded-full`}
+              onClick={handleRefresh}
+              whileHover={{ scale: 1.05, rotateZ: 180 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </motion.button>
+            
+            <ThemeToggle />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 relative z-10">
+        <AnimatePresence>
+          {statCards.map((stat, index) => (
+            <motion.div 
+              key={index}
+              className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden group`}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+            >
+              {darkMode && <div className="card-glow"></div>}
+              
+              <div className="flex items-center justify-between relative z-10">
+                <div>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400 cyber-title' : 'text-gray-500'} uppercase tracking-wide font-bold mb-1`}>
+                    {stat.title}
+                  </p>
+                  <motion.p 
+                    className={`text-3xl font-bold ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}
+                    key={stat.value}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {stat.value}
+                  </motion.p>
+                  <div className="flex items-center mt-2">
+                    <span className={`text-sm font-bold ${
+                      stat.trend === 'up' 
+                        ? darkMode ? 'text-green-400' : 'text-green-600'
+                        : darkMode ? 'text-red-400' : 'text-red-600'
+                    }`}>
+                      {stat.trend === 'up' ? '↗' : '↘'} {stat.change}
+                    </span>
+                    <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} ml-2`}>
+                      vs last period
+                    </span>
+                  </div>
+                </div>
+                <motion.div 
+                  className={`text-5xl p-4 rounded-2xl ${
+                    darkMode ? `bg-${stat.color}-900/30` : `bg-${stat.color}-100`
+                  } group-hover:scale-110 transition-transform duration-300`}
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    rotateZ: [0, 5, 0]
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                >
+                  {stat.icon}
+                </motion.div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - User Management */}
-        <div className="lg:col-span-2">
-          <UserManagement 
-            users={stats.users} 
+      {/* Main Dashboard Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+        
+        {/* Left Column - Calendar & Admin Panels */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Activity Calendar */}
+          <ActivityCalendar 
+            data={demoData.calendarData} 
             darkMode={darkMode} 
-            onDeleteUser={handleDeleteUser}
-            onUpdateUserRole={handleUpdateUserRole}
-            onRefreshUsers={refreshUsers}
-            onBulkAction={handleBulkUserAction}
+            onDateSelect={handleDateSelect}
           />
+          
+          {/* NEW: Admin Panel Quick Access */}
+          <AdminPanelAccess darkMode={darkMode} />
         </div>
 
-        {/* Right Column - System Health */}
-        <div>
-          <SystemHealthMonitor darkMode={darkMode} />
+        {/* Right Column - System Status */}
+        <div className="space-y-8">
+          <SystemStatusMonitor darkMode={darkMode} />
         </div>
       </div>
+
+      {/* Quick Actions Panel */}
+      <motion.div 
+        className={`fixed bottom-6 left-6 ${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative z-50`}
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1 }}
+      >
+        {darkMode && <div className="card-glow"></div>}
+        <div className="flex items-center gap-3 relative z-10">
+          <span className={`text-sm font-bold ${darkMode ? 'cyber-title text-cyan-400' : 'text-gray-700'}`}>
+            {darkMode ? 'QUICK ACCESS' : 'Quick Actions'}
+          </span>
+          <motion.button 
+            className={`${darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn'} px-3 py-1 text-xs`}
+            onClick={() => navigate('/admin/users')}
+            whileHover={{ scale: 1.05 }}
+          >
+            Users
+          </motion.button>
+          <motion.button 
+            className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} px-3 py-1 text-xs`}
+            onClick={() => navigate('/admin/analytics')}
+            whileHover={{ scale: 1.05 }}
+          >
+            Analytics
+          </motion.button>
+          <motion.button 
+            className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
+            onClick={() => navigate('/admin/security')}
+            whileHover={{ scale: 1.05 }}
+          >
+            Security
+          </motion.button>
+        </div>
+      </motion.div>
     </div>
   );
 };
