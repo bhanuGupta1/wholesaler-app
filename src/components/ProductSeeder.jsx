@@ -13,185 +13,200 @@ const ProductSeeder = () => {
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Clean, real product data with working image URLs
+  // Clean, real product data with 100% working image URLs and CORRECT pricing structure
   const premiumProducts = [
     {
       name: "iPhone 16 Pro Max",
       description: "Latest flagship iPhone with A18 Pro chip, ProRAW photography, and titanium design. Features 6.9-inch Super Retina XDR display.",
-      price: 1199.99,
-      costPrice: 950.00,
+      price: 1199.99, // Current selling price
+      originalPrice: 1399.99, // Original MSRP (higher than current)
+      costPrice: 850.00, // Our cost (lowest)
       stock: 25,
       category: "Electronics",
       sku: "APL-IP16-PM-256",
-      imageUrl: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-max-natural-titanium-pdp-image-position-1a_GBEN?wid=750&hei=915&fmt=jpeg&qlt=95&.v=1725298029086",
+      imageUrl: "https://cdn.dummyjson.com/products/images/smartphones/iPhone%2013%20mini/1.png",
       supplier: "Apple Inc.",
       tags: ["smartphone", "premium", "flagship"]
     },
     {
       name: "Samsung Galaxy S24 Ultra",
       description: "Premium Android smartphone with S Pen, 200MP camera, and AI-powered features. 6.8-inch Dynamic AMOLED display.",
-      price: 1299.99,
-      costPrice: 1040.00,
+      price: 1299.99, // Current selling price  
+      originalPrice: 1599.99, // Original MSRP (higher)
+      costPrice: 900.00, // Our cost (lowest)
       stock: 18,
       category: "Electronics", 
       sku: "SAM-GS24-ULT-512",
-      imageUrl: "https://images.samsung.com/us/smartphones/galaxy-s24-ultra/images/galaxy-s24-ultra-highlights-titanium-gray-back-ko.jpg",
+      imageUrl: "https://cdn.dummyjson.com/products/images/smartphones/Samsung%20Galaxy%20S10/1.png",
       supplier: "Samsung Electronics",
       tags: ["android", "premium", "s-pen"]
     },
     {
       name: "MacBook Pro 16-inch M4 Pro",
       description: "Professional laptop with M4 Pro chip, Liquid Retina XDR display, and all-day battery life. Perfect for creative professionals.",
-      price: 2499.99,
-      costPrice: 2000.00,
+      price: 2499.99, // Current selling price
+      originalPrice: 2999.99, // Original MSRP (higher)
+      costPrice: 1800.00, // Our cost (lowest)
       stock: 12,
       category: "Electronics",
       sku: "APL-MBP16-M4P-512",
-      imageUrl: "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/macbook-pro-16-spacegray-select-202410?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1728916088446",
+      imageUrl: "https://cdn.dummyjson.com/products/images/laptops/MacBook%20Pro/1.png",
       supplier: "Apple Inc.",
       tags: ["laptop", "professional", "m4-pro"]
     },
     {
       name: "Sony WH-1000XM5 Headphones",
       description: "Industry-leading noise canceling wireless headphones with 30-hour battery life and premium comfort.",
-      price: 399.99,
-      costPrice: 280.00,
+      price: 399.99, // Current selling price
+      originalPrice: 499.99, // Original MSRP (higher)
+      costPrice: 280.00, // Our cost (lowest)
       stock: 45,
       category: "Electronics",
       sku: "SNY-WH1000XM5-BLK",
-      imageUrl: "https://www.sony.com/image/5d02da5df6eba1c7f814eb7e5e70d7f4?fmt=pjpeg&wid=330&bgcolor=FFFFFF&bgc=FFFFFF",
+      imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
       supplier: "Sony Corporation",
       tags: ["headphones", "wireless", "noise-canceling"]
     },
     {
       name: "PlayStation 5 Pro",
       description: "Next-generation gaming console with enhanced performance, ray tracing, and 8K gaming capabilities.",
-      price: 699.99,
-      costPrice: 520.00,
+      price: 699.99, // Current selling price
+      originalPrice: 799.99, // Original MSRP (higher)
+      costPrice: 480.00, // Our cost (lowest)
       stock: 8,
       category: "Electronics",
       sku: "SNY-PS5-PRO-1TB",
-      imageUrl: "https://gmedia.playstation.com/is/image/SIEPDC/ps5-pro-console-image-block-01-en-18sep24?$facebook$",
+      imageUrl: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500&h=500&fit=crop",
       supplier: "Sony Interactive Entertainment",
       tags: ["gaming", "console", "next-gen"]
     },
     {
       name: "Canon EOS R5 Mark II",
       description: "Professional mirrorless camera with 45MP full-frame sensor, 8K video recording, and advanced autofocus system.",
-      price: 4299.99,
-      costPrice: 3440.00,
+      price: 4299.99, // Current selling price
+      originalPrice: 4899.99, // Original MSRP (higher)
+      costPrice: 3200.00, // Our cost (lowest)
       stock: 6,
       category: "Electronics",
       sku: "CAN-R5M2-BODY",
-      imageUrl: "https://i1.adis.ws/i/canon/eos-r5-mark-ii_front_closed-flash_32c26ad194234d42b3cd9e582a21c99b",
+      imageUrl: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=500&h=500&fit=crop",
       supplier: "Canon Inc.",
       tags: ["camera", "professional", "mirrorless"]
     },
     {
       name: "Herman Miller Aeron Chair",
       description: "Ergonomic office chair with PostureFit SL support, breathable mesh design, and 12-year warranty.",
-      price: 1395.00,
-      costPrice: 1116.00,
+      price: 1395.00, // Current selling price
+      originalPrice: 1695.00, // Original MSRP (higher)
+      costPrice: 900.00, // Our cost (lowest)
       stock: 15,
       category: "Furniture",
       sku: "HM-AERON-SZ-B",
-      imageUrl: "https://www.hermanmiller.com/content/dam/hermanmiller/page_assets/products/aeron_chairs/product_assets/AER_ALPHA_1048_STO_GRY_12_HERO.jpg",
+      imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=500&fit=crop",
       supplier: "Herman Miller",
       tags: ["chair", "ergonomic", "office"]
     },
     {
       name: "Dyson V15 Detect Vacuum",
       description: "Cordless vacuum with laser detection technology, LCD screen, and up to 60 minutes runtime.",
-      price: 749.99,
-      costPrice: 525.00,
+      price: 749.99, // Current selling price (matches your screenshot!)
+      originalPrice: 899.99, // Original MSRP (higher)
+      costPrice: 525.00, // Our cost (lowest)
       stock: 22,
       category: "Home & Garden",
       sku: "DYS-V15-DETECT-YEL",
-      imageUrl: "https://dyson-h.assetsadobe2.com/is/image/content/dam/dyson/products/vacuum-cleaners/upright/dyson-v15-detect/dyson-v15-detect-vacuum-yellow-nickel-hero-new.png",
+      imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=500&fit=crop",
       supplier: "Dyson Ltd.",
       tags: ["vacuum", "cordless", "laser-detection"]
     },
     {
       name: "KitchenAid Stand Mixer Pro",
       description: "Professional-grade stand mixer with 6-quart capacity, 10 speeds, and dishwasher-safe bowl.",
-      price: 429.99,
-      costPrice: 300.00,
+      price: 429.99, // Current selling price
+      originalPrice: 549.99, // Original MSRP (higher)
+      costPrice: 300.00, // Our cost (lowest)
       stock: 28,
       category: "Kitchen",
       sku: "KA-MIXER-PRO-RED",
-      imageUrl: "https://www.kitchenaid.com/is/image/content/dam/business-unit/kitchenaid/en-us/marketing-content/site-assets/page-content/pinwheel/stand-mixer-attachments/KitchenAid-Stand-Mixer-K5SS-Empire-Red-1.tif",
+      imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=500&fit=crop",
       supplier: "KitchenAid",
       tags: ["mixer", "kitchen", "professional"]
     },
     {
       name: "Nike Air Jordan 1 Retro High",
       description: "Classic basketball sneaker with premium leather construction and iconic colorway. Timeless style meets comfort.",
-      price: 170.00,
-      costPrice: 85.00,
+      price: 170.00, // Current selling price
+      originalPrice: 220.00, // Original MSRP (higher)
+      costPrice: 85.00, // Our cost (lowest)
       stock: 50,
       category: "Clothing",
       sku: "NKE-AJ1-HIGH-BRD",
-      imageUrl: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b7d9211c-26e7-431a-ac24-b0540fb3c00f/air-jordan-1-retro-high-og-shoes-Pjhxlk.png",
+      imageUrl: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=500&fit=crop",
       supplier: "Nike Inc.",
       tags: ["sneakers", "basketball", "retro"]
     },
     {
       name: "Rolex Submariner",
       description: "Luxury diving watch with automatic movement, 300m water resistance, and ceramic bezel. Swiss-made precision.",
-      price: 8950.00,
-      costPrice: 7160.00,
+      price: 8950.00, // Current selling price
+      originalPrice: 9950.00, // Original MSRP (higher)
+      costPrice: 6500.00, // Our cost (lowest)
       stock: 3,
       category: "Clothing",
       sku: "RLX-SUB-BLK-41MM",
-      imageUrl: "https://content.rolex.com/dam/2023-11/upright-bba-with-shadow/m126610ln-0001.png",
+      imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
       supplier: "Rolex SA",
       tags: ["watch", "luxury", "diving"]
     },
     {
       name: "Tesla Model Y Performance Wheels",
       description: "21-inch Überturbine wheels designed for Tesla Model Y Performance. Lightweight forged aluminum construction.",
-      price: 4500.00,
-      costPrice: 3150.00,
+      price: 4500.00, // Current selling price
+      originalPrice: 5200.00, // Original MSRP (higher)
+      costPrice: 3150.00, // Our cost (lowest)
       stock: 8,
       category: "Automotive",
       sku: "TSL-MY-WHEELS-21",
-      imageUrl: "https://digitalassets.tesla.com/tesla-contents/image/upload/f_auto,q_auto/Model-Y-Wheels-Uberturbine-Carousel-Desktop.png",
+      imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=500&fit=crop",
       supplier: "Tesla Inc.",
       tags: ["wheels", "tesla", "performance"]
     },
     {
       name: "Bose QuietComfort Ultra",
       description: "Premium noise-canceling earbuds with spatial audio, all-day comfort, and advanced noise cancellation.",
-      price: 299.00,
-      costPrice: 210.00,
+      price: 299.00, // Current selling price
+      originalPrice: 379.00, // Original MSRP (higher)
+      costPrice: 180.00, // Our cost (lowest)
       stock: 35,
       category: "Electronics",
       sku: "BSE-QC-ULTRA-WHT",
-      imageUrl: "https://assets.bose.com/content/dam/cloudassets/Bose_DAM/Web/consumer_electronics/global/products/headphones/quietcomfort_ultra_earbuds/product_silo_images/QC_Ultra_Earbuds_White_Smoke_EC_01.png",
+      imageUrl: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&h=500&fit=crop",
       supplier: "Bose Corporation",
       tags: ["earbuds", "noise-canceling", "premium"]
     },
     {
       name: "Microsoft Surface Pro 9",
       description: "Versatile 2-in-1 laptop with 13-inch PixelSense display, Intel 12th Gen processor, and all-day battery.",
-      price: 1299.99,
-      costPrice: 910.00,
+      price: 1299.99, // Current selling price
+      originalPrice: 1599.99, // Original MSRP (higher)
+      costPrice: 900.00, // Our cost (lowest)
       stock: 20,
       category: "Electronics",
       sku: "MSF-SP9-I7-512",
-      imageUrl: "https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageFileData/RE50lcF",
+      imageUrl: "https://cdn.dummyjson.com/products/images/laptops/Microsoft%20Surface%20Laptop%204/1.png",
       supplier: "Microsoft Corporation",
       tags: ["laptop", "2-in-1", "surface"]
     },
     {
       name: "Patagonia Better Sweater Jacket",
       description: "Classic fleece jacket made from recycled polyester. Warm, comfortable, and environmentally conscious.",
-      price: 139.00,
-      costPrice: 83.40,
+      price: 139.00, // Current selling price
+      originalPrice: 179.00, // Original MSRP (higher)
+      costPrice: 83.40, // Our cost (lowest)
       stock: 40,
       category: "Clothing",
       sku: "PTG-BS-JKT-NAV-L",
-      imageUrl: "https://www.patagonia.com/dw/image/v2/BDJB_PRD/on/demandware.static/-/Sites-patagonia-master/default/dw2c8e7a9b/images/hi-res/25542_NBNV_LG.jpg",
+      imageUrl: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5b?w=500&h=500&fit=crop",
       supplier: "Patagonia Inc.",
       tags: ["jacket", "fleece", "sustainable"]
     }
@@ -219,8 +234,9 @@ const ProductSeeder = () => {
           // Basic product info
           name: product.name,
           description: product.description,
-          price: product.price,
-          costPrice: product.costPrice,
+          price: product.price, // Current selling price
+          originalPrice: product.originalPrice, // Original MSRP (for showing discounts)
+          costPrice: product.costPrice, // Our wholesale cost
           stock: product.stock,
           stockQuantity: product.stock, // Keep both for compatibility
           category: product.category,
