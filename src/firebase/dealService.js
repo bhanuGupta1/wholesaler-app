@@ -96,7 +96,12 @@ export class DealService {
     return { discount, finalAmount };
   }
 
-  
+  // Step 4: Logging and validation
+  validateDealData(dealData) {
+    if (!dealData.title || !dealData.discount || !dealData.expires) {
+      throw new Error('Missing required fields');
+    }
+  }
 
   async logDealActivity(dealId, action, userId) {
     const activityRef = collection(db, 'deal_activity');
