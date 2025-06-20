@@ -9,6 +9,7 @@ import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import NoShoppingRedirect from './components/common/NoShoppingRedirect';
 import QRPage from './pages/QRPage';
+import ProductSeeder from './components/ProductSeeder';
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
@@ -222,6 +223,14 @@ function App() {
           <Router>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
+                
+<Route path="/seed-products" element={
+  <ProtectedRoute allowedRoles={['admin']}>
+    <Layout>
+      <ProductSeeder />
+    </Layout>
+  </ProtectedRoute>
+} />
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Registration />} />
@@ -363,6 +372,7 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
+                
 
                 {/* Admin Routes - Admin access only - UPDATED WITH DEAL MANAGEMENT */}
                 <Route path="/admin/*" element={
