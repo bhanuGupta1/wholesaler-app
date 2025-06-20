@@ -877,3 +877,5 @@ const UserApprovalDashboard = () => {
     </div>
   );
 };
+
+export default UserApprovalDashboard;
