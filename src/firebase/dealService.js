@@ -66,6 +66,19 @@ export class DealService {
     await deleteDoc(dealRef);
   }
 
+  // Step 2: Real-time subscription & filtering
+  subscribeToDeals(callback) {
+    return onSnapshot(this.dealsRef, (snapshot) => {
+      const deals = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        expires: doc.data().expires?.toDate(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      callback(deals);
+    });
+  }
+
 
   async logDealActivity(dealId, action, userId) {
     const activityRef = collection(db, 'deal_activity');
