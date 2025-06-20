@@ -52,7 +52,7 @@ const DealManagement = lazy(() => import('./pages/DealManagement'));
 // User-specific components
 const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
 
-// Startup Animation Component
+// Startup Animation Component with Skip Button
 const StartupAnimation = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [displayText, setDisplayText] = useState('');
@@ -64,6 +64,11 @@ const StartupAnimation = ({ onComplete }) => {
     'CONNECTING TO SERVERS...',
     'SYSTEM READY'
   ];
+
+  // Skip button handler
+  const handleSkip = () => {
+    onComplete();
+  };
 
   // Hacker text effect
   useEffect(() => {
@@ -124,6 +129,19 @@ const StartupAnimation = ({ onComplete }) => {
       <div className="absolute inset-0 opacity-20">
         <div className="grid-pattern"></div>
       </div>
+
+      {/* Skip Button */}
+      <button
+        onClick={handleSkip}
+        className="absolute top-6 right-6 text-gray-400 hover:text-cyan-400 transition-colors duration-300 z-20 group"
+      >
+        <div className="flex items-center space-x-2 px-4 py-2 border border-gray-600 hover:border-cyan-400 rounded-lg backdrop-blur-sm">
+          <span className="text-sm font-mono">SKIP</span>
+          <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </div>
+      </button>
 
       <div className="text-center space-y-8 relative z-10 max-w-2xl px-8">
         {/* Logo */}
