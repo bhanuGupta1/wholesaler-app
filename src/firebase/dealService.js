@@ -79,6 +79,24 @@ export class DealService {
     });
   }
 
+  // Step 3: Usage application and validation
+  async applyDealToOrder(dealId, orderAmount) {
+    const dealRef = doc(db, 'deals', dealId);
+    const dealDoc = await getDocs(dealRef);
+    const deal = dealDoc.data();
+
+    const discount = (orderAmount * deal.discount) / 100;
+    const finalAmount = orderAmount - discount;
+
+    await updateDoc(dealRef, {
+      currentUses: (deal.currentUses || 0) + 1,
+      updatedAt: Timestamp.now()
+    });
+
+    return { discount, finalAmount };
+  }
+
+  
 
   async logDealActivity(dealId, action, userId) {
     const activityRef = collection(db, 'deal_activity');
