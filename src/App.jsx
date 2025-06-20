@@ -42,11 +42,17 @@ const ContactSupport = lazy(() => import('./pages/ContactSupport'));
 const MyProfile = lazy(() => import('./pages/MyProfile'));
 const UserSettings = lazy(() => import('./pages/UserSettings'));
 
-// Admin components
+// Admin components - EXISTING + NEW ENHANCED PANELS
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
 
-// NEW: Deal Management component
+// NEW: Enhanced Admin Panels (Create these files)
+const UserPanel = lazy(() => import('./pages/admin/UserPanel'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
+
+// Deal Management component
 const DealManagement = lazy(() => import('./pages/DealManagement'));
 
 // User-specific components
@@ -242,13 +248,14 @@ function App() {
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 
-<Route path="/seed-products" element={
-  <ProtectedRoute allowedRoles={['admin']}>
-    <Layout>
-      <ProductSeeder />
-    </Layout>
-  </ProtectedRoute>
-} />
+                <Route path="/seed-products" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Layout>
+                      <ProductSeeder />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Registration />} />
@@ -391,18 +398,37 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-
-                {/* Admin Routes - Admin access only - UPDATED WITH DEAL MANAGEMENT */}
+                {/* ENHANCED ADMIN ROUTES - Complete Admin System */}
                 <Route path="/admin/*" element={
                   <ProtectedRoute requiredRole="admin">
                     <Layout>
                       <Routes>
-                        <Route index element={<AdminPanel />} />
-                        <Route path="users" element={<UserApprovalDashboard />} />
+                        {/* Main Admin Dashboard - Use Enhanced Command Center */}
+                        <Route index element={<AdminDashboard />} />
+                        
+                        {/* Legacy Admin Panel - Keep existing route */}
+                        <Route path="panel" element={<AdminPanel />} />
+                        
+                        {/* NEW: Enhanced User Management Panel (separate from approvals) */}
+                        <Route path="users" element={<UserPanel />} />
+                        
+                        {/* User Approval System (existing, keep separate from user management) */}
                         <Route path="approvals" element={<UserApprovalDashboard />} />
                         <Route path="pending-approvals" element={<UserApprovalDashboard />} />
-                        {/* NEW: Deal Management Route */}
+                        
+                        {/* NEW: System Settings Panel */}
+                        <Route path="settings" element={<AdminSettings />} />
+                        
+                        {/* NEW: Analytics Dashboard */}
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        
+                        {/* NEW: Security Center */}
+                        <Route path="security" element={<AdminSecurity />} />
+                        
+                        {/* Deal Management (existing) */}
                         <Route path="deals" element={<DealManagement />} />
+                        
+                        {/* Fallback */}
                         <Route path="*" element={<Navigate to="/admin" replace />} />
                       </Routes>
                     </Layout>
@@ -595,7 +621,6 @@ function App() {
                                 </div>
                               </Link>
 
-                              {/* Add Feedback Management for Managers */}
                               <Link to="/manager/feedback" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
                                 <div className="flex items-center">
                                   <div className="text-3xl mr-4">💬</div>
@@ -704,7 +729,7 @@ function App() {
                         
                         <Route path="orders" element={
                           <UserSpecificOrders />
-                        } />
+                        }/>
 
                         {/* Add feedback access for business users */}
                         <Route path="feedback" element={<FeedbackPage />} />
