@@ -1,7 +1,19 @@
-// src/pages/admin/AdminSettings.jsx - Futuristic Settings Panel
+// src/pages/admin/AdminSettings.jsx - Real Firebase Admin Settings
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  setDoc, 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  limit,
+  deleteDoc,
+  writeBatch
+} from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -27,27 +39,27 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
 
   const configSections = [
     {
-      title: 'SECURITY_MATRIX',
+      title: 'Security Settings',
       icon: '🔒',
       color: 'red',
       settings: [
         {
-          key: 'requireTwoFactor',
-          label: 'FORCE_2FA',
+          key: 'requireEmailVerification',
+          label: 'Require Email Verification',
           type: 'boolean',
-          description: 'Require two-factor authentication for all users'
+          description: 'Users must verify email before account activation'
         },
         {
           key: 'sessionTimeout',
-          label: 'SESSION_TIMEOUT',
+          label: 'Session Timeout (minutes)',
           type: 'number',
-          description: 'Session timeout in minutes',
+          description: 'Automatic logout after inactivity',
           min: 15,
           max: 1440
         },
         {
           key: 'maxLoginAttempts',
-          label: 'MAX_LOGIN_ATTEMPTS',
+          label: 'Max Login Attempts',
           type: 'number',
           description: 'Maximum failed login attempts before lockout',
           min: 3,
@@ -56,56 +68,85 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
       ]
     },
     {
-      title: 'SYSTEM_BEHAVIOR',
-      icon: '⚙️',
+      title: 'User Management',
+      icon: '👥',
       color: 'blue',
       settings: [
         {
           key: 'autoApproveUsers',
-          label: 'AUTO_APPROVE',
+          label: 'Auto-approve New Users',
           type: 'boolean',
           description: 'Automatically approve new user registrations'
         },
         {
-          key: 'maintenanceMode',
-          label: 'MAINTENANCE_MODE',
+          key: 'allowGuestAccess',
+          label: 'Allow Guest Access',
           type: 'boolean',
-          description: 'Enable maintenance mode (blocks non-admin access)'
+          description: 'Allow browsing without account registration'
         },
         {
-          key: 'maxFileSize',
-          label: 'MAX_FILE_SIZE',
-          type: 'number',
-          description: 'Maximum file upload size in MB',
-          min: 1,
-          max: 100
+          key: 'defaultUserRole',
+          label: 'Default User Role',
+          type: 'select',
+          description: 'Default role assigned to new users',
+          options: [
+            { value: 'user', label: 'Regular User' },
+            { value: 'business', label: 'Business User' }
+          ]
         }
       ]
     },
     {
-      title: 'NOTIFICATION_SYSTEM',
+      title: 'Business Settings',
+      icon: '🏢',
+      color: 'green',
+      settings: [
+        {
+          key: 'requireBusinessVerification',
+          label: 'Require Business Verification',
+          type: 'boolean',
+          description: 'Business accounts need document verification'
+        },
+        {
+          key: 'minOrderAmount',
+          label: 'Minimum Order Amount ($)',
+          type: 'number',
+          description: 'Minimum order value for processing',
+          min: 0,
+          max: 1000
+        },
+        {
+          key: 'allowBackorders',
+          label: 'Allow Backorders',
+          type: 'boolean',
+          description: 'Allow orders when items are out of stock'
+        }
+      ]
+    },
+    {
+      title: 'Notifications',
       icon: '📢',
       color: 'purple',
       settings: [
         {
           key: 'emailNotifications',
-          label: 'EMAIL_NOTIFICATIONS',
+          label: 'Email Notifications',
           type: 'boolean',
           description: 'Send email notifications for system events'
         },
         {
           key: 'lowStockAlert',
-          label: 'LOW_STOCK_ALERTS',
+          label: 'Low Stock Alert Threshold',
           type: 'number',
-          description: 'Low stock threshold for alerts',
+          description: 'Alert when inventory falls below this number',
           min: 0,
           max: 100
         },
         {
-          key: 'dailyReports',
-          label: 'DAILY_REPORTS',
+          key: 'orderNotifications',
+          label: 'Order Notifications',
           type: 'boolean',
-          description: 'Generate and send daily system reports'
+          description: 'Notify admins of new orders'
         }
       ]
     }
@@ -117,15 +158,15 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
         <div key={sectionIndex} className={`p-6 rounded-lg border ${
           darkMode 
             ? 'bg-gray-800/50 border-gray-700' 
-            : 'bg-white/50 border-gray-200'
-        } backdrop-blur-sm`}>
+            : 'bg-white border-gray-200'
+        }`}>
           
-          <h3 className={`font-mono text-lg mb-4 text-${section.color}-500 flex items-center`}>
-            <span className="animate-pulse mr-3">{section.icon}</span>
+          <h3 className={`text-lg font-semibold mb-4 text-${section.color}-500 flex items-center`}>
+            <span className="mr-3">{section.icon}</span>
             {section.title}
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {section.settings.map((setting, settingIndex) => (
               <div key={settingIndex} className={`p-4 rounded border ${
                 darkMode 
@@ -133,7 +174,7 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
                   : 'bg-gray-50 border-gray-200'
               }`}>
                 
-                <label className={`block text-sm font-mono mb-2 ${
+                <label className={`block text-sm font-medium mb-2 ${
                   darkMode ? 'text-gray-200' : 'text-gray-800'
                 }`}>
                   {setting.label}
@@ -157,14 +198,30 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
                           localConfig[setting.key] ? 'translate-x-6' : 'translate-x-0.5'
                         } mt-0.5`}></div>
                       </div>
-                      <span className={`ml-3 font-mono text-sm ${
+                      <span className={`ml-3 text-sm ${
                         localConfig[setting.key] 
                           ? `text-${section.color}-500` 
                           : darkMode ? 'text-gray-400' : 'text-gray-600'
                       }`}>
-                        {localConfig[setting.key] ? 'ENABLED' : 'DISABLED'}
+                        {localConfig[setting.key] ? 'Enabled' : 'Disabled'}
                       </span>
                     </label>
+                  ) : setting.type === 'select' ? (
+                    <select
+                      value={localConfig[setting.key] || setting.options[0].value}
+                      onChange={(e) => handleConfigChange(setting.key, e.target.value)}
+                      className={`w-full p-2 rounded border ${
+                        darkMode
+                          ? 'bg-gray-800 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      {setting.options.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   ) : (
                     <input
                       type="number"
@@ -172,7 +229,7 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
                       onChange={(e) => handleConfigChange(setting.key, parseInt(e.target.value))}
                       min={setting.min}
                       max={setting.max}
-                      className={`w-full p-2 rounded border font-mono text-sm ${
+                      className={`w-full p-2 rounded border ${
                         darkMode
                           ? 'bg-gray-800 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
@@ -181,10 +238,10 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
                   )}
                 </div>
                 
-                <p className={`text-xs font-mono ${
+                <p className={`text-xs ${
                   darkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-                  // {setting.description}
+                  {setting.description}
                 </p>
               </div>
             ))}
@@ -197,77 +254,116 @@ const SystemConfig = ({ config, onUpdate, darkMode }) => {
         <button
           onClick={saveConfig}
           disabled={saving}
-          className={`px-6 py-3 rounded-lg font-mono transition-all ${
+          className={`px-6 py-3 rounded-lg font-medium transition-all ${
             saving
               ? darkMode
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               : darkMode
-                ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
                 : 'bg-blue-600 hover:bg-blue-500 text-white'
           }`}
         >
-          {saving ? 'SAVING...' : 'SAVE_CONFIG'}
+          {saving ? 'Saving...' : 'Save Configuration'}
         </button>
       </div>
     </div>
   );
 };
 
-// Database Management Component
+// Database Management Component with Real Firebase Data
 const DatabaseManager = ({ darkMode }) => {
   const [dbStats, setDbStats] = useState({
-    totalCollections: 0,
-    totalDocuments: 0,
-    storageUsed: '0 MB',
-    lastBackup: null
+    totalUsers: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    pendingApprovals: 0,
+    lastUpdated: null
   });
-  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
-  const handleBackup = async () => {
-    setIsBackingUp(true);
-    // Simulate backup process
-    setTimeout(() => {
-      setDbStats(prev => ({
-        ...prev,
-        lastBackup: new Date()
-      }));
-      setIsBackingUp(false);
-    }, 3000);
+  // Fetch real database statistics
+  const fetchDbStats = async () => {
+    setIsRefreshing(true);
+    try {
+      const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'products')),
+        getDocs(collection(db, 'orders'))
+      ]);
+
+      // Count pending approvals
+      const pendingUsers = usersSnapshot.docs.filter(doc => {
+        const userData = doc.data();
+        return userData.status === 'pending_approval' || userData.status === 'pending';
+      });
+
+      setDbStats({
+        totalUsers: usersSnapshot.size,
+        totalProducts: productsSnapshot.size,
+        totalOrders: ordersSnapshot.size,
+        pendingApprovals: pendingUsers.length,
+        lastUpdated: new Date()
+      });
+    } catch (error) {
+      console.error('Error fetching database stats:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
+
+  // Clear test data (be careful with this!)
+  const clearTestData = async () => {
+    if (!window.confirm('Are you sure you want to clear test data? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      const batch = writeBatch(db);
+      
+      // Get test users (users with test emails)
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const testUsers = usersSnapshot.docs.filter(doc => {
+        const email = doc.data().email || '';
+        return email.includes('test') || email.includes('demo') || email.includes('example');
+      });
+
+      // Delete test users
+      testUsers.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+      await fetchDbStats(); // Refresh stats
+    } catch (error) {
+      console.error('Error clearing test data:', error);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDbStats();
+  }, []);
 
   const dbActions = [
     {
-      title: 'BACKUP_DATABASE',
-      description: 'Create a full system backup',
-      action: handleBackup,
-      loading: isBackingUp,
-      color: 'green',
-      icon: '💾'
-    },
-    {
-      title: 'OPTIMIZE_DB',
-      description: 'Optimize database performance',
-      action: () => console.log('Optimizing...'),
-      loading: false,
+      title: 'Refresh Statistics',
+      description: 'Update database statistics',
+      action: fetchDbStats,
+      loading: isRefreshing,
       color: 'blue',
-      icon: '⚡'
-    },
-    {
-      title: 'CLEAR_CACHE',
-      description: 'Clear all system caches',
-      action: () => console.log('Clearing cache...'),
-      loading: false,
-      color: 'yellow',
-      icon: '🧹'
-    },
-    {
-      title: 'RESET_ANALYTICS',
-      description: 'Reset analytics data',
-      action: () => console.log('Resetting analytics...'),
-      loading: false,
-      color: 'red',
       icon: '🔄'
+    },
+    {
+      title: 'Clear Test Data',
+      description: 'Remove test users and demo data',
+      action: clearTestData,
+      loading: isClearing,
+      color: 'red',
+      icon: '🧹'
     }
   ];
 
@@ -275,33 +371,34 @@ const DatabaseManager = ({ darkMode }) => {
     <div className={`p-6 rounded-lg border ${
       darkMode 
         ? 'bg-gray-800/50 border-gray-700' 
-        : 'bg-white/50 border-gray-200'
-    } backdrop-blur-sm`}>
+        : 'bg-white border-gray-200'
+    }`}>
       
-      <h3 className={`font-mono text-lg mb-6 ${
-        darkMode ? 'text-cyan-400' : 'text-blue-600'
+      <h3 className={`text-lg font-semibold mb-6 ${
+        darkMode ? 'text-blue-400' : 'text-blue-600'
       } flex items-center`}>
-        <span className="animate-pulse mr-3">🗄️</span>
-        DATABASE_MANAGEMENT
+        <span className="mr-3">🗄️</span>
+        Database Management
       </h3>
 
-      {/* Database Stats */}
+      {/* Real Database Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'COLLECTIONS', value: dbStats.totalCollections, color: 'blue' },
-          { label: 'DOCUMENTS', value: dbStats.totalDocuments, color: 'green' },
-          { label: 'STORAGE', value: dbStats.storageUsed, color: 'purple' },
-          { label: 'LAST_BACKUP', value: dbStats.lastBackup ? 'Recent' : 'Never', color: 'red' }
+          { label: 'Total Users', value: dbStats.totalUsers, color: 'blue', icon: '👥' },
+          { label: 'Total Products', value: dbStats.totalProducts, color: 'green', icon: '📦' },
+          { label: 'Total Orders', value: dbStats.totalOrders, color: 'purple', icon: '📋' },
+          { label: 'Pending Approvals', value: dbStats.pendingApprovals, color: 'yellow', icon: '⏳' }
         ].map((stat, index) => (
           <div key={index} className={`p-4 rounded border ${
             darkMode 
               ? 'bg-gray-700/50 border-gray-600' 
               : 'bg-gray-50 border-gray-200'
           } text-center`}>
-            <div className={`text-lg font-bold font-mono text-${stat.color}-500`}>
+            <div className="text-2xl mb-2">{stat.icon}</div>
+            <div className={`text-2xl font-bold text-${stat.color}-500 mb-1`}>
               {stat.value}
             </div>
-            <div className={`text-xs font-mono ${
+            <div className={`text-xs ${
               darkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
               {stat.label}
@@ -310,6 +407,13 @@ const DatabaseManager = ({ darkMode }) => {
         ))}
       </div>
 
+      {/* Last Updated */}
+      {dbStats.lastUpdated && (
+        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-6`}>
+          Last updated: {dbStats.lastUpdated.toLocaleString()}
+        </div>
+      )}
+
       {/* Database Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {dbActions.map((action, index) => (
@@ -317,33 +421,136 @@ const DatabaseManager = ({ darkMode }) => {
             key={index}
             onClick={action.action}
             disabled={action.loading}
-            className={`p-4 rounded border text-left transition-all hover:scale-105 ${
+            className={`p-4 rounded border text-left transition-all ${
               action.loading
                 ? darkMode
-                  ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
-                  : 'bg-gray-100 border-gray-200 cursor-not-allowed'
+                  ? 'bg-gray-700 border-gray-600 cursor-not-allowed opacity-50'
+                  : 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50'
                 : darkMode
-                  ? `bg-gray-700/50 border-gray-600 hover:border-${action.color}-500/50`
-                  : `bg-gray-50 border-gray-200 hover:border-${action.color}-500/50`
+                  ? `bg-gray-700/50 border-gray-600 hover:border-${action.color}-500/50 hover:bg-gray-700`
+                  : `bg-gray-50 border-gray-200 hover:border-${action.color}-500/50 hover:bg-gray-100`
             }`}
           >
             <div className="flex items-center mb-2">
               <span className="text-xl mr-3">{action.icon}</span>
-              <span className={`font-mono text-sm font-bold ${
+              <span className={`text-sm font-medium ${
                 action.loading 
                   ? darkMode ? 'text-gray-400' : 'text-gray-500'
                   : `text-${action.color}-500`
               }`}>
-                {action.loading ? 'PROCESSING...' : action.title}
+                {action.loading ? 'Processing...' : action.title}
               </span>
             </div>
-            <p className={`text-xs font-mono ${
+            <p className={`text-xs ${
               darkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              // {action.description}
+              {action.description}
             </p>
           </button>
         ))}
+      </div>
+    </div>
+  );
+};
+
+// System Logs Component with Real Firebase Data
+const SystemLogs = ({ darkMode }) => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        // Fetch recent user activities as logs
+        const usersSnapshot = await getDocs(
+          query(collection(db, 'users'), orderBy('updatedAt', 'desc'), limit(10))
+        );
+        
+        const recentLogs = usersSnapshot.docs.map(doc => {
+          const userData = doc.data();
+          const updatedAt = userData.updatedAt?.toDate() || userData.createdAt?.toDate() || new Date();
+          
+          return {
+            timestamp: updatedAt,
+            level: userData.status === 'rejected' ? 'ERROR' : 'INFO',
+            message: `User ${userData.status || 'updated'}: ${userData.email}`,
+            details: `Account type: ${userData.accountType || 'user'}`
+          };
+        });
+
+        setLogs(recentLogs);
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+        setLogs([{
+          timestamp: new Date(),
+          level: 'ERROR',
+          message: 'Failed to fetch system logs',
+          details: error.message
+        }]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className="text-2xl mb-2">📋</div>
+          <div>Loading system logs...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`p-6 rounded-lg border ${
+      darkMode 
+        ? 'bg-gray-800/50 border-gray-700' 
+        : 'bg-white border-gray-200'
+    }`}>
+      <h3 className={`text-lg font-semibold mb-4 ${
+        darkMode ? 'text-blue-400' : 'text-blue-600'
+      } flex items-center`}>
+        <span className="mr-3">📋</span>
+        System Logs
+      </h3>
+      
+      <div className={`p-4 rounded border font-mono text-sm ${
+        darkMode 
+          ? 'bg-gray-900 border-gray-600 text-green-400' 
+          : 'bg-black border-gray-300 text-green-500'
+      } max-h-96 overflow-y-auto`}>
+        <div className="space-y-1">
+          {logs.map((log, index) => (
+            <div key={index} className="flex flex-col">
+              <div className="flex items-start space-x-2">
+                <span className="text-gray-500">
+                  [{log.timestamp.toLocaleString()}]
+                </span>
+                <span className={`${
+                  log.level === 'ERROR' ? 'text-red-400' : 
+                  log.level === 'WARN' ? 'text-yellow-400' : 
+                  'text-green-400'
+                }`}>
+                  {log.level}:
+                </span>
+                <span>{log.message}</span>
+              </div>
+              {log.details && (
+                <div className="text-gray-500 ml-4 text-xs">
+                  {log.details}
+                </div>
+              )}
+            </div>
+          ))}
+          {logs.length === 0 && (
+            <div className="text-gray-500">No recent system activity</div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -356,6 +563,7 @@ const AdminSettings = () => {
   const [config, setConfig] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('system');
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -368,21 +576,25 @@ const AdminSettings = () => {
         } else {
           // Set default config
           const defaultConfig = {
-            requireTwoFactor: false,
+            requireEmailVerification: true,
             sessionTimeout: 60,
             maxLoginAttempts: 5,
             autoApproveUsers: false,
-            maintenanceMode: false,
-            maxFileSize: 10,
+            allowGuestAccess: true,
+            defaultUserRole: 'user',
+            requireBusinessVerification: true,
+            minOrderAmount: 50,
+            allowBackorders: true,
             emailNotifications: true,
             lowStockAlert: 10,
-            dailyReports: true
+            orderNotifications: true
           };
           setConfig(defaultConfig);
           await setDoc(configRef, defaultConfig);
         }
       } catch (error) {
         console.error('Error loading config:', error);
+        showNotification('Failed to load configuration', 'error');
       } finally {
         setLoading(false);
       }
@@ -390,6 +602,11 @@ const AdminSettings = () => {
 
     loadConfig();
   }, []);
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const updateConfig = async (newConfig) => {
     try {
@@ -400,27 +617,29 @@ const AdminSettings = () => {
         updatedBy: user.uid
       });
       setConfig(newConfig);
+      showNotification('Configuration updated successfully', 'success');
     } catch (error) {
       console.error('Error updating config:', error);
+      showNotification('Failed to update configuration', 'error');
     }
   };
 
   const tabs = [
-    { id: 'system', label: 'SYSTEM_CONFIG', icon: '⚙️' },
-    { id: 'database', label: 'DATABASE', icon: '🗄️' },
-    { id: 'logs', label: 'SYSTEM_LOGS', icon: '📋' }
+    { id: 'system', label: 'System Config', icon: '⚙️' },
+    { id: 'database', label: 'Database', icon: '🗄️' },
+    { id: 'logs', label: 'System Logs', icon: '📋' }
   ];
 
   if (loading) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-center">
-            <div className={`text-6xl mb-4 ${darkMode ? 'text-cyan-400' : 'text-blue-500'}`}>
+          <div className="text-center">
+            <div className={`text-6xl mb-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`}>
               ⚙️
             </div>
-            <div className={`font-mono ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              LOADING_SETTINGS...
+            <div className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Loading Settings...
             </div>
           </div>
         </div>
@@ -430,32 +649,43 @@ const AdminSettings = () => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' 
+            ? 'bg-green-600 text-white' 
+            : 'bg-red-600 text-white'
+        }`}>
+          {notification.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className={`text-3xl font-bold font-mono ${
-              darkMode ? 'text-cyan-400' : 'text-blue-600'
+            <h1 className={`text-3xl font-bold ${
+              darkMode ? 'text-white' : 'text-gray-900'
             } flex items-center`}>
-              <span className="animate-pulse mr-3">⚙️</span>
-              ADMIN_SETTINGS
+              <span className="mr-3">⚙️</span>
+              Admin Settings
             </h1>
-            <p className={`font-mono text-sm ${
+            <p className={`text-sm ${
               darkMode ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              // System configuration and management panel
+              Configure system settings and manage platform behavior
             </p>
           </div>
           
           <Link
             to="/admin"
-            className={`px-4 py-2 rounded-lg font-mono text-sm transition-all border ${
+            className={`px-4 py-2 rounded-lg text-sm transition-all border ${
               darkMode
-                ? 'bg-gray-800 hover:bg-gray-700 text-cyan-400 border-cyan-500/50'
+                ? 'bg-gray-800 hover:bg-gray-700 text-blue-400 border-blue-500/50'
                 : 'bg-white hover:bg-gray-50 text-blue-600 border-blue-500/50'
             }`}
           >
-            ← ADMIN_DASHBOARD
+            ← Back to Admin
           </Link>
         </div>
 
@@ -465,10 +695,10 @@ const AdminSettings = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 px-4 rounded font-mono text-sm transition-all ${
+              className={`flex-1 py-3 px-4 rounded text-sm font-medium transition-all ${
                 activeTab === tab.id
                   ? darkMode
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-blue-600 text-white'
                   : darkMode
                     ? 'text-gray-300 hover:text-white hover:bg-gray-700'
@@ -497,34 +727,7 @@ const AdminSettings = () => {
         )}
         
         {activeTab === 'logs' && (
-          <div className={`p-6 rounded-lg border ${
-            darkMode 
-              ? 'bg-gray-800/50 border-gray-700' 
-              : 'bg-white/50 border-gray-200'
-          } backdrop-blur-sm`}>
-            <h3 className={`font-mono text-lg mb-4 ${
-              darkMode ? 'text-cyan-400' : 'text-blue-600'
-            } flex items-center`}>
-              <span className="animate-pulse mr-3">📋</span>
-              SYSTEM_LOGS
-            </h3>
-            <div className={`p-4 rounded border font-mono text-sm ${
-              darkMode 
-                ? 'bg-gray-900 border-gray-600 text-green-400' 
-                : 'bg-black border-gray-300 text-green-500'
-            }`}>
-              <div className="space-y-1">
-                <div>[2025-06-21 10:30:15] INFO: System configuration updated</div>
-                <div>[2025-06-21 10:25:03] INFO: User role changed: user@example.com</div>
-                <div>[2025-06-21 10:20:45] WARN: Low stock alert triggered</div>
-                <div>[2025-06-21 10:15:22] INFO: Database backup completed</div>
-                <div>[2025-06-21 10:10:11] INFO: New user registration approved</div>
-                <div>[2025-06-21 10:05:33] ERROR: Failed login attempt detected</div>
-                <div>[2025-06-21 10:00:00] INFO: Daily analytics report generated</div>
-                <div className="animate-pulse">▌</div>
-              </div>
-            </div>
-          </div>
+          <SystemLogs darkMode={darkMode} />
         )}
       </div>
     </div>
