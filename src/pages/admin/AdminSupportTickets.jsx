@@ -741,3 +741,43 @@ const AdminSupportTickets = () => {
                   </button>
                 </div>
 
+                {/* Ticket Details */}
+                <div className={`p-4 rounded-lg mb-6 ${
+                  darkMode ? 'bg-gray-700' : 'bg-gray-50'
+                }`}>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {selectedTicket.userName} ({selectedTicket.userEmail})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {formatDate(selectedTicket.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {selectedTicket.category} - {selectedTicket.priority} priority
+                        </span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTicket.status)}`}>
+                        {selectedTicket.status?.replace('_', ' ') || 'open'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <h4 className={`font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {selectedTicket.subject}
+                  </h4>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {selectedTicket.message}
+                  </p>
+                </div>
+
