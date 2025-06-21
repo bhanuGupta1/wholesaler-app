@@ -177,3 +177,39 @@ const AdminFeedback = () => {
     }
   };
 
+  // Send admin response
+  const sendAdminResponse = async () => {
+    if (!selectedFeedback || !responseText.trim()) return;
+
+    try {
+      setProcessing(true);
+      const feedbackRef = doc(db, 'feedbacks', selectedFeedback.id);
+      await updateDoc(feedbackRef, {
+        adminResponse: responseText,
+        adminResponseAt: new Date(),
+        adminResponseBy: user.email,
+        status: 'reviewed'
+      });
+
+      setFeedbacks(prev => prev.map(f => 
+        f.id === selectedFeedback.id 
+          ? { 
+              ...f, 
+              adminResponse: responseText,
+              adminResponseAt: new Date(),
+              adminResponseBy: user.email,
+              status: 'reviewed'
+            } 
+          : f
+      ));
+
+      setShowResponseModal(false);
+      setResponseText('');
+      setSelectedFeedback(null);
+    } catch (error) {
+      console.error('Error sending admin response:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
