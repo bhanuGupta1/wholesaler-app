@@ -108,3 +108,17 @@ const AdminSupportTickets = () => {
       // Priority filter
       const matchesPriority = filters.priority === 'all' || ticket.priority === filters.priority;
 
+      // Date range filter
+      const now = new Date();
+      const ticketDate = ticket.createdAt;
+      let matchesDate = true;
+      
+      if (filters.dateRange !== 'all') {
+        const days = parseInt(filters.dateRange.replace('d', ''));
+        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        matchesDate = ticketDate >= cutoff;
+      }
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesDate;
+    });
+
