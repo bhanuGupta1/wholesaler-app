@@ -61,17 +61,24 @@ const SkeletonLoader = ({ className = "h-4 w-full", darkMode = false }) => (
 );
 
 // ===============================================
-// ENHANCED SIDEBAR COMPONENT
+// ENHANCED SIDEBAR COMPONENT - UPDATED VERSION
 // ===============================================
 const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth(); // Add this line to get logout function
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
     {
       title: 'Main',
       items: [
+        { 
+          icon: Home, 
+          label: 'Home', 
+          path: '/',
+          description: 'Go to Home Page'
+        },
         { 
           icon: Home, 
           label: 'Dashboard', 
@@ -129,6 +136,12 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
           label: 'Settings', 
           path: '/admin/settings',
           description: 'System Settings'
+        },
+        { 
+          icon: Archive, 
+          label: 'Legacy Panel', 
+          path: '/admin/panel',
+          description: 'Legacy Admin Interface'
         }
       ]
     }
@@ -138,6 +151,20 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
     navigate(path);
     if (window.innerWidth < 1024) {
       setIsOpen(false);
+    }
+  };
+
+  // Add this new function for logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login'); // Redirect to login after logout
+      if (window.innerWidth < 1024) {
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // You might want to show a toast notification here
     }
   };
 
@@ -171,29 +198,37 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
           {/* Sidebar Header */}
           <div className={`p-6 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between">
-              <motion.h2 
-                className={`text-xl font-bold ${
-                  darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
-                } ${isCollapsed ? 'hidden' : ''}`}
-                animate={{ opacity: isCollapsed ? 0 : 1 }}
-              >
-                {darkMode ? 'NEURAL CONTROL' : 'Admin Panel'}
-              </motion.h2>
+              {!isCollapsed && (
+                <div>
+                  <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Admin Panel
+                  </h2>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Management Dashboard
+                  </p>
+                </div>
+              )}
               
               <div className="flex items-center gap-2">
+                {/* Collapse Toggle */}
                 <button
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  className={`p-2 rounded-lg transition-colors hidden lg:block ${
-                    darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                  className={`p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'hover:bg-gray-800 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
                   }`}
                 >
                   <ChevronLeft className={`h-5 w-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
                 </button>
                 
+                {/* Close Button (Mobile) */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className={`p-2 rounded-lg transition-colors lg:hidden ${
-                    darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                  className={`lg:hidden p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'hover:bg-gray-800 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
                   }`}
                 >
                   <X className="h-5 w-5" />
@@ -261,9 +296,10 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
             ))}
           </nav>
 
-          {/* Sidebar Footer */}
+          {/* Sidebar Footer with Working Logout - UPDATED */}
           <div className={`p-4 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
             <motion.button
+              onClick={handleLogout} // Updated to use proper logout function
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                 darkMode 
                   ? 'hover:bg-red-900/20 text-gray-300 hover:text-red-400' 
