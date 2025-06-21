@@ -1,6 +1,6 @@
-// src/pages/AdminDashboard.jsx - ENHANCED INTELLIGENT VERSION
+// src/pages/AdminDashboard.jsx - ENHANCED WITH SIDEBAR
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   collection, 
   getDocs, 
@@ -39,7 +39,16 @@ import {
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
-  Zap
+  Zap,
+  Menu,
+  X,
+  Home,
+  Shield,
+  UserCheck,
+  FileText,
+  Briefcase,
+  LogOut,
+  ChevronLeft
 } from 'lucide-react';
 
 // ===============================================
@@ -48,6 +57,228 @@ import {
 const SkeletonLoader = ({ className = "h-4 w-full", darkMode = false }) => (
   <div className={`animate-pulse ${darkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded ${className}`} />
 );
+
+// ===============================================
+// ENHANCED SIDEBAR COMPONENT
+// ===============================================
+const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const menuItems = [
+    {
+      title: 'Main',
+      items: [
+        { 
+          icon: Home, 
+          label: 'Dashboard', 
+          path: '/admin/dashboard',
+          description: 'Overview & Analytics'
+        },
+        { 
+          icon: Users, 
+          label: 'User Management', 
+          path: '/admin/users',
+          description: 'Manage Users'
+        },
+        { 
+          icon: UserCheck, 
+          label: 'Approvals', 
+          path: '/admin/approvals',
+          description: 'Pending Approvals'
+        },
+        { 
+          icon: Briefcase, 
+          label: 'Deal Management', 
+          path: '/admin/deals',
+          description: 'Manage Deals & Offers'
+        }
+      ]
+    },
+    {
+      title: 'Analytics',
+      items: [
+        { 
+          icon: BarChart3, 
+          label: 'Analytics', 
+          path: '/admin/analytics',
+          description: 'Detailed Analytics'
+        },
+        { 
+          icon: FileText, 
+          label: 'Reports', 
+          path: '/admin/reports',
+          description: 'Generate Reports'
+        }
+      ]
+    },
+    {
+      title: 'System',
+      items: [
+        { 
+          icon: Shield, 
+          label: 'Security', 
+          path: '/admin/security',
+          description: 'Security Settings'
+        },
+        { 
+          icon: Settings, 
+          label: 'Settings', 
+          path: '/admin/settings',
+          description: 'System Settings'
+        }
+      ]
+    }
+  ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isOpen && window.innerWidth < 1024 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -320 }}
+        animate={{ x: isOpen ? 0 : -320 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`fixed top-0 left-0 h-full ${
+          isCollapsed ? 'w-20' : 'w-80'
+        } ${
+          darkMode ? 'bg-gray-900 border-r border-gray-800' : 'bg-white border-r border-gray-200'
+        } z-50 transition-all duration-300 lg:translate-x-0 lg:static lg:z-30`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className={`p-6 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+            <div className="flex items-center justify-between">
+              <motion.h2 
+                className={`text-xl font-bold ${
+                  darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
+                } ${isCollapsed ? 'hidden' : ''}`}
+                animate={{ opacity: isCollapsed ? 0 : 1 }}
+              >
+                {darkMode ? 'NEURAL CONTROL' : 'Admin Panel'}
+              </motion.h2>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className={`p-2 rounded-lg transition-colors hidden lg:block ${
+                    darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <ChevronLeft className={`h-5 w-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
+                </button>
+                
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className={`p-2 rounded-lg transition-colors lg:hidden ${
+                    darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav className="flex-1 overflow-y-auto p-4">
+            {menuItems.map((section, sectionIndex) => (
+              <div key={sectionIndex} className="mb-6">
+                {!isCollapsed && (
+                  <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
+                    darkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
+                    {section.title}
+                  </h3>
+                )}
+                
+                <div className="space-y-1">
+                  {section.items.map((item, itemIndex) => {
+                    const isActive = location.pathname === item.path;
+                    const Icon = item.icon;
+                    
+                    return (
+                      <motion.button
+                        key={itemIndex}
+                        onClick={() => handleNavigation(item.path)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                          isActive
+                            ? darkMode 
+                              ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-600/30' 
+                              : 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                            : darkMode
+                              ? 'hover:bg-gray-800 text-gray-300 hover:text-white'
+                              : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                        }`}
+                        whileHover={{ x: 2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Icon className={`h-5 w-5 flex-shrink-0 ${
+                          isActive && darkMode ? 'text-cyan-400' : ''
+                        }`} />
+                        
+                        {!isCollapsed && (
+                          <div className="flex-1 text-left">
+                            <div className="font-medium text-sm">{item.label}</div>
+                            <div className={`text-xs ${
+                              darkMode ? 'text-gray-500' : 'text-gray-400'
+                            }`}>
+                              {item.description}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {!isCollapsed && isActive && (
+                          <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          {/* Sidebar Footer */}
+          <div className={`p-4 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+            <motion.button
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                darkMode 
+                  ? 'hover:bg-red-900/20 text-gray-300 hover:text-red-400' 
+                  : 'hover:bg-red-50 text-gray-700 hover:text-red-600'
+              }`}
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
+            </motion.button>
+          </div>
+        </div>
+      </motion.aside>
+    </>
+  );
+};
 
 // ===============================================
 // BREADCRUMB NAVIGATION
@@ -69,7 +300,7 @@ const RealTimeToggle = ({ enabled, onToggle, darkMode }) => (
   <div className="flex items-center space-x-3">
     <Zap className={`h-4 w-4 ${enabled ? 'text-green-500' : darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
     <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-      Real-time Updates
+      Real-time
     </span>
     <button
       onClick={onToggle}
@@ -87,7 +318,7 @@ const RealTimeToggle = ({ enabled, onToggle, darkMode }) => (
 );
 
 // ===============================================
-// FILTER DROPDOWN COMPONENT
+// ENHANCED FILTER DROPDOWN WITH PROPER Z-INDEX
 // ===============================================
 const FilterDropdown = ({ title, options, selected, onSelect, darkMode }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -109,33 +340,42 @@ const FilterDropdown = ({ title, options, selected, onSelect, darkMode }) => {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={`absolute top-full left-0 mt-2 w-48 rounded-lg border shadow-lg z-10 ${
-              darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
-            }`}
-          >
-            <div className="py-2">
-              {options.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    onSelect(option);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                    selected === option
-                      ? darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                      : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </motion.div>
+          <>
+            {/* Backdrop to close dropdown */}
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setIsOpen(false)}
+            />
+            
+            {/* Dropdown Menu */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`absolute top-full left-0 mt-2 w-48 rounded-lg border shadow-xl z-50 ${
+                darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+              }`}
+            >
+              <div className="py-2">
+                {options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      onSelect(option);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      selected === option
+                        ? darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
+                        : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
