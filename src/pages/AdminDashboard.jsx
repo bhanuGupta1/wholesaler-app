@@ -51,7 +51,8 @@ import {
   LogOut,
   ChevronLeft,
   Archive,
-  MessageCircle
+  MessageCircle,
+  Headphones
 } from 'lucide-react';
 
 // ===============================================
@@ -149,7 +150,13 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
       label: 'Feedback', 
       path: '/admin/feedback',
       description: 'User Feedback & Support'
-    }
+    },
+    { 
+  icon: Headphones, 
+  label: 'Support Tickets', 
+  path: '/admin/support',
+  description: 'Manage User Support Requests'
+}
       ]
     }
   ];
