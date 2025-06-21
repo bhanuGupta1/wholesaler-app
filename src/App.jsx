@@ -55,6 +55,7 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
+const AdminSupportTickets = lazy(() => import('./pages/admin/AdminSupportTickets'));
 
 
 // Deal Management component
@@ -438,6 +439,9 @@ function App() {
 
                         {/* Feedback Management - Admin and Manager access */}
                         <Route path="feedback" element={<AdminFeedback />} />
+
+                        {/* Support Tickets - Admin and Manager access */} 
+                        <Route path="support" element={<AdminSupportTickets />} />
                         
                         {/* Fallback */}
                         <Route path="*" element={<Navigate to="/admin" replace />} />
