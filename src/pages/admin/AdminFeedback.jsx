@@ -213,3 +213,20 @@ const AdminFeedback = () => {
     }
   };
 
+  // Delete feedback
+  const deleteFeedback = async (feedbackId) => {
+    if (!confirm('Are you sure you want to delete this feedback? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      await deleteDoc(doc(db, 'feedbacks', feedbackId));
+      setFeedbacks(prev => prev.filter(f => f.id !== feedbackId));
+    } catch (error) {
+      console.error('Error deleting feedback:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
