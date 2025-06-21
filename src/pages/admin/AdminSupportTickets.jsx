@@ -88,3 +88,6 @@ const AdminSupportTickets = () => {
     fetchSupportTickets();
   }, []);
 
+  // Filter and sort tickets
+  const filteredTickets = useMemo(() => {
+    let filtered = tickets.filter(ticket => {
