@@ -1864,7 +1864,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions Panel */}
+       {/* Enhanced Quick Actions Panel */}
       <motion.div 
         className={`fixed bottom-6 left-6 ${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative z-50`}
         initial={{ opacity: 0, x: -50 }}
@@ -1872,31 +1872,68 @@ const AdminDashboard = () => {
         transition={{ delay: 1 }}
       >
         {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center gap-3 relative z-10">
-          <span className={`text-sm font-bold ${darkMode ? 'cyber-title text-cyan-400' : 'text-gray-700'}`}>
-            {darkMode ? 'QUICK ACCESS' : 'Quick Actions'}
-          </span>
-          <motion.button 
-            className={`${darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn'} px-3 py-1 text-xs`}
-            onClick={() => navigate('/admin/users')}
-            whileHover={{ scale: 1.05 }}
-          >
-            Users
-          </motion.button>
-          <motion.button 
-            className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} px-3 py-1 text-xs`}
-            onClick={() => navigate('/admin/approvals')}
-            whileHover={{ scale: 1.05 }}
-          >
-            Approvals
-          </motion.button>
-          <motion.button 
-            className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
-            onClick={() => navigate('/admin/analytics')}
-            whileHover={{ scale: 1.05 }}
-          >
-            Analytics
-          </motion.button>
+        <div className="relative z-10">
+          <div className="flex items-center mb-3">
+            <span className={`text-sm font-bold ${darkMode ? 'cyber-title text-cyan-400' : 'text-gray-700'}`}>
+              {darkMode ? 'QUICK ACCESS MATRIX' : 'Quick Actions'}
+            </span>
+          </div>
+          
+          {/* Primary Actions Row */}
+          <div className="flex items-center gap-2 mb-2">
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/users')}
+              whileHover={{ scale: 1.05 }}
+              title="User Management Panel"
+            >
+              👥 Users
+            </motion.button>
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/approvals')}
+              whileHover={{ scale: 1.05 }}
+              title="Pending User Approvals"
+            >
+              ⏳ Approvals
+            </motion.button>
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/analytics')}
+              whileHover={{ scale: 1.05 }}
+              title="Advanced Analytics Dashboard"
+            >
+              📊 Analytics
+            </motion.button>
+          </div>
+
+          {/* Secondary Actions Row */}
+          <div className="flex items-center gap-2">
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/security')}
+              whileHover={{ scale: 1.05 }}
+              title="Security Center"
+            >
+              🔒 Security
+            </motion.button>
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/settings')}
+              whileHover={{ scale: 1.05 }}
+              title="System Settings"
+            >
+              ⚙️ Settings
+            </motion.button>
+            <motion.button 
+              className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
+              onClick={() => navigate('/admin/panel')}
+              whileHover={{ scale: 1.05 }}
+              title="Legacy Admin Panel"
+            >
+              🏛️ Legacy
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     </div>
