@@ -94,3 +94,5 @@ const AdminFeedback = () => {
         feedback.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         feedback.userEmail?.toLowerCase().includes(searchTerm.toLowerCase());
 
+      // Status filter
+      const matchesStatus = filters.status === 'all' || feedback.status === filters.status;
