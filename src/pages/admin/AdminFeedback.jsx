@@ -309,3 +309,52 @@ const AdminFeedback = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Feedback Management
+              </h1>
+              <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Review and respond to user feedback and suggestions
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={exportToCSV}
+                className={`px-4 py-2 rounded-lg text-sm transition-all border ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border-gray-600'
+                    : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
+                }`}
+              >
+                <Download className="h-4 w-4 mr-2 inline" />
+                Export CSV
+              </button>
+              <button
+                onClick={fetchFeedbacks}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  darkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 inline ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <Link
+                to="/admin"
+                className={`px-4 py-2 rounded-lg text-sm transition-all border ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-blue-400 border-blue-500/50'
+                    : 'bg-white hover:bg-gray-50 text-blue-600 border-blue-500/50'
+                }`}
+              >
+                ← Back to Admin
+              </Link>
+            </div>
+          </div>
+        </div>
+
