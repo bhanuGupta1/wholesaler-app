@@ -74,3 +74,45 @@ const AdminReports = () => {
     fetchReportsData();
   }, [dateRange]);
 
+  // Export functions
+  const exportToCSV = (data, filename) => {
+    let csvContent = '';
+    
+    if (data.users) {
+      csvContent += 'USERS REPORT\n';
+      csvContent += 'ID,Name,Email,Account Type,Status,Created Date\n';
+      data.users.forEach(user => {
+        csvContent += `"${user.id}","${user.displayName || ''}","${user.email}","${user.accountType}","${user.status || 'active'}","${user.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}"\n`;
+      });
+      csvContent += '\n';
+    }
+
+    if (data.orders) {
+      csvContent += 'ORDERS REPORT\n';
+      csvContent += 'Order ID,Customer Email,Total,Status,Date,Items Count\n';
+      data.orders.forEach(order => {
+        csvContent += `"${order.id}","${order.customerEmail || ''}","${order.total || 0}","${order.status || ''}","${order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}","${order.items?.length || 0}"\n`;
+      });
+      csvContent += '\n';
+    }
+
+    if (data.products) {
+      csvContent += 'PRODUCTS REPORT\n';
+      csvContent += 'ID,Name,Category,Price,Stock,Creator\n';
+      data.products.forEach(product => {
+        csvContent += `"${product.id}","${product.name || ''}","${product.category || ''}","${product.price || 0}","${product.stock || 0}","${product.createdBy || ''}"\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = async (data, filename) => {
