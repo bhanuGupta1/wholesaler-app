@@ -172,3 +172,26 @@ const AdminSupportTickets = () => {
     };
   }, [tickets]);
 
+  // Update ticket status
+  const updateTicketStatus = async (ticketId, newStatus) => {
+    try {
+      setProcessing(true);
+      const ticketRef = doc(db, 'supportTickets', ticketId);
+      await updateDoc(ticketRef, {
+        status: newStatus,
+        updatedAt: serverTimestamp(),
+        lastUpdatedBy: user.email
+      });
+
+      setTickets(prev => prev.map(t => 
+        t.id === ticketId 
+          ? { ...t, status: newStatus, updatedAt: new Date(), lastUpdatedBy: user.email }
+          : t
+      ));
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
