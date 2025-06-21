@@ -528,3 +528,168 @@ const AdminFeedback = () => {
           </div>
         </div>
 
+        {/* Feedback List */}
+        <div className="space-y-4">
+          <AnimatePresence>
+            {filteredFeedbacks.map((feedback, index) => (
+              <motion.div
+                key={feedback.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-6 rounded-lg border ${
+                  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                } hover:shadow-lg transition-shadow`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <User className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {feedback.userName || 'Anonymous'}
+                        </span>
+                        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          ({feedback.userEmail})
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= (feedback.rating || 0)
+                                ? 'text-yellow-400 fill-current'
+                                : darkMode ? 'text-gray-600' : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                        <span className={`ml-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {feedback.rating || 0}/5
+                        </span>
+                      </div>
+
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}>
+                        {feedback.status || 'pending'}
+                      </span>
+
+                      <span className={`text-sm font-medium ${getPriorityColor(feedback.priority)}`}>
+                        <Flag className="h-3 w-3 inline mr-1" />
+                        {feedback.priority || 'medium'}
+                      </span>
+
+                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <Calendar className="h-3 w-3 inline mr-1" />
+                        {formatDate(feedback.createdAt)}
+                      </span>
+                    </div>
+
+                    <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {feedback.title}
+                    </h3>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <Tag className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {feedback.category || 'general'}
+                      </span>
+                    </div>
+
+                    <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {feedback.message}
+                    </p>
+
+                    {feedback.adminResponse && (
+                      <div className={`p-4 rounded-lg border-l-4 ${
+                        darkMode 
+                          ? 'bg-blue-900/20 border-blue-400' 
+                          : 'bg-blue-50 border-blue-400'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Reply className={`h-4 w-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                          <span className={`text-sm font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                            Admin Response by {feedback.adminResponseBy}
+                          </span>
+                          <span className={`text-xs ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
+                            {formatDate(feedback.adminResponseAt)}
+                          </span>
+                        </div>
+                        <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                          {feedback.adminResponse}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 ml-4">
+                    {!feedback.adminResponse && (
+                      <button
+                        onClick={() => {
+                          setSelectedFeedback(feedback);
+                          setShowResponseModal(true);
+                        }}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          darkMode
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
+                      >
+                        <Reply className="h-3 w-3 mr-1 inline" />
+                        Respond
+                      </button>
+                    )}
+
+                    <select
+                      value={feedback.status || 'pending'}
+                      onChange={(e) => updateFeedbackStatus(feedback.id, e.target.value)}
+                      disabled={processing}
+                      className={`px-2 py-1 rounded text-xs border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="reviewed">Reviewed</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+
+                    <button
+                      onClick={() => deleteFeedback(feedback.id)}
+                      disabled={processing}
+                      className={`px-2 py-1 rounded text-xs transition-colors ${
+                        darkMode
+                          ? 'bg-red-600/20 hover:bg-red-600/30 text-red-400'
+                          : 'bg-red-50 hover:bg-red-100 text-red-600'
+                      }`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {filteredFeedbacks.length === 0 && (
+            <div className={`text-center py-12 ${
+              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } rounded-lg border`}>
+              <MessageCircle className={`mx-auto h-12 w-12 mb-4 ${
+                darkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <h3 className={`text-lg font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                No feedback found
+              </h3>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {searchTerm || Object.values(filters).some(f => f !== 'all') 
+                  ? 'Try adjusting your search or filters'
+                  : 'No feedback has been submitted yet'}
+              </p>
+            </div>
+          )}
+        </div>
+
