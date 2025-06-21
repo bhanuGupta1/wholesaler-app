@@ -1,7 +1,15 @@
-// src/pages/AdminDashboard.jsx - ULTIMATE ENHANCED VERSION with New Panel Integration
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { collection, getDocs, query, orderBy, limit, where, doc, deleteDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
+// src/pages/AdminDashboard.jsx - ULTIMATE ENHANCED VERSION with Real Firebase Data
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  limit, 
+  where, 
+  onSnapshot 
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,27 +17,61 @@ import ThemeToggle from '../components/common/ThemeToggle';
 import SecretInvasionBackground from '../components/common/SecretInvasionBackground';
 
 // ===============================================
-// ENHANCED CALENDAR COMPONENT
+// REAL-TIME ACTIVITY CALENDAR COMPONENT
 // ===============================================
-const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
+const RealActivityCalendar = ({ darkMode, onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('month');
   const [calendarData, setCalendarData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const processedData = {};
-    data.forEach(item => {
-      const dateKey = item.date?.toDateString() || new Date().toDateString();
-      if (!processedData[dateKey]) {
-        processedData[dateKey] = { orders: 0, revenue: 0, users: 0, activities: [] };
+    const fetchCalendarData = async () => {
+      try {
+        // Fetch real user registrations and orders
+        const [usersSnapshot, ordersSnapshot] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'orders'))
+        ]);
+
+        const processedData = {};
+        
+        // Process user registrations
+        usersSnapshot.docs.forEach(doc => {
+          const userData = doc.data();
+          const createdAt = userData.createdAt?.toDate();
+          if (createdAt) {
+            const dateKey = createdAt.toDateString();
+            if (!processedData[dateKey]) {
+              processedData[dateKey] = { orders: 0, revenue: 0, users: 0 };
+            }
+            processedData[dateKey].users += 1;
+          }
+        });
+
+        // Process orders
+        ordersSnapshot.docs.forEach(doc => {
+          const orderData = doc.data();
+          const createdAt = orderData.createdAt?.toDate();
+          if (createdAt) {
+            const dateKey = createdAt.toDateString();
+            if (!processedData[dateKey]) {
+              processedData[dateKey] = { orders: 0, revenue: 0, users: 0 };
+            }
+            processedData[dateKey].orders += 1;
+            processedData[dateKey].revenue += orderData.total || 0;
+          }
+        });
+
+        setCalendarData(processedData);
+      } catch (error) {
+        console.error('Error fetching calendar data:', error);
+      } finally {
+        setLoading(false);
       }
-      processedData[dateKey].orders += item.orders || 0;
-      processedData[dateKey].revenue += item.revenue || 0;
-      processedData[dateKey].users += item.users || 0;
-      processedData[dateKey].activities.push(item);
-    });
-    setCalendarData(processedData);
-  }, [data]);
+    };
+
+    fetchCalendarData();
+  }, []);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -59,7 +101,7 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
     if (!dayData) return 0;
     
     const maxRevenue = Math.max(...Object.values(calendarData).map(d => d.revenue));
-    return maxRevenue > 0 ? (dayData.revenue / maxRevenue) : 0;
+    return maxRevenue > 0 ? Math.min(dayData.revenue / maxRevenue, 1) : 0;
   };
 
   const handleDateClick = (date) => {
@@ -82,6 +124,23 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  if (loading) {
+    return (
+      <motion.div 
+        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">📅</div>
+            <div>Loading calendar data...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
@@ -91,6 +150,7 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
     >
       {darkMode && <div className="card-glow"></div>}
       
+      {/* Calendar Header */}
       <div className="flex justify-between items-center mb-6 relative z-10">
         <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
           {darkMode ? 'ACTIVITY MATRIX' : 'Activity Calendar'}
@@ -118,7 +178,9 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
         </div>
       </div>
 
+      {/* Calendar Grid */}
       <div className="relative z-10">
+        {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {dayNames.map(day => (
             <div key={day} className={`text-center text-xs font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'} py-2`}>
@@ -127,6 +189,7 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
           ))}
         </div>
 
+        {/* Calendar Days */}
         <div className="grid grid-cols-7 gap-1">
           {getDaysInMonth(selectedDate).map((date, index) => {
             const intensity = getIntensity(date);
@@ -179,6 +242,7 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
         </div>
       </div>
 
+      {/* Selected Date Info */}
       {selectedDate && calendarData[selectedDate.toDateString()] && (
         <motion.div 
           className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} relative z-10`}
@@ -215,7 +279,505 @@ const ActivityCalendar = ({ data, darkMode, onDateSelect }) => {
 };
 
 // ===============================================
-// ENHANCED ADMIN PANEL QUICK ACCESS
+// REAL USER ANALYTICS CHART
+// ===============================================
+const RealUserAnalyticsChart = ({ darkMode }) => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserAnalytics = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date()
+        }));
+
+        // Group users by account type
+        const accountTypes = users.reduce((acc, user) => {
+          let type = user.accountType || 'user';
+          if (type === 'business') {
+            type = user.businessType === 'seller' ? 'Business Seller' : 'Business Buyer';
+          } else if (type === 'user') {
+            type = 'Regular User';
+          } else if (type === 'admin') {
+            type = 'Administrator';
+          } else if (type === 'manager') {
+            type = 'Manager';
+          }
+          
+          acc[type] = (acc[type] || 0) + 1;
+          return acc;
+        }, {});
+
+        const data = Object.entries(accountTypes).map(([name, value]) => ({
+          name,
+          value
+        }));
+
+        setChartData(data);
+      } catch (error) {
+        console.error('Error fetching user analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserAnalytics();
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div 
+        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">📊</div>
+            <div>Loading user analytics...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const maxValue = Math.max(...chartData.map(d => d.value));
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
+        {darkMode ? 'USER TYPE DISTRIBUTION' : 'User Analytics'}
+      </h3>
+      
+      <div className="space-y-3 relative z-10">
+        {chartData.map((item, index) => {
+          const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
+          
+          return (
+            <motion.div 
+              key={item.name}
+              className="relative"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {item.name}
+                </span>
+                <span className={`text-sm font-bold ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}>
+                  {item.value}
+                </span>
+              </div>
+              
+              <div className={`h-3 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
+                <motion.div 
+                  className={`h-full rounded-full ${
+                    index === 0 ? darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500' :
+                    index === 1 ? darkMode ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-purple-500 to-pink-500' :
+                    index === 2 ? darkMode ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-pink-500 to-red-500' :
+                    index === 3 ? darkMode ? 'bg-gradient-to-r from-pink-500 to-red-500' : 'bg-gradient-to-r from-red-500 to-orange-500' :
+                    darkMode ? 'bg-gradient-to-r from-green-500 to-teal-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                  }`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${percentage}%` }}
+                  transition={{ duration: 0.8, delay: index * 0.2 }}
+                />
+              </div>
+              
+              <div className="flex justify-between text-xs mt-1">
+                <span className={`${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {((item.value / chartData.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// REAL ACTIVITY FEED
+// ===============================================
+const RealActivityFeed = ({ darkMode }) => {
+  const [activities, setActivities] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        // Fetch recent user activities
+        const usersSnapshot = await getDocs(
+          query(collection(db, 'users'), orderBy('updatedAt', 'desc'), limit(10))
+        );
+        
+        const realActivities = [];
+        
+        usersSnapshot.docs.forEach((doc, index) => {
+          const userData = doc.data();
+          const updatedAt = userData.updatedAt?.toDate() || userData.createdAt?.toDate();
+          
+          if (updatedAt) {
+            // User registration activity
+            if (userData.createdAt) {
+              realActivities.push({
+                id: `user-created-${index}`,
+                type: 'user',
+                title: 'New User Registration',
+                description: `${userData.email} joined the platform`,
+                timestamp: formatTimeAgo(userData.createdAt.toDate()),
+                value: '+1'
+              });
+            }
+            
+            // Status change activities
+            if (userData.status && userData.updatedAt) {
+              let title = 'User Status Updated';
+              let description = `${userData.email} status changed to ${userData.status}`;
+              
+              if (userData.status === 'approved') {
+                title = 'User Approved';
+                description = `${userData.email} account approved`;
+              } else if (userData.status === 'suspended') {
+                title = 'User Suspended';
+                description = `${userData.email} account suspended`;
+              }
+              
+              realActivities.push({
+                id: `user-updated-${index}`,
+                type: 'system',
+                title,
+                description,
+                timestamp: formatTimeAgo(userData.updatedAt.toDate())
+              });
+            }
+          }
+        });
+
+        // Sort by most recent first
+        realActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setActivities(realActivities.slice(0, 8));
+        
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, []);
+
+  const formatTimeAgo = (date) => {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return 'Just now';
+  };
+
+  const filteredActivities = activities.filter(activity => 
+    filter === 'all' || activity.type === filter
+  );
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'user': return '👤';
+      case 'order': return '📦';
+      case 'system': return '⚙️';
+      case 'revenue': return '💰';
+      default: return '📡';
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'user': return darkMode ? 'text-cyan-400' : 'text-blue-600';
+      case 'order': return darkMode ? 'text-green-400' : 'text-green-600';
+      case 'system': return darkMode ? 'text-yellow-400' : 'text-yellow-600';
+      case 'revenue': return darkMode ? 'text-purple-400' : 'text-purple-600';
+      default: return darkMode ? 'text-gray-400' : 'text-gray-600';
+    }
+  };
+
+  if (loading) {
+    return (
+      <motion.div 
+        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">📡</div>
+            <div>Loading activity feed...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <div className="flex justify-between items-center mb-4 relative z-10">
+        <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'NEURAL ACTIVITY STREAM' : 'Activity Feed'}
+        </h3>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className={`text-xs rounded ${
+            darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+          } border px-2 py-1`}
+        >
+          <option value="all">{darkMode ? 'ALL ACTIVITIES' : 'All'}</option>
+          <option value="user">{darkMode ? 'USER EVENTS' : 'Users'}</option>
+          <option value="order">{darkMode ? 'ORDER EVENTS' : 'Orders'}</option>
+          <option value="system">{darkMode ? 'SYSTEM EVENTS' : 'System'}</option>
+        </select>
+      </div>
+      
+      <div className="space-y-3 max-h-80 overflow-y-auto relative z-10">
+        <AnimatePresence>
+          {filteredActivities.length > 0 ? (
+            filteredActivities.map((activity, index) => (
+              <motion.div
+                key={activity.id}
+                className={`flex items-start space-x-3 p-3 rounded-lg ${
+                  darkMode ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
+                } transition-colors cursor-pointer`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.02, x: 5 }}
+              >
+                <div className={`text-lg ${getActivityColor(activity.type)}`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                    {activity.title}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                    {activity.description}
+                  </p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                    {activity.timestamp}
+                  </p>
+                </div>
+                {activity.value && (
+                  <div className={`text-sm font-bold ${getActivityColor(activity.type)}`}>
+                    {activity.value}
+                  </div>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2 opacity-50">📡</div>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {darkMode ? 'NO NEURAL ACTIVITIES DETECTED' : 'No activities found'}
+              </p>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// REAL SYSTEM HEALTH MONITOR
+// ===============================================
+const RealSystemHealthMonitor = ({ darkMode }) => {
+  const [healthMetrics, setHealthMetrics] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    pendingApprovals: 0,
+    systemUptime: 99.9
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHealthMetrics = async () => {
+      try {
+        const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'products')),
+          getDocs(collection(db, 'orders'))
+        ]);
+
+        const users = usersSnapshot.docs.map(doc => doc.data());
+        const activeUsers = users.filter(user => user.status === 'active' && user.approved).length;
+        const pendingApprovals = users.filter(user => 
+          user.status === 'pending_approval' || user.status === 'pending'
+        ).length;
+
+        setHealthMetrics({
+          totalUsers: usersSnapshot.size,
+          activeUsers,
+          totalProducts: productsSnapshot.size,
+          totalOrders: ordersSnapshot.size,
+          pendingApprovals,
+          systemUptime: 99.9 + Math.random() * 0.1 // Simulated uptime
+        });
+      } catch (error) {
+        console.error('Error fetching health metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthMetrics();
+    
+    // Update metrics every 30 seconds
+    const interval = setInterval(fetchHealthMetrics, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getHealthColor = (value, type) => {
+    if (type === 'uptime') {
+      return value > 99.5 ? 'green' : value > 98 ? 'yellow' : 'red';
+    } else if (type === 'pending') {
+      return value === 0 ? 'green' : value < 5 ? 'yellow' : 'red';
+    } else {
+      return value > 0 ? 'green' : 'gray';
+    }
+  };
+
+  if (loading) {
+    return (
+      <motion.div 
+        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">💚</div>
+            <div>Loading system health...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const metrics = [
+    { label: 'Total Users', value: healthMetrics.totalUsers, type: 'normal', icon: '👥' },
+    { label: 'Active Users', value: healthMetrics.activeUsers, type: 'normal', icon: '✅' },
+    { label: 'Total Products', value: healthMetrics.totalProducts, type: 'normal', icon: '📦' },
+    { label: 'Total Orders', value: healthMetrics.totalOrders, type: 'normal', icon: '📋' },
+    { label: 'Pending Approvals', value: healthMetrics.pendingApprovals, type: 'pending', icon: '⏳' },
+    { label: 'System Uptime', value: `${healthMetrics.systemUptime.toFixed(2)}%`, type: 'uptime', icon: '🟢' }
+  ];
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-semibold mb-6 ${
+        darkMode ? 'text-green-400 cyber-title cyber-glow' : 'text-green-600'
+      } flex items-center relative z-10`}>
+        <span className="mr-3">💚</span>
+        {darkMode ? 'SYSTEM MATRIX' : 'System Health'}
+      </h3>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
+        {metrics.map((metric, index) => {
+          const color = getHealthColor(
+            typeof metric.value === 'string' ? parseFloat(metric.value) : metric.value, 
+            metric.type
+          );
+          return (
+            <motion.div 
+              key={index} 
+              className={`p-4 rounded border ${
+                darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
+              } hover:shadow-md transition-all`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="text-center">
+                <div className="text-2xl mb-2">{metric.icon}</div>
+                <div className={`text-xl font-bold text-${color}-500 mb-1`}>
+                  {metric.value}
+                </div>
+                <div className={`text-xs ${
+                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {metric.label}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* System Status */}
+      <motion.div 
+        className="mt-6 p-4 rounded border relative z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="flex items-center justify-between">
+          <div className={`text-sm font-medium ${
+            darkMode ? 'text-gray-300' : 'text-gray-700'
+          }`}>
+            Overall Status:
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            <span className={`text-sm font-medium ${
+              darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'
+            }`}>
+              {darkMode ? 'NEURAL SYSTEMS OPERATIONAL' : 'System Operational'}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// ENHANCED ADMIN PANEL ACCESS
 // ===============================================
 const AdminPanelAccess = ({ darkMode }) => {
   const navigate = useNavigate();
@@ -283,158 +845,51 @@ const AdminPanelAccess = ({ darkMode }) => {
       <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
         {darkMode ? 'ADMIN CONTROL MATRIX' : 'Admin Panel Access'}
       </h3>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
         {adminPanels.map((panel, index) => (
-          <motion.div
-            key={panel.path}
-            className={`p-4 rounded-lg cursor-pointer transition-all duration-300 border ${
-              darkMode 
-                ? `bg-gray-700/50 hover:bg-gray-700 border-${panel.color}-500/30 hover:border-${panel.color}-500/60` 
-                : `bg-gray-50 hover:bg-gray-100 border-${panel.color}-200 hover:border-${panel.color}-400`
-            }`}
+          <motion.button
+            key={index}
             onClick={() => navigate(panel.path)}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className={`p-4 rounded-lg border text-left transition-all hover:scale-105 ${
+              darkMode
+                ? `bg-gray-700/50 border-gray-600 hover:border-${panel.color}-500/50 hover:bg-gray-700`
+                : `bg-gray-50 border-gray-200 hover:border-${panel.color}-500/50 hover:bg-gray-100`
+            }`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02, y: -2 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-2xl">{panel.icon}</div>
-              <div className={`w-3 h-3 rounded-full bg-${panel.color}-500 animate-pulse`}></div>
+            <div className="flex items-center mb-3">
+              <span className="text-2xl mr-3">{panel.icon}</span>
+              <div>
+                <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {panel.title}
+                </h4>
+                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {panel.description}
+                </p>
+              </div>
             </div>
-            
-            <h4 className={`font-bold text-sm mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              {panel.title}
-            </h4>
-            
-            <p className={`text-xs mb-3 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {panel.description}
-            </p>
             
             <div className="grid grid-cols-2 gap-2 text-xs">
               {Object.entries(panel.stats).map(([key, value]) => (
-                <div key={key} className={`p-2 rounded ${darkMode ? 'bg-gray-600/50' : 'bg-white/50'}`}>
-                  <div className={`font-bold ${darkMode ? 'text-cyan-400' : `text-${panel.color}-600`}`}>
-                    {value}
+                <div key={key} className={`p-2 rounded ${
+                  darkMode ? 'bg-gray-800/50' : 'bg-white/50'
+                }`}>
+                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} capitalize`}>
+                    {key}:
                   </div>
-                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase`}>
-                    {key}
+                  <div className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {value}
                   </div>
                 </div>
               ))}
             </div>
-            
-            <div className={`mt-3 py-2 px-3 rounded text-center text-xs font-bold transition-all ${
-              darkMode
-                ? `text-${panel.color}-400 hover:bg-${panel.color}-500/20`
-                : `text-${panel.color}-600 hover:bg-${panel.color}-500/10`
-            }`}>
-              ACCESS PANEL →
-            </div>
-          </motion.div>
+          </motion.button>
         ))}
-      </div>
-    </motion.div>
-  );
-};
-
-// ===============================================
-// SYSTEM STATUS MONITOR
-// ===============================================
-const SystemStatusMonitor = ({ darkMode }) => {
-  const [systemStatus, setSystemStatus] = useState({
-    database: 'operational',
-    api: 'operational', 
-    storage: 'operational',
-    auth: 'operational',
-    cache: 'warning',
-    backup: 'operational'
-  });
-
-  const services = [
-    { name: 'DATABASE', key: 'database', icon: '🗄️', description: 'Firebase Firestore' },
-    { name: 'API_GATEWAY', key: 'api', icon: '🔌', description: 'REST API Services' },
-    { name: 'FILE_STORAGE', key: 'storage', icon: '📁', description: 'Firebase Storage' },
-    { name: 'AUTHENTICATION', key: 'auth', icon: '🔐', description: 'Firebase Auth' },
-    { name: 'CACHE_LAYER', key: 'cache', icon: '⚡', description: 'Redis Cache' },
-    { name: 'BACKUP_SYSTEM', key: 'backup', icon: '💾', description: 'Automated Backups' }
-  ];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'operational': return 'green';
-      case 'warning': return 'yellow';
-      case 'error': return 'red';
-      case 'maintenance': return 'blue';
-      default: return 'gray';
-    }
-  };
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
-        {darkMode ? 'SYSTEM STATUS MATRIX' : 'System Health Monitor'}
-      </h3>
-
-      <div className="space-y-3 relative z-10">
-        {services.map((service, index) => (
-          <motion.div
-            key={service.key}
-            className={`flex items-center justify-between p-3 rounded-lg ${
-              darkMode ? 'bg-gray-700/50' : 'bg-gray-50'
-            } transition-all hover:scale-102`}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ x: 5 }}
-          >
-            <div className="flex items-center space-x-3">
-              <span className="text-xl">{service.icon}</span>
-              <div>
-                <div className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {service.name}
-                </div>
-                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {service.description}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full bg-${getStatusColor(systemStatus[service.key])}-500 animate-pulse`}></div>
-              <span className={`text-xs font-bold px-2 py-1 rounded bg-${getStatusColor(systemStatus[service.key])}-500/20 text-${getStatusColor(systemStatus[service.key])}-500`}>
-                {systemStatus[service.key].toUpperCase()}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className={`mt-6 p-4 rounded-lg ${
-        darkMode ? 'bg-green-900/20 border border-green-500/30' : 'bg-green-50 border border-green-200'
-      } relative z-10`}>
-        <div className="flex items-center justify-center">
-          <div className="animate-pulse w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          <span className={`font-bold text-sm ${
-            darkMode ? 'text-green-400' : 'text-green-600'
-          }`}>
-            {darkMode ? 'ALL NEURAL SYSTEMS OPERATIONAL' : 'ALL SYSTEMS OPERATIONAL'}
-          </span>
-        </div>
-        <div className={`text-center text-xs mt-1 ${
-          darkMode ? 'text-green-500' : 'text-green-700'
-        }`}>
-          UPTIME: 99.98% • LAST UPDATE: {new Date().toLocaleTimeString()}
-        </div>
       </div>
     </motion.div>
   );
@@ -446,7 +901,6 @@ const SystemStatusMonitor = ({ darkMode }) => {
 const AdminDashboard = () => {
   const { darkMode } = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
   
   // Enhanced state management
   const [stats, setStats] = useState({
@@ -456,8 +910,8 @@ const AdminDashboard = () => {
     totalProducts: 0,
     lowStockProducts: 0,
     pendingOrders: 0,
-    allOrders: [],
-    users: []
+    pendingApprovals: 0,
+    activeUsers: 0
   });
   
   const [loading, setLoading] = useState(true);
@@ -465,92 +919,36 @@ const AdminDashboard = () => {
   const [notification, setNotification] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [realTimeEnabled, setRealTimeEnabled] = useState(false);
-  const [selectedTimeRange, setSelectedTimeRange] = useState('7d');
 
-  // Generate enhanced demo data
-  const generateEnhancedDemoData = useCallback(() => {
-    const now = new Date();
-    const demoData = {
-      calendarData: Array.from({ length: 30 }, (_, i) => {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        return {
-          date,
-          orders: Math.floor(Math.random() * 50) + 10,
-          revenue: Math.floor(Math.random() * 5000) + 1000,
-          users: Math.floor(Math.random() * 20) + 5
-        };
-      })
-    };
-    
-    return demoData;
-  }, []);
-
-  const [demoData] = useState(() => generateEnhancedDemoData());
-
-  // Original data fetching logic (preserved)
-  const fetchUsers = async () => {
-    try {
-      const usersRef = collection(db, 'users');
-      const usersSnapshot = await getDocs(usersRef);
-      const users = usersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date()
-      }));
-      return users;
-    } catch (error) {
-      console.log('No users collection found, creating demo users');
-      return [
-        {
-          id: 'demo-admin-1',
-          email: 'admin@company.com',
-          displayName: 'Admin User',
-          role: 'admin',
-          accountType: 'admin',
-          active: true,
-          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: 'demo-manager-1',
-          email: 'manager@company.com',
-          displayName: 'Manager User',
-          role: 'manager',
-          accountType: 'manager',
-          active: true,
-          createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: 'demo-business-buyer-1',
-          email: 'buyer@company.com',
-          displayName: 'Business Buyer',
-          role: 'business',
-          accountType: 'business',
-          businessType: 'buyer',
-          active: true,
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
-        }
-      ];
-    }
-  };
-
+  // Fetch real Firebase data
   useEffect(() => {
     async function fetchAdminData() {
       try {
         setLoading(true);
         
-        // Fetch products
-        const productsSnapshot = await getDocs(collection(db, 'products'));
-        const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const lowStock = products.filter(product => product.stock <= 10).length;
+        // Fetch all collections in parallel
+        const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'products')),
+          getDocs(collection(db, 'orders'))
+        ]);
         
-        // Fetch orders
-        const ordersSnapshot = await getDocs(collection(db, 'orders'));
+        // Process users data
+        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const activeUsers = users.filter(user => user.status === 'active' && user.approved).length;
+        const pendingApprovals = users.filter(user => 
+          user.status === 'pending_approval' || user.status === 'pending'
+        ).length;
+        
+        // Process products data
+        const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const lowStock = products.filter(product => (product.stock || 0) <= 10).length;
+        
+        // Process orders data
         const allOrders = ordersSnapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
-            customerName: data.customerName || 'Unknown Customer',
             total: data.total || 0,
             status: data.status || 'pending',
             createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
@@ -560,9 +958,6 @@ const AdminDashboard = () => {
         const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
         const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
         
-        // Fetch users
-        const users = await fetchUsers();
-        
         setStats({
           totalUsers: users.length,
           totalOrders: allOrders.length,
@@ -570,10 +965,11 @@ const AdminDashboard = () => {
           totalProducts: products.length,
           lowStockProducts: lowStock,
           pendingOrders,
-          allOrders,
-          users
+          pendingApprovals,
+          activeUsers
         });
         
+        setLastUpdated(new Date());
         setLoading(false);
       } catch (err) {
         console.error('Error fetching admin data:', err);
@@ -583,7 +979,17 @@ const AdminDashboard = () => {
     }
 
     fetchAdminData();
-  }, []);
+    
+    // Set up real-time updates if enabled
+    let interval;
+    if (realTimeEnabled) {
+      interval = setInterval(fetchAdminData, 30000); // Update every 30 seconds
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [realTimeEnabled]);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -592,7 +998,7 @@ const AdminDashboard = () => {
 
   const handleDateSelect = (date, data) => {
     showNotification(
-      `${darkMode ? 'DATE SELECTED:' : 'Selected:'} ${date?.toLocaleDateString()} - ${data?.orders || 0} orders, $${data?.revenue?.toFixed(2) || '0.00'} revenue`,
+      `${darkMode ? 'DATE SELECTED:' : 'Selected:'} ${date?.toLocaleDateString()} - ${data?.orders || 0} orders, ${data?.revenue?.toFixed(2) || '0.00'} revenue`,
       'success'
     );
   };
@@ -605,12 +1011,39 @@ const AdminDashboard = () => {
     );
   }, [realTimeEnabled, darkMode]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     setLastUpdated(new Date());
     showNotification(darkMode ? 'NEURAL DATA REFRESHED' : 'Data refreshed successfully', 'success');
+    
+    // Trigger data refresh
+    try {
+      const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'products')),
+        getDocs(collection(db, 'orders'))
+      ]);
+      
+      // Update stats with fresh data
+      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const orders = ordersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return { id: doc.id, total: data.total || 0, status: data.status || 'pending' };
+      });
+      
+      setStats(prev => ({
+        ...prev,
+        totalUsers: users.length,
+        totalProducts: products.length,
+        totalOrders: orders.length,
+        totalRevenue: orders.reduce((sum, order) => sum + order.total, 0)
+      }));
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
   }, [darkMode]);
 
-  // Enhanced stat cards
+  // Enhanced stat cards with real data
   const statCards = useMemo(() => [
     { 
       title: darkMode ? 'NEURAL ENTITIES' : 'Total Users', 
@@ -630,19 +1063,19 @@ const AdminDashboard = () => {
     },
     { 
       title: darkMode ? 'REVENUE MATRIX' : 'Total Revenue', 
-      value: `$${stats.totalRevenue.toFixed(2)}`, 
+      value: `${stats.totalRevenue.toFixed(2)}`, 
       icon: '💰', 
-      color: 'indigo',
+      color: 'purple',
       change: '+15%',
       trend: 'up'
     },
     { 
-      title: darkMode ? 'PENDING TASKS' : 'Pending Orders', 
-      value: stats.pendingOrders, 
+      title: darkMode ? 'PENDING TASKS' : 'Pending Approvals', 
+      value: stats.pendingApprovals, 
       icon: '⏳', 
       color: 'yellow',
-      change: '-5%',
-      trend: 'down'
+      change: stats.pendingApprovals > 0 ? 'Action Required' : 'All Clear',
+      trend: stats.pendingApprovals > 0 ? 'neutral' : 'up'
     }
   ], [stats, darkMode]);
 
@@ -741,26 +1174,12 @@ const AdminDashboard = () => {
             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
               {darkMode 
                 ? 'ADVANCED NEURAL INTERFACE WITH QUANTUM ANALYTICS AND REAL-TIME MONITORING' 
-                : 'Comprehensive analytics, real-time monitoring, and advanced panel management'
+                : 'Comprehensive analytics, real-time monitoring, and advanced data visualization'
               }
             </p>
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            {/* Time Range Selector */}
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className={`text-sm rounded ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-              } border px-3 py-2`}
-            >
-              <option value="24h">{darkMode ? '24H CYCLE' : 'Last 24 Hours'}</option>
-              <option value="7d">{darkMode ? '7D MATRIX' : 'Last 7 Days'}</option>
-              <option value="30d">{darkMode ? '30D NEURAL' : 'Last 30 Days'}</option>
-              <option value="90d">{darkMode ? '90D QUANTUM' : 'Last 90 Days'}</option>
-            </select>
-            
             <span className={`text-sm ${darkMode ? 'text-gray-400 cyber-title' : 'text-gray-500'} font-medium`}>
               {darkMode ? 'LAST SYNC: ' : 'Updated: '}{lastUpdated.toLocaleTimeString()}
             </span>
@@ -840,12 +1259,11 @@ const AdminDashboard = () => {
                     <span className={`text-sm font-bold ${
                       stat.trend === 'up' 
                         ? darkMode ? 'text-green-400' : 'text-green-600'
-                        : darkMode ? 'text-red-400' : 'text-red-600'
+                        : stat.trend === 'down'
+                        ? darkMode ? 'text-red-400' : 'text-red-600'
+                        : darkMode ? 'text-yellow-400' : 'text-yellow-600'
                     }`}>
-                      {stat.trend === 'up' ? '↗' : '↘'} {stat.change}
-                    </span>
-                    <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} ml-2`}>
-                      vs last period
+                      {stat.trend === 'up' ? '↗' : stat.trend === 'down' ? '↘' : '→'} {stat.change}
                     </span>
                   </div>
                 </div>
@@ -874,23 +1292,25 @@ const AdminDashboard = () => {
       {/* Main Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
         
-        {/* Left Column - Calendar & Admin Panels */}
+        {/* Left Column - Calendar & Charts */}
         <div className="lg:col-span-2 space-y-8">
-          
           {/* Activity Calendar */}
-          <ActivityCalendar 
-            data={demoData.calendarData} 
+          <RealActivityCalendar 
             darkMode={darkMode} 
             onDateSelect={handleDateSelect}
           />
           
-          {/* NEW: Admin Panel Quick Access */}
-          <AdminPanelAccess darkMode={darkMode} />
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RealUserAnalyticsChart darkMode={darkMode} />
+            <AdminPanelAccess darkMode={darkMode} />
+          </div>
         </div>
 
-        {/* Right Column - System Status */}
+        {/* Right Column - Activity Feed & Health */}
         <div className="space-y-8">
-          <SystemStatusMonitor darkMode={darkMode} />
+          <RealActivityFeed darkMode={darkMode} />
+          <RealSystemHealthMonitor darkMode={darkMode} />
         </div>
       </div>
 
@@ -915,17 +1335,17 @@ const AdminDashboard = () => {
           </motion.button>
           <motion.button 
             className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} px-3 py-1 text-xs`}
+            onClick={() => navigate('/admin/approvals')}
+            whileHover={{ scale: 1.05 }}
+          >
+            Approvals
+          </motion.button>
+          <motion.button 
+            className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
             onClick={() => navigate('/admin/analytics')}
             whileHover={{ scale: 1.05 }}
           >
             Analytics
-          </motion.button>
-          <motion.button 
-            className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
-            onClick={() => navigate('/admin/security')}
-            whileHover={{ scale: 1.05 }}
-          >
-            Security
           </motion.button>
         </div>
       </motion.div>
