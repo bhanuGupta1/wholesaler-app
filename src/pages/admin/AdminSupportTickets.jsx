@@ -99,3 +99,6 @@ const AdminSupportTickets = () => {
         ticket.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase());
 
+      // Status filter
+      const matchesStatus = filters.status === 'all' || ticket.status === filters.status;
+
