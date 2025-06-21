@@ -622,6 +622,227 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
       const businessUsers = users.filter(u => u.accountType === 'business').length;
 
       // Create HTML content for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Analytics Report</title>
+          <style>
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              margin: 40px; 
+              line-height: 1.6;
+              color: #333;
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 3px solid #007bff; 
+              padding-bottom: 20px; 
+              margin-bottom: 30px;
+            }
+            h1 { 
+              color: #007bff; 
+              margin: 0;
+              font-size: 2.5em;
+            }
+            .subtitle {
+              color: #666;
+              font-size: 1.1em;
+              margin: 10px 0;
+            }
+            .summary { 
+              background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+              padding: 25px; 
+              border-radius: 10px; 
+              margin: 30px 0;
+              border-left: 5px solid #007bff;
+            }
+            .summary h2 {
+              color: #007bff;
+              margin-top: 0;
+            }
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 20px;
+              margin: 20px 0;
+            }
+            .stat-item {
+              background: white;
+              padding: 15px;
+              border-radius: 8px;
+              border: 1px solid #ddd;
+              text-align: center;
+            }
+            .stat-value {
+              font-size: 1.8em;
+              font-weight: bold;
+              color: #007bff;
+            }
+            .stat-label {
+              color: #666;
+              font-size: 0.9em;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 25px 0; 
+              background: white;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 12px 8px; 
+              text-align: left; 
+            }
+            th { 
+              background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+              color: white;
+              font-weight: bold;
+            }
+            tr:nth-child(even) { 
+              background-color: #f8f9fa; 
+            }
+            tr:hover {
+              background-color: #e3f2fd;
+            }
+            .section {
+              margin: 40px 0;
+              page-break-inside: avoid;
+            }
+            .section h2 {
+              color: #007bff;
+              border-bottom: 2px solid #007bff;
+              padding-bottom: 10px;
+            }
+            .footer {
+              margin-top: 50px;
+              text-align: center;
+              color: #666;
+              font-size: 0.9em;
+              border-top: 1px solid #ddd;
+              padding-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>📊 Analytics Dashboard Report</h1>
+            <div class="subtitle">Comprehensive Business Intelligence Summary</div>
+            <div class="subtitle">Generated on: ${new Date().toLocaleString()}</div>
+          </div>
+          
+          <div class="summary">
+            <h2>📈 Executive Summary</h2>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-value">${users.length}</div>
+                <div class="stat-label">Total Users</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${orders.length}</div>
+                <div class="stat-label">Total Orders</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${totalRevenue.toFixed(2)}</div>
+                <div class="stat-label">Total Revenue</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${averageOrderValue.toFixed(2)}</div>
+                <div class="stat-label">Avg Order Value</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>👥 Users Overview (Top 15)</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Account Type</th>
+                  <th>Status</th>
+                  <th>Join Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${users.slice(0, 15).map(user => `
+                  <tr>
+                    <td>${user.displayName || 'N/A'}</td>
+                    <td>${user.email}</td>
+                    <td>${user.accountType}</td>
+                    <td>${user.status || 'active'}</td>
+                    <td>${user.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <h2>🛒 Recent Orders (Top 15)</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Items</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.slice(0, 15).map(order => `
+                  <tr>
+                    <td>${order.id.substring(0, 8)}...</td>
+                    <td>${order.customerEmail || 'N/A'}</td>
+                    <td>${(order.total || 0).toFixed(2)}</td>
+                    <td>${order.status || 'N/A'}</td>
+                    <td>${order.items?.length || 0}</td>
+                    <td>${order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <h2>📦 Products Overview (Top 15)</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Creator</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${products.slice(0, 15).map(product => `
+                  <tr>
+                    <td>${product.name || 'N/A'}</td>
+                    <td>${product.category || 'N/A'}</td>
+                    <td>${(product.price || 0).toFixed(2)}</td>
+                    <td>${product.stock || 0}</td>
+                    <td>${product.createdBy || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>📊 This report contains ${users.length} users, ${orders.length} orders, and ${products.length} products.</p>
+            <p>Generated automatically by Admin Analytics Dashboard</p>
+          </div>
+        </body>
+        </html>
+      `;
+
   };
 
   return (
