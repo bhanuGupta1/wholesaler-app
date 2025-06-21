@@ -122,3 +122,23 @@ const AdminSupportTickets = () => {
       return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesDate;
     });
 
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+
+      if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
+        aValue = aValue instanceof Date ? aValue : new Date(aValue);
+        bValue = bValue instanceof Date ? bValue : new Date(bValue);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [tickets, searchTerm, filters, sortBy, sortOrder]);
+
