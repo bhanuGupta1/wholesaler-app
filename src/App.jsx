@@ -368,9 +368,9 @@ function App() {
                 {/* Role-specific dashboard routes with access control */}
                 <Route path="/admin-dashboard" element={
                   <ProtectedRoute requiredRole="admin">
-                    
-                      <AdminDashboard />
-                    
+                    <AdminLayout>
+      <AdminDashboard />
+    </AdminLayout>
                   </ProtectedRoute>
                 } />
 
