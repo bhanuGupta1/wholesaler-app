@@ -144,3 +144,16 @@ const AdminFeedback = () => {
     return filtered;
   }, [feedbacks, searchTerm, filters, sortBy, sortOrder]);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = feedbacks.length;
+    const pending = feedbacks.filter(f => f.status === 'pending').length;
+    const resolved = feedbacks.filter(f => f.status === 'resolved').length;
+    const avgRating = feedbacks.length > 0 
+      ? (feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbacks.length).toFixed(1)
+      : '0.0';
+    const highPriority = feedbacks.filter(f => f.priority === 'high').length;
+
+    return { total, pending, resolved, avgRating, highPriority };
+  }, [feedbacks]);
+
