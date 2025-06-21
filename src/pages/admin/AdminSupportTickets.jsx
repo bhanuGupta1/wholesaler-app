@@ -59,3 +59,32 @@ const AdminSupportTickets = () => {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Fetch all support tickets
+  const fetchSupportTickets = async () => {
+    try {
+      setLoading(true);
+      const ticketsQuery = query(
+        collection(db, 'supportTickets'),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(ticketsQuery);
+      const ticketData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(doc.data().createdAt),
+        updatedAt: doc.data().updatedAt?.toDate ? doc.data().updatedAt.toDate() : new Date(doc.data().updatedAt)
+      }));
+      
+      setTickets(ticketData);
+    } catch (error) {
+      console.error('Error fetching support tickets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSupportTickets();
+  }, []);
+
