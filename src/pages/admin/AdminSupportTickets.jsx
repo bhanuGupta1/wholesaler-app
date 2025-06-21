@@ -210,3 +210,36 @@ const AdminSupportTickets = () => {
         type: 'admin_response'
       };
 
+      // Get current responses or initialize empty array
+      const currentResponses = selectedTicket.responses || [];
+      const updatedResponses = [...currentResponses, response];
+
+      await updateDoc(ticketRef, {
+        responses: updatedResponses,
+        status: 'in_progress',
+        updatedAt: serverTimestamp(),
+        lastUpdatedBy: user.email
+      });
+
+      setTickets(prev => prev.map(t => 
+        t.id === selectedTicket.id 
+          ? { 
+              ...t, 
+              responses: updatedResponses,
+              status: 'in_progress',
+              updatedAt: new Date(),
+              lastUpdatedBy: user.email
+            }
+          : t
+      ));
+
+      setShowResponseModal(false);
+      setResponseMessage('');
+      setSelectedTicket(null);
+    } catch (error) {
+      console.error('Error adding ticket response:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
