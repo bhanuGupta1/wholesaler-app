@@ -44,3 +44,33 @@ const AdminReports = () => {
       const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      // Calculate analytics
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+      const totalUsers = users.length;
+      const businessUsers = users.filter(u => u.accountType === 'business').length;
+
+      setReports({
+        users,
+        orders,
+        products,
+        analytics: {
+          totalRevenue,
+          averageOrderValue,
+          totalUsers,
+          businessUsers,
+          totalOrders: orders.length,
+          totalProducts: products.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching reports data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReportsData();
+  }, [dateRange]);
+
