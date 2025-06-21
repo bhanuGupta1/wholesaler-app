@@ -203,3 +203,97 @@ Note: This is an automated report from your admin dashboard.`;
     window.location.href = mailtoLink;
   };
 
+  // Report types
+  const reportTypes = [
+    {
+      id: 'users',
+      title: 'Users Report',
+      description: 'Complete user database with account types and status',
+      icon: Users,
+      color: 'blue',
+      count: reports.users.length
+    },
+    {
+      id: 'orders',
+      title: 'Orders Report',
+      description: 'All orders with customer details and revenue data',
+      icon: ShoppingCart,
+      color: 'green',
+      count: reports.orders.length
+    },
+    {
+      id: 'products',
+      title: 'Products Report',
+      description: 'Product inventory with pricing and stock levels',
+      icon: BarChart3,
+      color: 'purple',
+      count: reports.products.length
+    },
+    {
+      id: 'analytics',
+      title: 'Analytics Summary',
+      description: 'Key performance metrics and business insights',
+      icon: TrendingUp,
+      color: 'orange',
+      count: Object.keys(reports.analytics).length
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="flex items-center justify-center py-12">
+            <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <div>Loading reports data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Reports Dashboard
+              </h1>
+              <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Generate and export comprehensive business reports
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className={`px-4 py-2 rounded-lg border ${
+                  darkMode
+                    ? 'bg-gray-800 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
+              >
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+                <option value="1y">Last Year</option>
+              </select>
+              <Link
+                to="/admin"
+                className={`px-4 py-2 rounded-lg text-sm transition-all border ${
+                  darkMode
+                    ? 'bg-gray-800 hover:bg-gray-700 text-blue-400 border-blue-500/50'
+                    : 'bg-white hover:bg-gray-50 text-blue-600 border-blue-500/50'
+                }`}
+              >
+                ← Back to Admin
+              </Link>
+            </div>
+          </div>
+        </div>
+
