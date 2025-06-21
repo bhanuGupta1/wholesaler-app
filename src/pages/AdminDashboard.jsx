@@ -2569,3 +2569,122 @@ const AdminDashboard = () => {
       </div>
     );
   }
+return (
+    <div className={`flex h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Sidebar */}
+      <AdminSidebar 
+        darkMode={darkMode} 
+        isOpen={sidebarOpen} 
+        setIsOpen={setSidebarOpen} 
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header Bar */}
+        <header className={`flex items-center justify-between px-6 py-4 border-b ${
+          darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+        } relative z-20`}>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+              }`}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            
+            <h1 className={`text-2xl font-bold ${
+              darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
+            }`}>
+              {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Dashboard'}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <RealTimeToggle 
+              enabled={realTimeEnabled} 
+              onToggle={() => setRealTimeEnabled(!realTimeEnabled)} 
+              darkMode={darkMode} 
+            />
+            
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+              }`}
+              title="Refresh Data"
+            >
+              <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''} ${
+                darkMode ? 'text-gray-400' : 'text-gray-600'
+              }`} />
+            </button>
+
+            <button
+              onClick={handleExportReport}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+              }`}
+              title="Export Report"
+            >
+              <Download className={`h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+            </button>
+            
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Scrollable Content Area */}
+        <main className="flex-1 overflow-y-auto relative">
+          <div className="container mx-auto px-6 py-8 max-w-7xl">
+            {/* Your existing dashboard content goes here */}
+            {/* Include all the stats cards, charts, etc. from the original */}
+            
+            {/* Filter Controls with Better Positioning */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 relative z-30">
+              <FilterDropdown
+                title="Status"
+                options={['All', 'Active', 'Pending', 'Suspended']}
+                selected={statusFilter}
+                onSelect={setStatusFilter}
+                darkMode={darkMode}
+              />
+              
+              <FilterDropdown
+                title="Activity"
+                options={['All', 'Orders', 'Inventory', 'Users']}
+                selected={activityFilter}
+                onSelect={setActivityFilter}
+                darkMode={darkMode}
+              />
+            </div>
+
+            {/* Rest of your dashboard content... */}
+          </div>
+        </main>
+      </div>
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div 
+            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+              notification.type === 'success' 
+                ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+                : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+            } border font-bold`}
+            initial={{ opacity: 0, y: -50, x: 50 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: -50, x: 50 }}
+            transition={{ duration: 0.3 }}
+          >
+            {notification.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default AdminDashboard;
