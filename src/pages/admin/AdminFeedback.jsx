@@ -87,3 +87,10 @@ const AdminFeedback = () => {
   // Filter and sort feedbacks
   const filteredFeedbacks = useMemo(() => {
     let filtered = feedbacks.filter(feedback => {
+      // Search filter
+      const matchesSearch = searchTerm.trim() === '' || 
+        feedback.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        feedback.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        feedback.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        feedback.userEmail?.toLowerCase().includes(searchTerm.toLowerCase());
+
