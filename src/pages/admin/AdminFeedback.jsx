@@ -100,3 +100,6 @@ const AdminFeedback = () => {
       // Category filter  
       const matchesCategory = filters.category === 'all' || feedback.category === filters.category;
 
+      // Priority filter
+      const matchesPriority = filters.priority === 'all' || feedback.priority === filters.priority;
+
