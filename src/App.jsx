@@ -427,6 +427,9 @@ function App() {
                         
                         {/* NEW: Security Center */}
                         <Route path="security" element={<AdminSecurity />} />
+
+                        {/* NEW: Reports Management */}
+                        <Route path="reports" element={<AdminReports />} />
                         
                         {/* Deal Management (existing) */}
                         <Route path="deals" element={<DealManagement />} />
