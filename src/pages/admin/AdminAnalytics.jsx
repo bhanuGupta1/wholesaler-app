@@ -558,9 +558,32 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
       // Create CSV content
       let csvContent = 'ANALYTICS EXPORT REPORT\n';
       csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
+      
+      // Users data
+      csvContent += 'USERS DATA\n';
+      csvContent += 'ID,Name,Email,Account Type,Status,Created Date\n';
+      users.forEach(user => {
+        const createdAt = user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'N/A';
+        csvContent += `"${user.id}","${user.displayName || ''}","${user.email}","${user.accountType}","${user.status || 'active'}","${createdAt}"\n`;
+      });
+      
+      csvContent += '\nORDERS DATA\n';
+      csvContent += 'Order ID,Customer Email,Total,Status,Date,Items Count\n';
+      orders.forEach(order => {
+        const createdAt = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'N/A';
+        csvContent += `"${order.id}","${order.customerEmail || ''}","${order.total || 0}","${order.status || ''}","${createdAt}","${order.items?.length || 0}"\n`;
+      });
+      
+      csvContent += '\nPRODUCTS DATA\n';
+      csvContent += 'ID,Name,Category,Price,Stock,Creator\n';
+      products.forEach(product => {
+        csvContent += `"${product.id}","${product.name || ''}","${product.category || ''}","${product.price || 0}","${product.stock || 0}","${product.createdBy || ''}"\n`;
+      });
+
   };
 
   return (
