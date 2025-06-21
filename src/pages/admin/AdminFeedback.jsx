@@ -230,3 +230,82 @@ const AdminFeedback = () => {
     }
   };
 
+  // Export feedbacks to CSV
+  const exportToCSV = () => {
+    const headers = ['Date', 'User', 'Email', 'Title', 'Category', 'Priority', 'Rating', 'Status', 'Message', 'Admin Response'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredFeedbacks.map(feedback => [
+        feedback.createdAt?.toLocaleDateString() || 'N/A',
+        `"${feedback.userName || 'Anonymous'}"`,
+        feedback.userEmail || 'N/A',
+        `"${feedback.title || ''}"`,
+        feedback.category || 'general',
+        feedback.priority || 'medium',
+        feedback.rating || 0,
+        feedback.status || 'pending',
+        `"${(feedback.message || '').replace(/"/g, '""')}"`,
+        `"${(feedback.adminResponse || '').replace(/"/g, '""')}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `feedback-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return darkMode ? 'text-yellow-400 bg-yellow-900/20' : 'text-yellow-600 bg-yellow-100';
+      case 'reviewed': return darkMode ? 'text-blue-400 bg-blue-900/20' : 'text-blue-600 bg-blue-100';
+      case 'resolved': return darkMode ? 'text-green-400 bg-green-900/20' : 'text-green-600 bg-green-100';
+      case 'closed': return darkMode ? 'text-gray-400 bg-gray-900/20' : 'text-gray-600 bg-gray-100';
+      default: return darkMode ? 'text-gray-400 bg-gray-900/20' : 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return darkMode ? 'text-red-400' : 'text-red-600';
+      case 'medium': return darkMode ? 'text-yellow-400' : 'text-yellow-600';
+      case 'low': return darkMode ? 'text-green-400' : 'text-green-600';
+      default: return darkMode ? 'text-gray-400' : 'text-gray-600';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="flex items-center justify-center py-12">
+            <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <div>Loading feedback data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
