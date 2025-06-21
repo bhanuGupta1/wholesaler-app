@@ -56,3 +56,31 @@ const AdminFeedback = () => {
   const [responseText, setResponseText] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  // Fetch all feedback from Firebase
+  const fetchFeedbacks = async () => {
+    try {
+      setLoading(true);
+      const feedbackQuery = query(
+        collection(db, 'feedbacks'),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(feedbackQuery);
+      const feedbackData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date(doc.data().createdAt)
+      }));
+      
+      setFeedbacks(feedbackData);
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, []);
+
