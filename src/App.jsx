@@ -54,6 +54,8 @@ const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
+
 
 // Deal Management component
 const DealManagement = lazy(() => import('./pages/DealManagement'));
