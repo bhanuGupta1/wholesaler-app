@@ -102,3 +102,6 @@ const AdminSupportTickets = () => {
       // Status filter
       const matchesStatus = filters.status === 'all' || ticket.status === filters.status;
 
+      // Category filter  
+      const matchesCategory = filters.category === 'all' || ticket.category === filters.category;
+
