@@ -693,3 +693,105 @@ const AdminFeedback = () => {
           )}
         </div>
 
+        {/* Admin Response Modal */}
+        <AnimatePresence>
+          {showResponseModal && selectedFeedback && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              onClick={() => setShowResponseModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className={`w-full max-w-2xl rounded-lg border ${
+                  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                } p-6`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Respond to Feedback
+                  </h3>
+                  <button
+                    onClick={() => setShowResponseModal(false)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className={`p-4 rounded-lg mb-4 ${
+                  darkMode ? 'bg-gray-700' : 'bg-gray-50'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {selectedFeedback.userName} ({selectedFeedback.userEmail})
+                    </span>
+                  </div>
+                  <h4 className={`font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {selectedFeedback.title}
+                  </h4>
+                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {selectedFeedback.message}
+                  </p>
+                </div>
+
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    darkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Your Response
+                  </label>
+                  <textarea
+                    value={responseText}
+                    onChange={(e) => setResponseText(e.target.value)}
+                    rows={6}
+                    placeholder="Type your response to the user..."
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowResponseModal(false)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      darkMode
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={sendAdminResponse}
+                    disabled={!responseText.trim() || processing}
+                    className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${
+                      darkMode
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {processing ? 'Sending...' : 'Send Response'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default AdminFeedback;
