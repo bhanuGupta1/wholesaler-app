@@ -781,3 +781,34 @@ const AdminSupportTickets = () => {
                   </p>
                 </div>
 
+                {/* Previous Responses */}
+                {selectedTicket.responses && selectedTicket.responses.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className={`font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Previous Responses ({selectedTicket.responses.length})
+                    </h4>
+                    <div className="space-y-4 max-h-60 overflow-y-auto">
+                      {selectedTicket.responses.map((response, index) => (
+                        <div key={index} className={`p-4 rounded-lg border-l-4 ${
+                          darkMode 
+                            ? 'bg-blue-900/20 border-blue-400' 
+                            : 'bg-blue-50 border-blue-400'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Reply className={`h-4 w-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                            <span className={`text-sm font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                              {response.respondedBy}
+                            </span>
+                            <span className={`text-xs ${darkMode ? 'text-blue-300' : 'text-blue-500'}`}>
+                              {formatDate(response.respondedAt?.toDate ? response.respondedAt.toDate() : response.respondedAt)}
+                            </span>
+                          </div>
+                          <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                            {response.message}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
