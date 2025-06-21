@@ -142,7 +142,13 @@ const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
           label: 'Legacy Panel', 
           path: '/admin/panel',
           description: 'Legacy Admin Interface'
-        }
+        },
+        { 
+      icon: MessageCircle, 
+      label: 'Feedback', 
+      path: '/admin/feedback',
+      description: 'User Feedback & Support'
+    }
       ]
     }
   ];
