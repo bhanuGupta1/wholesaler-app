@@ -105,3 +105,6 @@ const AdminSupportTickets = () => {
       // Category filter  
       const matchesCategory = filters.category === 'all' || ticket.category === filters.category;
 
+      // Priority filter
+      const matchesPriority = filters.priority === 'all' || ticket.priority === filters.priority;
+
