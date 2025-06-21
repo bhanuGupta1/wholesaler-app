@@ -435,6 +435,9 @@ function App() {
                         
                         {/* Deal Management (existing) */}
                         <Route path="deals" element={<DealManagement />} />
+
+                        {/* Feedback Management - Admin and Manager access */}
+                        <Route path="feedback" element={<AdminFeedback />} />
                         
                         {/* Fallback */}
                         <Route path="*" element={<Navigate to="/admin" replace />} />
