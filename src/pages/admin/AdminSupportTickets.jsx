@@ -91,3 +91,11 @@ const AdminSupportTickets = () => {
   // Filter and sort tickets
   const filteredTickets = useMemo(() => {
     let filtered = tickets.filter(ticket => {
+      // Search filter
+      const matchesSearch = searchTerm.trim() === '' || 
+        ticket.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.ticketId?.toLowerCase().includes(searchTerm.toLowerCase());
+
