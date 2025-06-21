@@ -157,3 +157,23 @@ const AdminFeedback = () => {
     return { total, pending, resolved, avgRating, highPriority };
   }, [feedbacks]);
 
+  // Update feedback status
+  const updateFeedbackStatus = async (feedbackId, newStatus) => {
+    try {
+      setProcessing(true);
+      const feedbackRef = doc(db, 'feedbacks', feedbackId);
+      await updateDoc(feedbackRef, {
+        status: newStatus,
+        lastUpdated: new Date()
+      });
+
+      setFeedbacks(prev => prev.map(f => 
+        f.id === feedbackId ? { ...f, status: newStatus, lastUpdated: new Date() } : f
+      ));
+    } catch (error) {
+      console.error('Error updating feedback status:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
