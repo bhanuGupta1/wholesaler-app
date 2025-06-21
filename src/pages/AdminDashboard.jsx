@@ -16,6 +16,7 @@ import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from '../components/common/ThemeToggle';
+import { useAuth } from '../hooks/useAuth';
 import SecretInvasionBackground from '../components/common/SecretInvasionBackground';
 import { 
   Users, 
