@@ -103,3 +103,9 @@ const AdminFeedback = () => {
       // Priority filter
       const matchesPriority = filters.priority === 'all' || feedback.priority === filters.priority;
 
+      // Rating filter
+      const matchesRating = filters.rating === 'all' || 
+        (filters.rating === '5' && feedback.rating === 5) ||
+        (filters.rating === '4' && feedback.rating === 4) ||
+        (filters.rating === '3' && feedback.rating === 3) ||
+        (filters.rating === '1-2' && feedback.rating <= 2);
