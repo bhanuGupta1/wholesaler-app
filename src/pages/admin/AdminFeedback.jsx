@@ -399,3 +399,132 @@ const AdminFeedback = () => {
           ))}
         </div>
 
+        {/* Filters and Search */}
+        <div className={`p-6 rounded-lg border ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        } mb-6`}>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+            <div className="md:col-span-2">
+              <div className="relative">
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
+                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <input
+                  type="text"
+                  placeholder="Search feedback..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                />
+              </div>
+            </div>
+
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="all">All Categories</option>
+              <option value="general">General</option>
+              <option value="product">Product</option>
+              <option value="service">Service</option>
+              <option value="website">Website</option>
+              <option value="delivery">Delivery</option>
+              <option value="billing">Billing</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="complaint">Complaint</option>
+            </select>
+
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="all">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+
+            <select
+              value={filters.rating}
+              onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
+              className={`px-3 py-2 rounded-lg border ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="all">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="1-2">1-2 Stars</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Sort by:
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={`px-3 py-1 rounded border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                >
+                  <option value="createdAt">Date</option>
+                  <option value="rating">Rating</option>
+                  <option value="priority">Priority</option>
+                  <option value="status">Status</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className={`px-2 py-1 rounded ${
+                    darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
+            </div>
+            
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Showing {filteredFeedbacks.length} of {feedbacks.length} feedback items
+            </div>
+          </div>
+        </div>
+
