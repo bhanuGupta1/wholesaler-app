@@ -547,3 +547,164 @@ const AdminSupportTickets = () => {
             </div>
           </div>
         </div>
+
+        {/* Tickets List */}
+        <div className="space-y-4">
+          <AnimatePresence>
+            {filteredTickets.map((ticket, index) => (
+              <motion.div
+                key={ticket.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-6 rounded-lg border ${
+                  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                } hover:shadow-lg transition-shadow`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Ticket className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`font-mono text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                          {ticket.ticketId || ticket.id.substring(0, 8)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <User className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {ticket.userName || 'Unknown User'}
+                        </span>
+                        <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          ({ticket.userEmail})
+                        </span>
+                      </div>
+
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
+                        {ticket.status?.replace('_', ' ') || 'open'}
+                      </span>
+
+                      <span className={`text-sm font-medium ${getPriorityColor(ticket.priority)}`}>
+                        <span className="mr-1">{getPriorityIcon(ticket.priority)}</span>
+                        {ticket.priority || 'medium'} priority
+                      </span>
+
+                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <Calendar className="h-3 w-3 inline mr-1" />
+                        {formatDate(ticket.createdAt)}
+                      </span>
+                    </div>
+
+                    <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {ticket.subject}
+                    </h3>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <Tag className={`h-4 w-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                      <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {ticket.category || 'general'}
+                      </span>
+                      {ticket.responses && ticket.responses.length > 0 && (
+                        <>
+                          <MessageSquare className={`h-4 w-4 ml-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+                          <span className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-500'}`}>
+                            {ticket.responses.length} response{ticket.responses.length !== 1 ? 's' : ''}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {ticket.message?.length > 200 
+                        ? `${ticket.message.substring(0, 200)}...` 
+                        : ticket.message}
+                    </p>
+
+                    {ticket.responses && ticket.responses.length > 0 && (
+                      <div className={`p-4 rounded-lg border-l-4 ${
+                        darkMode 
+                          ? 'bg-blue-900/20 border-blue-400' 
+                          : 'bg-blue-50 border-blue-400'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Reply className={`h-4 w-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                          <span className={`text-sm font-medium ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                            Latest Response by {ticket.responses[ticket.responses.length - 1].respondedBy}
+                          </span>
+                        </div>
+                        <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                          {ticket.responses[ticket.responses.length - 1].message}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => {
+                        setSelectedTicket(ticket);
+                        setShowResponseModal(true);
+                      }}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        darkMode
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      <Reply className="h-3 w-3 mr-1 inline" />
+                      Respond
+                    </button>
+
+                    <select
+                      value={ticket.status || 'open'}
+                      onChange={(e) => updateTicketStatus(ticket.id, e.target.value)}
+                      disabled={processing}
+                      className={`px-2 py-1 rounded text-xs border ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="open">Open</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+
+                    <button
+                      onClick={() => setSelectedTicket(ticket)}
+                      className={`px-2 py-1 rounded text-xs transition-colors ${
+                        darkMode
+                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {filteredTickets.length === 0 && (
+            <div className={`text-center py-12 ${
+              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            } rounded-lg border`}>
+              <Ticket className={`mx-auto h-12 w-12 mb-4 ${
+                darkMode ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <h3 className={`text-lg font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                No tickets found
+              </h3>
+              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {searchTerm || Object.values(filters).some(f => f !== 'all') 
+                  ? 'Try adjusting your search or filters'
+                  : 'No support tickets have been submitted yet'}
+              </p>
+            </div>
+          )}
+        </div>
+
