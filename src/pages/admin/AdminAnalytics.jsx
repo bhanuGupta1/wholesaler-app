@@ -843,6 +843,25 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
         </html>
       `;
 
+      // Open in new window and trigger print
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      setTimeout(() => {
+        printWindow.print();
+        setTimeout(() => {
+          printWindow.close();
+        }, 1000);
+      }, 500);
+
+      alert('PDF export initiated! Please check your print dialog.');
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   };
 
   return (
