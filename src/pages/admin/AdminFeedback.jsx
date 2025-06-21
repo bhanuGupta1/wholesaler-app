@@ -96,3 +96,7 @@ const AdminFeedback = () => {
 
       // Status filter
       const matchesStatus = filters.status === 'all' || feedback.status === filters.status;
+
+      // Category filter  
+      const matchesCategory = filters.category === 'all' || feedback.category === filters.category;
+
