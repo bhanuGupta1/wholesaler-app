@@ -1,4 +1,4 @@
-// src/pages/ProductDetails.jsx
+// src/pages/ProductDetails.jsx - Customer-facing catalog page with correct pricing
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, getDocs, query, where, limit } from 'firebase/firestore';
@@ -227,13 +227,23 @@ const ProductDetails = () => {
                 {product.name}
               </h1>
               
+              {/* FIXED: Correct Price Display Order */}
               <div className="flex items-center space-x-4 mb-4">
                 <span className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   ${Number(product.price).toFixed(2)}
                 </span>
-                {product.costPrice && (
+                {/* Show originalPrice as crossed out (if it exists and is higher than current price) */}
+                {product.originalPrice && product.originalPrice > product.price && (
                   <span className={`text-lg line-through ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    ${Number(product.costPrice).toFixed(2)}
+                    ${Number(product.originalPrice).toFixed(2)}
+                  </span>
+                )}
+                {/* Show savings if there's an original price */}
+                {product.originalPrice && product.originalPrice > product.price && (
+                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+                    darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
+                  }`}>
+                    Save ${(product.originalPrice - product.price).toFixed(2)}
                   </span>
                 )}
               </div>
@@ -285,7 +295,7 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Additional Details */}
+            {/* Additional Details - Customer view (no internal pricing) */}
             <div className="mb-8">
               <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
                 Product Details
@@ -295,12 +305,6 @@ const ProductDetails = () => {
                   <div>
                     <dt className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Supplier</dt>
                     <dd className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>{product.supplier}</dd>
-                  </div>
-                )}
-                {product.reorderPoint && (
-                  <div>
-                    <dt className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Reorder Point</dt>
-                    <dd className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>{product.reorderPoint} units</dd>
                   </div>
                 )}
                 <div>
@@ -313,6 +317,27 @@ const ProductDetails = () => {
                 </div>
               </div>
             </div>
+
+            {/* Bulk Pricing (for customers) */}
+            {product.bulkPricing && (
+              <div className="mb-8">
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+                  Volume Discounts
+                </h3>
+                <div className="space-y-2">
+                  {Object.entries(product.bulkPricing).map(([quantity, price]) => (
+                    <div key={quantity} className={`flex justify-between p-2 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        Buy {quantity}+ units
+                      </span>
+                      <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        ${Number(price).toFixed(2)} each
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Purchase Section */}
             {product.stock > 0 && (
