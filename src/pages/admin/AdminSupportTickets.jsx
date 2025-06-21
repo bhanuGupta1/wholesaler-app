@@ -195,3 +195,18 @@ const AdminSupportTickets = () => {
     }
   };
 
+  // Add response to ticket
+  const addTicketResponse = async () => {
+    if (!selectedTicket || !responseMessage.trim()) return;
+
+    try {
+      setProcessing(true);
+      const ticketRef = doc(db, 'supportTickets', selectedTicket.id);
+      
+      const response = {
+        message: responseMessage,
+        respondedBy: user.email,
+        respondedAt: serverTimestamp(),
+        type: 'admin_response'
+      };
+
