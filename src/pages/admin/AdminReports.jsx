@@ -297,3 +297,42 @@ Note: This is an automated report from your admin dashboard.`;
           </div>
         </div>
 
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            { title: 'Total Revenue', value: `$${reports.analytics.totalRevenue?.toFixed(2) || '0.00'}`, icon: DollarSign, color: 'green' },
+            { title: 'Total Orders', value: reports.analytics.totalOrders || 0, icon: ShoppingCart, color: 'blue' },
+            { title: 'Total Users', value: reports.analytics.totalUsers || 0, icon: Users, color: 'purple' },
+            { title: 'Avg Order Value', value: `$${reports.analytics.averageOrderValue?.toFixed(2) || '0.00'}`, icon: TrendingUp, color: 'orange' }
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-6 rounded-lg border ${
+                darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <div className={`p-3 rounded-lg ${
+                  stat.color === 'green' ? 'bg-green-100 text-green-600' :
+                  stat.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                  stat.color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                  'bg-orange-100 text-orange-600'
+                }`}>
+                  <stat.icon className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {stat.title}
+                  </p>
+                  <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {stat.value}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
