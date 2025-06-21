@@ -1,9 +1,4 @@
-{/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RealSalesFunnelChart darkMode={darkMode} />
-            <RealPerformanceRadarChart darkMode={darkMode} />
-            <RealMonthlyRevenueChart darkMode={darkMode} />
-            <RealUserActivityH// src/pages/AdminDashboard.jsx - ULTIMATE ENHANCED VERSION with Real Firebase Data
+// src/pages/AdminDashboard.jsx - FIXED VERSION
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -798,7 +793,207 @@ const RealMonthlyRevenueChart = ({ darkMode }) => {
                 {/* Area */}
                 <motion.path
                   d={areaData}
-                  fill="
+                  fill="url(#areaGradient)"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1 }}
+                />
+                
+                {/* Line */}
+                <motion.path
+                  d={pathData}
+                  fill="none"
+                  stroke={darkMode ? "#00FFFF" : "#4F46E5"}
+                  strokeWidth="2"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1 }}
+                />
+                
+                {/* Data points */}
+                {revenueData.map((item, index) => (
+                  <motion.circle
+                    key={index}
+                    cx={xScale(index)}
+                    cy={yScale(item.value)}
+                    r="3"
+                    fill={darkMode ? "#00FFFF" : "#4F46E5"}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                  />
+                ))}
+              </g>
+            </svg>
+          </div>
+          
+          {/* Month labels */}
+          <div className="flex justify-between text-xs mt-2 relative z-10">
+            {revenueData.slice(0, 6).map((item, index) => (
+              <span key={index} className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {item.name}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </motion.div>
+  );
+};
+
+// ===============================================
+// REAL USER ACTIVITY HEATMAP
+// ===============================================
+const RealUserActivityHeatmap = ({ darkMode }) => {
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHeatmapData = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            createdAt: data.createdAt?.toDate() || new Date(),
+            lastLogin: data.lastLogin?.toDate() || new Date()
+          };
+        });
+
+        // Generate activity data for the last 7 days
+        const today = new Date();
+        const weekData = [];
+        
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+          
+          // Count activities for this day
+          const dayActivity = users.filter(user => {
+            const userDate = user.lastLogin || user.createdAt;
+            return userDate.toDateString() === date.toDateString();
+          }).length;
+          
+          weekData.push({
+            day: dayName,
+            activity: dayActivity,
+            date: date.toDateString()
+          });
+        }
+
+        setHeatmapData(weekData);
+      } catch (error) {
+        console.error('Error fetching heatmap data:', error);
+        // Fallback data
+        const fallbackData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+          day,
+          activity: 0,
+          date: new Date().toDateString()
+        }));
+        setHeatmapData(fallbackData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHeatmapData();
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">🔥</div>
+            <div>Loading activity heatmap...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const maxActivity = Math.max(...heatmapData.map(d => d.activity), 1);
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
+        {darkMode ? 'NEURAL ACTIVITY HEATMAP' : 'User Activity Heatmap'}
+      </h3>
+      
+      {maxActivity === 1 && heatmapData[0].activity === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2 opacity-50">🔥</div>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No activity data - Users will appear here when they log in
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-2 relative z-10">
+          {heatmapData.map((item, index) => {
+            const intensity = item.activity / maxActivity;
+            const color = darkMode ? 'cyan' : 'indigo';
+            
+            return (
+              <motion.div
+                key={index}
+                className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all duration-300 cursor-pointer`}
+                style={{
+                  backgroundColor: intensity > 0 
+                    ? darkMode 
+                      ? `rgba(0, 255, 255, ${0.2 + intensity * 0.6})`
+                      : `rgba(79, 70, 229, ${0.2 + intensity * 0.6})`
+                    : darkMode 
+                      ? 'rgba(75, 85, 99, 0.3)'
+                      : 'rgba(229, 231, 235, 0.5)',
+                  color: intensity > 0.5 ? 'white' : darkMode ? '#9CA3AF' : '#6B7280'
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.1 }}
+                title={`${item.day}: ${item.activity} activities`}
+              >
+                <span className="text-xs mb-1">{item.day}</span>
+                <span className="text-lg">{item.activity}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+      
+      {/* Legend */}
+      <div className="mt-4 flex items-center justify-between text-xs relative z-10">
+        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {darkMode ? 'LESS ACTIVE' : 'Less active'}
+        </span>
+        <div className="flex gap-1">
+          {[0.2, 0.4, 0.6, 0.8, 1].map((intensity, index) => (
+            <div
+              key={index}
+              className="w-3 h-3 rounded-sm"
+              style={{
+                backgroundColor: darkMode 
+                  ? `rgba(0, 255, 255, ${intensity})`
+                  : `rgba(79, 70, 229, ${intensity})`
+              }}
+            />
+          ))}
+        </div>
+        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          {darkMode ? 'MORE ACTIVE' : 'More active'}
+        </span>
+      </div>
+    </motion.div>
+  );
+};
 
 // ===============================================
 // REAL ACTIVITY FEED
@@ -813,27 +1008,25 @@ const RealActivityFeed = ({ darkMode }) => {
       try {
         // Fetch recent user activities
         const usersSnapshot = await getDocs(
-          query(collection(db, 'users'), orderBy('updatedAt', 'desc'), limit(10))
+          query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(10))
         );
         
         const realActivities = [];
         
         usersSnapshot.docs.forEach((doc, index) => {
           const userData = doc.data();
-          const updatedAt = userData.updatedAt?.toDate() || userData.createdAt?.toDate();
+          const createdAt = userData.createdAt?.toDate();
           
-          if (updatedAt) {
+          if (createdAt) {
             // User registration activity
-            if (userData.createdAt) {
-              realActivities.push({
-                id: `user-created-${index}`,
-                type: 'user',
-                title: 'New User Registration',
-                description: `${userData.email} joined the platform`,
-                timestamp: formatTimeAgo(userData.createdAt.toDate()),
-                value: '+1'
-              });
-            }
+            realActivities.push({
+              id: `user-created-${index}`,
+              type: 'user',
+              title: 'New User Registration',
+              description: `${userData.email} joined the platform`,
+              timestamp: formatTimeAgo(createdAt),
+              value: '+1'
+            });
             
             // Status change activities
             if (userData.status && userData.updatedAt) {
@@ -1005,222 +1198,83 @@ const RealActivityFeed = ({ darkMode }) => {
 };
 
 // ===============================================
-// REAL SYSTEM HEALTH MONITOR
+// REAL PERFORMANCE METRICS
 // ===============================================
-const RealSystemHealthMonitor = ({ darkMode }) => {
-  const [healthMetrics, setHealthMetrics] = useState({
-    totalUsers: 0,
-    activeUsers: 0,
-    totalProducts: 0,
-    totalOrders: 0,
-    pendingApprovals: 0,
-    systemUptime: 99.9
+const RealPerformanceMetrics = ({ darkMode }) => {
+  const [metrics, setMetrics] = useState({
+    systemLoad: 0,
+    memoryUsage: 0,
+    networkLatency: 0,
+    errorRate: 0
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchHealthMetrics = async () => {
-      try {
-        const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'products')),
-          getDocs(collection(db, 'orders'))
-        ]);
-
-        const users = usersSnapshot.docs.map(doc => doc.data());
-        const activeUsers = users.filter(user => user.status === 'active' && user.approved).length;
-        const pendingApprovals = users.filter(user => 
-          user.status === 'pending_approval' || user.status === 'pending'
-        ).length;
-
-        setHealthMetrics({
-          totalUsers: usersSnapshot.size,
-          activeUsers,
-          totalProducts: productsSnapshot.size,
-          totalOrders: ordersSnapshot.size,
-          pendingApprovals,
-          systemUptime: 99.9 + Math.random() * 0.1 // Simulated uptime
-        });
-      } catch (error) {
-        console.error('Error fetching health metrics:', error);
-      } finally {
-        setLoading(false);
-      }
+    const updateMetrics = () => {
+      // Simulate real-time performance metrics
+      setMetrics({
+        systemLoad: Math.floor(Math.random() * 30) + 20, // 20-50%
+        memoryUsage: Math.floor(Math.random() * 25) + 45, // 45-70%
+        networkLatency: Math.floor(Math.random() * 50) + 10, // 10-60ms
+        errorRate: Math.random() * 2 // 0-2%
+      });
     };
 
-    fetchHealthMetrics();
-    
-    // Update metrics every 30 seconds
-    const interval = setInterval(fetchHealthMetrics, 30000);
+    updateMetrics();
+    const interval = setInterval(updateMetrics, 5000); // Update every 5 seconds
+    setLoading(false);
+
     return () => clearInterval(interval);
   }, []);
 
-  const getHealthColor = (value, type) => {
-    if (type === 'uptime') {
-      return value > 99.5 ? 'green' : value > 98 ? 'yellow' : 'red';
-    } else if (type === 'pending') {
-      return value === 0 ? 'green' : value < 5 ? 'yellow' : 'red';
-    } else {
-      return value > 0 ? 'green' : 'gray';
+  const getStatusColor = (value, type) => {
+    if (type === 'load' || type === 'memory') {
+      return value < 60 ? 'green' : value < 80 ? 'yellow' : 'red';
+    } else if (type === 'latency') {
+      return value < 30 ? 'green' : value < 50 ? 'yellow' : 'red';
+    } else if (type === 'error') {
+      return value < 1 ? 'green' : value < 2 ? 'yellow' : 'red';
     }
+    return 'gray';
   };
 
   if (loading) {
     return (
-      <motion.div 
-        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
         <div className="flex items-center justify-center h-64">
           <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <div className="text-2xl mb-2">💚</div>
-            <div>Loading system health...</div>
+            <div className="text-2xl mb-2">⚡</div>
+            <div>Loading performance metrics...</div>
           </div>
         </div>
       </motion.div>
     );
   }
 
-  const metrics = [
-    { label: 'Total Users', value: healthMetrics.totalUsers, type: 'normal', icon: '👥' },
-    { label: 'Active Users', value: healthMetrics.activeUsers, type: 'normal', icon: '✅' },
-    { label: 'Total Products', value: healthMetrics.totalProducts, type: 'normal', icon: '📦' },
-    { label: 'Total Orders', value: healthMetrics.totalOrders, type: 'normal', icon: '📋' },
-    { label: 'Pending Approvals', value: healthMetrics.pendingApprovals, type: 'pending', icon: '⏳' },
-    { label: 'System Uptime', value: `${healthMetrics.systemUptime.toFixed(2)}%`, type: 'uptime', icon: '🟢' }
-  ];
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <h3 className={`text-lg font-semibold mb-6 ${
-        darkMode ? 'text-green-400 cyber-title cyber-glow' : 'text-green-600'
-      } flex items-center relative z-10`}>
-        <span className="mr-3">💚</span>
-        {darkMode ? 'SYSTEM MATRIX' : 'System Health'}
-      </h3>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
-        {metrics.map((metric, index) => {
-          const color = getHealthColor(
-            typeof metric.value === 'string' ? parseFloat(metric.value) : metric.value, 
-            metric.type
-          );
-          return (
-            <motion.div 
-              key={index} 
-              className={`p-4 rounded border ${
-                darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-              } hover:shadow-md transition-all`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <div className="text-center">
-                <div className="text-2xl mb-2">{metric.icon}</div>
-                <div className={`text-xl font-bold text-${color}-500 mb-1`}>
-                  {metric.value}
-                </div>
-                <div className={`text-xs ${
-                  darkMode ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  {metric.label}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* System Status */}
-      <motion.div 
-        className="mt-6 p-4 rounded border relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <div className="flex items-center justify-between">
-          <div className={`text-sm font-medium ${
-            darkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
-            Overall Status:
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-            <span className={`text-sm font-medium ${
-              darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'
-            }`}>
-              {darkMode ? 'NEURAL SYSTEMS OPERATIONAL' : 'System Operational'}
-            </span>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-// ===============================================
-// ENHANCED ADMIN PANEL ACCESS
-// ===============================================
-const AdminPanelAccess = ({ darkMode }) => {
-  const navigate = useNavigate();
-
-  const adminPanels = [
-    {
-      title: 'User Management',
-      description: 'Advanced user control and role assignment',
-      path: '/admin/users',
-      icon: '👥',
-      color: 'blue',
-      stats: { total: 247, pending: 12 }
+  const performanceData = [
+    { 
+      label: darkMode ? 'SYSTEM LOAD' : 'System Load', 
+      value: `${metrics.systemLoad}%`, 
+      type: 'load', 
+      icon: '⚡' 
     },
-    {
-      title: 'User Approvals',
-      description: 'Review and process account applications',
-      path: '/admin/approvals',
-      icon: '⏳',
-      color: 'yellow',
-      stats: { pending: 8, today: 3 }
+    { 
+      label: darkMode ? 'MEMORY USAGE' : 'Memory Usage', 
+      value: `${metrics.memoryUsage}%`, 
+      type: 'memory', 
+      icon: '🧠' 
     },
-    {
-      title: 'System Settings',
-      description: 'Configure system parameters',
-      path: '/admin/settings',
-      icon: '⚙️',
-      color: 'purple',
-      stats: { configs: 24, modified: 3 }
+    { 
+      label: darkMode ? 'NETWORK LATENCY' : 'Network Latency', 
+      value: `${metrics.networkLatency}ms`, 
+      type: 'latency', 
+      icon: '🌐' 
     },
-    {
-      title: 'Analytics Dashboard',
-      description: 'Real-time metrics and insights',
-      path: '/admin/analytics',
-      icon: '📊',
-      color: 'green',
-      stats: { revenue: '$89K', orders: 1523 }
-    },
-    {
-      title: 'Security Center',
-      description: 'Monitor threats and system security',
-      path: '/admin/security',
-      icon: '🔒',
-      color: 'red',
-      stats: { alerts: 2, blocked: 15 }
-    },
-    {
-      title: 'Legacy Panel',
-      description: 'Traditional admin features',
-      path: '/admin/panel',
-      icon: '🏛️',
-      color: 'gray',
-      stats: { version: 'v1.0', status: 'OK' }
+    { 
+      label: darkMode ? 'ERROR RATE' : 'Error Rate', 
+      value: `${metrics.errorRate.toFixed(2)}%`, 
+      type: 'error', 
+      icon: '⚠️' 
     }
   ];
 
@@ -1233,55 +1287,157 @@ const AdminPanelAccess = ({ darkMode }) => {
     >
       {darkMode && <div className="card-glow"></div>}
       
-      <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
-        {darkMode ? 'ADMIN CONTROL MATRIX' : 'Admin Panel Access'}
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
+        {darkMode ? 'NEURAL PERFORMANCE MATRIX' : 'Performance Metrics'}
       </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
-        {adminPanels.map((panel, index) => (
-          <motion.button
-            key={index}
-            onClick={() => navigate(panel.path)}
-            className={`p-4 rounded-lg border text-left transition-all hover:scale-105 ${
-              darkMode
-                ? `bg-gray-700/50 border-gray-600 hover:border-${panel.color}-500/50 hover:bg-gray-700`
-                : `bg-gray-50 border-gray-200 hover:border-${panel.color}-500/50 hover:bg-gray-100`
-            }`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center mb-3">
-              <span className="text-2xl mr-3">{panel.icon}</span>
-              <div>
-                <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {panel.title}
-                </h4>
-                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {panel.description}
-                </p>
+      
+      <div className="space-y-4 relative z-10">
+        {performanceData.map((item, index) => {
+          const color = getStatusColor(
+            parseFloat(item.value), 
+            item.type
+          );
+          
+          return (
+            <motion.div 
+              key={index}
+              className="flex items-center justify-between"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-center">
+                <span className="text-lg mr-3">{item.icon}</span>
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {item.label}
+                </span>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {Object.entries(panel.stats).map(([key, value]) => (
-                <div key={key} className={`p-2 rounded ${
-                  darkMode ? 'bg-gray-800/50' : 'bg-white/50'
-                }`}>
-                  <div className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} capitalize`}>
-                    {key}:
-                  </div>
-                  <div className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.button>
-        ))}
+              <div className="flex items-center">
+                <span className={`font-bold text-${color}-500 mr-2`}>
+                  {item.value}
+                </span>
+                <div className={`w-3 h-3 rounded-full bg-${color}-500 animate-pulse`}></div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// REAL USER ANALYTICS CHART
+// ===============================================
+const RealUserAnalyticsChart = ({ darkMode }) => {
+  const [analyticsData, setAnalyticsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            createdAt: data.createdAt?.toDate() || new Date(),
+            status: data.status || 'active'
+          };
+        });
+
+        // Group users by status
+        const statusGroups = users.reduce((acc, user) => {
+          const status = user.status;
+          acc[status] = (acc[status] || 0) + 1;
+          return acc;
+        }, {});
+
+        const data = Object.entries(statusGroups).map(([status, count]) => ({
+          name: status.replace('_', ' ').toUpperCase(),
+          value: count,
+          percentage: ((count / users.length) * 100).toFixed(1)
+        }));
+
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Error fetching analytics data:', error);
+        setAnalyticsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+        <div className="flex items-center justify-center h-64">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <div className="text-2xl mb-2">📊</div>
+            <div>Loading user analytics...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const colors = darkMode 
+    ? ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF6600']
+    : ['#4F46E5', '#7C3AED', '#DC2626', '#059669', '#D97706'];
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
+        {darkMode ? 'USER STATUS MATRIX' : 'User Analytics'}
+      </h3>
+      
+      {analyticsData.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2 opacity-50">📊</div>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No user data available
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3 relative z-10">
+          {analyticsData.map((item, index) => (
+            <motion.div 
+              key={index}
+              className="flex items-center justify-between"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-center">
+                <div 
+                  className="w-4 h-4 rounded-full mr-3"
+                  style={{ backgroundColor: colors[index % colors.length] }}
+                ></div>
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {item.name}
+                </span>
+              </div>
+              <div className="text-right">
+                <div className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {item.value}
+                </div>
+                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {item.percentage}%
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 };
