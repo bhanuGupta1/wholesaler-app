@@ -336,3 +336,56 @@ Note: This is an automated report from your admin dashboard.`;
           ))}
         </div>
 
+        {/* Export Options */}
+        <div className={`p-6 rounded-lg border ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        } mb-8`}>
+          <h3 className={`text-lg font-semibold mb-4 ${
+            darkMode ? 'text-blue-400' : 'text-blue-600'
+          } flex items-center`}>
+            <Download className="mr-3 h-5 w-5" />
+            Quick Export Options
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => exportToCSV(reports, `admin-report-${new Date().toISOString().split('T')[0]}.csv`)}
+              className={`p-4 rounded border transition-all hover:scale-105 text-center ${
+                darkMode
+                  ? 'bg-green-800/20 border-green-700 text-green-400 hover:bg-green-800/30'
+                  : 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+              }`}
+            >
+              <div className="text-2xl mb-2">📊</div>
+              <div className="font-medium">CSV Export</div>
+              <div className="text-xs opacity-75">Download raw data</div>
+            </button>
+
+            <button
+              onClick={() => exportToPDF(reports, `admin-report-${new Date().toISOString().split('T')[0]}.pdf`)}
+              className={`p-4 rounded border transition-all hover:scale-105 text-center ${
+                darkMode
+                  ? 'bg-red-800/20 border-red-700 text-red-400 hover:bg-red-800/30'
+                  : 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+              }`}
+            >
+              <div className="text-2xl mb-2">📄</div>
+              <div className="font-medium">PDF Report</div>
+              <div className="text-xs opacity-75">Generate formatted report</div>
+            </button>
+
+            <button
+              onClick={() => sendEmailReport(reports)}
+              className={`p-4 rounded border transition-all hover:scale-105 text-center ${
+                darkMode
+                  ? 'bg-blue-800/20 border-blue-700 text-blue-400 hover:bg-blue-800/30'
+                  : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+              }`}
+            >
+              <div className="text-2xl mb-2">📧</div>
+              <div className="font-medium">Email Report</div>
+              <div className="text-xs opacity-75">Send via email</div>
+            </button>
+          </div>
+        </div>
+
