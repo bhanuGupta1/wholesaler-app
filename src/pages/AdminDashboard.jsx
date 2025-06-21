@@ -50,7 +50,8 @@ import {
   Briefcase,
   LogOut,
   ChevronLeft,
-  Archive // Add this line to your existing icon imports
+  Archive,
+  MessageCircle
 } from 'lucide-react';
 
 // ===============================================
