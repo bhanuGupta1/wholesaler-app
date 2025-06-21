@@ -862,6 +862,9 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
     }
   };
 
+  // Working email report function
+  const sendEmailReport = async () => {
+    try {
   };
 
   return (
