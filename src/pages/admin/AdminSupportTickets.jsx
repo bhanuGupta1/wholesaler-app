@@ -708,3 +708,36 @@ const AdminSupportTickets = () => {
           )}
         </div>
 
+        {/* Response Modal */}
+        <AnimatePresence>
+          {showResponseModal && selectedTicket && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+              onClick={() => setShowResponseModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className={`w-full max-w-4xl rounded-lg border ${
+                  darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                } p-6 max-h-[80vh] overflow-y-auto`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Respond to Ticket: {selectedTicket.ticketId || selectedTicket.id.substring(0, 8)}
+                  </h3>
+                  <button
+                    onClick={() => setShowResponseModal(false)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    ✕
+                  </button>
+                </div>
+
