@@ -615,6 +615,13 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Calculate summary stats
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+      const businessUsers = users.filter(u => u.accountType === 'business').length;
+
+      // Create HTML content for PDF
   };
 
   return (
