@@ -974,19 +974,21 @@ Timestamp: ${new Date().toISOString()}`;
             onClick={option.action}
             className={`p-4 rounded border transition-all hover:scale-105 text-center ${
               darkMode
-                ? `bg-gray-700/50 border-gray-600 hover:border-${option.color}-500/50`
-                : `bg-gray-50 border-gray-200 hover:border-${option.color}-500/50`
+                ? option.color === 'green' 
+                  ? 'bg-green-800/20 border-green-700 text-green-400 hover:bg-green-800/30'
+                  : option.color === 'red'
+                    ? 'bg-red-800/20 border-red-700 text-red-400 hover:bg-red-800/30'
+                    : 'bg-blue-800/20 border-blue-700 text-blue-400 hover:bg-blue-800/30'
+                : option.color === 'green'
+                  ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+                  : option.color === 'red'
+                    ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                    : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
             }`}
           >
-            <div className="text-3xl mb-2">{option.icon}</div>
-            <div className={`text-sm font-medium text-${option.color}-500 mb-1`}>
-              {option.label}
-            </div>
-            <div className={`text-xs ${
-              darkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              {option.description}
-            </div>
+            <div className="text-2xl mb-2">{option.icon}</div>
+            <div className="font-medium">{option.label}</div>
+            <div className="text-xs opacity-75">{option.description}</div>
           </button>
         ))}
       </div>
