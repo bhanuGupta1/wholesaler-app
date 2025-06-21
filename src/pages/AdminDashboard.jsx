@@ -1037,7 +1037,122 @@ const RealPerformanceMetrics = ({ darkMode }) => {
   );
 };
 
+// ===============================================
+// REAL USER ANALYTICS CHART (FROM ORIGINAL)
+// ===============================================
+const RealUserAnalyticsChart = ({ darkMode }) => {
+  const [analyticsData, setAnalyticsData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = usersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            createdAt: data.createdAt?.toDate() || new Date(),
+            status: data.status || 'active'
+          };
+        });
+
+        // Group users by status
+        const statusGroups = users.reduce((acc, user) => {
+          const status = user.status;
+          acc[status] = (acc[status] || 0) + 1;
+          return acc;
+        }, {});
+
+        const data = Object.entries(statusGroups).map(([status, count]) => ({
+          name: status.replace('_', ' ').toUpperCase(),
+          value: count,
+          percentage: ((count / users.length) * 100).toFixed(1)
+        }));
+
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Error fetching analytics data:', error);
+        setAnalyticsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
+
+  if (loading) {
+    return (
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+        {darkMode && <div className="card-glow"></div>}
+        <div className="flex items-center justify-center h-64 relative z-10">
+          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
+            <BarChart3 className="h-12 w-12 mx-auto mb-2" />
+            <div>Loading user analytics...</div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const colors = darkMode 
+    ? ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF6600']
+    : ['#4F46E5', '#7C3AED', '#DC2626', '#059669', '#D97706'];
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
+        {darkMode ? 'USER STATUS MATRIX' : 'User Analytics'}
+      </h3>
+      
+      {analyticsData.length === 0 ? (
+        <div className="text-center py-8 relative z-10">
+          <div className="text-4xl mb-2 opacity-50">📊</div>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No user data available
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3 relative z-10">
+          {analyticsData.map((item, index) => (
+            <motion.div 
+              key={index}
+              className="flex items-center justify-between"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <div className="flex items-center">
+                <div 
+                  className="w-4 h-4 rounded-full mr-3"
+                  style={{ backgroundColor: colors[index % colors.length] }}
+                ></div>
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {item.name}
+                </span>
+              </div>
+              <div className="text-right">
+                <div className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {item.value}
+                </div>
+                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {item.percentage}%
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+};
 
 // ===============================================
 // ENHANCED METRICS CARD WITH ANIMATIONS
