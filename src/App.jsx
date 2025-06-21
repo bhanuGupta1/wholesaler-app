@@ -12,6 +12,7 @@ import QRPage from './pages/QRPage';
 import ProductSeeder from './components/ProductSeeder';
 import AdminLayout from './components/common/AdminLayout';
 
+
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard'));
@@ -52,6 +53,7 @@ const UserPanel = lazy(() => import('./pages/admin/UserPanel'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 
 // Deal Management component
 const DealManagement = lazy(() => import('./pages/DealManagement'));
