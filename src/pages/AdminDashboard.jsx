@@ -2724,7 +2724,7 @@ const AdminDashboard = () => {
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                 <div>
                   <h1 className={`text-4xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900 neumorph-title'} mb-2`}>
-                    {darkMode ? 'NEURAL COMMAND CENTER' : 'Enhanced Admin Dashboard'}
+                    {darkMode ? 'NEURAL COMMAND CENTER' : 'Main Admin Components'}
                   </h1>
                   <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
                     {darkMode 
