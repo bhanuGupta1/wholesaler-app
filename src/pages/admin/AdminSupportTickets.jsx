@@ -151,3 +151,24 @@ const AdminSupportTickets = () => {
     const closed = tickets.filter(t => t.status === 'closed').length;
     const highPriority = tickets.filter(t => t.priority === 'high').length;
 
+    // Calculate average response time (in hours)
+    const respondedTickets = tickets.filter(t => t.responses && t.responses.length > 0);
+    const avgResponseTime = respondedTickets.length > 0 
+      ? respondedTickets.reduce((sum, ticket) => {
+          const firstResponse = ticket.responses[0];
+          const responseTime = (firstResponse.createdAt - ticket.createdAt) / (1000 * 60 * 60); // hours
+          return sum + responseTime;
+        }, 0) / respondedTickets.length
+      : 0;
+
+    return { 
+      total, 
+      open, 
+      inProgress, 
+      resolved, 
+      closed, 
+      highPriority,
+      avgResponseTime: avgResponseTime.toFixed(1)
+    };
+  }, [tickets]);
+
