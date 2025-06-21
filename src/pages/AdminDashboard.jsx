@@ -2260,34 +2260,7 @@ const RealSalesFunnelChart = ({ darkMode }) => {
   );
 };
 
-// ===============================================
-// MAIN ENHANCED ADMIN DASHBOARD
-// ===============================================
-const AdminDashboard = () => {
-  const { darkMode } = useTheme();
-  const navigate = useNavigate();
-  
-  // Enhanced state management
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    totalProducts: 0,
-    lowStockProducts: 0,
-    pendingOrders: 0,
-    pendingApprovals: 0,
-    activeUsers: 0
-  });
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [notification, setNotification] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [realTimeEnabled, setRealTimeEnabled] = useState(false);
-  const [activities, setActivities] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [activityFilter, setActivityFilter] = useState('All');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   // Memoized calculations for enhanced metrics
   const processedStats = useMemo(() => {
