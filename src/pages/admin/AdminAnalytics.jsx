@@ -603,6 +603,8 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   };
 
   // Working PDF export function
+  const exportToPDF = async () => {
+    try {
   };
 
   return (
