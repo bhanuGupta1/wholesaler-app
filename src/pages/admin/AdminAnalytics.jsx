@@ -548,6 +548,16 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   // Working CSV export function
   const exportToCSV = async () => {
     try {
+      // Fetch fresh data for export
+      const [usersSnapshot, ordersSnapshot, productsSnapshot] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'orders')),
+        getDocs(collection(db, 'products'))
+      ]);
+
+      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   };
 
   return (
