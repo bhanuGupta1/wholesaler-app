@@ -558,6 +558,9 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Create CSV content
+      let csvContent = 'ANALYTICS EXPORT REPORT\n';
+      csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
   };
 
   return (
