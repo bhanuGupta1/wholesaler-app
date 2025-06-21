@@ -389,3 +389,70 @@ Note: This is an automated report from your admin dashboard.`;
           </div>
         </div>
 
+        {/* Report Types */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reportTypes.map((report, index) => (
+            <motion.div
+              key={report.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-6 rounded-lg border ${
+                darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <div className={`p-3 rounded-lg ${
+                    report.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                    report.color === 'green' ? 'bg-green-100 text-green-600' :
+                    report.color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                    'bg-orange-100 text-orange-600'
+                  }`}>
+                    <report.icon className="h-6 w-6" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {report.title}
+                    </h3>
+                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {report.description}
+                    </p>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      {report.count} records
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => exportToCSV({ [report.id]: reports[report.id] }, `${report.id}-report.csv`)}
+                  className={`px-3 py-1 text-xs rounded ${
+                    darkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  } transition-colors`}
+                >
+                  Export CSV
+                </button>
+                <button
+                  onClick={() => exportToPDF({ [report.id]: reports[report.id], analytics: reports.analytics }, `${report.id}-report.pdf`)}
+                  className={`px-3 py-1 text-xs rounded ${
+                    darkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  } transition-colors`}
+                >
+                  Export PDF
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminReports;
