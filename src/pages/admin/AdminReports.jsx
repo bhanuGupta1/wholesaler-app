@@ -116,3 +116,60 @@ const AdminReports = () => {
   };
 
   const exportToPDF = async (data, filename) => {
+    // Create a simple HTML content for PDF
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Admin Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; border-bottom: 2px solid #333; }
+            h2 { color: #666; margin-top: 30px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .summary { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <h1>Admin Dashboard Report</h1>
+          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          
+          <div class="summary">
+            <h2>Summary</h2>
+            <p>Total Users: ${data.analytics?.totalUsers || 0}</p>
+            <p>Total Orders: ${data.analytics?.totalOrders || 0}</p>
+            <p>Total Products: ${data.analytics?.totalProducts || 0}</p>
+            <p>Total Revenue: $${data.analytics?.totalRevenue?.toFixed(2) || '0.00'}</p>
+            <p>Average Order Value: $${data.analytics?.averageOrderValue?.toFixed(2) || '0.00'}</p>
+          </div>
+
+          <h2>Users (Top 10)</h2>
+          <table>
+            <tr><th>Name</th><th>Email</th><th>Account Type</th><th>Status</th></tr>
+            ${data.users?.slice(0, 10).map(user => `
+              <tr>
+                <td>${user.displayName || 'N/A'}</td>
+                <td>${user.email}</td>
+                <td>${user.accountType}</td>
+                <td>${user.status || 'active'}</td>
+              </tr>
+            `).join('') || ''}
+          </table>
+
+          <h2>Recent Orders (Top 10)</h2>
+          <table>
+            <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr>
+            ${data.orders?.slice(0, 10).map(order => `
+              <tr>
+                <td>${order.id}</td>
+                <td>${order.customerEmail || 'N/A'}</td>
+                <td>$${order.total?.toFixed(2) || '0.00'}</td>
+                <td>${order.status || 'N/A'}</td>
+                <td>${order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}</td>
+              </tr>
+            `).join('') || ''}
+          </table>
+        </body>
+      </html>
+    `;
