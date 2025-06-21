@@ -109,3 +109,18 @@ const AdminFeedback = () => {
         (filters.rating === '4' && feedback.rating === 4) ||
         (filters.rating === '3' && feedback.rating === 3) ||
         (filters.rating === '1-2' && feedback.rating <= 2);
+
+      // Date range filter
+      const now = new Date();
+      const feedbackDate = feedback.createdAt;
+      let matchesDate = true;
+      
+      if (filters.dateRange !== 'all') {
+        const days = parseInt(filters.dateRange.replace('d', ''));
+        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        matchesDate = feedbackDate >= cutoff;
+      }
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesRating && matchesDate;
+    });
+
