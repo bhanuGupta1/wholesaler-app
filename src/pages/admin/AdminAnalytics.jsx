@@ -545,6 +545,9 @@ const ProductAnalytics = ({ darkMode }) => {
 };
 
 const ExportOptions = ({ darkMode, analyticsData = {} }) => {
+  // Working CSV export function
+  const exportToCSV = async () => {
+    try {
   };
 
   return (
