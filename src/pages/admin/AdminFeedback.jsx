@@ -358,3 +358,44 @@ const AdminFeedback = () => {
           </div>
         </div>
 
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          {[
+            { title: 'Total Feedback', value: stats.total, icon: MessageCircle, color: 'blue' },
+            { title: 'Pending Review', value: stats.pending, icon: Clock, color: 'yellow' },
+            { title: 'Resolved', value: stats.resolved, icon: CheckCircle, color: 'green' },
+            { title: 'Average Rating', value: stats.avgRating, icon: Star, color: 'purple' },
+            { title: 'High Priority', value: stats.highPriority, icon: AlertTriangle, color: 'red' }
+          ].map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-6 rounded-lg border ${
+                darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}
+            >
+              <div className="flex items-center">
+                <div className={`p-3 rounded-lg ${
+                  stat.color === 'blue' ? 'bg-blue-100 text-blue-600' :
+                  stat.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                  stat.color === 'green' ? 'bg-green-100 text-green-600' :
+                  stat.color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                  'bg-red-100 text-red-600'
+                }`}>
+                  <stat.icon className="h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {stat.title}
+                  </p>
+                  <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {stat.value}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
