@@ -10,6 +10,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import NoShoppingRedirect from './components/common/NoShoppingRedirect';
 import QRPage from './pages/QRPage';
 import ProductSeeder from './components/ProductSeeder';
+import AdminLayout from './components/common/AdminLayout';
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
