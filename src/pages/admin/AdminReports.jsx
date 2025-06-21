@@ -173,3 +173,33 @@ const AdminReports = () => {
         </body>
       </html>
     `;
+
+    // Convert HTML to PDF using browser's print functionality
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
+  const sendEmailReport = (data) => {
+    const subject = `Admin Dashboard Report - ${new Date().toLocaleDateString()}`;
+    const body = `Admin Dashboard Report Summary:
+    
+Total Users: ${data.analytics?.totalUsers || 0}
+Total Orders: ${data.analytics?.totalOrders || 0}
+Total Products: ${data.analytics?.totalProducts || 0}
+Total Revenue: $${data.analytics?.totalRevenue?.toFixed(2) || '0.00'}
+Average Order Value: $${data.analytics?.averageOrderValue?.toFixed(2) || '0.00'}
+
+Generated on: ${new Date().toLocaleString()}
+
+Note: This is an automated report from your admin dashboard.`;
+
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  };
+
