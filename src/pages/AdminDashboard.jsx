@@ -49,7 +49,8 @@ import {
   FileText,
   Briefcase,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  Archive // Add this line to your existing icon imports
 } from 'lucide-react';
 
 // ===============================================
