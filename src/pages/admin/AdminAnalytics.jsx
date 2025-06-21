@@ -544,24 +544,7 @@ const ProductAnalytics = ({ darkMode }) => {
   );
 };
 
-// Export Functionality
-const ExportOptions = ({ darkMode, analyticsData }) => {
-  const exportToCSV = () => {
-    // This would generate a CSV export of analytics data
-    console.log('Exporting to CSV...', analyticsData);
-    alert('CSV export functionality would be implemented here');
-  };
-
-  const exportToPDF = () => {
-    // This would generate a PDF report
-    console.log('Exporting to PDF...', analyticsData);
-    alert('PDF export functionality would be implemented here');
-  };
-
-  const sendEmailReport = () => {
-    // This would send an email report
-    console.log('Sending email report...', analyticsData);
-    alert('Email report functionality would be implemented here');
+const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   };
 
   return (
