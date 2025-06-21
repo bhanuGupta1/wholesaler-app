@@ -584,6 +584,25 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
         csvContent += `"${product.id}","${product.name || ''}","${product.category || ''}","${product.price || 0}","${product.stock || 0}","${product.createdBy || ''}"\n`;
       });
 
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `analytics-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert('CSV export completed successfully!');
+    } catch (error) {
+      console.error('CSV Export Error:', error);
+      alert('Error exporting CSV. Please try again.');
+    }
+  };
+
+  // Working PDF export function
   };
 
   return (
