@@ -1,4 +1,4 @@
-// src/pages/AddProduct.jsx - Updated with ownership tracking and user-specific filtering
+// src/pages/AddProduct.jsx - Enhanced with all necessary product fields
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, doc, deleteDoc, where } from 'firebase/firestore';
@@ -17,11 +17,18 @@ const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
+    originalPrice: '', // MSRP/List price (highest)
+    price: '',         // Current selling price (middle)
+    costPrice: '',     // Our wholesale cost (lowest)
     stock: '',
     category: '',
-    imageUrl: '',
-    sku: ''
+    imageUrl: '',      // Primary image
+    imageUrls: [],     // Additional images array
+    sku: '',
+    supplier: '',
+    tags: '',
+    reorderPoint: '',
+    enableBulkPricing: true
   });
   
   const [loading, setLoading] = useState(false);
@@ -30,6 +37,7 @@ const AddProduct = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [deletingProducts, setDeletingProducts] = useState(new Set());
+  const [pricingErrors, setPricingErrors] = useState({});
 
   // Check if user can delete products (admin, manager, or their own products)
   const canDeleteProducts = isAdmin || isManager;
@@ -45,7 +53,24 @@ const AddProduct = () => {
     'Books & Media',
     'Clothing & Accessories',
     'Tools & Hardware',
+    'Kitchen',
     'Other'
+  ];
+
+  const commonSuppliers = [
+    'Apple Inc.',
+    'Samsung Electronics',
+    'Sony Corporation',
+    'Microsoft Corporation',
+    'Nike Inc.',
+    'Canon Inc.',
+    'Herman Miller',
+    'Dyson Ltd.',
+    'KitchenAid',
+    'Tesla Inc.',
+    'Bose Corporation',
+    'Patagonia Inc.',
+    'Custom Supplier'
   ];
 
   // Fetch recent products based on user role with ownership filtering
@@ -55,6 +80,54 @@ const AddProduct = () => {
     }
   }, [canManageProducts, user]);
 
+  // Auto-calculate reorder point when stock changes
+  useEffect(() => {
+    if (formData.stock && !formData.reorderPoint) {
+      const autoReorderPoint = Math.max(5, Math.floor(parseInt(formData.stock) * 0.1));
+      setFormData(prev => ({
+        ...prev,
+        reorderPoint: autoReorderPoint.toString()
+      }));
+    }
+  }, [formData.stock]);
+
+  // Validate pricing structure
+  useEffect(() => {
+    validatePricing();
+  }, [formData.costPrice, formData.price, formData.originalPrice]);
+
+  const validatePricing = () => {
+    const errors = {};
+    const cost = parseFloat(formData.costPrice) || 0;
+    const selling = parseFloat(formData.price) || 0;
+    const original = parseFloat(formData.originalPrice) || 0;
+
+    if (cost && selling && cost >= selling) {
+      errors.costPrice = 'Cost price must be less than selling price';
+    }
+    if (selling && original && selling > original) {
+      errors.price = 'Selling price cannot be higher than original price';
+    }
+    if (cost && original && cost >= original) {
+      errors.originalPrice = 'Original price must be higher than cost price';
+    }
+
+    setPricingErrors(errors);
+  };
+
+  // Calculate profit margins
+  const calculateMargins = () => {
+    const cost = parseFloat(formData.costPrice) || 0;
+    const selling = parseFloat(formData.price) || 0;
+    const original = parseFloat(formData.originalPrice) || 0;
+
+    const profitMargin = cost && selling ? (((selling - cost) / selling) * 100).toFixed(1) : 0;
+    const markup = cost && selling ? (((selling - cost) / cost) * 100).toFixed(1) : 0;
+    const discountPercent = original && selling ? (((original - selling) / original) * 100).toFixed(1) : 0;
+
+    return { profitMargin, markup, discountPercent };
+  };
+
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
     try {
@@ -62,17 +135,14 @@ const AddProduct = () => {
       let q;
       
       if (isAdmin || isManager) {
-        // Admin and Manager can see all recent products
         q = query(productsRef, orderBy('createdAt', 'desc'), limit(5));
       } else if (isSeller && user?.uid) {
-        // Sellers can only see products they created (no orderBy to avoid index issues)
         q = query(
           productsRef, 
           where('createdBy', '==', user.uid),
           limit(5)
         );
       } else {
-        // Regular users see products they created (no orderBy to avoid index issues)
         q = query(
           productsRef, 
           where('createdBy', '==', user?.uid || 'none'),
@@ -88,10 +158,13 @@ const AddProduct = () => {
           name: data.name || 'Unnamed Product',
           description: data.description || '',
           price: data.price || 0,
+          originalPrice: data.originalPrice || data.price || 0,
+          costPrice: data.costPrice || 0,
           stock: data.stock || data.stockQuantity || 0,
           category: data.category || 'Uncategorized',
           imageUrl: data.imageUrl || '',
           sku: data.sku || '',
+          supplier: data.supplier || '',
           createdBy: data.createdBy || 'unknown',
           ownedBy: data.ownedBy || data.createdBy || 'unknown',
           createdByEmail: data.createdByEmail || 'unknown',
@@ -99,19 +172,14 @@ const AddProduct = () => {
         };
       });
       
-      // Sort products manually by creation date (newest first) for non-admin users
       if (!isAdmin && !isManager) {
         products.sort((a, b) => b.createdAt - a.createdAt);
       }
       
-      console.log(`📦 Successfully fetched ${products.length} recent products for ${userAccessLevel}`);
       setRecentProducts(products);
     } catch (err) {
       console.error('Error fetching recent products:', err);
-      // Handle indexing issues specifically
       if (err.code === 'failed-precondition' || err.message.includes('index')) {
-        console.log('Firestore indexing issue, trying simpler query for recent products...');
-        // Try a simpler query without orderBy
         if ((isSeller || !isAdmin) && user?.uid) {
           try {
             const simpleQuery = query(productsRef, where('createdBy', '==', user.uid), limit(5));
@@ -121,36 +189,26 @@ const AddProduct = () => {
               return {
                 id: doc.id,
                 name: data.name || 'Unnamed Product',
-                description: data.description || '',
                 price: data.price || 0,
+                originalPrice: data.originalPrice || data.price || 0,
                 stock: data.stock || data.stockQuantity || 0,
                 category: data.category || 'Uncategorized',
-                imageUrl: data.imageUrl || '',
-                sku: data.sku || '',
-                createdBy: data.createdBy || 'unknown',
-                ownedBy: data.ownedBy || data.createdBy || 'unknown',
-                createdByEmail: data.createdByEmail || 'unknown',
                 createdAt: data.createdAt?.toDate() || new Date()
               };
             });
-            
-            // Sort manually
             products.sort((a, b) => b.createdAt - a.createdAt);
             setRecentProducts(products);
-            return; // Exit successfully
           } catch (simpleErr) {
             console.error('Simple query also failed:', simpleErr);
           }
         }
       }
-      // Don't show error for empty results in recent products - this is optional
     } finally {
       setLoadingProducts(false);
     }
   };
 
   const handleDeleteProduct = async (productId, productName) => {
-    // Check permissions
     if (!canDeleteProducts) {
       const product = recentProducts.find(p => p.id === productId);
       if (!product || (product.createdBy !== user?.uid && product.ownedBy !== user?.uid)) {
@@ -169,14 +227,9 @@ const AddProduct = () => {
 
     try {
       await deleteDoc(doc(db, 'products', productId));
-      
-      // Remove from local state
       setRecentProducts(prev => prev.filter(product => product.id !== productId));
-      
-      // Show success message
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-      
     } catch (err) {
       console.error('Error deleting product:', err);
       setError('Failed to delete product. Please try again.');
@@ -236,16 +289,21 @@ const AddProduct = () => {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (error) setError(null);
     if (success) setSuccess(false);
   };
 
   const validateForm = () => {
     if (!formData.name.trim()) return 'Product name is required';
-    if (!formData.price || parseFloat(formData.price) <= 0) return 'Valid price is required';
+    if (!formData.price || parseFloat(formData.price) <= 0) return 'Valid selling price is required';
     if (!formData.stock || parseInt(formData.stock) < 0) return 'Valid stock quantity is required';
     if (!formData.category) return 'Category is required';
+    
+    // Pricing validation
+    if (Object.keys(pricingErrors).length > 0) {
+      return 'Please fix pricing errors before submitting';
+    }
+    
     return null;
   };
 
@@ -262,20 +320,38 @@ const AddProduct = () => {
     setError(null);
 
     try {
-      // Prepare product data with ownership tracking and bulk pricing
       const basePrice = parseFloat(formData.price);
       const stockQuantity = parseInt(formData.stock);
+      const originalPrice = parseFloat(formData.originalPrice) || basePrice;
+      const costPrice = parseFloat(formData.costPrice) || 0;
+      const reorderPoint = parseInt(formData.reorderPoint) || Math.max(5, Math.floor(stockQuantity * 0.1));
+
+      // Process tags
+      const tags = formData.tags 
+        ? formData.tags.split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag)
+        : [formData.category.toLowerCase(), formData.name.toLowerCase().split(' ')[0]];
+
+      // Process image URLs - filter out empty strings
+      const additionalImages = formData.imageUrls.filter(url => url.trim());
+      const allImages = formData.imageUrl ? [formData.imageUrl, ...additionalImages] : additionalImages;
 
       const productData = {
         // Basic product info
         name: formData.name.trim(),
         description: formData.description.trim() || '',
         price: basePrice,
+        originalPrice: originalPrice,
+        costPrice: costPrice,
         stock: stockQuantity,
-        stockQuantity: stockQuantity, // Keep both for compatibility
+        stockQuantity: stockQuantity,
         category: formData.category,
-        imageUrl: formData.imageUrl.trim() || '',
+        imageUrl: formData.imageUrl.trim() || '', // Primary image
+        imageUrls: additionalImages, // Additional images array
+        allImages: allImages, // All images combined for easy access
         sku: formData.sku.trim() || '',
+        supplier: formData.supplier.trim() || '',
+        tags: tags,
+        reorderPoint: reorderPoint,
         
         // Ownership tracking fields
         createdBy: user.uid,
@@ -289,47 +365,44 @@ const AddProduct = () => {
         updatedAt: serverTimestamp(),
         
         // Status and approval
-        isApproved: true, // Auto-approve for now
+        isApproved: true,
         status: 'active',
         
-        // Automatic bulk pricing tiers
-        bulkPricing: {
-          '10': +(basePrice * 0.9).toFixed(2),   // 10% off for 10+ units
-          '50': +(basePrice * 0.85).toFixed(2),  // 15% off for 50+ units
-          '100': +(basePrice * 0.8).toFixed(2)   // 20% off for 100+ units
-        },
-        
-        // Additional metadata
-        reorderPoint: Math.max(5, Math.floor(stockQuantity * 0.1)), // Auto-set reorder point
-        supplier: user.businessName || user.displayName || '',
-        tags: [formData.category.toLowerCase(), formData.name.toLowerCase().split(' ')[0]]
+        // Bulk pricing (only if enabled)
+        bulkPricing: formData.enableBulkPricing ? {
+          '10': +(basePrice * 0.9).toFixed(2),
+          '50': +(basePrice * 0.85).toFixed(2),
+          '100': +(basePrice * 0.8).toFixed(2)
+        } : {}
       };
 
-      // Add to Firestore
       const docRef = await addDoc(collection(db, 'products'), productData);
       
       console.log('Product added with ID:', docRef.id);
-      console.log('Product data:', productData);
-      
       setSuccess(true);
       
       // Reset form
       setFormData({
         name: '',
         description: '',
+        originalPrice: '',
         price: '',
+        costPrice: '',
         stock: '',
         category: '',
         imageUrl: '',
-        sku: ''
+        imageUrls: [],
+        sku: '',
+        supplier: '',
+        tags: '',
+        reorderPoint: '',
+        enableBulkPricing: true
       });
 
-      // Show success message and redirect after delay
       setTimeout(() => {
         navigate('/inventory');
       }, 2000);
 
-      // Refresh recent products list
       fetchRecentProducts();
 
     } catch (err) {
@@ -344,17 +417,18 @@ const AddProduct = () => {
     navigate('/inventory');
   };
 
+  const { profitMargin, markup, discountPercent } = calculateMargins();
+
   return (
-    <div className={`container mx-auto px-4 py-8 max-w-2xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+    <div className={`container mx-auto px-4 py-8 max-w-4xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
       {/* Header */}
       <div className="mb-8">
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           Add New Product
         </h1>
         <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Add a new product to your inventory with automatic ownership tracking
+          Create a comprehensive product listing with pricing, inventory, and business details
         </p>
-        {/* Show user access level */}
         <div className="mt-2 flex items-center space-x-2">
           <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
             darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
@@ -376,7 +450,7 @@ const AddProduct = () => {
             <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Product added successfully with ownership tracking! Redirecting to inventory...
+            Product added successfully! Redirecting to inventory...
           </div>
         </div>
       )}
@@ -395,173 +469,644 @@ const AddProduct = () => {
 
       {/* Form */}
       <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border`}>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Product Name */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          
+          {/* Basic Information Section */}
           <div>
-            <label htmlFor="name" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              Product Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } focus:ring-indigo-500 focus:border-indigo-500`}
-              placeholder="Enter product name"
-              required
-            />
-          </div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              📝 Basic Information
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Product Name */}
+              <div className="lg:col-span-2">
+                <label htmlFor="name" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="Enter product name"
+                  required
+                />
+              </div>
 
-          {/* SKU */}
-          <div>
-            <label htmlFor="sku" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              SKU (Stock Keeping Unit)
-            </label>
-            <input
-              type="text"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } focus:ring-indigo-500 focus:border-indigo-500`}
-              placeholder="Enter SKU (optional)"
-            />
-          </div>
+              {/* SKU */}
+              <div>
+                <label htmlFor="sku" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  SKU (Stock Keeping Unit)
+                </label>
+                <input
+                  type="text"
+                  id="sku"
+                  name="sku"
+                  value={formData.sku}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="e.g., APL-IP16-256"
+                />
+              </div>
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              className={`w-full px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } focus:ring-indigo-500 focus:border-indigo-500`}
-              placeholder="Enter product description (optional)"
-            />
-          </div>
+              {/* Category */}
+              <div>
+                <label htmlFor="category" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Category *
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Price and Stock */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="price" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                Price ($) *
-              </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-                className={`w-full px-3 py-2 border rounded-md ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                } focus:ring-indigo-500 focus:border-indigo-500`}
-                placeholder="0.00"
-                required
-              />
-              {formData.price && (
-                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Bulk pricing: 10+ units: ${(parseFloat(formData.price) * 0.9).toFixed(2)}, 
-                  50+ units: ${(parseFloat(formData.price) * 0.85).toFixed(2)}, 
-                  100+ units: ${(parseFloat(formData.price) * 0.8).toFixed(2)}
-                </p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="stock" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                Stock Quantity *
-              </label>
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                value={formData.stock}
-                onChange={handleInputChange}
-                min="0"
-                className={`w-full px-3 py-2 border rounded-md ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                } focus:ring-indigo-500 focus:border-indigo-500`}
-                placeholder="0"
-                required
-              />
-              {formData.stock && (
-                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Auto reorder point: {Math.max(5, Math.floor(parseInt(formData.stock) * 0.1))} units
-                </p>
-              )}
+              {/* Description */}
+              <div className="lg:col-span-2">
+                <label htmlFor="description" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="Enter detailed product description..."
+                />
+              </div>
             </div>
           </div>
 
-          {/* Category */}
+          {/* Pricing Section */}
           <div>
-            <label htmlFor="category" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-              Category *
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                  : 'bg-white border-gray-300 text-gray-900'
-              } focus:ring-indigo-500 focus:border-indigo-500`}
-              required
-            >
-              <option value="">Select a category</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              💰 Pricing & Margins
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Cost Price */}
+              <div>
+                <label htmlFor="costPrice" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Cost Price ($)
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (Your wholesale cost)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="costPrice"
+                  name="costPrice"
+                  value={formData.costPrice}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    pricingErrors.costPrice 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="0.00"
+                />
+                {pricingErrors.costPrice && (
+                  <p className="text-red-500 text-xs mt-1">{pricingErrors.costPrice}</p>
+                )}
+              </div>
+
+              {/* Selling Price */}
+              <div>
+                <label htmlFor="price" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Selling Price ($) *
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (Current price)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    pricingErrors.price 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="0.00"
+                  required
+                />
+                {pricingErrors.price && (
+                  <p className="text-red-500 text-xs mt-1">{pricingErrors.price}</p>
+                )}
+              </div>
+
+              {/* Original Price */}
+              <div>
+                <label htmlFor="originalPrice" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Original Price ($)
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (MSRP/List price)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="originalPrice"
+                  name="originalPrice"
+                  value={formData.originalPrice}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    pricingErrors.originalPrice 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="0.00"
+                />
+                {pricingErrors.originalPrice && (
+                  <p className="text-red-500 text-xs mt-1">{pricingErrors.originalPrice}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Pricing Analytics */}
+            {(formData.price || formData.costPrice || formData.originalPrice) && (
+              <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📊 Pricing Analytics
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  {profitMargin > 0 && (
+                    <div className={`${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      📈 Profit Margin: {profitMargin}%
+                    </div>
+                  )}
+                  {markup > 0 && (
+                    <div className={`${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      🔢 Markup: {markup}%
+                    </div>
+                  )}
+                  {discountPercent > 0 && (
+                    <div className={`${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      🏷️ Discount: {discountPercent}%
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Inventory Section */}
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              📦 Inventory Management
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Stock Quantity */}
+              <div>
+                <label htmlFor="stock" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Stock Quantity *
+                </label>
+                <input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="0"
+                  required
+                />
+              </div>
+
+              {/* Reorder Point */}
+              <div>
+                <label htmlFor="reorderPoint" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Reorder Point
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (When to restock)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="reorderPoint"
+                  name="reorderPoint"
+                  value={formData.reorderPoint}
+                  onChange={handleInputChange}
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="Auto-calculated"
+                />
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Auto-calculated as 10% of stock (minimum 5 units)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Information Section */}
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              🏢 Business Information
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Supplier */}
+              <div>
+                <label htmlFor="supplier" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Supplier
+                </label>
+                <select
+                  id="supplier"
+                  name="supplier"
+                  value={formData.supplier}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                >
+                  <option value="">Select supplier</option>
+                  {commonSuppliers.map(supplier => (
+                    <option key={supplier} value={supplier}>
+                      {supplier}
+                    </option>
+                  ))}
+                </select>
+                {formData.supplier === 'Custom Supplier' && (
+                  <input
+                    type="text"
+                    placeholder="Enter custom supplier name"
+                    className={`w-full mt-2 px-3 py-2 border rounded-md ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    } focus:ring-indigo-500 focus:border-indigo-500`}
+                    onChange={(e) => setFormData(prev => ({ ...prev, supplier: e.target.value }))}
+                  />
+                )}
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label htmlFor="tags" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Tags
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (comma separated)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  id="tags"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="e.g., premium, wireless, portable"
+                />
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Auto-generated from category and product name if left empty
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Image Upload */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Product Image
-            </label>
-            <ImageUploader
-              initialImage={formData.imageUrl}
-              onImageUploaded={(url) =>
-                setFormData(prev => ({ ...prev, imageUrl: url }))
-              }
-              folder="product-images"
-              customId={user?.uid}
-              darkMode={darkMode}
-              autoUpload={true}
-            />
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              🖼️ Product Images
+              <span className={`text-sm font-normal ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                (Add up to 5 images)
+              </span>
+            </h3>
+            
+            {/* Primary Image */}
+            <div className="mb-6">
+              <label htmlFor="imageUrl" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Primary Image URL *
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Main product image)
+                </span>
+              </label>
+              <input
+                type="url"
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                } focus:ring-indigo-500 focus:border-indigo-500`}
+                placeholder="https://example.com/primary-image.jpg"
+              />
+              
+              {/* Primary Image Preview */}
+              {formData.imageUrl && (
+                <div className="mt-3">
+                  <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Primary Image Preview:
+                  </p>
+                  <div className={`w-32 h-32 rounded-lg border-2 border-dashed ${
+                    darkMode ? 'border-gray-600' : 'border-gray-300'
+                  } flex items-center justify-center overflow-hidden`}>
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Primary product preview" 
+                      className="w-full h-full object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerHTML = `
+                          <div class="text-center p-4">
+                            <span class="text-red-500 text-sm">❌ Invalid image URL</span>
+                          </div>
+                        `;
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Images */}
+            <div className="mb-6">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Additional Images (Optional)
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Up to 4 more images for gallery view)
+                </span>
+              </label>
+              
+              {/* Dynamic Image URL inputs */}
+              <div className="space-y-3">
+                {[0, 1, 2, 3].map((index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <input
+                      type="url"
+                      value={formData.imageUrls[index] || ''}
+                      onChange={(e) => {
+                        const newImageUrls = [...formData.imageUrls];
+                        newImageUrls[index] = e.target.value;
+                        setFormData(prev => ({ ...prev, imageUrls: newImageUrls }));
+                      }}
+                      className={`flex-1 px-3 py-2 border rounded-md ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } focus:ring-indigo-500 focus:border-indigo-500`}
+                      placeholder={`https://example.com/image-${index + 2}.jpg`}
+                    />
+                    
+                    {/* Preview thumbnail */}
+                    {formData.imageUrls[index] && (
+                      <div className={`w-12 h-12 rounded border ${
+                        darkMode ? 'border-gray-600' : 'border-gray-300'
+                      } overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={formData.imageUrls[index]} 
+                          alt={`Preview ${index + 2}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentNode.innerHTML = '<div class="w-full h-full bg-red-100 flex items-center justify-center"><span class="text-red-500 text-xs">❌</span></div>';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Clear button */}
+                    {formData.imageUrls[index] && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImageUrls = [...formData.imageUrls];
+                          newImageUrls[index] = '';
+                          setFormData(prev => ({ ...prev, imageUrls: newImageUrls }));
+                        }}
+                        className={`p-2 rounded ${
+                          darkMode ? 'text-red-400 hover:bg-red-900/20' : 'text-red-600 hover:bg-red-50'
+                        } transition-colors`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Gallery Preview */}
+              {(formData.imageUrl || formData.imageUrls.some(url => url)) && (
+                <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <p className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    📸 Gallery Preview (how it will look to customers):
+                  </p>
+                  <div className="flex space-x-2 overflow-x-auto">
+                    {/* Primary image */}
+                    {formData.imageUrl && (
+                      <div className={`w-20 h-20 rounded-lg border-2 border-indigo-500 overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={formData.imageUrl} 
+                          alt="Primary"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Additional images */}
+                    {formData.imageUrls.filter(url => url).map((url, index) => (
+                      <div key={index} className={`w-20 h-20 rounded-lg border-2 ${
+                        darkMode ? 'border-gray-600' : 'border-gray-200'
+                      } overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={url} 
+                          alt={`Additional ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Total images: {[formData.imageUrl, ...formData.imageUrls.filter(url => url)].length} 
+                    {formData.imageUrl && ' (Primary image has blue border)'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center my-4">
+              <div className={`flex-1 border-t ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}></div>
+              <span className={`px-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>OR</span>
+              <div className={`flex-1 border-t ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}></div>
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Upload Image File
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Upload from your device - will set as primary image)
+                </span>
+              </p>
+              <ImageUploader
+                initialImage={formData.imageUrl}
+                onImageUploaded={(url) =>
+                  setFormData(prev => ({ ...prev, imageUrl: url }))
+                }
+                folder="product-images"
+                customId={user?.uid}
+                darkMode={darkMode}
+                autoUpload={true}
+              />
+            </div>
+
+            {/* Quick Demo Images */}
+            <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                🔗 Quick Demo Images (for testing):
+              </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop' }))}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  📱 Phone (Primary)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[0] = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  👟 Sneakers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[1] = 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  💻 Laptop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[2] = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  ⌚ Watch
+                </button>
+              </div>
+              <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                💡 Tip: Use the first button to set a primary image, then use others to add gallery images
+              </p>
+            </div>
+          </div>
+
+          {/* Bulk Pricing Option */}
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              🎯 Bulk Pricing
+            </h3>
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableBulkPricing}
+                  onChange={(e) => setFormData(prev => ({ ...prev, enableBulkPricing: e.target.checked }))}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className={`ml-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Enable automatic bulk pricing discounts
+                </span>
+              </label>
+              
+              {formData.enableBulkPricing && formData.price && (
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Bulk Pricing Tiers
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className={`${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      📦 10+ units: ${(parseFloat(formData.price) * 0.9).toFixed(2)} (10% off)
+                    </div>
+                    <div className={`${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      📦 50+ units: ${(parseFloat(formData.price) * 0.85).toFixed(2)} (15% off)
+                    </div>
+                    <div className={`${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      📦 100+ units: ${(parseFloat(formData.price) * 0.8).toFixed(2)} (20% off)
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={handleCancel}
-              className={`px-4 py-2 border rounded-md font-medium ${
+              className={`px-6 py-2 border rounded-md font-medium ${
                 darkMode 
                   ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
                   : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -572,8 +1117,8 @@ const AddProduct = () => {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className={`px-6 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center`}
+              disabled={loading || Object.keys(pricingErrors).length > 0}
+              className={`px-8 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center`}
             >
               {loading && (
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -595,19 +1140,20 @@ const AddProduct = () => {
           </svg>
           <div>
             <h3 className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
-              Ownership & Permissions
+              Ownership & Business Features
             </h3>
             <ul className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
-              <li>• Products you create will be automatically owned by you</li>
-              <li>• Automatic bulk pricing tiers will be applied (10%, 15%, 20% discounts)</li>
-              <li>• {isSeller ? 'As a seller, only you can edit/delete your products' : isAdmin || isManager ? 'As admin/manager, you can manage all products' : 'You can manage your own products'}</li>
-              <li>• Products will be immediately available in the inventory</li>
+              <li>• Products automatically owned by you with full management rights</li>
+              <li>• Pricing structure tracks cost, selling, and original prices for margin analysis</li>
+              <li>• Bulk pricing tiers automatically calculated when enabled</li>
+              <li>• Inventory reorder points help manage stock levels</li>
+              <li>• Supplier and tag information for better organization</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Recently Added Products Section - User-specific filtering */}
+      {/* Recently Added Products Section */}
       {canManageProducts && (
         <div className={`mt-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-lg border`}>
           <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
@@ -678,8 +1224,18 @@ const AddProduct = () => {
                           {product.name}
                         </h4>
                         <div className="flex items-center space-x-4 mt-1">
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-sm font-medium ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                              ${product.price?.toFixed(2)}
+                            </span>
+                            {product.originalPrice && product.originalPrice > product.price && (
+                              <span className={`text-xs line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                                ${product.originalPrice?.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
                           <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            ${product.price?.toFixed(2)} • Stock: {product.stock}
+                            Stock: {product.stock}
                           </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
@@ -688,7 +1244,7 @@ const AddProduct = () => {
                           </span>
                         </div>
                         <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-                          Added {product.createdAt.toLocaleDateString()} at {product.createdAt.toLocaleTimeString()}
+                          Added {product.createdAt.toLocaleDateString()}
                           {(isAdmin || isManager) && product.createdBy !== user.uid && (
                             <span className={`ml-2 px-1 py-0.5 rounded text-xs ${
                               darkMode ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'
@@ -717,7 +1273,6 @@ const AddProduct = () => {
                         View
                       </button>
                       
-                      {/* Show delete button based on permissions */}
                       {(canDeleteProducts || product.createdBy === user?.uid) && (
                         <button
                           onClick={() => handleDeleteProduct(product.id, product.name)}
@@ -745,35 +1300,6 @@ const AddProduct = () => {
                 ))}
               </div>
             )}
-
-            {/* Permission Notice */}
-            <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border`}>
-              <div className="flex items-start">
-                <svg className={`h-5 w-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'} mt-0.5 mr-2`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <div>
-                  <h4 className={`text-sm font-medium ${darkMode ? 'text-yellow-300' : 'text-yellow-800'} mb-1`}>
-                    🔐 Ownership & Access Control
-                  </h4>
-                  <p className={`text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
-                    {canDeleteProducts ? (
-                      <>
-                        <strong>Admin/Manager Access:</strong> You can view all products and delete any product. Deleted products cannot be recovered.
-                      </>
-                    ) : isSeller ? (
-                      <>
-                        <strong>Seller Access:</strong> You can only view and manage products you created. Only you and administrators can delete your products.
-                      </>
-                    ) : (
-                      <>
-                        <strong>User Access:</strong> You can view and manage products you created. Only administrators and managers can delete products created by others.
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

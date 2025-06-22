@@ -9,6 +9,9 @@ import Registration from './pages/Registration';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import NoShoppingRedirect from './components/common/NoShoppingRedirect';
 import QRPage from './pages/QRPage';
+import ProductSeeder from './components/ProductSeeder';
+import AdminLayout from './components/common/AdminLayout';
+
 
 // Lazy-loaded components for better performance
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
@@ -36,21 +39,32 @@ const OrderProcessing = lazy(() => import('./pages/OrderProcessing'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const Documentation = lazy(() => import('./pages/Documentation'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
-
 const MyProfile = lazy(() => import('./pages/MyProfile'));
 const UserSettings = lazy(() => import('./pages/UserSettings'));
 
-// Admin components
+// Admin components - EXISTING + NEW ENHANCED PANELS
 const UserApprovalDashboard = lazy(() => import('./pages/admin/UserApprovalDashboard'));
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
+
+// NEW: Enhanced Admin Panels (Create these files)
+const UserPanel = lazy(() => import('./pages/admin/UserPanel'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
+const AdminSupportTickets = lazy(() => import('./pages/admin/AdminSupportTickets'));
+
+
+// Deal Management component
+const DealManagement = lazy(() => import('./pages/DealManagement'));
 
 // User-specific components
 const UserSpecificOrders = lazy(() => import('./components/UserSpecificOrders'));
 
-// Startup Animation Component
+// Startup Animation Component with Skip Button
 const StartupAnimation = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [displayText, setDisplayText] = useState('');
@@ -62,6 +76,11 @@ const StartupAnimation = ({ onComplete }) => {
     'CONNECTING TO SERVERS...',
     'SYSTEM READY'
   ];
+
+  // Skip button handler
+  const handleSkip = () => {
+    onComplete();
+  };
 
   // Hacker text effect
   useEffect(() => {
@@ -122,6 +141,19 @@ const StartupAnimation = ({ onComplete }) => {
       <div className="absolute inset-0 opacity-20">
         <div className="grid-pattern"></div>
       </div>
+
+      {/* Skip Button */}
+      <button
+        onClick={handleSkip}
+        className="absolute top-6 right-6 text-gray-400 hover:text-cyan-400 transition-colors duration-300 z-20 group"
+      >
+        <div className="flex items-center space-x-2 px-4 py-2 border border-gray-600 hover:border-cyan-400 rounded-lg backdrop-blur-sm">
+          <span className="text-sm font-mono">SKIP</span>
+          <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </div>
+      </button>
 
       <div className="text-center space-y-8 relative z-10 max-w-2xl px-8">
         {/* Logo */}
@@ -221,6 +253,15 @@ function App() {
           <Router>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
+                
+                <Route path="/seed-products" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Layout>
+                      <ProductSeeder />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+
                 {/* Public Routes - No authentication required */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Registration />} />
@@ -272,36 +313,37 @@ function App() {
                     <ProductCatalog />
                   </Layout>
                 } />
+                
                 {/* Profile and Settings Routes - Available to all authenticated users */}
-<Route path="/profile" element={
-  <ProtectedRoute>
-    <Layout>
-      <MyProfile />
-    </Layout>
-  </ProtectedRoute>
-} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <MyProfile />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
-<Route path="/settings" element={
-  <ProtectedRoute>
-    <Layout>
-      <UserSettings />
-    </Layout>
-  </ProtectedRoute>
-} />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <UserSettings />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
 
                 {/* Help Center - Public access */}
-<Route path="/help-center" element={
-  <Layout>
-    <HelpCenter />
-  </Layout>
-} />
+                <Route path="/help-center" element={
+                  <Layout>
+                    <HelpCenter />
+                  </Layout>
+                } />
 
-{/* Contact Support - Public access */}
-<Route path="/contact-support" element={
-  <Layout>
-    <ContactSupport />
-  </Layout>
-} />
+                {/* Contact Support - Public access */}
+                <Route path="/contact-support" element={
+                  <Layout>
+                    <ContactSupport />
+                  </Layout>
+                } />
 
                 {/* Shopping routes - restricted for admin/manager */}
                 <Route path="/cart" element={
@@ -332,9 +374,9 @@ function App() {
                 {/* Role-specific dashboard routes with access control */}
                 <Route path="/admin-dashboard" element={
                   <ProtectedRoute requiredRole="admin">
-                    <Layout>
-                      <AdminDashboard />
-                    </Layout>
+                    <AdminLayout>
+      <AdminDashboard />
+    </AdminLayout>
                   </ProtectedRoute>
                 } />
 
@@ -361,16 +403,47 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
-
-                {/* Admin Routes - Admin access only */}
+                
+                {/* ENHANCED ADMIN ROUTES - Complete Admin System */}
                 <Route path="/admin/*" element={
                   <ProtectedRoute requiredRole="admin">
                     <Layout>
                       <Routes>
-                        <Route index element={<AdminPanel />} />
-                        <Route path="users" element={<UserApprovalDashboard />} />
+                        {/* Main Admin Dashboard - Use Enhanced Command Center */}
+                        <Route index element={<AdminDashboard />} />
+                        
+                        {/* Legacy Admin Panel - Keep existing route */}
+                        <Route path="panel" element={<AdminPanel />} />
+                        
+                        {/* NEW: Enhanced User Management Panel (separate from approvals) */}
+                        <Route path="users" element={<UserPanel />} />
+                        
+                        {/* User Approval System (existing, keep separate from user management) */}
                         <Route path="approvals" element={<UserApprovalDashboard />} />
                         <Route path="pending-approvals" element={<UserApprovalDashboard />} />
+                        
+                        {/* NEW: System Settings Panel */}
+                        <Route path="settings" element={<AdminSettings />} />
+                        
+                        {/* NEW: Analytics Dashboard */}
+                        <Route path="analytics" element={<AdminAnalytics />} />
+                        
+                        {/* NEW: Security Center */}
+                        <Route path="security" element={<AdminSecurity />} />
+
+                        {/* NEW: Reports Management */}
+                        <Route path="reports" element={<AdminReports />} />
+                        
+                        {/* Deal Management (existing) */}
+                        <Route path="deals" element={<DealManagement />} />
+
+                        {/* Feedback Management - Admin and Manager access */}
+                        <Route path="feedback" element={<AdminFeedback />} />
+
+                        {/* Support Tickets - Admin and Manager access */} 
+                        <Route path="support" element={<AdminSupportTickets />} />
+                        
+                        {/* Fallback */}
                         <Route path="*" element={<Navigate to="/admin" replace />} />
                       </Routes>
                     </Layout>
@@ -563,7 +636,6 @@ function App() {
                                 </div>
                               </Link>
 
-                              {/* Add Feedback Management for Managers */}
                               <Link to="/manager/feedback" className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
                                 <div className="flex items-center">
                                   <div className="text-3xl mr-4">💬</div>
@@ -672,7 +744,7 @@ function App() {
                         
                         <Route path="orders" element={
                           <UserSpecificOrders />
-                        } />
+                        }/>
 
                         {/* Add feedback access for business users */}
                         <Route path="feedback" element={<FeedbackPage />} />
