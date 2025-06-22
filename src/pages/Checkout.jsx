@@ -433,24 +433,25 @@ const Checkout = () => {
           email: guestContact.email
         } : (paymentInfo.billingAddressSame ? shippingInfo : paymentInfo.billingAddress),
         
-        // Enhanced order items with bulk pricing info
-        items: cart.map(item => ({
+        // UPDATED: Enhanced order items with auto-applied bulk pricing info
+        items: processedCart.map(item => ({
           productId: item.id,
           productName: item.name,
-          originalPrice: item.bulkPricing?.originalPrice || item.price,
-          effectivePrice: item.effectivePrice || item.price,
+          originalPrice: item.price, // Always the original price
+          effectivePrice: item.effectivePrice || item.price, // Bulk-discounted price if applicable
           quantity: item.quantity,
           subtotal: (item.effectivePrice || item.price) * item.quantity,
-          // Bulk pricing details
-          hasBulkPricing: !!item.bulkPricing?.isBulkPrice,
+          // Enhanced bulk pricing details
+          hasBulkPricing: !!item.hasBulkDiscount,
           bulkTier: item.bulkPricing?.bulkTier || null,
           bulkDiscount: item.bulkPricing?.bulkDiscount || 0,
-          bulkSavings: item.bulkPricing?.isBulkPrice 
-            ? (item.bulkPricing.originalPrice - (item.effectivePrice || item.price)) * item.quantity 
-            : 0
+          bulkSavings: item.hasBulkDiscount 
+            ? (item.price - item.effectivePrice) * item.quantity 
+            : 0,
+          wasAutoApplied: !!item.hasBulkDiscount // Track if this was auto-applied
         })),
         
-        // Enhanced pricing with bulk savings
+        // Enhanced pricing with auto-applied bulk savings
         originalSubtotal: pricing.originalSubtotal,
         subtotal: pricing.subtotal,
         totalBulkSavings: pricing.totalBulkSavings,
@@ -472,8 +473,9 @@ const Checkout = () => {
         userId: isGuest ? null : (user?.uid || null),
         
         // Metadata
-        itemCount: cart.reduce((sum, item) => sum + item.quantity, 0),
+        itemCount: processedCart.reduce((sum, item) => sum + item.quantity, 0),
         hasBulkDiscounts: pricing.totalBulkSavings > 0,
+        bulkDiscountsAutoApplied: processedCart.some(item => item.hasBulkDiscount), // NEW: Track auto-application
         
         // New Zealand specific
         country: 'New Zealand',
@@ -530,18 +532,26 @@ const Checkout = () => {
             </div>
           )}
 
-          {/* Bulk Savings Notice */}
+          {/* UPDATED: Enhanced Bulk Savings Notice */}
           {pricing.totalBulkSavings > 0 && (
             <div className={`mb-6 p-6 rounded-xl ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
               <div className="flex items-center">
                 <Tag className="w-8 h-8 mr-3 text-green-600" />
-                <div>
+                <div className="flex-1">
                   <h3 className={`text-lg font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'} mb-1`}>
-                    🎉 You're saving ${pricing.totalBulkSavings.toFixed(2)} NZD with bulk pricing!
+                    🎉 You're saving ${pricing.totalBulkSavings.toFixed(2)} NZD with auto-applied bulk pricing!
                   </h3>
                   <p className={`${darkMode ? 'text-green-200' : 'text-green-700'}`}>
-                    Your bulk discounts have been applied and will be maintained through checkout.
+                    Bulk discounts have been automatically applied based on your quantities and will be maintained through checkout.
                   </p>
+                </div>
+                <div className="text-right">
+                  <div className={`text-sm font-medium ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+                    {processedCart.filter(item => item.hasBulkDiscount).length} items with bulk pricing
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                    Auto-applied at checkout
+                  </div>
                 </div>
               </div>
             </div>
