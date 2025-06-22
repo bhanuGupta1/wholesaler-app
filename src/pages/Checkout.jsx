@@ -1177,13 +1177,13 @@ const Checkout = () => {
               <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-8`}>
                 <h2 className="text-2xl font-bold mb-6">Review Your Order</h2>
                 
-                {/* Enhanced Order Items with Bulk Pricing */}
+                {/* UPDATED: Enhanced Order Items with Auto-Applied Bulk Pricing */}
                 <div className="space-y-4 mb-8">
-                  {cart.map(item => {
+                  {processedCart.map(item => {
                     const effectivePrice = item.effectivePrice || item.price;
-                    const hasBulkPricing = item.bulkPricing?.isBulkPrice;
+                    const hasBulkPricing = item.hasBulkDiscount;
                     const itemSavings = hasBulkPricing ? 
-                      (item.bulkPricing.originalPrice - effectivePrice) * item.quantity : 0;
+                      (item.price - effectivePrice) * item.quantity : 0;
 
                     return (
                       <div key={item.id} className={`flex items-center space-x-4 p-4 border rounded-xl ${
@@ -1203,7 +1203,7 @@ const Checkout = () => {
                               Qty: {item.quantity} × ${effectivePrice.toFixed(2)}
                               {hasBulkPricing && (
                                 <span className="ml-2 text-green-600 font-medium">
-                                  (was ${item.bulkPricing.originalPrice.toFixed(2)})
+                                  (was ${item.price.toFixed(2)})
                                 </span>
                               )}
                             </p>
@@ -1211,7 +1211,7 @@ const Checkout = () => {
                               <div className="flex items-center space-x-2">
                                 <Tag className="w-3 h-3 text-green-600" />
                                 <span className="text-xs font-medium text-green-600">
-                                  Bulk discount: {item.bulkPricing.bulkDiscount.toFixed(0)}% off
+                                  Auto bulk discount: {item.bulkPricing.bulkDiscount.toFixed(0)}% off • {item.bulkPricing.bulkTier}+ units
                                 </span>
                               </div>
                             )}
@@ -1279,7 +1279,7 @@ const Checkout = () => {
             )}
           </div>
 
-          {/* Enhanced Order Summary Sidebar with Bulk Pricing */}
+          {/* UPDATED: Enhanced Order Summary Sidebar with Auto-Applied Bulk Pricing */}
           <div className="xl:col-span-1">
             <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-6 sticky top-4`}>
               <h3 className="text-xl font-bold mb-6 flex items-center">
@@ -1305,12 +1305,12 @@ const Checkout = () => {
                   <span className="font-semibold">${pricing.subtotal.toFixed(2)}</span>
                 </div>
 
-                {/* Bulk Savings */}
+                {/* Auto-Applied Bulk Savings */}
                 {pricing.totalBulkSavings > 0 && (
                   <div className="flex justify-between">
                     <span className="text-green-600 font-medium flex items-center">
                       <Tag className="w-4 h-4 mr-1" />
-                      Bulk Savings:
+                      Auto Bulk Savings:
                     </span>
                     <span className="font-bold text-green-600">
                       -${pricing.totalBulkSavings.toFixed(2)}
