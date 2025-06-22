@@ -1295,7 +1295,7 @@ const CreateOrder = () => {
             )}
           </div>
 
-          {/* Enhanced Order Summary Sidebar */}
+          {/* ENHANCED: Complete Order Summary Sidebar with All Discount Types */}
           <div className="lg:col-span-1">
             <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 sticky top-4`}>
               <h3 className="text-lg font-semibold mb-4 flex items-center">
@@ -1308,7 +1308,7 @@ const CreateOrder = () => {
                 )}
               </h3>
               
-              {selectedProducts.length === 0 ? (
+              {processedSelectedProducts.length === 0 ? (
                 <div className="text-center py-6">
                   <div className="text-4xl mb-2">🛍️</div>
                   <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -1327,7 +1327,7 @@ const CreateOrder = () => {
                 <div className="space-y-4">
                   {/* Selected Products */}
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {selectedProducts.map(product => (
+                    {processedSelectedProducts.map(product => (
                       <div key={product.id} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-sm font-medium truncate pr-2">{product.name}</p>
@@ -1354,9 +1354,16 @@ const CreateOrder = () => {
                               +
                             </button>
                           </div>
+                          <div className="text-right">
                           <p className="text-sm font-semibold">
-                            ${(product.price * product.quantity).toFixed(2)}
+                              ${((product.effectivePrice || product.price) * product.quantity).toFixed(2)}
                           </p>
+                            {product.hasBulkDiscount && (
+                              <p className="text-xs text-green-600">
+                                Auto bulk applied
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
