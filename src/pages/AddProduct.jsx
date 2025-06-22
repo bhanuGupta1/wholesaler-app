@@ -677,11 +677,34 @@ const AddProduct = () => {
             </select>
           </div>
 
-          {/* Image Upload */}
+              {/* Tags */}
           <div>
-            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              Product Image
+                <label htmlFor="tags" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Tags
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (comma separated)
+                  </span>
             </label>
+                <input
+                  type="text"
+                  id="tags"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="e.g., premium, wireless, portable"
+                />
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Auto-generated from category and product name if left empty
+                </p>
+              </div>
+            </div>
+          </div>
+
             <ImageUploader
               initialImage={formData.imageUrl}
               onImageUploaded={(url) =>
