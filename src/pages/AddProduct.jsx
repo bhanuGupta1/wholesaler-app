@@ -23,7 +23,11 @@ const AddProduct = () => {
     stock: '',
     category: '',
     imageUrl: '',
-    sku: ''
+    sku: '',
+    supplier: '',
+    tags: '',
+    reorderPoint: '',
+    enableBulkPricing: true
   });
   
   const [loading, setLoading] = useState(false);
