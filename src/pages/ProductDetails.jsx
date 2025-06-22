@@ -159,6 +159,13 @@ const ProductDetails = () => {
   const getEffectivePrice = () => {
     return currentBulkPrice || product?.price || 0;
   };
+
+  // Get product images
+  const getProductImages = (product) => {
+    if (!product) return [];
+    
+    const images = [];
+    if (product.imageUrl) images.push(product.imageUrl);
     if (product.imageUrls && Array.isArray(product.imageUrls)) {
       product.imageUrls.forEach(url => {
         if (url && url.trim() && !images.includes(url)) {
