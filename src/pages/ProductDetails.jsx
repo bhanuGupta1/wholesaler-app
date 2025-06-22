@@ -127,18 +127,38 @@ const ProductDetails = () => {
     }
   };
 
-  // FIXED: Real multiple images support
-  const getProductImages = (product) => {
-    if (!product) return [];
-    
-    const images = [];
-    
-    // Add primary image first
-    if (product.imageUrl) {
-      images.push(product.imageUrl);
+  // Calculate bulk pricing based on quantity
+  const calculateBulkPricing = () => {
+    if (!product?.bulkPricing) {
+      setCurrentBulkPrice(null);
+      setBulkDiscount(0);
+      return;
     }
+
+    const bulkTiers = Object.keys(product.bulkPricing)
+      .map(tier => parseInt(tier))
+      .sort((a, b) => b - a); // Sort descending
+
+    // Find the highest tier that applies
+    const applicableTier = bulkTiers.find(tier => quantity >= tier);
     
-    // Add additional images from imageUrls array
+    if (applicableTier) {
+      const bulkPrice = product.bulkPricing[applicableTier.toString()];
+      const savings = product.price - bulkPrice;
+      const discountPercent = (savings / product.price) * 100;
+      
+      setCurrentBulkPrice(bulkPrice);
+      setBulkDiscount(discountPercent);
+    } else {
+      setCurrentBulkPrice(null);
+      setBulkDiscount(0);
+    }
+  };
+
+  // Get effective price (bulk price if applicable, otherwise regular price)
+  const getEffectivePrice = () => {
+    return currentBulkPrice || product?.price || 0;
+  };
     if (product.imageUrls && Array.isArray(product.imageUrls)) {
       product.imageUrls.forEach(url => {
         if (url && url.trim() && !images.includes(url)) {
