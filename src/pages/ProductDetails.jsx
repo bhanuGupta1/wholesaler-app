@@ -627,12 +627,18 @@ const ProductDetails = () => {
                 {product.name}
               </h1>
               
-              {/* SKU */}
-              {product.sku && (
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>
-                  SKU: {product.sku}
-                </p>
-              )}
+              {/* Rating (mock for now) */}
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-5 h-5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  4.0 (123 reviews)
+                </span>
+              </div>
+            </div>
               
               {/* Pricing with original price support */}
               <div className="flex items-center space-x-4 mb-4">
