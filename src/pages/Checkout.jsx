@@ -1362,18 +1362,57 @@ const Checkout = () => {
                     </button>
                   </>
                 )}
+
+                {/* Validation Error Summary */}
+                {Object.keys(formErrors).length > 0 && (
+                  <div className={`mt-4 p-4 rounded-xl ${darkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'} border`}>
+                    <div className="flex items-center mb-2">
+                      <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-semibold text-red-600">Please fix the following errors:</span>
+                    </div>
+                    <div className={`text-sm space-y-1 ${darkMode ? 'text-red-300' : 'text-red-600'}`}>
+                      {Object.keys(formErrors).length} field(s) need attention
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Security Badge */}
-              <div className={`mt-6 p-3 rounded text-xs ${
+              {/* Enhanced Security & NZ Info */}
+              <div className="mt-6 space-y-3">
+                <div className={`p-4 rounded-xl text-sm ${
                 darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'
               } border`}>
-                <div className="flex items-center">
-                  <span className="mr-2">🔒</span>
-                  <div>
-                    <div className="font-medium text-green-600">Secure Checkout</div>
-                    <div className={`${darkMode ? 'text-green-300' : 'text-green-600'}`}>
-                      SSL encrypted & PCI compliant
+                  <div className="flex items-center mb-2">
+                    <Shield className="w-4 h-4 mr-2 text-green-600" />
+                    <span className="font-semibold text-green-600">Secure NZ Checkout</span>
+                    </div>
+                  <div className={`text-xs space-y-1 ${darkMode ? 'text-green-300' : 'text-green-600'}`}>
+                    <div>• SSL encrypted & PCI compliant</div>
+                    <div>• All prices include GST</div>
+                    <div>• NZ consumer rights protected</div>
+                  </div>
+                </div>
+
+                {/* Payment Features */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <Shield className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
+                    <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Secure
+              </div>
+            </div>
+                  <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <Truck className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                    <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Fast Ship
+                    </div>
+                  </div>
+                  <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <Tag className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                    <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      Best Price
                     </div>
                   </div>
                 </div>
