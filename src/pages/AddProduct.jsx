@@ -820,15 +820,18 @@ const AddProduct = () => {
           {/* Image Upload */}
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              🖼️ Product Image
+              🖼️ Product Images
+              <span className={`text-sm font-normal ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                (Add up to 5 images)
+              </span>
             </h3>
             
-            {/* Image URL Input */}
-            <div className="mb-4">
+            {/* Primary Image */}
+            <div className="mb-6">
               <label htmlFor="imageUrl" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
-                Image URL
+                Primary Image URL *
                 <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  (Direct link to product image)
+                  (Main product image)
                 </span>
               </label>
               <input
@@ -842,21 +845,21 @@ const AddProduct = () => {
                     ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
                     : 'bg-white border-gray-300 text-gray-900'
                 } focus:ring-indigo-500 focus:border-indigo-500`}
-                placeholder="https://example.com/product-image.jpg"
+                placeholder="https://example.com/primary-image.jpg"
               />
               
-              {/* Image Preview */}
+              {/* Primary Image Preview */}
               {formData.imageUrl && (
                 <div className="mt-3">
                   <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Image Preview:
+                    Primary Image Preview:
                   </p>
                   <div className={`w-32 h-32 rounded-lg border-2 border-dashed ${
                     darkMode ? 'border-gray-600' : 'border-gray-300'
                   } flex items-center justify-center overflow-hidden`}>
                     <img 
                       src={formData.imageUrl} 
-                      alt="Product preview" 
+                      alt="Primary product preview" 
                       className="w-full h-full object-cover rounded-lg"
                       onError={(e) => {
                         e.target.style.display = 'none';
@@ -868,6 +871,113 @@ const AddProduct = () => {
                       }}
                     />
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Images */}
+            <div className="mb-6">
+              <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Additional Images (Optional)
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Up to 4 more images for gallery view)
+                </span>
+              </label>
+              
+              {/* Dynamic Image URL inputs */}
+              <div className="space-y-3">
+                {[0, 1, 2, 3].map((index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <input
+                      type="url"
+                      value={formData.imageUrls[index] || ''}
+                      onChange={(e) => {
+                        const newImageUrls = [...formData.imageUrls];
+                        newImageUrls[index] = e.target.value;
+                        setFormData(prev => ({ ...prev, imageUrls: newImageUrls }));
+                      }}
+                      className={`flex-1 px-3 py-2 border rounded-md ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } focus:ring-indigo-500 focus:border-indigo-500`}
+                      placeholder={`https://example.com/image-${index + 2}.jpg`}
+                    />
+                    
+                    {/* Preview thumbnail */}
+                    {formData.imageUrls[index] && (
+                      <div className={`w-12 h-12 rounded border ${
+                        darkMode ? 'border-gray-600' : 'border-gray-300'
+                      } overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={formData.imageUrls[index]} 
+                          alt={`Preview ${index + 2}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentNode.innerHTML = '<div class="w-full h-full bg-red-100 flex items-center justify-center"><span class="text-red-500 text-xs">❌</span></div>';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Clear button */}
+                    {formData.imageUrls[index] && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImageUrls = [...formData.imageUrls];
+                          newImageUrls[index] = '';
+                          setFormData(prev => ({ ...prev, imageUrls: newImageUrls }));
+                        }}
+                        className={`p-2 rounded ${
+                          darkMode ? 'text-red-400 hover:bg-red-900/20' : 'text-red-600 hover:bg-red-50'
+                        } transition-colors`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Gallery Preview */}
+              {(formData.imageUrl || formData.imageUrls.some(url => url)) && (
+                <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <p className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    📸 Gallery Preview (how it will look to customers):
+                  </p>
+                  <div className="flex space-x-2 overflow-x-auto">
+                    {/* Primary image */}
+                    {formData.imageUrl && (
+                      <div className={`w-20 h-20 rounded-lg border-2 border-indigo-500 overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={formData.imageUrl} 
+                          alt="Primary"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Additional images */}
+                    {formData.imageUrls.filter(url => url).map((url, index) => (
+                      <div key={index} className={`w-20 h-20 rounded-lg border-2 ${
+                        darkMode ? 'border-gray-600' : 'border-gray-200'
+                      } overflow-hidden flex-shrink-0`}>
+                        <img 
+                          src={url} 
+                          alt={`Additional ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Total images: {[formData.imageUrl, ...formData.imageUrls.filter(url => url)].length} 
+                    {formData.imageUrl && ' (Primary image has blue border)'}
+                  </p>
                 </div>
               )}
             </div>
@@ -884,7 +994,7 @@ const AddProduct = () => {
               <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 Upload Image File
                 <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  (Upload from your device)
+                  (Upload from your device - will set as primary image)
                 </span>
               </p>
               <ImageUploader
@@ -899,41 +1009,56 @@ const AddProduct = () => {
               />
             </div>
 
-            {/* Common Image URLs for Testing/Demo */}
+            {/* Quick Demo Images */}
             <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
               <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                🔗 Quick Image URLs (for testing):
+                🔗 Quick Demo Images (for testing):
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop' }))}
                   className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
                 >
-                  📱 Generic Phone
+                  📱 Phone (Primary)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop' }))}
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[0] = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
                   className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
                 >
                   👟 Sneakers
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop' }))}
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[1] = 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
                   className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
                 >
                   💻 Laptop
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop' }))}
+                  onClick={() => {
+                    const newUrls = [...formData.imageUrls];
+                    newUrls[2] = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop';
+                    setFormData(prev => ({ ...prev, imageUrls: newUrls }));
+                  }}
                   className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
                 >
                   ⌚ Watch
                 </button>
               </div>
+              <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                💡 Tip: Use the first button to set a primary image, then use others to add gallery images
+              </p>
             </div>
           </div>
 
