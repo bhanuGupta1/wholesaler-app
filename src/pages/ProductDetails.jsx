@@ -6,6 +6,11 @@ import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
+import { 
+  Heart, Share2, Eye, ShoppingCart, Star, Truck, Shield, RefreshCw, 
+  ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Move, Play, Pause,
+  RotateCw, Maximize2, Volume2, VolumeX, Camera, Video
+} from 'lucide-react';
 
 const ProductDetails = () => {
   const { id } = useParams();
