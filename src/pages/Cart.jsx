@@ -262,32 +262,41 @@ const Cart = () => {
                     </span>
                   </div>
                   
-                  <div className={`border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'} pt-3`}>
-                    <div className="flex justify-between">
-                      <span className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {/* Total */}
+                  <div className={`border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'} pt-4`}>
+                    <div className="flex justify-between items-center">
+                      <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         Total:
                       </span>
-                      <span className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      <div className="text-right">
+                        <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         ${total.toFixed(2)}
                       </span>
+                        {totalSavings > 0 && (
+                          <div className="text-sm text-green-600 font-medium">
+                            Saved ${totalSavings.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Checkout Options */}
-                <div className="mt-6 space-y-3">
+                {/* Enhanced Checkout Options */}
+                <div className="mt-8 space-y-4">
                   {/* Primary Checkout Button */}
                   <button
                     onClick={handleCheckout}
-                    className="w-full py-3 px-4 bg-indigo-600 text-white text-base font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                    className="w-full py-4 px-6 bg-indigo-600 text-white text-lg font-semibold rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center"
                   >
+                    <CreditCard className="w-5 h-5 mr-2" />
                     {user ? 'Quick Checkout' : 'Sign In to Checkout'}
                   </button>
 
                   {/* Alternative: Create Order Button */}
                   <button
                     onClick={handleCreateOrder}
-                    className={`w-full py-3 px-4 border-2 border-indigo-600 text-indigo-600 text-base font-medium rounded-lg hover:bg-indigo-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${darkMode ? 'hover:border-indigo-500' : ''}`}
+                    className={`w-full py-3 px-4 border-2 border-indigo-600 text-indigo-600 text-base font-medium rounded-xl hover:bg-indigo-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ${darkMode ? 'hover:border-indigo-500' : ''}`}
                   >
                     {user ? 'Advanced Order' : 'Sign In for Advanced Order'}
                   </button>
@@ -299,30 +308,40 @@ const Cart = () => {
                   )}
                 </div>
 
-                {/* Checkout Options Explanation */}
-                <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} text-xs`}>
-                  <h4 className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                {/* Enhanced Features */}
+                <div className="mt-6 space-y-3">
+                  <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} text-sm`}>
+                    <h4 className={`font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2 flex items-center`}>
+                      <Package className="w-4 h-4 mr-1" />
                     Checkout Options:
                   </h4>
-                  <ul className={`space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <ul className={`space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'} text-xs`}>
                     <li>• <strong>Quick Checkout:</strong> Fast, streamlined process</li>
-                    <li>• <strong>Advanced Order:</strong> More options & business features</li>
+                      <li>• <strong>Advanced Order:</strong> Business features & bulk options</li>
                   </ul>
                 </div>
 
-                {/* Security Notice */}
-                <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border text-xs`}>
-                  <div className="flex items-center">
-                    <svg className={`h-4 w-4 mr-2 ${darkMode ? 'text-green-400' : 'text-green-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className={`font-medium ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
-                      Secure Checkout
-                    </span>
+                  {/* Security & Shipping */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <Shield className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
+                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Secure
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <Truck className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Free Ship
+                      </div>
+                    </div>
+                    <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <Tag className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+                      <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Best Price
+                      </div>
+                    </div>
                   </div>
-                  <p className={`${darkMode ? 'text-green-300' : 'text-green-600'} mt-1`}>
-                    Your payment information is encrypted and secure
-                  </p>
                 </div>
               </div>
             </div>
@@ -333,17 +352,28 @@ const Cart = () => {
       {/* Clear Cart Confirmation Modal */}
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl p-6 max-w-md w-full mx-4`}>
-            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-2xl border p-8 max-w-md w-full mx-4`}>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
               Clear Cart
             </h3>
             <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-              Are you sure you want to remove all items from your cart? This action cannot be undone.
+                Are you sure you want to remove all {totalItems} items from your cart? 
+                {totalSavings > 0 && (
+                  <span className="block mt-1 text-red-600 font-medium">
+                    You'll lose ${totalSavings.toFixed(2)} in bulk savings!
+                  </span>
+                )}
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className={`flex-1 py-2 px-4 border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} rounded-lg transition-colors`}
+                  className={`flex-1 py-3 px-4 border rounded-xl font-medium transition-colors ${
+                    darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 Cancel
               </button>
@@ -352,10 +382,11 @@ const Cart = () => {
                   clearCart();
                   setShowClearConfirm(false);
                 }}
-                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
               >
                 Clear Cart
               </button>
+              </div>
             </div>
           </div>
         </div>
@@ -364,9 +395,13 @@ const Cart = () => {
   );
 };
 
-// Enhanced Cart Item Component
-const CartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
+// Enhanced Cart Item Component with Bulk Pricing Support
+const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
   const [quantity, setQuantity] = useState(item.quantity);
+  
+  // Get effective price (bulk price if available, otherwise regular price)
+  const effectivePrice = item.effectivePrice || item.price;
+  const hasBulkPricing = item.bulkPricing?.isBulkPrice;
 
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= item.stock) {
@@ -377,30 +412,34 @@ const CartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
     }
   };
 
+  const itemTotal = effectivePrice * quantity;
+  const originalItemTotal = hasBulkPricing ? item.bulkPricing.originalPrice * quantity : itemTotal;
+  const itemSavings = originalItemTotal - itemTotal;
+
   return (
-    <div className="p-6">
-      <div className="flex items-center space-x-4">
-        {/* Product Image */}
-        <Link to={`/products/${item.id}`} className="flex-shrink-0">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+    <div className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+      <div className="flex items-center space-x-6">
+        {/* Enhanced Product Image */}
+        <Link to={`/products/${item.id}`} className="flex-shrink-0 group">
+          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
             {item.imageUrl ? (
               <img 
                 src={item.imageUrl} 
                 alt={item.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             ) : (
               <div className="flex items-center justify-center h-full">
-                <span className="text-2xl">📦</span>
+                <Package className="w-8 h-8 text-gray-400" />
               </div>
             )}
           </div>
         </Link>
 
-        {/* Product Info */}
+        {/* Enhanced Product Info */}
         <div className="flex-1 min-w-0">
           <Link to={`/products/${item.id}`}>
-            <h3 className={`font-semibold ${darkMode ? 'text-white hover:text-indigo-400' : 'text-gray-900 hover:text-indigo-600'} mb-1 transition-colors`}>
+            <h3 className={`text-lg font-semibold ${darkMode ? 'text-white hover:text-indigo-400' : 'text-gray-900 hover:text-indigo-600'} mb-2 transition-colors line-clamp-2`}>
               {item.name}
             </h3>
           </Link>
