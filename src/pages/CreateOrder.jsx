@@ -433,7 +433,7 @@ const CreateOrder = () => {
     setStep(1);
   };
 
-  // Submit order
+  // ENHANCED: Submit order with complete bulk pricing and business discount data
   const submitOrder = async () => {
     if (!user) {
       setError('Please sign in to place an order');
@@ -499,19 +499,45 @@ const CreateOrder = () => {
         },
         userId: user.uid,
         userRole: userRole,
-        orderSource: orderSource, // Track how the order was created
-        items: selectedProducts.map(product => ({
+        userAccountType: userAccountType?.accountType,
+        userBusinessType: userAccountType?.businessType,
+        orderSource: orderSource,
+        
+        // ENHANCED: Complete item data with auto-applied bulk pricing
+        items: processedSelectedProducts.map(product => ({
           productId: product.id,
           productName: product.name,
-          price: product.price,
+          originalPrice: product.price, // Original product price
+          effectivePrice: product.effectivePrice || product.price, // Price after item-level bulk discounts
           quantity: product.quantity,
-          subtotal: product.price * product.quantity
+          subtotal: (product.effectivePrice || product.price) * product.quantity,
+          // Item-level bulk pricing details
+          hasItemBulkPricing: !!product.hasBulkDiscount,
+          itemBulkTier: product.bulkPricing?.bulkTier || null,
+          itemBulkDiscount: product.bulkPricing?.bulkDiscount || 0,
+          itemBulkSavings: product.hasBulkDiscount ? (product.price - product.effectivePrice) * product.quantity : 0,
+          wasAutoApplied: !!product.hasBulkDiscount
         })),
-        itemCount: selectedProducts.reduce((sum, p) => sum + p.quantity, 0),
-        subtotal: pricing.subtotal,
-        discount: pricing.discount,
+        
+        itemCount: processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0),
+        
+        // ENHANCED: Complete pricing breakdown
+        originalSubtotal: pricing.originalSubtotal,
+        subtotal: pricing.subtotal, // After item-level bulk discounts
+        itemLevelBulkSavings: pricing.itemLevelBulkSavings,
+        businessDiscount: pricing.businessDiscount, // 15% business discount
+        additionalBulkDiscount: pricing.additionalBulkDiscount, // Extra 5% business bulk discount
+        totalBusinessSavings: pricing.totalBusinessSavings,
+        totalBulkSavings: pricing.totalBulkSavings,
+        totalSavings: pricing.totalSavings,
         tax: pricing.tax,
         total: pricing.total,
+        
+        // Enhanced metadata
+        hasItemLevelBulkDiscounts: pricing.itemLevelBulkSavings > 0,
+        hasBusinessDiscounts: pricing.totalBusinessSavings > 0,
+        qualifiesForAdditionalBulkDiscount: pricing.additionalBulkDiscount > 0,
+        
         status: 'pending',
         paymentStatus: 'pending'
       };
@@ -587,18 +613,59 @@ const CreateOrder = () => {
           </div>
           
           <div className="flex items-center mt-2">
+            {/* ENHANCED: Complete business account display with all discount types */}
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               userRole === 'business' 
                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                 : userRole === 'customer'
                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                  : userRole === 'admin'
+                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
             }`}>
-              {userRole === 'business' && '🏢 Business Account - 15% Bulk Discount'}
-              {userRole === 'customer' && '👤 Customer Account - 10% Tax Applied'}
+              {userRole === 'business' && (
+                <>
+                  {userAccountType?.businessType === 'seller' ? '🏪' : userAccountType?.businessType === 'buyer' ? '🛒' : '🏢'} 
+                  Business Account {userAccountType?.businessType ? `(${userAccountType.businessType.charAt(0).toUpperCase() + userAccountType.businessType.slice(1)})` : ''} - 15% Business + Auto Bulk + 5% Extra Available
+                  {(() => {
+                    const bulkStatus = getBulkDiscountStatus();
+                    if (bulkStatus) {
+                      return (
+                        <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                          bulkStatus.qualified 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-yellow-500 text-white'
+                        }`}>
+                          {bulkStatus.message}
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
+                </>
+              )}
+              {userRole === 'customer' && '👤 Customer Account - 15% Tax Applied + Auto Bulk Pricing'}
               {userRole === 'admin' && '⚙️ Admin Account - No Additional Charges'}
+              {userRole === 'guest' && '👤 Guest User'}
             </div>
           </div>
+
+          {/* NEW: Auto-Applied Bulk Pricing Notice */}
+          {pricing.itemLevelBulkSavings > 0 && (
+            <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
+              <div className="flex items-center">
+                <div className="text-2xl mr-3">🎉</div>
+                <div>
+                  <h3 className={`font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
+                    Auto Bulk Pricing Applied! Saving ${pricing.itemLevelBulkSavings.toFixed(2)}
+                  </h3>
+                  <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-green-700'}`}>
+                    {processedSelectedProducts.filter(p => p.hasBulkDiscount).length} items automatically qualified for volume discounts
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Progress Steps */}
