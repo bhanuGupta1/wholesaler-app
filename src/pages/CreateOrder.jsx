@@ -1369,24 +1369,53 @@ const CreateOrder = () => {
                     ))}
                   </div>
 
-                  {/* Pricing Breakdown */}
+                  {/* ENHANCED: Complete Pricing Breakdown with All Discount Types */}
                   <div className={`pt-4 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                     <div className="space-y-2">
+                      {/* Original Subtotal (if any savings exist) */}
+                      {pricing.totalSavings > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} line-through`}>
+                            Original Subtotal:
+                          </span>
+                          <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} line-through`}>
+                            ${pricing.originalSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
                         <span>${pricing.subtotal.toFixed(2)}</span>
                       </div>
                       
-                      {pricing.discount > 0 && (
+                      {/* Item-Level Auto Bulk Savings */}
+                      {pricing.itemLevelBulkSavings > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>🎯 Auto Bulk Discounts:</span>
+                          <span>-${pricing.itemLevelBulkSavings.toFixed(2)}</span>
+                        </div>
+                      )}
+
+                      {/* Business Discount (15%) */}
+                      {pricing.businessDiscount > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
                           <span>Business Discount (15%):</span>
-                          <span>-${pricing.discount.toFixed(2)}</span>
+                          <span>-${pricing.businessDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Additional Business Bulk Discount (5%) */}
+                      {userRole === 'business' && pricing.additionalBulkDiscount > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>🎯 Extra Bulk Discount (5%):</span>
+                          <span>-${pricing.additionalBulkDiscount.toFixed(2)}</span>
                         </div>
                       )}
                       
                       {pricing.tax > 0 && (
                         <div className="flex justify-between">
-                          <span>Tax (10%):</span>
+                          <span>Tax (15%):</span>
                           <span>${pricing.tax.toFixed(2)}</span>
                         </div>
                       )}
@@ -1395,6 +1424,14 @@ const CreateOrder = () => {
                         <span>Total:</span>
                         <span>${pricing.total.toFixed(2)}</span>
                       </div>
+                      
+                      {/* Total Savings Summary */}
+                      {pricing.totalSavings > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400 font-medium pt-2 border-t border-green-200 dark:border-green-800">
+                          <span>💰 Total Savings:</span>
+                          <span>${pricing.totalSavings.toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
