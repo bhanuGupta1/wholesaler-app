@@ -391,6 +391,7 @@ const AddProduct = () => {
         stock: '',
         category: '',
         imageUrl: '',
+        imageUrls: [],
         sku: '',
         supplier: '',
         tags: '',
