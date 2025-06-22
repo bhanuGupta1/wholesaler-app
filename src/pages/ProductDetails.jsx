@@ -47,6 +47,15 @@ const ProductDetails = () => {
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   
+  // Bulk pricing states
+  const [currentBulkPrice, setCurrentBulkPrice] = useState(null);
+  const [bulkDiscount, setBulkDiscount] = useState(0);
+  
+  const imageRef = useRef(null);
+  const containerRef = useRef(null);
+  const magnifierRef = useRef(null);
+  const videoRef = useRef(null);
+
 
   // Fetch product details
   useEffect(() => {
