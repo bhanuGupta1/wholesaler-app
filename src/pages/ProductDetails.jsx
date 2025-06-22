@@ -113,20 +113,19 @@ const ProductDetails = () => {
     return images;
   };
 
-  // Get cart quantity for this product
-  const getCartQuantity = () => {
-    const cartItem = cart.find(item => item.id === id);
-    return cartItem ? cartItem.quantity : 0;
+  const productImages = getProductImages(product);
+
+  const handleAddToCart = () => {
+    if (product && quantity > 0) {
+      addToCart(product, quantity);
+      // Show success message or redirect
+      alert(`Added ${quantity} ${product.name}(s) to cart!`);
+    }
   };
 
-  // Handle buy now (add to cart and go to checkout)
-  const handleBuyNow = () => {
-    handleAddToCart();
-    setTimeout(() => {
-      if (!user) {
-        navigate('/login', { state: { from: { pathname: '/checkout' } } });
-      } else {
-        navigate('/checkout');
+  const handleQuantityChange = (value) => {
+    if (value >= 1 && value <= product.stock) {
+      setQuantity(value);
       }
     }, 500);
   };
