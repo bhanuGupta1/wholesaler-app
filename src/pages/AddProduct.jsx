@@ -52,7 +52,24 @@ const AddProduct = () => {
     'Books & Media',
     'Clothing & Accessories',
     'Tools & Hardware',
+    'Kitchen',
     'Other'
+  ];
+
+  const commonSuppliers = [
+    'Apple Inc.',
+    'Samsung Electronics',
+    'Sony Corporation',
+    'Microsoft Corporation',
+    'Nike Inc.',
+    'Canon Inc.',
+    'Herman Miller',
+    'Dyson Ltd.',
+    'KitchenAid',
+    'Tesla Inc.',
+    'Bose Corporation',
+    'Patagonia Inc.',
+    'Custom Supplier'
   ];
 
   // Fetch recent products based on user role with ownership filtering
