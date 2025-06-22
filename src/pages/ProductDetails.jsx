@@ -56,7 +56,18 @@ const ProductDetails = () => {
   const magnifierRef = useRef(null);
   const videoRef = useRef(null);
 
+  // Mock 360° images and video data (replace with real data)
+  const mock360Images = [
+    'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800&h=800&fit=crop',
   ];
+
+  const mockProductVideo = {
+    url: 'https://www.w3schools.com/html/mov_bbb.mp4', // Sample video
+    thumbnail: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&h=800&fit=crop'
+  };
 
   // Fetch product details
   useEffect(() => {
