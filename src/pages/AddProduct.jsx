@@ -114,6 +114,18 @@ const AddProduct = () => {
     setPricingErrors(errors);
   };
 
+  // Calculate profit margins
+  const calculateMargins = () => {
+    const cost = parseFloat(formData.costPrice) || 0;
+    const selling = parseFloat(formData.price) || 0;
+    const original = parseFloat(formData.originalPrice) || 0;
+
+    const profitMargin = cost && selling ? (((selling - cost) / selling) * 100).toFixed(1) : 0;
+    const markup = cost && selling ? (((selling - cost) / cost) * 100).toFixed(1) : 0;
+    const discountPercent = original && selling ? (((original - selling) / original) * 100).toFixed(1) : 0;
+
+    return { profitMargin, markup, discountPercent };
+  };
 
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
