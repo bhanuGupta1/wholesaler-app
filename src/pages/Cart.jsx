@@ -1,5 +1,5 @@
-// src/pages/Cart.jsx - Enhanced with Bulk Pricing Support
-import { useState } from 'react';
+// src/pages/Cart.jsx - Enhanced with Auto-Apply Bulk Pricing
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,8 +12,69 @@ const Cart = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [processedCart, setProcessedCart] = useState([]);
 
-  // Enhanced total calculations with bulk pricing support
+  // NEW: Auto-apply bulk pricing whenever cart changes
+  useEffect(() => {
+    const cartWithBulkPricing = cart.map(item => {
+      return calculateItemBulkPricing(item);
+    });
+    setProcessedCart(cartWithBulkPricing);
+  }, [cart]);
+
+  // NEW: Function to calculate bulk pricing for an item
+  const calculateItemBulkPricing = (item) => {
+    // If product doesn't have bulk pricing, return as-is
+    if (!item.bulkPricing || typeof item.bulkPricing !== 'object') {
+      return {
+        ...item,
+        effectivePrice: item.price,
+        hasBulkDiscount: false
+      };
+    }
+
+    // Get all bulk pricing tiers and sort by quantity (descending)
+    const bulkTiers = Object.keys(item.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => b - a);
+
+    // Find the highest tier that applies to current quantity
+    const applicableTier = bulkTiers.find(tier => item.quantity >= tier);
+
+    if (applicableTier) {
+      const bulkPrice = item.bulkPricing[applicableTier.toString()];
+      const savings = item.price - bulkPrice;
+      const discountPercent = (savings / item.price) * 100;
+
+      return {
+        ...item,
+        effectivePrice: bulkPrice,
+        hasBulkDiscount: true,
+        bulkPricing: {
+          ...item.bulkPricing,
+          isBulkPrice: true,
+          originalPrice: item.price,
+          bulkDiscount: discountPercent,
+          bulkTier: applicableTier,
+          appliedPrice: bulkPrice,
+          savings: savings
+        }
+      };
+    }
+
+    // No bulk tier applies
+    return {
+      ...item,
+      effectivePrice: item.price,
+      hasBulkDiscount: false,
+      bulkPricing: {
+        ...item.bulkPricing,
+        isBulkPrice: false
+      }
+    };
+  };
+
   const calculateTotals = () => {
     let subtotal = 0;
     let totalSavings = 0;
