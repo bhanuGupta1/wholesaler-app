@@ -1,7 +1,7 @@
-// src/pages/CreateOrder.jsx - Enhanced with Cart Integration
+// src/pages/CreateOrder.jsx - Complete with Auto-Apply Bulk Discounts + Business Discounts
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -15,9 +15,10 @@ const CreateOrder = () => {
   const { darkMode } = useTheme();
   const { cart, clearCart } = useCart();
   
-  // State management using different stats
+  // State management
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [processedSelectedProducts, setProcessedSelectedProducts] = useState([]); // NEW: Processed with bulk pricing
   const [customerInfo, setCustomerInfo] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -29,19 +30,16 @@ const CreateOrder = () => {
 
   // Enhanced payment information state
   const [paymentInfo, setPaymentInfo] = useState({
-    paymentMethod: 'credit_card', // 'credit_card' or 'bank_account'
-    // Credit Card Details
+    paymentMethod: 'credit_card',
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardHolderName: '',
-    // Bank Account Details
     accountNumber: '',
     routingNumber: '',
     accountHolderName: '',
     bankName: '',
-    accountType: 'checking', // 'checking' or 'savings'
-    // Billing Address
+    accountType: 'checking',
     billingAddressSame: true,
     billingAddress: '',
     billingCity: '',
@@ -53,13 +51,78 @@ const CreateOrder = () => {
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderSource, setOrderSource] = useState('direct'); // 'direct' or 'cart'
+  const [orderSource, setOrderSource] = useState('direct');
+
+  // User role state management with Firestore data
+  const [userRole, setUserRole] = useState('guest');
+  const [userAccountType, setUserAccountType] = useState(null);
+
+  // NEW: Auto-apply bulk pricing whenever selectedProducts changes
+  useEffect(() => {
+    const productsWithBulkPricing = selectedProducts.map(item => {
+      return calculateItemBulkPricing(item);
+    });
+    setProcessedSelectedProducts(productsWithBulkPricing);
+  }, [selectedProducts]);
+
+  // NEW: Function to calculate bulk pricing for an item (same logic as Cart/Checkout)
+  const calculateItemBulkPricing = (item) => {
+    // If product doesn't have bulk pricing, return as-is
+    if (!item.bulkPricing || typeof item.bulkPricing !== 'object') {
+      return {
+        ...item,
+        effectivePrice: item.price,
+        hasBulkDiscount: false
+      };
+    }
+
+    // Get all bulk pricing tiers and sort by quantity (descending)
+    const bulkTiers = Object.keys(item.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => b - a);
+
+    // Find the highest tier that applies to current quantity
+    const applicableTier = bulkTiers.find(tier => item.quantity >= tier);
+
+    if (applicableTier) {
+      const bulkPrice = item.bulkPricing[applicableTier.toString()];
+      const savings = item.price - bulkPrice;
+      const discountPercent = (savings / item.price) * 100;
+
+      return {
+        ...item,
+        effectivePrice: bulkPrice,
+        hasBulkDiscount: true,
+        bulkPricing: {
+          ...item.bulkPricing,
+          isBulkPrice: true,
+          originalPrice: item.price,
+          bulkDiscount: discountPercent,
+          bulkTier: applicableTier,
+          appliedPrice: bulkPrice,
+          savings: savings
+        }
+      };
+    }
+
+    // No bulk tier applies
+    return {
+      ...item,
+      effectivePrice: item.price,
+      hasBulkDiscount: false,
+      bulkPricing: {
+        ...item.bulkPricing,
+        isBulkPrice: false
+      }
+    };
+  };
 
   // Check if coming from cart
   useEffect(() => {
     if (location.state?.fromCart && cart.length > 0) {
       setOrderSource('cart');
-      // Convert cart items to selected products format
+      // Convert cart items to selected products format with bulk pricing pre-applied
       const cartProducts = cart.map(item => ({
         ...item,
         quantity: item.quantity
@@ -69,15 +132,64 @@ const CreateOrder = () => {
     }
   }, [location.state, cart]);
 
-  // User role detection
-  const getUserRole = () => {
-    if (!user) return 'guest';
-    if (user.email?.includes('admin')) return 'admin';
-    if (user.email?.includes('business')) return 'business';
-    return 'customer';
-  };
+  // Enhanced user role detection using Firestore data
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user?.uid) {
+        setUserRole('guest');
+        setUserAccountType(null);
+        return;
+      }
 
-  const userRole = getUserRole();
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const accountType = userData.accountType;
+          const businessType = userData.businessType;
+          
+          // Set proper role based on Firestore data
+          if (accountType === 'admin') {
+            setUserRole('admin');
+          } else if (accountType === 'manager') {
+            setUserRole('admin'); // Managers get same privileges as admin for orders
+          } else if (accountType === 'business') {
+            // Business users get business discounts regardless of seller/buyer type
+            setUserRole('business');
+          } else {
+            setUserRole('customer'); // Regular users are customers
+          }
+          
+          setUserAccountType({ accountType, businessType });
+        } else {
+          // Fallback to email-based detection if no Firestore document
+          if (user.email?.includes('admin')) {
+            setUserRole('admin');
+          } else if (user.email?.includes('business')) {
+            setUserRole('business');
+          } else {
+            setUserRole('customer');
+          }
+          setUserAccountType(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+        // Fallback to email-based detection
+        if (user.email?.includes('admin')) {
+          setUserRole('admin');
+        } else if (user.email?.includes('business')) {
+          setUserRole('business');
+        } else {
+          setUserRole('customer');
+        }
+        setUserAccountType(null);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   // Fetch products on component mount
   useEffect(() => {
@@ -150,26 +262,91 @@ const CreateOrder = () => {
     setSelectedProducts(updated);
   };
 
-  // Calculate pricing based on user role
+  // ENHANCED: Complete pricing calculation with auto-applied bulk discounts + business discounts
   const calculatePricing = () => {
     let subtotal = 0;
-    let discount = 0;
+    let originalSubtotal = 0;
+    let itemLevelBulkSavings = 0;
+    let businessDiscount = 0;
+    let additionalBulkDiscount = 0; // Business-only 5% additional bulk discount
     let tax = 0;
 
-    selectedProducts.forEach(product => {
-      subtotal += product.price * product.quantity;
+    // Calculate base pricing with auto-applied item-level bulk discounts
+    processedSelectedProducts.forEach(product => {
+      const effectivePrice = product.effectivePrice || product.price;
+      const originalPrice = product.price;
+      
+      subtotal += effectivePrice * product.quantity;
+      originalSubtotal += originalPrice * product.quantity;
+      
+      // Track item-level bulk savings
+      if (product.hasBulkDiscount) {
+        itemLevelBulkSavings += (originalPrice - effectivePrice) * product.quantity;
+      }
     });
 
+    // Apply business user discounts (15% standard business discount)
     if (userRole === 'business') {
-      discount = subtotal * 0.15;
+      businessDiscount = subtotal * 0.15;
+      
+      // Additional 5% bulk discount for businesses with qualifying criteria
+      const totalItems = processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0);
+      if (totalItems >= 10 || subtotal >= 500) {
+        additionalBulkDiscount = subtotal * 0.05;
+      }
     }
 
+    // Apply tax for customers (on final discounted amount)
     if (userRole === 'customer') {
-      tax = (subtotal - discount) * 0.10;
+      tax = (subtotal - businessDiscount - additionalBulkDiscount) * 0.15;
     }
 
-    const total = subtotal - discount + tax;
-    return { subtotal, discount, tax, total };
+    const total = subtotal - businessDiscount - additionalBulkDiscount + tax;
+    
+    return { 
+      subtotal, 
+      originalSubtotal,
+      itemLevelBulkSavings,
+      businessDiscount, 
+      additionalBulkDiscount,
+      totalBulkSavings: itemLevelBulkSavings, // Item-level bulk savings
+      totalBusinessSavings: businessDiscount + additionalBulkDiscount, // All business-related savings
+      totalSavings: itemLevelBulkSavings + businessDiscount + additionalBulkDiscount, // Grand total savings
+      tax, 
+      total 
+    };
+  };
+
+  // Enhanced bulk discount qualification status for businesses
+  const getBulkDiscountStatus = () => {
+    if (userRole !== 'business') return null;
+    
+    const totalItems = processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0);
+    const subtotal = processedSelectedProducts.reduce((sum, p) => sum + ((p.effectivePrice || p.price) * p.quantity), 0);
+    
+    if (totalItems >= 10 || subtotal >= 500) {
+      return { qualified: true, message: "✓ Additional 5% Bulk Qualified" };
+    }
+    
+    const itemsNeeded = Math.max(0, 10 - totalItems);
+    const amountNeeded = Math.max(0, 500 - subtotal);
+    
+    if (itemsNeeded > 0 && amountNeeded > 0) {
+      return { 
+        qualified: false, 
+        message: `Need ${itemsNeeded} more items OR $${amountNeeded.toFixed(0)} more for extra 5% bulk discount` 
+      };
+    } else if (itemsNeeded > 0) {
+      return { 
+        qualified: false, 
+        message: `Need ${itemsNeeded} more items for extra 5% bulk discount` 
+      };
+    } else {
+      return { 
+        qualified: false, 
+        message: `Need $${amountNeeded.toFixed(0)} more for extra 5% bulk discount` 
+      };
+    }
   };
 
   // Handle customer info changes
@@ -256,7 +433,7 @@ const CreateOrder = () => {
     setStep(1);
   };
 
-  // Submit order
+  // ENHANCED: Submit order with complete bulk pricing and business discount data
   const submitOrder = async () => {
     if (!user) {
       setError('Please sign in to place an order');
@@ -322,19 +499,45 @@ const CreateOrder = () => {
         },
         userId: user.uid,
         userRole: userRole,
-        orderSource: orderSource, // Track how the order was created
-        items: selectedProducts.map(product => ({
+        userAccountType: userAccountType?.accountType,
+        userBusinessType: userAccountType?.businessType,
+        orderSource: orderSource,
+        
+        // ENHANCED: Complete item data with auto-applied bulk pricing
+        items: processedSelectedProducts.map(product => ({
           productId: product.id,
           productName: product.name,
-          price: product.price,
+          originalPrice: product.price, // Original product price
+          effectivePrice: product.effectivePrice || product.price, // Price after item-level bulk discounts
           quantity: product.quantity,
-          subtotal: product.price * product.quantity
+          subtotal: (product.effectivePrice || product.price) * product.quantity,
+          // Item-level bulk pricing details
+          hasItemBulkPricing: !!product.hasBulkDiscount,
+          itemBulkTier: product.bulkPricing?.bulkTier || null,
+          itemBulkDiscount: product.bulkPricing?.bulkDiscount || 0,
+          itemBulkSavings: product.hasBulkDiscount ? (product.price - product.effectivePrice) * product.quantity : 0,
+          wasAutoApplied: !!product.hasBulkDiscount
         })),
-        itemCount: selectedProducts.reduce((sum, p) => sum + p.quantity, 0),
-        subtotal: pricing.subtotal,
-        discount: pricing.discount,
+        
+        itemCount: processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0),
+        
+        // ENHANCED: Complete pricing breakdown
+        originalSubtotal: pricing.originalSubtotal,
+        subtotal: pricing.subtotal, // After item-level bulk discounts
+        itemLevelBulkSavings: pricing.itemLevelBulkSavings,
+        businessDiscount: pricing.businessDiscount, // 15% business discount
+        additionalBulkDiscount: pricing.additionalBulkDiscount, // Extra 5% business bulk discount
+        totalBusinessSavings: pricing.totalBusinessSavings,
+        totalBulkSavings: pricing.totalBulkSavings,
+        totalSavings: pricing.totalSavings,
         tax: pricing.tax,
         total: pricing.total,
+        
+        // Enhanced metadata
+        hasItemLevelBulkDiscounts: pricing.itemLevelBulkSavings > 0,
+        hasBusinessDiscounts: pricing.totalBusinessSavings > 0,
+        qualifiesForAdditionalBulkDiscount: pricing.additionalBulkDiscount > 0,
+        
         status: 'pending',
         paymentStatus: 'pending'
       };
@@ -410,18 +613,59 @@ const CreateOrder = () => {
           </div>
           
           <div className="flex items-center mt-2">
+            {/* ENHANCED: Complete business account display with all discount types */}
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               userRole === 'business' 
                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                 : userRole === 'customer'
                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                  : userRole === 'admin'
+                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
             }`}>
-              {userRole === 'business' && '🏢 Business Account - 15% Bulk Discount'}
-              {userRole === 'customer' && '👤 Customer Account - 10% Tax Applied'}
+              {userRole === 'business' && (
+                <>
+                  {userAccountType?.businessType === 'seller' ? '🏪' : userAccountType?.businessType === 'buyer' ? '🛒' : '🏢'} 
+                  Business Account {userAccountType?.businessType ? `(${userAccountType.businessType.charAt(0).toUpperCase() + userAccountType.businessType.slice(1)})` : ''} - 15% Business + Auto Bulk + 5% Extra Available
+                  {(() => {
+                    const bulkStatus = getBulkDiscountStatus();
+                    if (bulkStatus) {
+                      return (
+                        <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                          bulkStatus.qualified 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-yellow-500 text-white'
+                        }`}>
+                          {bulkStatus.message}
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
+                </>
+              )}
+              {userRole === 'customer' && '👤 Customer Account - 15% Tax Applied + Auto Bulk Pricing'}
               {userRole === 'admin' && '⚙️ Admin Account - No Additional Charges'}
+              {userRole === 'guest' && '👤 Guest User'}
             </div>
           </div>
+
+          {/* NEW: Auto-Applied Bulk Pricing Notice */}
+          {pricing.itemLevelBulkSavings > 0 && (
+            <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
+              <div className="flex items-center">
+                <div className="text-2xl mr-3">🎉</div>
+                <div>
+                  <h3 className={`font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
+                    Auto Bulk Pricing Applied! Saving ${pricing.itemLevelBulkSavings.toFixed(2)}
+                  </h3>
+                  <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-green-700'}`}>
+                    {processedSelectedProducts.filter(p => p.hasBulkDiscount).length} items automatically qualified for volume discounts
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Progress Steps */}
@@ -943,32 +1187,58 @@ const CreateOrder = () => {
                   </div>
                 )}
                 
-                {/* Order Items */}
+                {/* ENHANCED: Order Items with Auto-Applied Bulk Pricing Display */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium mb-4">Order Items</h3>
                   <div className="space-y-3">
-                    {selectedProducts.map(product => (
-                      <div key={product.id} className={`flex justify-between items-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-12 h-12 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
-                            {product.imageUrl ? (
-                              <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
-                            ) : (
-                              <span>📦</span>
+                    {processedSelectedProducts.map(product => {
+                      const effectivePrice = product.effectivePrice || product.price;
+                      const itemSavings = product.hasBulkDiscount ? (product.price - effectivePrice) * product.quantity : 0;
+
+                      return (
+                        <div key={product.id} className={`flex justify-between items-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-12 h-12 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
+                              ) : (
+                                <span>📦</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              <div className="space-y-1">
+                                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  ${effectivePrice.toFixed(2)} × {product.quantity}
+                                  {product.hasBulkDiscount && (
+                                    <span className="ml-2 text-green-600 font-medium">
+                                      (was ${product.price.toFixed(2)})
+                                    </span>
+                                  )}
+                                </p>
+                                {product.hasBulkDiscount && (
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium text-green-600">
+                                      🎯 Auto bulk: {product.bulkPricing.bulkDiscount.toFixed(0)}% off • {product.bulkPricing.bulkTier}+ units
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-lg">
+                              ${(effectivePrice * product.quantity).toFixed(2)}
+                            </p>
+                            {itemSavings > 0 && (
+                              <p className="text-sm text-green-600 font-medium">
+                                Saved ${itemSavings.toFixed(2)}
+                              </p>
                             )}
                           </div>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              ${product.price.toFixed(2)} × {product.quantity}
-                            </p>
-                          </div>
                         </div>
-                        <p className="font-semibold text-lg">
-                          ${(product.price * product.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1025,7 +1295,7 @@ const CreateOrder = () => {
             )}
           </div>
 
-          {/* Enhanced Order Summary Sidebar */}
+          {/* ENHANCED: Complete Order Summary Sidebar with All Discount Types */}
           <div className="lg:col-span-1">
             <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 sticky top-4`}>
               <h3 className="text-lg font-semibold mb-4 flex items-center">
@@ -1038,7 +1308,7 @@ const CreateOrder = () => {
                 )}
               </h3>
               
-              {selectedProducts.length === 0 ? (
+              {processedSelectedProducts.length === 0 ? (
                 <div className="text-center py-6">
                   <div className="text-4xl mb-2">🛍️</div>
                   <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -1057,7 +1327,7 @@ const CreateOrder = () => {
                 <div className="space-y-4">
                   {/* Selected Products */}
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {selectedProducts.map(product => (
+                    {processedSelectedProducts.map(product => (
                       <div key={product.id} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-sm font-medium truncate pr-2">{product.name}</p>
@@ -1084,32 +1354,68 @@ const CreateOrder = () => {
                               +
                             </button>
                           </div>
-                          <p className="text-sm font-semibold">
-                            ${(product.price * product.quantity).toFixed(2)}
-                          </p>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold">
+                              ${((product.effectivePrice || product.price) * product.quantity).toFixed(2)}
+                            </p>
+                            {product.hasBulkDiscount && (
+                              <p className="text-xs text-green-600">
+                                Auto bulk applied
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Pricing Breakdown */}
+                  {/* ENHANCED: Complete Pricing Breakdown with All Discount Types */}
                   <div className={`pt-4 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                     <div className="space-y-2">
+                      {/* Original Subtotal (if any savings exist) */}
+                      {pricing.totalSavings > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} line-through`}>
+                            Original Subtotal:
+                          </span>
+                          <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} line-through`}>
+                            ${pricing.originalSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
                         <span>${pricing.subtotal.toFixed(2)}</span>
                       </div>
                       
-                      {pricing.discount > 0 && (
+                      {/* Item-Level Auto Bulk Savings */}
+                      {pricing.itemLevelBulkSavings > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>🎯 Auto Bulk Discounts:</span>
+                          <span>-${pricing.itemLevelBulkSavings.toFixed(2)}</span>
+                        </div>
+                      )}
+
+                      {/* Business Discount (15%) */}
+                      {pricing.businessDiscount > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
                           <span>Business Discount (15%):</span>
-                          <span>-${pricing.discount.toFixed(2)}</span>
+                          <span>-${pricing.businessDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Additional Business Bulk Discount (5%) */}
+                      {userRole === 'business' && pricing.additionalBulkDiscount > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                          <span>🎯 Extra Bulk Discount (5%):</span>
+                          <span>-${pricing.additionalBulkDiscount.toFixed(2)}</span>
                         </div>
                       )}
                       
                       {pricing.tax > 0 && (
                         <div className="flex justify-between">
-                          <span>Tax (10%):</span>
+                          <span>Tax (15%):</span>
                           <span>${pricing.tax.toFixed(2)}</span>
                         </div>
                       )}
@@ -1118,6 +1424,14 @@ const CreateOrder = () => {
                         <span>Total:</span>
                         <span>${pricing.total.toFixed(2)}</span>
                       </div>
+                      
+                      {/* Total Savings Summary */}
+                      {pricing.totalSavings > 0 && (
+                        <div className="flex justify-between text-green-600 dark:text-green-400 font-medium pt-2 border-t border-green-200 dark:border-green-800">
+                          <span>💰 Total Savings:</span>
+                          <span>${pricing.totalSavings.toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1128,9 +1442,9 @@ const CreateOrder = () => {
                 {step === 1 && (
                   <button
                     onClick={() => setStep(2)}
-                    disabled={selectedProducts.length === 0}
+                    disabled={processedSelectedProducts.length === 0}
                     className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                      selectedProducts.length === 0
+                      processedSelectedProducts.length === 0
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
@@ -1217,6 +1531,11 @@ const CreateOrder = () => {
                     <p className={`${darkMode ? 'text-blue-300' : 'text-blue-600'} mt-1`}>
                       Your payment information is encrypted and secure.
                     </p>
+                    {pricing.totalSavings > 0 && (
+                      <p className={`${darkMode ? 'text-green-300' : 'text-green-600'} mt-1 font-medium`}>
+                        Auto discounts applied & locked in!
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1228,9 +1547,36 @@ const CreateOrder = () => {
   );
 };
 
-// Compact Product Card Component
+// Enhanced Compact Product Card Component
 const CompactProductCard = ({ product, onAddToOrder, darkMode, isSelected }) => {
   const [quantity, setQuantity] = useState(1);
+
+  // Show bulk pricing preview
+  const getBulkPreview = () => {
+    if (!product.bulkPricing || typeof product.bulkPricing !== 'object') return null;
+    
+    const bulkTiers = Object.keys(product.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => a - b);
+
+    const applicableTier = bulkTiers.find(tier => quantity >= tier);
+    if (applicableTier) {
+      const bulkPrice = product.bulkPricing[applicableTier.toString()];
+      const savings = product.price - bulkPrice;
+      const discountPercent = (savings / product.price) * 100;
+      
+      return {
+        bulkPrice,
+        discountPercent,
+        tier: applicableTier
+      };
+    }
+    
+    return null;
+  };
+
+  const bulkPreview = getBulkPreview();
 
   return (
     <div className={`border rounded-lg p-4 transition-all hover:shadow-md ${
@@ -1255,15 +1601,38 @@ const CompactProductCard = ({ product, onAddToOrder, darkMode, isSelected }) => 
 
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold truncate">{product.name}</h3>
-            <div className="flex items-center space-x-4 text-sm">
-              <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                ${product.price.toFixed(2)}
-              </span>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Stock: {product.stock}
-              </span>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-4 text-sm">
+                {bulkPreview ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      ${bulkPreview.bulkPrice.toFixed(2)}
+                    </span>
+                    <span className={`line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      ${product.price.toFixed(2)}
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                      {bulkPreview.discountPercent.toFixed(0)}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                    ${product.price.toFixed(2)}
+                  </span>
+                )}
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Stock: {product.stock}
+                </span>
+              </div>
+              
+              {bulkPreview && (
+                <div className="text-xs text-green-600 font-medium">
+                  🎯 Auto bulk pricing - {bulkPreview.tier}+ units
+                </div>
+              )}
+              
               {product.category && (
-                <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                <span className={`inline-block px-2 py-1 rounded text-xs ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
                   {product.category}
                 </span>
               )}
