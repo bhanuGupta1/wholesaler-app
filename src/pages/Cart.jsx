@@ -75,24 +75,24 @@ const Cart = () => {
     };
   };
 
+  // Enhanced total calculations with auto-applied bulk pricing
   const calculateTotals = () => {
     let subtotal = 0;
     let totalSavings = 0;
     let originalSubtotal = 0;
 
-    cart.forEach(item => {
+    processedCart.forEach(item => {
       const effectivePrice = item.effectivePrice || item.price;
       const itemSubtotal = effectivePrice * item.quantity;
       subtotal += itemSubtotal;
 
-      // Calculate savings from bulk pricing
-      if (item.bulkPricing?.isBulkPrice) {
-        const originalItemTotal = item.bulkPricing.originalPrice * item.quantity;
+      // Calculate original subtotal and savings
+      const originalItemTotal = item.price * item.quantity;
+      originalSubtotal += originalItemTotal;
+      
+      if (item.hasBulkDiscount) {
         const savings = originalItemTotal - itemSubtotal;
         totalSavings += savings;
-        originalSubtotal += originalItemTotal;
-      } else {
-        originalSubtotal += item.price * item.quantity;
       }
     });
 
@@ -105,7 +105,7 @@ const Cart = () => {
       totalSavings,
       tax,
       total,
-      totalItems: cart.reduce((sum, item) => sum + item.quantity, 0)
+      totalItems: processedCart.reduce((sum, item) => sum + item.quantity, 0)
     };
   };
 
@@ -127,7 +127,13 @@ const Cart = () => {
     }
   };
 
-  if (cart.length === 0) {
+  // NEW: Handle quantity updates with bulk pricing recalculation
+  const handleQuantityUpdate = (itemId, newQuantity) => {
+    updateQuantity(itemId, newQuantity);
+    // Bulk pricing will be recalculated automatically via useEffect
+  };
+
+  if (processedCart.length === 0) {
     return (
       <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="container mx-auto px-4 py-8">
