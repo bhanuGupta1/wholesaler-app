@@ -891,6 +891,44 @@ const AddProduct = () => {
             />
           </div>
 
+            {/* Common Image URLs for Testing/Demo */}
+            <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+              <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                🔗 Quick Image URLs (for testing):
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop' }))}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  📱 Generic Phone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop' }))}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  👟 Sneakers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop' }))}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  💻 Laptop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop' }))}
+                  className={`text-left p-2 rounded ${darkMode ? 'hover:bg-gray-600 text-blue-400' : 'hover:bg-gray-200 text-blue-600'} transition-colors`}
+                >
+                  ⌚ Watch
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Bulk Pricing Option */}
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
