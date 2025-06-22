@@ -40,6 +40,13 @@ const ProductDetails = () => {
   const [isDragging360, setIsDragging360] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   
+  // Video states
+  const [showVideo, setShowVideo] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  
 
   // Fetch product details
   useEffect(() => {
