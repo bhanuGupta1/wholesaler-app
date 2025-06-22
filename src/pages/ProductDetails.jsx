@@ -585,13 +585,36 @@ const ProductDetails = () => {
               </div>
             )}
 
-            {/* Image Counter */}
-            {productImages.length > 0 && (
-              <div className={`mt-3 text-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Image {activeImageIndex + 1} of {productImages.length}
-                {productImages.length === 1 && (
-                  <span className="ml-2">• Single image</span>
+          {/* Enhanced Product Information */}
+          <div className="space-y-6">
+            {/* Header */}
+            <div>
+              {/* SKU and Actions */}
+              <div className="flex items-center justify-between mb-3">
+                {product.sku && (
+                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-mono`}>
+                    SKU: {product.sku}
+                  </span>
                 )}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsWishlisted(!isWishlisted)}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      isWishlisted 
+                        ? 'bg-red-50 border-red-200 text-red-600' 
+                        : darkMode ? 'border-gray-600 text-gray-400 hover:text-red-400' : 'border-gray-200 text-gray-400 hover:text-red-600'
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      darkMode ? 'border-gray-600 text-gray-400 hover:text-indigo-400' : 'border-gray-200 text-gray-400 hover:text-indigo-600'
+                    }`}
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </button>
               </div>
             )}
           </div>
