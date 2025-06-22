@@ -136,27 +136,30 @@ const Cart = () => {
             <div className="flex space-x-3">
               <Link 
                 to="/catalog"
-                className={`inline-flex items-center px-4 py-2 border ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
+                className={`inline-flex items-center px-6 py-3 border rounded-xl font-medium transition-colors ${
+                  darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 Continue Shopping
               </Link>
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className={`inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white ${darkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600 hover:bg-red-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors`}
+                className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
               >
+                <Trash2 className="w-5 h-5 mr-2" />
                 Clear Cart
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Cart Items */}
-            <div className="lg:col-span-3">
-              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border overflow-hidden`}>
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            {/* Enhanced Cart Items */}
+            <div className="xl:col-span-3">
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border overflow-hidden`}>
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {cart.map((item, index) => (
-                    <CartItem 
-                      key={item.id} 
+                    <EnhancedCartItem 
+                      key={`${item.id}-${index}`}
                       item={item} 
                       onRemove={removeFromCart}
                       onUpdateQuantity={updateQuantity}
@@ -165,25 +168,93 @@ const Cart = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Bulk Pricing Info Section */}
+              {cart.some(item => item.bulkPricing?.isBulkPrice) && (
+                <div className={`mt-6 p-6 rounded-2xl ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                      <Tag className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
+                        🎉 Bulk Pricing Applied!
+                      </h3>
+                      <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-green-700'}`}>
+                        You're getting volume discounts on qualifying items
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-800/30' : 'bg-white'}`}>
+                      <div className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+                        ${totalSavings.toFixed(2)}
+                      </div>
+                      <div className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        Total Savings
+                      </div>
+                    </div>
+                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-800/30' : 'bg-white'}`}>
+                      <div className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+                        {cart.filter(item => item.bulkPricing?.isBulkPrice).length}
+                      </div>
+                      <div className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        Items with Bulk Pricing
+                      </div>
+                    </div>
+                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-800/30' : 'bg-white'}`}>
+                      <div className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+                        {((totalSavings / originalSubtotal) * 100).toFixed(1)}%
+                      </div>
+                      <div className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        Average Discount
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6 sticky top-4`}>
-                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+            {/* Enhanced Order Summary */}
+            <div className="xl:col-span-1">
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-6 sticky top-4`}>
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6 flex items-center`}>
+                  <CreditCard className="w-6 h-6 mr-2" />
                   Order Summary
                 </h2>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between">
+                <div className="space-y-4">
+                  {/* Subtotal with original price if savings exist */}
+                  <div className="flex justify-between items-center">
                     <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items):
+                      Subtotal ({totalItems} items):
                     </span>
-                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <div className="text-right">
+                      <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                       ${subtotal.toFixed(2)}
                     </span>
+                      {totalSavings > 0 && (
+                        <div className={`text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                          ${originalSubtotal.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
+                  {/* Bulk Savings */}
+                  {totalSavings > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-600 font-medium">
+                        Bulk Savings:
+                      </span>
+                      <span className="font-semibold text-green-600">
+                        -${totalSavings.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Tax */}
                   <div className="flex justify-between">
                     <span className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Tax (10%):</span>
                     <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
