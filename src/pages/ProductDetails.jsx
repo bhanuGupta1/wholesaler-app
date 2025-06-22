@@ -73,25 +73,44 @@ const ProductDetails = () => {
     }
   };
 
-  // Handle add to cart
-  const handleAddToCart = () => {
-    if (quantity > product.stock) {
-      alert(`Only ${product.stock} items available in stock`);
-      return;
+  // FIXED: Real multiple images support
+  const getProductImages = (product) => {
+    if (!product) return [];
+    
+    const images = [];
+    
+    // Add primary image first
+    if (product.imageUrl) {
+      images.push(product.imageUrl);
     }
     
-    addToCart(product, quantity);
+    // Add additional images from imageUrls array
+    if (product.imageUrls && Array.isArray(product.imageUrls)) {
+      product.imageUrls.forEach(url => {
+        if (url && url.trim() && !images.includes(url)) {
+          images.push(url);
+        }
+      });
+    }
     
-    // Show success message
-    const successMessage = document.createElement('div');
-    successMessage.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white bg-green-500 transform transition-transform duration-300`;
-    successMessage.textContent = `Added ${quantity} ${product.name} to cart!`;
-    document.body.appendChild(successMessage);
+    // Fallback: use allImages if available
+    if (images.length === 0 && product.allImages && Array.isArray(product.allImages)) {
+      product.allImages.forEach(url => {
+        if (url && url.trim()) {
+          images.push(url);
+        }
+      });
+    }
     
-    setTimeout(() => {
-      successMessage.style.transform = 'translateX(100%)';
-      setTimeout(() => document.body.removeChild(successMessage), 300);
-    }, 2000);
+    // Debug log to see what images we found
+    console.log('Product images found:', images);
+    console.log('Product data:', { 
+      imageUrl: product.imageUrl, 
+      imageUrls: product.imageUrls, 
+      allImages: product.allImages 
+    });
+    
+    return images;
   };
 
   // Get cart quantity for this product
