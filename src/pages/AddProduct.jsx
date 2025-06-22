@@ -36,6 +36,7 @@ const AddProduct = () => {
   const [recentProducts, setRecentProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [deletingProducts, setDeletingProducts] = useState(new Set());
+  const [pricingErrors, setPricingErrors] = useState({});
 
   // Check if user can delete products (admin, manager, or their own products)
   const canDeleteProducts = isAdmin || isManager;
