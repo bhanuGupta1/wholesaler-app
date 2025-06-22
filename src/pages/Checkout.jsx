@@ -187,25 +187,24 @@ const Checkout = () => {
     'West Coast'
   ];
 
-  // Enhanced calculation with bulk pricing support
+  // UPDATED: Enhanced calculation with auto-applied bulk pricing
   const calculateTotal = () => {
     let subtotal = 0;
     let totalBulkSavings = 0;
     let originalSubtotal = 0;
 
-    cart.forEach(item => {
+    processedCart.forEach(item => {
       const effectivePrice = item.effectivePrice || item.price;
       const itemSubtotal = effectivePrice * item.quantity;
       subtotal += itemSubtotal;
 
-      // Calculate bulk savings
-      if (item.bulkPricing?.isBulkPrice) {
-        const originalItemTotal = item.bulkPricing.originalPrice * item.quantity;
+      // Calculate original subtotal and savings
+      const originalItemTotal = item.price * item.quantity;
+      originalSubtotal += originalItemTotal;
+      
+      if (item.hasBulkDiscount) {
         const savings = originalItemTotal - itemSubtotal;
         totalBulkSavings += savings;
-        originalSubtotal += originalItemTotal;
-      } else {
-        originalSubtotal += item.price * item.quantity;
       }
     });
 
@@ -221,7 +220,7 @@ const Checkout = () => {
       deliveryFee, 
       gst, 
       total,
-      totalItems: cart.reduce((sum, item) => sum + item.quantity, 0)
+      totalItems: processedCart.reduce((sum, item) => sum + item.quantity, 0)
     };
   };
 
