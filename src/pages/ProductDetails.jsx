@@ -26,6 +26,14 @@ const ProductDetails = () => {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  // Enhanced zoom and magnifier states
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [isZooming, setIsZooming] = useState(false);
+  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
+  const [magnifierOffset, setMagnifierOffset] = useState({ x: 0, y: 0 });
+  
 
   // Fetch product details
   useEffect(() => {
