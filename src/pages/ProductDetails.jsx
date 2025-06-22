@@ -418,12 +418,122 @@ const ProductDetails = () => {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div>
-            {/* Main Image */}
-            <div className={`aspect-w-1 aspect-h-1 w-full h-96 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-xl overflow-hidden mb-4`}>
-              {productImages.length > 0 ? (
-                <img 
+          {/* Enhanced Image Gallery with all features */}
+          <div className="space-y-4">
+            {/* View Mode Selector */}
+            <div className="flex items-center space-x-2 mb-4">
+              <button
+                onClick={() => {setIs360Mode(false); setShowVideo(false);}}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  !is360Mode && !showVideo
+                    ? 'bg-indigo-600 text-white'
+                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Camera className="w-4 h-4 inline mr-2" />
+                Photos
+              </button>
+              <button
+                onClick={() => {setIs360Mode(true); setShowVideo(false);}}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  is360Mode
+                    ? 'bg-indigo-600 text-white'
+                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <RotateCw className="w-4 h-4 inline mr-2" />
+                360° View
+              </button>
+              <button
+                onClick={toggleVideo}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  showVideo
+                    ? 'bg-indigo-600 text-white'
+                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Video className="w-4 h-4 inline mr-2" />
+                Video
+              </button>
+            </div>
+
+            {/* Main Display Area */}
+            <div 
+              className="relative group"
+              ref={containerRef}
+            >
+              <div className={`aspect-square w-full ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} rounded-2xl overflow-hidden relative`}>
+                {/* Video Mode */}
+                {showVideo && mockProductVideo ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      ref={videoRef}
+                      src={mockProductVideo.url}
+                      poster={mockProductVideo.thumbnail}
+                      className="w-full h-full object-cover"
+                      onTimeUpdate={handleVideoTimeUpdate}
+                      onLoadedMetadata={handleVideoTimeUpdate}
+                    />
+                    
+                    {/* Video Controls */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={toggleVideoPlay}
+                        className="bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-70 transition-colors"
+                      >
+                        {isVideoPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
+                      </button>
+                    </div>
+                    
+                    {/* Video Progress Bar */}
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center space-x-3 bg-black bg-opacity-50 rounded-lg p-3">
+                        <button onClick={toggleVideoPlay} className="text-white">
+                          {isVideoPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                        </button>
+                        <div className="flex-1 bg-gray-600 rounded-full h-1">
+                          <div 
+                            className="bg-white h-1 rounded-full transition-all"
+                            style={{ width: `${(videoCurrentTime / videoDuration) * 100}%` }}
+                          />
+                        </div>
+                        <button onClick={toggleVideoMute} className="text-white">
+                          {isVideoMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        </button>
+                        <button onClick={() => setShowFullscreen(true)} className="text-white">
+                          <Maximize2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : is360Mode ? (
+                  /* 360° View Mode */
+                  <div 
+                    className="w-full h-full cursor-grab active:cursor-grabbing select-none"
+                    onMouseDown={handle360MouseDown}
+                    onMouseMove={handle360MouseMove}
+                    onMouseUp={handle360MouseUp}
+                    onMouseLeave={handle360MouseUp}
+                  >
+                    <img 
+                      src={mock360Images[Math.floor((rotation360 / 360) * mock360Images.length)]}
+                      alt={`${product.name} 360° view`}
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                    
+                    {/* 360° Instructions */}
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg text-sm">
+                      <Move className="w-4 h-4 inline mr-2" />
+                      Drag to rotate • {Math.round(rotation360)}°
+                    </div>
+                  </div>
+                ) : (
+                  /* Regular Photo Mode with Magnifier */
+                  productImages.length > 0 && (
+                    <>
+                      <img 
+                        ref={imageRef}
                   src={productImages[activeImageIndex]} 
                   alt={product.name}
                   className="w-full h-full object-cover"
