@@ -79,6 +79,18 @@ const AddProduct = () => {
     }
   }, [canManageProducts, user]);
 
+  // Auto-calculate reorder point when stock changes
+  useEffect(() => {
+    if (formData.stock && !formData.reorderPoint) {
+      const autoReorderPoint = Math.max(5, Math.floor(parseInt(formData.stock) * 0.1));
+      setFormData(prev => ({
+        ...prev,
+        reorderPoint: autoReorderPoint.toString()
+      }));
+    }
+  }, [formData.stock]);
+
+
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
     try {
