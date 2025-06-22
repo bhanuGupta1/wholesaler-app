@@ -90,6 +90,30 @@ const AddProduct = () => {
     }
   }, [formData.stock]);
 
+  // Validate pricing structure
+  useEffect(() => {
+    validatePricing();
+  }, [formData.costPrice, formData.price, formData.originalPrice]);
+
+  const validatePricing = () => {
+    const errors = {};
+    const cost = parseFloat(formData.costPrice) || 0;
+    const selling = parseFloat(formData.price) || 0;
+    const original = parseFloat(formData.originalPrice) || 0;
+
+    if (cost && selling && cost >= selling) {
+      errors.costPrice = 'Cost price must be less than selling price';
+    }
+    if (selling && original && selling > original) {
+      errors.price = 'Selling price cannot be higher than original price';
+    }
+    if (cost && original && cost >= original) {
+      errors.originalPrice = 'Original price must be higher than cost price';
+    }
+
+    setPricingErrors(errors);
+  };
+
 
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
