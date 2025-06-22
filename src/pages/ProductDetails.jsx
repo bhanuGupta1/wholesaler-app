@@ -74,6 +74,13 @@ const ProductDetails = () => {
     fetchProductDetails();
   }, [id]);
 
+  // Calculate bulk pricing whenever quantity changes
+  useEffect(() => {
+    if (product && product.bulkPricing) {
+      calculateBulkPricing();
+    }
+  }, [quantity, product]);
+
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
