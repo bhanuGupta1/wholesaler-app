@@ -879,17 +879,17 @@ const AddProduct = () => {
                   (Upload from your device)
                 </span>
               </p>
-            <ImageUploader
-              initialImage={formData.imageUrl}
-              onImageUploaded={(url) =>
-                setFormData(prev => ({ ...prev, imageUrl: url }))
-              }
-              folder="product-images"
-              customId={user?.uid}
-              darkMode={darkMode}
-              autoUpload={true}
-            />
-          </div>
+              <ImageUploader
+                initialImage={formData.imageUrl}
+                onImageUploaded={(url) =>
+                  setFormData(prev => ({ ...prev, imageUrl: url }))
+                }
+                folder="product-images"
+                customId={user?.uid}
+                darkMode={darkMode}
+                autoUpload={true}
+              />
+            </div>
 
             {/* Common Image URLs for Testing/Demo */}
             <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
