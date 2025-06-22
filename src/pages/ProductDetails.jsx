@@ -56,6 +56,7 @@ const ProductDetails = () => {
   const magnifierRef = useRef(null);
   const videoRef = useRef(null);
 
+  ];
 
   // Fetch product details
   useEffect(() => {
