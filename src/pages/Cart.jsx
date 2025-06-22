@@ -512,13 +512,47 @@ const Cart = () => {
   );
 };
 
-// Enhanced Cart Item Component with Bulk Pricing Support
+// NEW: Helper functions for bulk pricing calculations
+const hasNearbyBulkTiers = (item) => {
+  if (!item.bulkPricing || typeof item.bulkPricing !== 'object') return false;
+  
+  const bulkTiers = Object.keys(item.bulkPricing)
+    .map(tier => parseInt(tier))
+    .filter(tier => !isNaN(tier))
+    .sort((a, b) => a - b);
+  
+  // Check if there's a tier within 5 units of current quantity
+  return bulkTiers.some(tier => tier > item.quantity && tier <= item.quantity + 5);
+};
+
+const getNextBulkTier = (item) => {
+  if (!item.bulkPricing || typeof item.bulkPricing !== 'object') return null;
+  
+  const bulkTiers = Object.keys(item.bulkPricing)
+    .map(tier => parseInt(tier))
+    .filter(tier => !isNaN(tier))
+    .sort((a, b) => a - b);
+  
+  return bulkTiers.find(tier => tier > item.quantity);
+};
+
+const calculateAdditionalSavings = (item, nextTier) => {
+  if (!item.bulkPricing || !nextTier) return 0;
+  
+  const nextTierPrice = item.bulkPricing[nextTier.toString()];
+  const currentPrice = item.effectivePrice || item.price;
+  const additionalUnits = nextTier - item.quantity;
+  
+  return (currentPrice - nextTierPrice) * nextTier; // Total savings if they reach next tier
+};
+
+// Enhanced Cart Item Component with Auto-Applied Bulk Pricing Support
 const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
   const [quantity, setQuantity] = useState(item.quantity);
   
   // Get effective price (bulk price if available, otherwise regular price)
   const effectivePrice = item.effectivePrice || item.price;
-  const hasBulkPricing = item.bulkPricing?.isBulkPrice;
+  const hasBulkPricing = item.hasBulkDiscount;
 
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= item.stock) {
@@ -530,7 +564,7 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
   };
 
   const itemTotal = effectivePrice * quantity;
-  const originalItemTotal = hasBulkPricing ? item.bulkPricing.originalPrice * quantity : itemTotal;
+  const originalItemTotal = item.price * quantity;
   const itemSavings = originalItemTotal - itemTotal;
 
   return (
@@ -572,10 +606,10 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
               {hasBulkPricing && (
                 <>
                   <span className={`text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    ${item.bulkPricing.originalPrice.toFixed(2)}
+                    ${item.price.toFixed(2)}
                   </span>
                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                    {item.bulkPricing.bulkDiscount.toFixed(0)}% OFF
+                    {item.bulkPricing?.bulkDiscount?.toFixed(0) || 0}% OFF
                   </span>
                 </>
               )}
@@ -587,7 +621,7 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
                 <div className="flex items-center text-sm">
                   <Tag className="w-4 h-4 mr-1 text-green-600" />
                   <span className={`font-medium ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
-                    Bulk Pricing Active - {item.bulkPricing.bulkTier}+ units
+                    Auto Bulk Pricing - {item.bulkPricing?.bulkTier}+ units
                   </span>
                 </div>
               </div>
