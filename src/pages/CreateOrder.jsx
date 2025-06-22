@@ -1,7 +1,7 @@
-// src/pages/CreateOrder.jsx - Enhanced with Cart Integration
+// src/pages/CreateOrder.jsx - Complete with Auto-Apply Bulk Discounts + Business Discounts
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -15,9 +15,10 @@ const CreateOrder = () => {
   const { darkMode } = useTheme();
   const { cart, clearCart } = useCart();
   
-  // State management using different stats
+  // State management
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [processedSelectedProducts, setProcessedSelectedProducts] = useState([]); // NEW: Processed with bulk pricing
   const [customerInfo, setCustomerInfo] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -29,19 +30,16 @@ const CreateOrder = () => {
 
   // Enhanced payment information state
   const [paymentInfo, setPaymentInfo] = useState({
-    paymentMethod: 'credit_card', // 'credit_card' or 'bank_account'
-    // Credit Card Details
+    paymentMethod: 'credit_card',
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardHolderName: '',
-    // Bank Account Details
     accountNumber: '',
     routingNumber: '',
     accountHolderName: '',
     bankName: '',
-    accountType: 'checking', // 'checking' or 'savings'
-    // Billing Address
+    accountType: 'checking',
     billingAddressSame: true,
     billingAddress: '',
     billingCity: '',
@@ -53,7 +51,72 @@ const CreateOrder = () => {
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderSource, setOrderSource] = useState('direct'); // 'direct' or 'cart'
+  const [orderSource, setOrderSource] = useState('direct');
+
+  // User role state management with Firestore data
+  const [userRole, setUserRole] = useState('guest');
+  const [userAccountType, setUserAccountType] = useState(null);
+
+  // NEW: Auto-apply bulk pricing whenever selectedProducts changes
+  useEffect(() => {
+    const productsWithBulkPricing = selectedProducts.map(item => {
+      return calculateItemBulkPricing(item);
+    });
+    setProcessedSelectedProducts(productsWithBulkPricing);
+  }, [selectedProducts]);
+
+  // NEW: Function to calculate bulk pricing for an item (same logic as Cart/Checkout)
+  const calculateItemBulkPricing = (item) => {
+    // If product doesn't have bulk pricing, return as-is
+    if (!item.bulkPricing || typeof item.bulkPricing !== 'object') {
+      return {
+        ...item,
+        effectivePrice: item.price,
+        hasBulkDiscount: false
+      };
+    }
+
+    // Get all bulk pricing tiers and sort by quantity (descending)
+    const bulkTiers = Object.keys(item.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => b - a);
+
+    // Find the highest tier that applies to current quantity
+    const applicableTier = bulkTiers.find(tier => item.quantity >= tier);
+
+    if (applicableTier) {
+      const bulkPrice = item.bulkPricing[applicableTier.toString()];
+      const savings = item.price - bulkPrice;
+      const discountPercent = (savings / item.price) * 100;
+
+      return {
+        ...item,
+        effectivePrice: bulkPrice,
+        hasBulkDiscount: true,
+        bulkPricing: {
+          ...item.bulkPricing,
+          isBulkPrice: true,
+          originalPrice: item.price,
+          bulkDiscount: discountPercent,
+          bulkTier: applicableTier,
+          appliedPrice: bulkPrice,
+          savings: savings
+        }
+      };
+    }
+
+    // No bulk tier applies
+    return {
+      ...item,
+      effectivePrice: item.price,
+      hasBulkDiscount: false,
+      bulkPricing: {
+        ...item.bulkPricing,
+        isBulkPrice: false
+      }
+    };
+  };
 
   // Check if coming from cart
   useEffect(() => {
