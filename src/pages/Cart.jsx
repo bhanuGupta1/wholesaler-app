@@ -35,8 +35,8 @@ const Cart = () => {
       }
     });
 
-  const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + tax;
+    const tax = subtotal * 0.1; // 10% tax
+    const total = subtotal + tax;
 
     return {
       subtotal,
@@ -118,7 +118,7 @@ const Cart = () => {
               <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center mb-2`}>
                 <ShoppingCart className="w-10 h-10 mr-3" />
                 Shopping Cart
-            </h1>
+              </h1>
               <div className="flex items-center space-x-4">
                 <span className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {totalItems} {totalItems === 1 ? 'item' : 'items'}
@@ -232,8 +232,8 @@ const Cart = () => {
                     </span>
                     <div className="text-right">
                       <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      ${subtotal.toFixed(2)}
-                    </span>
+                        ${subtotal.toFixed(2)}
+                      </span>
                       {totalSavings > 0 && (
                         <div className={`text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                           ${originalSubtotal.toFixed(2)}
@@ -270,8 +270,8 @@ const Cart = () => {
                       </span>
                       <div className="text-right">
                         <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                        ${total.toFixed(2)}
-                      </span>
+                          ${total.toFixed(2)}
+                        </span>
                         {totalSavings > 0 && (
                           <div className="text-sm text-green-600 font-medium">
                             Saved ${totalSavings.toFixed(2)}
@@ -313,13 +313,13 @@ const Cart = () => {
                   <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} text-sm`}>
                     <h4 className={`font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-2 flex items-center`}>
                       <Package className="w-4 h-4 mr-1" />
-                    Checkout Options:
-                  </h4>
+                      Checkout Options:
+                    </h4>
                     <ul className={`space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'} text-xs`}>
-                    <li>• <strong>Quick Checkout:</strong> Fast, streamlined process</li>
+                      <li>• <strong>Quick Checkout:</strong> Fast, streamlined process</li>
                       <li>• <strong>Advanced Order:</strong> Business features & bulk options</li>
-                  </ul>
-                </div>
+                    </ul>
+                  </div>
 
                   {/* Security & Shipping */}
                   <div className="grid grid-cols-3 gap-2 text-center">
@@ -358,34 +358,34 @@ const Cart = () => {
                 <Trash2 className="w-8 h-8 text-red-600" />
               </div>
               <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-              Clear Cart
-            </h3>
-            <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
+                Clear Cart
+              </h3>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
                 Are you sure you want to remove all {totalItems} items from your cart? 
                 {totalSavings > 0 && (
                   <span className="block mt-1 text-red-600 font-medium">
                     You'll lose ${totalSavings.toFixed(2)} in bulk savings!
                   </span>
                 )}
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowClearConfirm(false)}
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
                   className={`flex-1 py-3 px-4 border rounded-xl font-medium transition-colors ${
                     darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  clearCart();
-                  setShowClearConfirm(false);
-                }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    clearCart();
+                    setShowClearConfirm(false);
+                  }}
                   className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
-              >
-                Clear Cart
-              </button>
+                >
+                  Clear Cart
+                </button>
               </div>
             </div>
           </div>
@@ -477,20 +477,20 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
             )}
             
             {/* Product Meta */}
-          <div className="flex items-center space-x-4 text-sm">
+            <div className="flex items-center space-x-4 text-sm">
               {item.sku && (
                 <span className={`font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   SKU: {item.sku}
-            </span>
+                </span>
               )}
-            {item.category && (
+              {item.category && (
                 <span className={`px-2 py-1 rounded-md text-xs font-medium ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
-                {item.category}
+                  {item.category}
+                </span>
+              )}
+              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {item.stock} available
               </span>
-            )}
-            <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {item.stock} available
-            </span>
             </div>
           </div>
           
@@ -502,7 +502,7 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 Limited stock - only {item.stock - quantity} left after this quantity
-            </p>
+              </p>
             </div>
           )}
         </div>
