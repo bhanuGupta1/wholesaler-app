@@ -525,7 +525,7 @@ const Checkout = () => {
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-            {error}
+              {error}
             </div>
           </div>
         )}
@@ -1119,16 +1119,16 @@ const Checkout = () => {
                         darkMode ? 'border-gray-600' : 'border-gray-200'
                       }`}>
                         <div className="w-20 h-20 bg-gray-200 rounded-xl flex items-center justify-center overflow-hidden">
-                        {item.imageUrl ? (
+                          {item.imageUrl ? (
                             <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-cover rounded-xl" />
-                        ) : (
+                          ) : (
                             <Package className="w-8 h-8 text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1">
+                          )}
+                        </div>
+                        <div className="flex-1">
                           <h3 className="font-semibold text-lg">{item.name}</h3>
                           <div className="space-y-1">
-                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               Qty: {item.quantity} × ${effectivePrice.toFixed(2)}
                               {hasBulkPricing && (
                                 <span className="ml-2 text-green-600 font-medium">
@@ -1142,10 +1142,10 @@ const Checkout = () => {
                                 <span className="text-xs font-medium text-green-600">
                                   Bulk discount: {item.bulkPricing.bulkDiscount.toFixed(0)}% off
                                 </span>
-                      </div>
+                              </div>
                             )}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                         <div className="text-right">
                           <div className="font-bold text-lg">
                             ${(effectivePrice * item.quantity).toFixed(2)}
@@ -1173,10 +1173,10 @@ const Checkout = () => {
                         <div className="font-medium">
                           {isGuest ? `${guestContact.firstName} ${guestContact.lastName}` : `${shippingInfo.firstName} ${shippingInfo.lastName}`}
                         </div>
-                      <div>{isGuest ? guestContact.email : shippingInfo.email}</div>
-                      {(isGuest ? guestContact.phone : shippingInfo.phone) && (
-                        <div>{isGuest ? guestContact.phone : shippingInfo.phone}</div>
-                      )}
+                        <div>{isGuest ? guestContact.email : shippingInfo.email}</div>
+                        {(isGuest ? guestContact.phone : shippingInfo.phone) && (
+                          <div>{isGuest ? guestContact.phone : shippingInfo.phone}</div>
+                        )}
                         {isGuest && (
                           <div className={`text-xs mt-2 px-2 py-1 rounded ${darkMode ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-700'}`}>
                             Guest Order • ID: {guestId}
@@ -1194,9 +1194,9 @@ const Checkout = () => {
                     <div className={`p-4 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                       <div className="space-y-1 text-sm">
                         <div className="font-medium capitalize">{paymentInfo.method.replace('_', ' ')}</div>
-                      {paymentInfo.cardNumber && (
-                        <div>•••• •••• •••• {paymentInfo.cardNumber.slice(-4)}</div>
-                      )}
+                        {paymentInfo.cardNumber && (
+                          <div>•••• •••• •••• {paymentInfo.cardNumber.slice(-4)}</div>
+                        )}
                         <div className="text-xs text-green-600 font-medium">
                           All payments in NZD
                         </div>
@@ -1382,12 +1382,12 @@ const Checkout = () => {
               {/* Enhanced Security & NZ Info */}
               <div className="mt-6 space-y-3">
                 <div className={`p-4 rounded-xl text-sm ${
-                darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'
-              } border`}>
+                  darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'
+                } border`}>
                   <div className="flex items-center mb-2">
                     <Shield className="w-4 h-4 mr-2 text-green-600" />
                     <span className="font-semibold text-green-600">Secure NZ Checkout</span>
-                    </div>
+                  </div>
                   <div className={`text-xs space-y-1 ${darkMode ? 'text-green-300' : 'text-green-600'}`}>
                     <div>• SSL encrypted & PCI compliant</div>
                     <div>• All prices include GST</div>
@@ -1401,8 +1401,8 @@ const Checkout = () => {
                     <Shield className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-green-400' : 'text-green-600'}`} />
                     <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Secure
-              </div>
-            </div>
+                    </div>
+                  </div>
                   <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                     <Truck className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                     <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
