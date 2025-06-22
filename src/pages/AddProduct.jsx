@@ -626,6 +626,71 @@ const AddProduct = () => {
               )}
             </div>
             
+              {/* Original Price */}
+              <div>
+                <label htmlFor="originalPrice" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Original Price ($)
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (MSRP/List price)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="originalPrice"
+                  name="originalPrice"
+                  value={formData.originalPrice}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    pricingErrors.originalPrice 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="0.00"
+                />
+                {pricingErrors.originalPrice && (
+                  <p className="text-red-500 text-xs mt-1">{pricingErrors.originalPrice}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Pricing Analytics */}
+            {(formData.price || formData.costPrice || formData.originalPrice) && (
+              <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📊 Pricing Analytics
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  {profitMargin > 0 && (
+                    <div className={`${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      📈 Profit Margin: {profitMargin}%
+                    </div>
+                  )}
+                  {markup > 0 && (
+                    <div className={`${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      🔢 Markup: {markup}%
+                    </div>
+                  )}
+                  {discountPercent > 0 && (
+                    <div className={`${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      🏷️ Discount: {discountPercent}%
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Inventory Section */}
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              📦 Inventory Management
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Stock Quantity */}
             <div>
               <label htmlFor="stock" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                 Stock Quantity *
