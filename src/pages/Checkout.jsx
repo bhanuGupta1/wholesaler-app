@@ -1,4 +1,4 @@
-// src/pages/Checkout.jsx - New Zealand localized with Bulk Pricing Support
+// src/pages/Checkout.jsx - Enhanced with Auto-Apply Bulk Pricing Support
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -21,6 +21,68 @@ const Checkout = () => {
   const [step, setStep] = useState(isGuest ? 2 : 1); // 1: Shipping, 2: Payment, 3: Review
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [processedCart, setProcessedCart] = useState([]);
+
+  // NEW: Auto-apply bulk pricing whenever cart changes
+  useEffect(() => {
+    const cartWithBulkPricing = cart.map(item => {
+      return calculateItemBulkPricing(item);
+    });
+    setProcessedCart(cartWithBulkPricing);
+  }, [cart]);
+
+  // NEW: Function to calculate bulk pricing for an item (same as Cart)
+  const calculateItemBulkPricing = (item) => {
+    // If product doesn't have bulk pricing, return as-is
+    if (!item.bulkPricing || typeof item.bulkPricing !== 'object') {
+      return {
+        ...item,
+        effectivePrice: item.price,
+        hasBulkDiscount: false
+      };
+    }
+
+    // Get all bulk pricing tiers and sort by quantity (descending)
+    const bulkTiers = Object.keys(item.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => b - a);
+
+    // Find the highest tier that applies to current quantity
+    const applicableTier = bulkTiers.find(tier => item.quantity >= tier);
+
+    if (applicableTier) {
+      const bulkPrice = item.bulkPricing[applicableTier.toString()];
+      const savings = item.price - bulkPrice;
+      const discountPercent = (savings / item.price) * 100;
+
+      return {
+        ...item,
+        effectivePrice: bulkPrice,
+        hasBulkDiscount: true,
+        bulkPricing: {
+          ...item.bulkPricing,
+          isBulkPrice: true,
+          originalPrice: item.price,
+          bulkDiscount: discountPercent,
+          bulkTier: applicableTier,
+          appliedPrice: bulkPrice,
+          savings: savings
+        }
+      };
+    }
+
+    // No bulk tier applies
+    return {
+      ...item,
+      effectivePrice: item.price,
+      hasBulkDiscount: false,
+      bulkPricing: {
+        ...item.bulkPricing,
+        isBulkPrice: false
+      }
+    };
+  };
 
   // Shipping Information - New Zealand focused
   const [shippingInfo, setShippingInfo] = useState({
