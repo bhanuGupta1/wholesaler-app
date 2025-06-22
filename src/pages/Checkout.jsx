@@ -1463,6 +1463,9 @@ const Checkout = () => {
                     <div>• SSL encrypted & PCI compliant</div>
                     <div>• All prices include GST</div>
                     <div>• NZ consumer rights protected</div>
+                    {pricing.totalBulkSavings > 0 && (
+                      <div>• Auto bulk discounts applied</div>
+                    )}
                   </div>
                 </div>
 
@@ -1483,7 +1486,7 @@ const Checkout = () => {
                   <div className={`p-3 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                     <Tag className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
                     <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Best Price
+                      Auto Bulk
                     </div>
                   </div>
                 </div>
