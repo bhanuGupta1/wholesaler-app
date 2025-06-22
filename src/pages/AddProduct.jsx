@@ -814,6 +814,71 @@ const AddProduct = () => {
             <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               🖼️ Product Image
             </h3>
+            
+            {/* Image URL Input */}
+            <div className="mb-4">
+              <label htmlFor="imageUrl" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Image URL
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Direct link to product image)
+                </span>
+              </label>
+              <input
+                type="url"
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-md ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                } focus:ring-indigo-500 focus:border-indigo-500`}
+                placeholder="https://example.com/product-image.jpg"
+              />
+              
+              {/* Image Preview */}
+              {formData.imageUrl && (
+                <div className="mt-3">
+                  <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Image Preview:
+                  </p>
+                  <div className={`w-32 h-32 rounded-lg border-2 border-dashed ${
+                    darkMode ? 'border-gray-600' : 'border-gray-300'
+                  } flex items-center justify-center overflow-hidden`}>
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Product preview" 
+                      className="w-full h-full object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerHTML = `
+                          <div class="text-center p-4">
+                            <span class="text-red-500 text-sm">❌ Invalid image URL</span>
+                          </div>
+                        `;
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center my-4">
+              <div className={`flex-1 border-t ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}></div>
+              <span className={`px-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>OR</span>
+              <div className={`flex-1 border-t ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}></div>
+            </div>
+
+            {/* File Upload */}
+            <div>
+              <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Upload Image File
+                <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  (Upload from your device)
+                </span>
+              </p>
             <ImageUploader
               initialImage={formData.imageUrl}
               onImageUploaded={(url) =>
