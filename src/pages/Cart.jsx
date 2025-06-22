@@ -1,9 +1,10 @@
-// src/pages/Cart.jsx - Enhanced with CreateOrder Integration
+// src/pages/Cart.jsx - Enhanced with Bulk Pricing Support
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
+import { ShoppingCart, Trash2, Plus, Minus, Package, CreditCard, Shield, Truck, Tag } from 'lucide-react';
 
 const Cart = () => {
   const { cart, removeFromCart, clearCart, updateQuantity } = useCart();
@@ -12,24 +13,53 @@ const Cart = () => {
   const navigate = useNavigate();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // Calculate totals
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Enhanced total calculations with bulk pricing support
+  const calculateTotals = () => {
+    let subtotal = 0;
+    let totalSavings = 0;
+    let originalSubtotal = 0;
+
+    cart.forEach(item => {
+      const effectivePrice = item.effectivePrice || item.price;
+      const itemSubtotal = effectivePrice * item.quantity;
+      subtotal += itemSubtotal;
+
+      // Calculate savings from bulk pricing
+      if (item.bulkPricing?.isBulkPrice) {
+        const originalItemTotal = item.bulkPricing.originalPrice * item.quantity;
+        const savings = originalItemTotal - itemSubtotal;
+        totalSavings += savings;
+        originalSubtotal += originalItemTotal;
+      } else {
+        originalSubtotal += item.price * item.quantity;
+      }
+    });
+
   const tax = subtotal * 0.1; // 10% tax
   const total = subtotal + tax;
 
+    return {
+      subtotal,
+      originalSubtotal,
+      totalSavings,
+      tax,
+      total,
+      totalItems: cart.reduce((sum, item) => sum + item.quantity, 0)
+    };
+  };
+
+  const { subtotal, originalSubtotal, totalSavings, tax, total, totalItems } = calculateTotals();
+
   const handleCheckout = () => {
     if (!user) {
-      // Redirect to login with return path
       navigate('/login', { state: { from: { pathname: '/checkout' } } });
     } else {
       navigate('/checkout');
     }
   };
 
-  // New function to go to CreateOrder with cart items
   const handleCreateOrder = () => {
     if (!user) {
-      // Redirect to login with return path to CreateOrder
       navigate('/login', { state: { from: { pathname: '/create-order', state: { fromCart: true } } } });
     } else {
       navigate('/create-order', { state: { fromCart: true } });
@@ -43,33 +73,32 @@ const Cart = () => {
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
-              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center`}>
+                <ShoppingCart className="w-8 h-8 mr-3" />
                 Shopping Cart
               </h1>
               <Link 
                 to="/catalog"
-                className={`inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
+                className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg"
               >
                 Continue Shopping
               </Link>
             </div>
 
             {/* Empty Cart */}
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-12 text-center`}>
-              <div className="text-8xl mb-4">🛒</div>
-              <h2 className={`text-2xl font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-900'} mb-2`}>
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-12 text-center`}>
+              <div className="text-8xl mb-6">🛒</div>
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-gray-200' : 'text-gray-900'} mb-3`}>
                 Your cart is empty
               </h2>
-              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-6`}>
-                Looks like you haven't added any products to your cart yet.
+              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-8 max-w-md mx-auto`}>
+                Discover amazing products and start building your perfect order.
               </p>
               <Link
                 to="/catalog"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                className="inline-flex items-center px-8 py-4 bg-indigo-600 text-white text-lg font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m2.6 8L6 5H3m4 8a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
+                <Package className="w-6 h-6 mr-2" />
                 Start Shopping
               </Link>
             </div>
@@ -82,12 +111,28 @@ const Cart = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Header with Savings Badge */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Shopping Cart ({cart.length} {cart.length === 1 ? 'item' : 'items'})
+            <div>
+              <h1 className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} flex items-center mb-2`}>
+                <ShoppingCart className="w-10 h-10 mr-3" />
+                Shopping Cart
             </h1>
+              <div className="flex items-center space-x-4">
+                <span className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                </span>
+                {totalSavings > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold flex items-center">
+                      <Tag className="w-4 h-4 mr-1" />
+                      You're saving ${totalSavings.toFixed(2)}!
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="flex space-x-3">
               <Link 
                 to="/catalog"
