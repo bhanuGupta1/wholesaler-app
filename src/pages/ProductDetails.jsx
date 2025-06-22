@@ -34,6 +34,12 @@ const ProductDetails = () => {
   const [magnifierPosition, setMagnifierPosition] = useState({ x: 0, y: 0 });
   const [magnifierOffset, setMagnifierOffset] = useState({ x: 0, y: 0 });
   
+  // 360° rotation states
+  const [is360Mode, setIs360Mode] = useState(false);
+  const [rotation360, setRotation360] = useState(0);
+  const [isDragging360, setIsDragging360] = useState(false);
+  const [dragStart, setDragStart] = useState(0);
+  
 
   // Fetch product details
   useEffect(() => {
