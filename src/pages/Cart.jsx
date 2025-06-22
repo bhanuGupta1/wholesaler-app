@@ -220,24 +220,24 @@ const Cart = () => {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            {/* Enhanced Cart Items */}
+            {/* Enhanced Cart Items with Auto-Applied Bulk Pricing */}
             <div className="xl:col-span-3">
               <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border overflow-hidden`}>
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {cart.map((item, index) => (
+                  {processedCart.map((item, index) => (
                     <EnhancedCartItem 
                       key={`${item.id}-${index}`}
                       item={item} 
                       onRemove={removeFromCart}
-                      onUpdateQuantity={updateQuantity}
+                      onUpdateQuantity={handleQuantityUpdate}
                       darkMode={darkMode}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Bulk Pricing Info Section */}
-              {cart.some(item => item.bulkPricing?.isBulkPrice) && (
+              {/* Enhanced Bulk Pricing Info Section */}
+              {processedCart.some(item => item.hasBulkDiscount) && (
                 <div className={`mt-6 p-6 rounded-2xl ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
@@ -245,10 +245,10 @@ const Cart = () => {
                     </div>
                     <div>
                       <h3 className={`text-lg font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
-                        🎉 Bulk Pricing Applied!
+                        🎉 Bulk Pricing Applied Automatically!
                       </h3>
                       <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-green-700'}`}>
-                        You're getting volume discounts on qualifying items
+                        Your quantities qualify for volume discounts
                       </p>
                     </div>
                   </div>
@@ -264,7 +264,7 @@ const Cart = () => {
                     </div>
                     <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-800/30' : 'bg-white'}`}>
                       <div className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
-                        {cart.filter(item => item.bulkPricing?.isBulkPrice).length}
+                        {processedCart.filter(item => item.hasBulkDiscount).length}
                       </div>
                       <div className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
                         Items with Bulk Pricing
@@ -272,12 +272,62 @@ const Cart = () => {
                     </div>
                     <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-800/30' : 'bg-white'}`}>
                       <div className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
-                        {((totalSavings / originalSubtotal) * 100).toFixed(1)}%
+                        {totalSavings > 0 ? ((totalSavings / originalSubtotal) * 100).toFixed(1) : '0.0'}%
                       </div>
                       <div className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
                         Average Discount
                       </div>
                     </div>
+                  </div>
+
+                  {/* NEW: Show breakdown of bulk discounts per item */}
+                  <div className="mt-4">
+                    <h4 className={`text-sm font-semibold ${darkMode ? 'text-green-300' : 'text-green-700'} mb-2`}>
+                      Applied Discounts:
+                    </h4>
+                    <div className="space-y-2">
+                      {processedCart.filter(item => item.hasBulkDiscount).map(item => (
+                        <div key={item.id} className={`flex justify-between text-xs ${darkMode ? 'text-green-200' : 'text-green-600'}`}>
+                          <span>{item.name} ({item.quantity} units)</span>
+                          <span>{item.bulkPricing.bulkDiscount.toFixed(1)}% off • Save ${(item.bulkPricing.savings * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* NEW: Show potential bulk discounts for items close to thresholds */}
+              {processedCart.some(item => hasNearbyBulkTiers(item)) && (
+                <div className={`mt-6 p-6 rounded-2xl ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border`}>
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                      <Tag className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-semibold ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                        💡 Get More Savings!
+                      </h3>
+                      <p className={`text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
+                        You're close to additional bulk discounts
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {processedCart.filter(item => hasNearbyBulkTiers(item)).map(item => {
+                      const nextTier = getNextBulkTier(item);
+                      const additionalSavings = nextTier ? calculateAdditionalSavings(item, nextTier) : 0;
+                      
+                      return (
+                        <div key={item.id} className={`flex justify-between text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
+                          <span>{item.name}</span>
+                          <span>
+                            Add {nextTier ? nextTier - item.quantity : 0} more for ${additionalSavings.toFixed(2)} extra savings
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -313,7 +363,7 @@ const Cart = () => {
                   {totalSavings > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-green-600 font-medium">
-                        Bulk Savings:
+                        Auto Bulk Savings:
                       </span>
                       <span className="font-semibold text-green-600">
                         -${totalSavings.toFixed(2)}
