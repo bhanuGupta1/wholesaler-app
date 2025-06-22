@@ -277,13 +277,60 @@ const ProductDetails = () => {
     setActiveImageIndex((prev) => (prev + 1) % productImages.length);
   };
 
-  const productImages = getProductImages(product);
+  const prevImage = () => {
+    setActiveImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
 
+  // Enhanced cart functionality with bulk pricing
   const handleAddToCart = () => {
     if (product && quantity > 0) {
-      addToCart(product, quantity);
-      // Show success message or redirect
-      alert(`Added ${quantity} ${product.name}(s) to cart!`);
+      const effectivePrice = getEffectivePrice();
+      const bulkInfo = currentBulkPrice ? {
+        isBulkPrice: true,
+        originalPrice: product.price,
+        bulkPrice: currentBulkPrice,
+        bulkDiscount: bulkDiscount,
+        bulkTier: Object.keys(product.bulkPricing).find(tier => 
+          quantity >= parseInt(tier) && product.bulkPricing[tier] === currentBulkPrice
+        )
+      } : null;
+
+      // Create enhanced product object for cart
+      const cartProduct = {
+        ...product,
+        effectivePrice: effectivePrice,
+        bulkPricing: bulkInfo
+      };
+
+      addToCart(cartProduct, quantity);
+      
+      // Enhanced success notification
+      const savings = currentBulkPrice ? (product.price - currentBulkPrice) * quantity : 0;
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-xl ${
+        darkMode ? 'bg-green-800 text-green-200 border border-green-700' : 'bg-green-100 text-green-800 border border-green-200'
+      } transform transition-all duration-300 max-w-sm`;
+      
+      notification.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <div class="flex-shrink-0">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="font-semibold">Added to cart!</p>
+            <p class="text-sm">${quantity} × ${product.name}</p>
+            ${savings > 0 ? `<p class="text-sm font-medium text-green-600">💰 Saved $${savings.toFixed(2)} with bulk pricing!</p>` : ''}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+      }, 3000);
     }
   };
 
