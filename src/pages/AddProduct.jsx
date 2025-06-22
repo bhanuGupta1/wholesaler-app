@@ -318,6 +318,12 @@ const AddProduct = () => {
     if (!formData.price || parseFloat(formData.price) <= 0) return 'Valid price is required';
     if (!formData.stock || parseInt(formData.stock) < 0) return 'Valid stock quantity is required';
     if (!formData.category) return 'Category is required';
+    
+    // Pricing validation
+    if (Object.keys(pricingErrors).length > 0) {
+      return 'Please fix pricing errors before submitting';
+    }
+    
     return null;
   };
 
