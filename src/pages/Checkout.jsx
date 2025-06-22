@@ -1,10 +1,11 @@
-// src/pages/Checkout.jsx - Enhanced with guest checkout support
+// src/pages/Checkout.jsx - New Zealand localized with Bulk Pricing Support
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { createOrderWithStockUpdate } from '../firebase/orderService';
+import { CreditCard, Truck, Shield, Package, MapPin, User, Mail, Phone, Tag } from 'lucide-react';
 
 const Checkout = () => {
   const { cart, clearCart } = useCart();
@@ -21,24 +22,24 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Shipping Information - simplified for guests
+  // Shipping Information - New Zealand focused
   const [shippingInfo, setShippingInfo] = useState({
     firstName: user?.displayName?.split(' ')[0] || '',
     lastName: user?.displayName?.split(' ')[1] || '',
     email: user?.email || '',
     phone: '',
     address: '',
-    apartment: '',
+    suburb: '',
     city: '',
-    state: '',
-    zipCode: '',
-    country: 'US',
+    region: '',
+    postcode: '',
+    country: 'NZ',
     isDefault: false
   });
 
-  // Payment Information
+  // Payment Information - NZ payment methods
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'credit_card', // credit_card, debit_card, paypal, apple_pay, google_pay
+    method: 'credit_card', // credit_card, debit_card, bank_transfer, afterpay, paypal
     cardNumber: '',
     expiryDate: '',
     cvv: '',
@@ -46,15 +47,15 @@ const Checkout = () => {
     billingAddressSame: true,
     billingAddress: {
       address: '',
-      apartment: '',
+      suburb: '',
       city: '',
-      state: '',
-      zipCode: '',
-      country: 'US'
+      region: '',
+      postcode: '',
+      country: 'NZ'
     }
   });
 
-  // Delivery Options
+  // Delivery Options - NZ focused
   const [deliveryOption, setDeliveryOption] = useState('standard');
   const [specialInstructions, setSpecialInstructions] = useState('');
 
@@ -72,35 +73,56 @@ const Checkout = () => {
     }
   }, [cart, navigate]);
 
+  // New Zealand delivery options - realistic pricing
   const deliveryOptions = [
     {
       id: 'standard',
       name: 'Standard Delivery',
-      description: '5-7 business days',
-      price: 15.99,
-      freeThreshold: 100
+      description: '3-5 business days',
+      price: 9.90,
+      freeThreshold: 250 // Free over $250 NZD
     },
     {
-      id: 'expedited',
-      name: 'Expedited Delivery',
-      description: '2-3 business days',
-      price: 29.99,
-      freeThreshold: 200
+      id: 'express',
+      name: 'Express Delivery',
+      description: '1-2 business days',
+      price: 19.90,
+      freeThreshold: 500 // Free over $500 NZD
     },
     {
       id: 'overnight',
       name: 'Overnight Delivery',
-      description: 'Next business day',
-      price: 49.99,
-      freeThreshold: 500
+      description: 'Next business day (Metro areas)',
+      price: 29.90,
+      freeThreshold: 1000 // Free over $1000 NZD
     },
     {
       id: 'pickup',
-      name: 'Store Pickup',
+      name: 'Click & Collect',
       description: 'Ready in 2-4 hours',
       price: 0,
       freeThreshold: 0
     }
+  ];
+
+  // New Zealand regions
+  const nzRegions = [
+    'Auckland',
+    'Bay of Plenty',
+    'Canterbury',
+    'Gisborne',
+    'Hawke\'s Bay',
+    'Manawatū-Whanganui',
+    'Marlborough',
+    'Nelson',
+    'Northland',
+    'Otago',
+    'Southland',
+    'Taranaki',
+    'Tasman',
+    'Waikato',
+    'Wellington',
+    'West Coast'
   ];
 
   const calculateTotal = () => {
