@@ -1196,19 +1196,19 @@ const CreateOrder = () => {
                       const itemSavings = product.hasBulkDiscount ? (product.price - effectivePrice) * product.quantity : 0;
 
                       return (
-                      <div key={product.id} className={`flex justify-between items-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-12 h-12 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
-                            {product.imageUrl ? (
-                              <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
-                            ) : (
-                              <span>📦</span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
+                        <div key={product.id} className={`flex justify-between items-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-12 h-12 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
+                              ) : (
+                                <span>📦</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{product.name}</p>
                               <div className="space-y-1">
-                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                                   ${effectivePrice.toFixed(2)} × {product.quantity}
                                   {product.hasBulkDiscount && (
                                     <span className="ml-2 text-green-600 font-medium">
@@ -1221,21 +1221,21 @@ const CreateOrder = () => {
                                     <span className="text-xs font-medium text-green-600">
                                       🎯 Auto bulk: {product.bulkPricing.bulkDiscount.toFixed(0)}% off • {product.bulkPricing.bulkTier}+ units
                                     </span>
-                          </div>
+                                  </div>
                                 )}
-                        </div>
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
-                        <p className="font-semibold text-lg">
+                            <p className="font-semibold text-lg">
                               ${(effectivePrice * product.quantity).toFixed(2)}
-                        </p>
+                            </p>
                             {itemSavings > 0 && (
                               <p className="text-sm text-green-600 font-medium">
                                 Saved ${itemSavings.toFixed(2)}
                               </p>
                             )}
-                      </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -1355,9 +1355,9 @@ const CreateOrder = () => {
                             </button>
                           </div>
                           <div className="text-right">
-                          <p className="text-sm font-semibold">
+                            <p className="text-sm font-semibold">
                               ${((product.effectivePrice || product.price) * product.quantity).toFixed(2)}
-                          </p>
+                            </p>
                             {product.hasBulkDiscount && (
                               <p className="text-xs text-green-600">
                                 Auto bulk applied
@@ -1442,9 +1442,9 @@ const CreateOrder = () => {
                 {step === 1 && (
                   <button
                     onClick={() => setStep(2)}
-                    disabled={selectedProducts.length === 0}
+                    disabled={processedSelectedProducts.length === 0}
                     className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                      selectedProducts.length === 0
+                      processedSelectedProducts.length === 0
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
@@ -1531,6 +1531,11 @@ const CreateOrder = () => {
                     <p className={`${darkMode ? 'text-blue-300' : 'text-blue-600'} mt-1`}>
                       Your payment information is encrypted and secure.
                     </p>
+                    {pricing.totalSavings > 0 && (
+                      <p className={`${darkMode ? 'text-green-300' : 'text-green-600'} mt-1 font-medium`}>
+                        Auto discounts applied & locked in!
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1542,9 +1547,36 @@ const CreateOrder = () => {
   );
 };
 
-// Compact Product Card Component
+// Enhanced Compact Product Card Component
 const CompactProductCard = ({ product, onAddToOrder, darkMode, isSelected }) => {
   const [quantity, setQuantity] = useState(1);
+
+  // Show bulk pricing preview
+  const getBulkPreview = () => {
+    if (!product.bulkPricing || typeof product.bulkPricing !== 'object') return null;
+    
+    const bulkTiers = Object.keys(product.bulkPricing)
+      .map(tier => parseInt(tier))
+      .filter(tier => !isNaN(tier))
+      .sort((a, b) => a - b);
+
+    const applicableTier = bulkTiers.find(tier => quantity >= tier);
+    if (applicableTier) {
+      const bulkPrice = product.bulkPricing[applicableTier.toString()];
+      const savings = product.price - bulkPrice;
+      const discountPercent = (savings / product.price) * 100;
+      
+      return {
+        bulkPrice,
+        discountPercent,
+        tier: applicableTier
+      };
+    }
+    
+    return null;
+  };
+
+  const bulkPreview = getBulkPreview();
 
   return (
     <div className={`border rounded-lg p-4 transition-all hover:shadow-md ${
@@ -1569,15 +1601,38 @@ const CompactProductCard = ({ product, onAddToOrder, darkMode, isSelected }) => 
 
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold truncate">{product.name}</h3>
-            <div className="flex items-center space-x-4 text-sm">
-              <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                ${product.price.toFixed(2)}
-              </span>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Stock: {product.stock}
-              </span>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-4 text-sm">
+                {bulkPreview ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      ${bulkPreview.bulkPrice.toFixed(2)}
+                    </span>
+                    <span className={`line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      ${product.price.toFixed(2)}
+                    </span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                      {bulkPreview.discountPercent.toFixed(0)}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                    ${product.price.toFixed(2)}
+                  </span>
+                )}
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Stock: {product.stock}
+                </span>
+              </div>
+              
+              {bulkPreview && (
+                <div className="text-xs text-green-600 font-medium">
+                  🎯 Auto bulk pricing - {bulkPreview.tier}+ units
+                </div>
+              )}
+              
               {product.category && (
-                <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                <span className={`inline-block px-2 py-1 rounded text-xs ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
                   {product.category}
                 </span>
               )}
