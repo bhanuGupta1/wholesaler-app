@@ -173,25 +173,108 @@ const ProductDetails = () => {
         }
       });
     }
-    
-    // Fallback: use allImages if available
-    if (images.length === 0 && product.allImages && Array.isArray(product.allImages)) {
-      product.allImages.forEach(url => {
-        if (url && url.trim()) {
-          images.push(url);
-        }
-      });
-    }
-    
-    // Debug log to see what images we found
-    console.log('Product images found:', images);
-    console.log('Product data:', { 
-      imageUrl: product.imageUrl, 
-      imageUrls: product.imageUrls, 
-      allImages: product.allImages 
-    });
-    
     return images;
+  };
+
+  const productImages = getProductImages(product);
+
+  // Enhanced magnifier functionality
+  const handleMouseEnter = () => {
+    setIsZooming(true);
+    setShowMagnifier(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsZooming(false);
+    setShowMagnifier(false);
+    setZoomLevel(1);
+    setZoomPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isZooming || !imageRef.current) return;
+    
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setZoomPosition({ x, y });
+    
+    // Update magnifier position
+    const magnifierSize = 200;
+    const offsetX = e.clientX - rect.left - magnifierSize / 2;
+    const offsetY = e.clientY - rect.top - magnifierSize / 2;
+    
+    setMagnifierPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setMagnifierOffset({ x: offsetX, y: offsetY });
+  };
+
+  const handleWheel = (e) => {
+    if (!isZooming) return;
+    e.preventDefault();
+    
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    setZoomLevel(prev => Math.max(1, Math.min(4, prev + delta)));
+  };
+
+  // 360° rotation functionality
+  const handle360MouseDown = (e) => {
+    if (!is360Mode) return;
+    setIsDragging360(true);
+    setDragStart(e.clientX);
+  };
+
+  const handle360MouseMove = (e) => {
+    if (!isDragging360) return;
+    
+    const sensitivity = 2;
+    const deltaX = e.clientX - dragStart;
+    const newRotation = (rotation360 + deltaX * sensitivity) % 360;
+    
+    setRotation360(newRotation < 0 ? newRotation + 360 : newRotation);
+    setDragStart(e.clientX);
+  };
+
+  const handle360MouseUp = () => {
+    setIsDragging360(false);
+  };
+
+  // Video functionality
+  const toggleVideo = () => {
+    setShowVideo(!showVideo);
+    if (showVideo) {
+      setIsVideoPlaying(false);
+    }
+  };
+
+  const toggleVideoPlay = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsVideoPlaying(!isVideoPlaying);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isVideoMuted;
+      setIsVideoMuted(!isVideoMuted);
+    }
+  };
+
+  const handleVideoTimeUpdate = () => {
+    if (videoRef.current) {
+      setVideoCurrentTime(videoRef.current.currentTime);
+      setVideoDuration(videoRef.current.duration);
+    }
+  };
+
+  // Navigation
+  const nextImage = () => {
+    setActiveImageIndex((prev) => (prev + 1) % productImages.length);
   };
 
   const productImages = getProductImages(product);
