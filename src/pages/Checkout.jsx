@@ -125,14 +125,42 @@ const Checkout = () => {
     'West Coast'
   ];
 
+  // Enhanced calculation with bulk pricing support
   const calculateTotal = () => {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let subtotal = 0;
+    let totalBulkSavings = 0;
+    let originalSubtotal = 0;
+
+    cart.forEach(item => {
+      const effectivePrice = item.effectivePrice || item.price;
+      const itemSubtotal = effectivePrice * item.quantity;
+      subtotal += itemSubtotal;
+
+      // Calculate bulk savings
+      if (item.bulkPricing?.isBulkPrice) {
+        const originalItemTotal = item.bulkPricing.originalPrice * item.quantity;
+        const savings = originalItemTotal - itemSubtotal;
+        totalBulkSavings += savings;
+        originalSubtotal += originalItemTotal;
+      } else {
+        originalSubtotal += item.price * item.quantity;
+      }
+    });
+
     const selectedDelivery = deliveryOptions.find(opt => opt.id === deliveryOption);
     const deliveryFee = subtotal >= selectedDelivery.freeThreshold ? 0 : selectedDelivery.price;
-    const tax = subtotal * 0.08; // 8% tax
-    const total = subtotal + deliveryFee + tax;
+    const gst = subtotal * 0.15; // 15% GST in New Zealand
+    const total = subtotal + deliveryFee + gst;
 
-    return { subtotal, deliveryFee, tax, total };
+    return { 
+      subtotal, 
+      originalSubtotal,
+      totalBulkSavings,
+      deliveryFee, 
+      gst, 
+      total,
+      totalItems: cart.reduce((sum, item) => sum + item.quantity, 0)
+    };
   };
 
   const handleShippingChange = (field, value) => {
@@ -150,21 +178,79 @@ const Checkout = () => {
   const validateShipping = () => {
     if (isGuest) return true; // Skip shipping validation for guests
     
-    const required = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode'];
-    return required.every(field => shippingInfo[field].trim() !== '');
+    const errors = {};
+    
+    if (!shippingInfo.firstName.trim()) errors.firstName = 'First name is required';
+    if (!shippingInfo.lastName.trim()) errors.lastName = 'Last name is required';
+    if (!shippingInfo.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(shippingInfo.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    if (!shippingInfo.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!validateNZPhone(shippingInfo.phone)) {
+      errors.phone = 'Please enter a valid NZ phone number';
+    }
+    if (!shippingInfo.address.trim()) errors.address = 'Address is required';
+    if (!shippingInfo.city.trim()) errors.city = 'City is required';
+    if (!shippingInfo.region.trim()) errors.region = 'Region is required';
+    if (!shippingInfo.postcode.trim()) {
+      errors.postcode = 'Postcode is required';
+    } else if (!validatePostcode(shippingInfo.postcode)) {
+      errors.postcode = 'Postcode must be 4 digits';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const validateGuestContact = () => {
     if (!isGuest) return true;
     
-    return guestContact.email && guestContact.firstName && guestContact.lastName;
+    const errors = {};
+    
+    if (!guestContact.firstName.trim()) errors.guestFirstName = 'First name is required';
+    if (!guestContact.lastName.trim()) errors.guestLastName = 'Last name is required';
+    if (!guestContact.email.trim()) {
+      errors.guestEmail = 'Email is required';
+    } else if (!validateEmail(guestContact.email)) {
+      errors.guestEmail = 'Please enter a valid email address';
+    }
+    if (guestContact.phone && !validateNZPhone(guestContact.phone)) {
+      errors.guestPhone = 'Please enter a valid NZ phone number';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const validatePayment = () => {
+    const errors = {};
+    
     if (paymentInfo.method === 'credit_card' || paymentInfo.method === 'debit_card') {
-      return paymentInfo.cardNumber && paymentInfo.expiryDate && paymentInfo.cvv && paymentInfo.nameOnCard;
+      if (!paymentInfo.nameOnCard.trim()) {
+        errors.nameOnCard = 'Name on card is required';
+      }
+      if (!paymentInfo.cardNumber.trim()) {
+        errors.cardNumber = 'Card number is required';
+      } else if (!validateCardNumber(paymentInfo.cardNumber)) {
+        errors.cardNumber = 'Card number must be 16 digits';
+      }
+      if (!paymentInfo.expiryDate.trim()) {
+        errors.expiryDate = 'Expiry date is required';
+      } else if (!validateExpiryDate(paymentInfo.expiryDate)) {
+        errors.expiryDate = 'Invalid or expired date (MM/YY)';
+      }
+      if (!paymentInfo.cvv.trim()) {
+        errors.cvv = 'CVV is required';
+      } else if (!validateCVV(paymentInfo.cvv)) {
+        errors.cvv = 'CVV must be 3-4 digits';
+      }
     }
-    return true; // For other payment methods
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const formatCardNumber = (value) => {
@@ -185,6 +271,25 @@ const Checkout = () => {
     }
     return cleaned;
   };
+
+  const formatPostcode = (value) => {
+    // NZ postcodes are 4 digits
+    return value.replace(/\D/g, '').substring(0, 4);
+  };
+
+  const formatPhoneNumber = (value) => {
+    // Basic NZ phone formatting
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.startsWith('64')) {
+      return '+64 ' + cleaned.substring(2);
+    } else if (cleaned.startsWith('0')) {
+      return cleaned;
+    } else if (cleaned.length <= 9) {
+      return '0' + cleaned;
+    }
+    return value;
+  };
+
 
   const handlePlaceOrder = async () => {
     try {
