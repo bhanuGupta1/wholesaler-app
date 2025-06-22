@@ -455,7 +455,7 @@ const Cart = () => {
                     <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                       <Tag className={`w-5 h-5 mx-auto mb-1 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
                       <div className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Best Price
+                        Auto Bulk Pricing
                       </div>
                     </div>
                   </div>
