@@ -22,7 +22,8 @@ const AddProduct = () => {
     costPrice: '',     // Our wholesale cost (lowest)
     stock: '',
     category: '',
-    imageUrl: '',
+    imageUrl: '',      // Primary image
+    imageUrls: [],     // Additional images array
     sku: '',
     supplier: '',
     tags: '',
