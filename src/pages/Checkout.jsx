@@ -290,6 +290,49 @@ const Checkout = () => {
     return value;
   };
 
+  // Enhanced validation functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateNZPhone = (phone) => {
+    // NZ phone numbers: 021/022/027/029 (mobile) or 03/04/06/07/09 (landline)
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.startsWith('64')) {
+      return cleaned.length >= 11 && cleaned.length <= 13;
+    }
+    return cleaned.length >= 8 && cleaned.length <= 10;
+  };
+
+  const validatePostcode = (postcode) => {
+    return /^\d{4}$/.test(postcode);
+  };
+
+  const validateCardNumber = (cardNumber) => {
+    const cleaned = cardNumber.replace(/\s/g, '');
+    return /^\d{16}$/.test(cleaned);
+  };
+
+  const validateCVV = (cvv) => {
+    return /^\d{3,4}$/.test(cvv);
+  };
+
+  const validateExpiryDate = (expiryDate) => {
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) return false;
+    
+    const [month, year] = expiryDate.split('/').map(num => parseInt(num));
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    if (month < 1 || month > 12) return false;
+    if (year < currentYear || (year === currentYear && month < currentMonth)) return false;
+    
+    return true;
+  };
+
+  const [formErrors, setFormErrors] = useState({});
 
   const handlePlaceOrder = async () => {
     try {
