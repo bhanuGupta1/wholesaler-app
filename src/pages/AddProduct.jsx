@@ -694,6 +694,45 @@ const AddProduct = () => {
             />
           </div>
 
+          {/* Bulk Pricing Option */}
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              🎯 Bulk Pricing
+            </h3>
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableBulkPricing}
+                  onChange={(e) => setFormData(prev => ({ ...prev, enableBulkPricing: e.target.checked }))}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className={`ml-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Enable automatic bulk pricing discounts
+                </span>
+              </label>
+              
+              {formData.enableBulkPricing && formData.price && (
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h4 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Bulk Pricing Tiers
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className={`${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      📦 10+ units: ${(parseFloat(formData.price) * 0.9).toFixed(2)} (10% off)
+                    </div>
+                    <div className={`${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      📦 50+ units: ${(parseFloat(formData.price) * 0.85).toFixed(2)} (15% off)
+                    </div>
+                    <div className={`${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      📦 100+ units: ${(parseFloat(formData.price) * 0.8).toFixed(2)} (20% off)
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Form Actions */}
           <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
