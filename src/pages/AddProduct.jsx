@@ -17,7 +17,9 @@ const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '',
+    originalPrice: '', // MSRP/List price (highest)
+    price: '',         // Current selling price (middle)
+    costPrice: '',     // Our wholesale cost (lowest)
     stock: '',
     category: '',
     imageUrl: '',
