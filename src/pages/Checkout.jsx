@@ -353,18 +353,18 @@ const Checkout = () => {
         isGuestOrder: isGuest,
         guestId: guestId,
         
-        // Addresses - use minimal info for guests
+        // Addresses - New Zealand format
         shippingAddress: isGuest ? {
           firstName: guestContact.firstName,
           lastName: guestContact.lastName,
           email: guestContact.email,
           phone: guestContact.phone,
-          // For guests, we'll use store pickup or minimal shipping
-          address: deliveryOption === 'pickup' ? 'Store Pickup' : 'Guest Order',
+          address: deliveryOption === 'pickup' ? 'Click & Collect' : 'Guest Order',
+          suburb: 'N/A',
           city: 'N/A',
-          state: 'N/A',
-          zipCode: 'N/A',
-          country: 'US'
+          region: 'N/A',
+          postcode: 'N/A',
+          country: 'New Zealand'
         } : shippingInfo,
         billingAddress: isGuest ? {
           firstName: guestContact.firstName,
@@ -372,20 +372,31 @@ const Checkout = () => {
           email: guestContact.email
         } : (paymentInfo.billingAddressSame ? shippingInfo : paymentInfo.billingAddress),
         
-        // Order details
+        // Enhanced order items with bulk pricing info
         items: cart.map(item => ({
           productId: item.id,
           productName: item.name,
-          price: item.price,
+          originalPrice: item.bulkPricing?.originalPrice || item.price,
+          effectivePrice: item.effectivePrice || item.price,
           quantity: item.quantity,
-          subtotal: item.price * item.quantity
+          subtotal: (item.effectivePrice || item.price) * item.quantity,
+          // Bulk pricing details
+          hasBulkPricing: !!item.bulkPricing?.isBulkPrice,
+          bulkTier: item.bulkPricing?.bulkTier || null,
+          bulkDiscount: item.bulkPricing?.bulkDiscount || 0,
+          bulkSavings: item.bulkPricing?.isBulkPrice 
+            ? (item.bulkPricing.originalPrice - (item.effectivePrice || item.price)) * item.quantity 
+            : 0
         })),
         
-        // Pricing
+        // Enhanced pricing with bulk savings
+        originalSubtotal: pricing.originalSubtotal,
         subtotal: pricing.subtotal,
+        totalBulkSavings: pricing.totalBulkSavings,
         deliveryFee: pricing.deliveryFee,
-        tax: pricing.tax,
+        gst: pricing.gst, // GST instead of tax
         total: pricing.total,
+        currency: 'NZD',
         
         // Delivery
         deliveryOption: deliveryOption,
@@ -400,7 +411,12 @@ const Checkout = () => {
         userId: isGuest ? null : (user?.uid || null),
         
         // Metadata
-        itemCount: cart.reduce((sum, item) => sum + item.quantity, 0)
+        itemCount: cart.reduce((sum, item) => sum + item.quantity, 0),
+        hasBulkDiscounts: pricing.totalBulkSavings > 0,
+        
+        // New Zealand specific
+        country: 'New Zealand',
+        timezone: 'Pacific/Auckland'
       };
 
       const orderId = await createOrderWithStockUpdate(orderData);
@@ -429,23 +445,41 @@ const Checkout = () => {
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 flex items-center">
+            <Package className="w-10 h-10 mr-3" />
             {isGuest ? 'Guest Checkout' : 'Checkout'}
           </h1>
           
           {/* Guest Notice */}
           {isGuest && (
-            <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
+            <div className={`mb-6 p-6 rounded-xl ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'} border`}>
               <div className="flex items-start">
-                <div className="text-2xl mr-3">🛒</div>
+                <div className="text-3xl mr-4">🇳🇿</div>
                 <div>
-                  <h3 className={`font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
+                  <h3 className={`text-lg font-semibold ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-2`}>
                     Checking out as Guest
                   </h3>
-                  <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
-                    You can complete your purchase without creating an account. We'll send order updates to your email.
+                  <p className={`${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                    Complete your purchase without creating an account. We'll send order updates to your email. All prices in NZD.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bulk Savings Notice */}
+          {pricing.totalBulkSavings > 0 && (
+            <div className={`mb-6 p-6 rounded-xl ${darkMode ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border`}>
+              <div className="flex items-center">
+                <Tag className="w-8 h-8 mr-3 text-green-600" />
+                <div>
+                  <h3 className={`text-lg font-semibold ${darkMode ? 'text-green-300' : 'text-green-800'} mb-1`}>
+                    🎉 You're saving ${pricing.totalBulkSavings.toFixed(2)} NZD with bulk pricing!
+                  </h3>
+                  <p className={`${darkMode ? 'text-green-200' : 'text-green-700'}`}>
+                    Your bulk discounts have been applied and will be maintained through checkout.
                   </p>
                 </div>
               </div>
@@ -463,16 +497,16 @@ const Checkout = () => {
               { num: 3, label: 'Review' }
             ]).map((stepInfo, index) => (
               <div key={stepInfo.num} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${
                   step >= stepInfo.num 
                     ? 'bg-indigo-600 text-white' 
                     : darkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-300 text-gray-600'
                 }`}>
                   {step > stepInfo.num ? '✓' : stepInfo.num}
                 </div>
-                <span className="ml-2 font-medium">{stepInfo.label}</span>
+                <span className="ml-3 font-medium">{stepInfo.label}</span>
                 {index < (isGuest ? 1 : 2) && (
-                  <div className={`w-16 h-0.5 mx-4 ${
+                  <div className={`w-20 h-1 mx-6 rounded ${
                     step > stepInfo.num 
                       ? 'bg-indigo-600' 
                       : darkMode ? 'bg-gray-700' : 'bg-gray-300'
@@ -484,156 +518,215 @@ const Checkout = () => {
         </div>
 
         {error && (
-          <div className={`mb-6 p-4 rounded-lg border-l-4 ${
+          <div className={`mb-6 p-4 rounded-xl border-l-4 ${
             darkMode ? 'bg-red-900/30 border-red-800 text-red-400' : 'bg-red-50 border-red-400 text-red-700'
           }`}>
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
             {error}
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             {/* Step 1: Shipping Information (Skip for guests) */}
             {!isGuest && step === 1 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
-                <h2 className="text-xl font-semibold mb-6">Shipping Information</h2>
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-8`}>
+                <h2 className="text-2xl font-bold mb-6 flex items-center">
+                  <MapPin className="w-6 h-6 mr-2" />
+                  Shipping Information
+                </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">First Name *</label>
+                    <label className="text-sm font-semibold mb-2 flex items-center">
+                      <User className="w-4 h-4 mr-1" />
+                      First Name *
+                    </label>
                     <input
                       type="text"
                       value={shippingInfo.firstName}
                       onChange={(e) => handleShippingChange('firstName', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        formErrors.firstName 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                            : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                       }`}
                       required
                     />
+                    {formErrors.firstName && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.firstName}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Last Name *</label>
+                    <label className="block text-sm font-semibold mb-2">Last Name *</label>
                     <input
                       type="text"
                       value={shippingInfo.lastName}
                       onChange={(e) => handleShippingChange('lastName', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        formErrors.lastName 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                            : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                       }`}
                       required
                     />
+                    {formErrors.lastName && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.lastName}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email *</label>
+                    <label className="text-sm font-semibold mb-2 flex items-center">
+                      <Mail className="w-4 h-4 mr-1" />
+                      Email *
+                    </label>
                     <input
                       type="email"
                       value={shippingInfo.email}
                       onChange={(e) => handleShippingChange('email', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        formErrors.email 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                            : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                       }`}
                       required
                     />
+                    {formErrors.email && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Phone *</label>
+                    <label className="text-sm font-semibold mb-2 flex items-center">
+                      <Phone className="w-4 h-4 mr-1" />
+                      Phone *
+                    </label>
                     <input
                       type="tel"
                       value={shippingInfo.phone}
-                      onChange={(e) => handleShippingChange('phone', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                      onChange={(e) => handleShippingChange('phone', formatPhoneNumber(e.target.value))}
+                      placeholder="021 234 5678"
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        formErrors.phone 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                            : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                       }`}
                       required
                     />
+                    {formErrors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2">Address *</label>
+                    <label className="block text-sm font-semibold mb-2">Street Address *</label>
                     <input
                       type="text"
                       value={shippingInfo.address}
                       onChange={(e) => handleShippingChange('address', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                      }`}
+                      placeholder="123 Queen Street"
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                      } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                       required
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-2">Apartment, suite, etc. (Optional)</label>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Suburb</label>
                     <input
                       type="text"
-                      value={shippingInfo.apartment}
-                      onChange={(e) => handleShippingChange('apartment', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                      }`}
+                      value={shippingInfo.suburb}
+                      onChange={(e) => handleShippingChange('suburb', e.target.value)}
+                      placeholder="CBD"
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                      } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">City *</label>
+                    <label className="block text-sm font-semibold mb-2">City *</label>
                     <input
                       type="text"
                       value={shippingInfo.city}
                       onChange={(e) => handleShippingChange('city', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                      }`}
+                      placeholder="Auckland"
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                      } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">State *</label>
+                    <label className="block text-sm font-semibold mb-2">Region *</label>
                     <select
-                      value={shippingInfo.state}
-                      onChange={(e) => handleShippingChange('state', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                      }`}
+                      value={shippingInfo.region}
+                      onChange={(e) => handleShippingChange('region', e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                      } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
                       required
                     >
-                      <option value="">Select State</option>
-                      <option value="CA">California</option>
-                      <option value="NY">New York</option>
-                      <option value="TX">Texas</option>
-                      <option value="FL">Florida</option>
-                      {/* Add more states */}
+                      <option value="">Select Region</option>
+                      {nzRegions.map(region => (
+                        <option key={region} value={region}>{region}</option>
+                      ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">ZIP Code *</label>
+                    <label className="block text-sm font-semibold mb-2">Postcode *</label>
                     <input
                       type="text"
-                      value={shippingInfo.zipCode}
-                      onChange={(e) => handleShippingChange('zipCode', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg ${
-                        darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                      value={shippingInfo.postcode}
+                      onChange={(e) => handleShippingChange('postcode', formatPostcode(e.target.value))}
+                      placeholder="1010"
+                      maxLength="4"
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        formErrors.postcode 
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : darkMode 
+                            ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                            : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                       }`}
                       required
                     />
+                    {formErrors.postcode && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.postcode}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Delivery Options */}
                 <div className="mt-8">
-                  <h3 className="text-lg font-medium mb-4">Delivery Options</h3>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <Truck className="w-5 h-5 mr-2" />
+                    Delivery Options
+                  </h3>
                   <div className="space-y-3">
                     {deliveryOptions.map(option => (
                       <label
                         key={option.id}
-                        className={`flex items-center p-4 border rounded-lg cursor-pointer ${
+                        className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
                           deliveryOption === option.id
-                            ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
-                            : darkMode ? 'border-gray-600' : 'border-gray-300'
+                            ? darkMode ? 'border-indigo-500 bg-indigo-900/20 shadow-lg' : 'border-indigo-500 bg-indigo-50 shadow-lg'
+                            : darkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
                         <input
@@ -642,24 +735,24 @@ const Checkout = () => {
                           value={option.id}
                           checked={deliveryOption === option.id}
                           onChange={(e) => setDeliveryOption(e.target.value)}
-                          className="mr-4"
+                          className="mr-4 w-5 h-5"
                         />
                         <div className="flex-1">
-                          <div className="font-medium">{option.name}</div>
+                          <div className="font-semibold">{option.name}</div>
                           <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                             {option.description}
                           </div>
                         </div>
                         <div className="text-right">
                           {option.price === 0 ? (
-                            <span className="font-medium text-green-600">FREE</span>
+                            <span className="font-semibold text-green-600">FREE</span>
                           ) : pricing.subtotal >= option.freeThreshold ? (
                             <div>
-                              <span className="line-through text-gray-400">${option.price}</span>
-                              <span className="ml-2 font-medium text-green-600">FREE</span>
+                              <span className="line-through text-gray-400">${option.price.toFixed(2)}</span>
+                              <span className="ml-2 font-semibold text-green-600">FREE</span>
                             </div>
                           ) : (
-                            <span className="font-medium">${option.price}</span>
+                            <span className="font-semibold">${option.price.toFixed(2)}</span>
                           )}
                         </div>
                       </label>
@@ -669,15 +762,15 @@ const Checkout = () => {
 
                 {/* Special Instructions */}
                 <div className="mt-6">
-                  <label className="block text-sm font-medium mb-2">Special Instructions (Optional)</label>
+                  <label className="block text-sm font-semibold mb-2">Special Instructions (Optional)</label>
                   <textarea
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
                     rows="3"
-                    className={`w-full px-4 py-3 border rounded-lg ${
-                      darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                    }`}
-                    placeholder="Any special delivery instructions..."
+                    className={`w-full px-4 py-3 border rounded-xl ${
+                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'
+                    } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                    placeholder="Leave at door, ring doorbell, etc..."
                   />
                 </div>
               </div>
@@ -685,76 +778,116 @@ const Checkout = () => {
 
             {/* Step 2: Payment Information (includes guest contact for guests) */}
             {step === 2 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
-                <h2 className="text-xl font-semibold mb-6">
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-8`}>
+                <h2 className="text-2xl font-bold mb-6 flex items-center">
+                  <CreditCard className="w-6 h-6 mr-2" />
                   {isGuest ? 'Contact & Payment Information' : 'Payment Information'}
                 </h2>
 
                 {/* Guest Contact Information */}
                 {isGuest && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center">
+                      <User className="w-5 h-5 mr-2" />
+                      Contact Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium mb-2">First Name *</label>
+                        <label className="block text-sm font-semibold mb-2">First Name *</label>
                         <input
                           type="text"
                           value={guestContact.firstName}
                           onChange={(e) => handleGuestContactChange('firstName', e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.guestFirstName 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
                           required
                         />
+                        {formErrors.guestFirstName && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.guestFirstName}</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">Last Name *</label>
+                        <label className="block text-sm font-semibold mb-2">Last Name *</label>
                         <input
                           type="text"
                           value={guestContact.lastName}
                           onChange={(e) => handleGuestContactChange('lastName', e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.guestLastName 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
                           required
                         />
+                        {formErrors.guestLastName && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.guestLastName}</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">Email *</label>
+                        <label className="text-sm font-semibold mb-2 flex items-center">
+                          <Mail className="w-4 h-4 mr-1" />
+                          Email *
+                        </label>
                         <input
                           type="email"
                           value={guestContact.email}
                           onChange={(e) => handleGuestContactChange('email', e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.guestEmail 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
-                          placeholder="We'll send order updates here"
+                          placeholder="your.email@example.co.nz"
                           required
                         />
+                        {formErrors.guestEmail && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.guestEmail}</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">Phone (Optional)</label>
+                        <label className="text-sm font-semibold mb-2 flex items-center">
+                          <Phone className="w-4 h-4 mr-1" />
+                          Phone (Optional)
+                        </label>
                         <input
                           type="tel"
                           value={guestContact.phone}
-                          onChange={(e) => handleGuestContactChange('phone', e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          onChange={(e) => handleGuestContactChange('phone', formatPhoneNumber(e.target.value))}
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.guestPhone 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
-                          placeholder="For delivery updates"
+                          placeholder="021 234 5678"
                         />
+                        {formErrors.guestPhone && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.guestPhone}</p>
+                        )}
                       </div>
                     </div>
 
                     {/* Guest Delivery Options */}
                     <div className="mt-6">
-                      <h4 className="text-md font-medium mb-3">Delivery Method</h4>
-                      <div className="space-y-2">
-                        {/* For guests, recommend pickup or simplified delivery */}
-                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                      <h4 className="text-md font-semibold mb-3 flex items-center">
+                        <Truck className="w-4 h-4 mr-1" />
+                        Delivery Method
+                      </h4>
+                      <div className="space-y-3">
+                        <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
                           deliveryOption === 'pickup'
                             ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
                             : darkMode ? 'border-gray-600' : 'border-gray-300'
@@ -765,18 +898,18 @@ const Checkout = () => {
                             value="pickup"
                             checked={deliveryOption === 'pickup'}
                             onChange={(e) => setDeliveryOption(e.target.value)}
-                            className="mr-3"
+                            className="mr-3 w-5 h-5"
                           />
                           <div className="flex-1">
-                            <div className="font-medium">Store Pickup (Recommended)</div>
+                            <div className="font-semibold">Click & Collect (Recommended)</div>
                             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               Ready in 2-4 hours • FREE
                             </div>
                           </div>
-                          <span className="font-medium text-green-600">FREE</span>
+                          <span className="font-semibold text-green-600">FREE</span>
                         </label>
 
-                        <label className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                        <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
                           deliveryOption === 'standard'
                             ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
                             : darkMode ? 'border-gray-600' : 'border-gray-300'
@@ -787,37 +920,38 @@ const Checkout = () => {
                             value="standard"
                             checked={deliveryOption === 'standard'}
                             onChange={(e) => setDeliveryOption(e.target.value)}
-                            className="mr-3"
+                            className="mr-3 w-5 h-5"
                           />
                           <div className="flex-1">
-                            <div className="font-medium">Standard Delivery</div>
+                            <div className="font-semibold">Standard Delivery</div>
                             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              5-7 business days
+                              3-5 business days across New Zealand
                             </div>
                           </div>
-                          <span className="font-medium">${deliveryOptions.find(opt => opt.id === 'standard')?.price}</span>
+                          <span className="font-semibold">${deliveryOptions.find(opt => opt.id === 'standard')?.price.toFixed(2)}</span>
                         </label>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Payment Methods */}
+                {/* Payment Methods - NZ focused */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-4">Choose Payment Method</h3>
+                  <h3 className="text-lg font-semibold mb-4">Choose Payment Method</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      { id: 'credit_card', name: 'Credit Card', icon: '💳' },
-                      { id: 'debit_card', name: 'Debit Card', icon: '💳' },
-                      { id: 'paypal', name: 'PayPal', icon: '🅿️' },
-                      { id: 'apple_pay', name: 'Apple Pay', icon: '🍎' }
+                      { id: 'credit_card', name: 'Credit Card', icon: '💳', desc: 'Visa, Mastercard' },
+                      { id: 'debit_card', name: 'Debit Card', icon: '💳', desc: 'EFTPOS, Visa Debit' },
+                      { id: 'bank_transfer', name: 'Bank Transfer', icon: '🏦', desc: 'Direct from bank' },
+                      { id: 'afterpay', name: 'Afterpay', icon: '💰', desc: 'Buy now, pay later' },
+                      { id: 'paypal', name: 'PayPal', icon: '🅿️', desc: 'PayPal account' }
                     ].map(method => (
                       <label
                         key={method.id}
-                        className={`flex items-center p-4 border rounded-lg cursor-pointer ${
+                        className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
                           paymentInfo.method === method.id
                             ? darkMode ? 'border-indigo-500 bg-indigo-900/20' : 'border-indigo-500 bg-indigo-50'
-                            : darkMode ? 'border-gray-600' : 'border-gray-300'
+                            : darkMode ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
                         <input
@@ -826,10 +960,15 @@ const Checkout = () => {
                           value={method.id}
                           checked={paymentInfo.method === method.id}
                           onChange={(e) => handlePaymentChange('method', e.target.value)}
-                          className="mr-3"
+                          className="mr-3 w-5 h-5"
                         />
-                        <span className="mr-2">{method.icon}</span>
-                        <span>{method.name}</span>
+                        <span className="mr-3 text-2xl">{method.icon}</span>
+                        <div>
+                          <div className="font-semibold">{method.name}</div>
+                          <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {method.desc}
+                          </div>
+                        </div>
                       </label>
                     ))}
                   </div>
@@ -837,79 +976,124 @@ const Checkout = () => {
 
                 {/* Card Details */}
                 {(paymentInfo.method === 'credit_card' || paymentInfo.method === 'debit_card') && (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Name on Card *</label>
+                      <label className="block text-sm font-semibold mb-2">Name on Card *</label>
                       <input
                         type="text"
                         value={paymentInfo.nameOnCard}
                         onChange={(e) => handlePaymentChange('nameOnCard', e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-lg ${
-                          darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                        className={`w-full px-4 py-3 border rounded-xl ${
+                          formErrors.nameOnCard 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : darkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                              : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                         }`}
                         required
                       />
+                      {formErrors.nameOnCard && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.nameOnCard}</p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2">Card Number *</label>
+                      <label className="block text-sm font-semibold mb-2">Card Number *</label>
                       <input
                         type="text"
                         value={paymentInfo.cardNumber}
                         onChange={(e) => handlePaymentChange('cardNumber', formatCardNumber(e.target.value))}
                         placeholder="1234 5678 9012 3456"
                         maxLength="19"
-                        className={`w-full px-4 py-3 border rounded-lg ${
-                          darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                        className={`w-full px-4 py-3 border rounded-xl ${
+                          formErrors.cardNumber 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : darkMode 
+                              ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                              : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                         }`}
                         required
                       />
+                      {formErrors.cardNumber && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.cardNumber}</p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Expiry Date *</label>
+                        <label className="block text-sm font-semibold mb-2">Expiry Date *</label>
                         <input
                           type="text"
                           value={paymentInfo.expiryDate}
                           onChange={(e) => handlePaymentChange('expiryDate', formatExpiryDate(e.target.value))}
                           placeholder="MM/YY"
                           maxLength="5"
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.expiryDate 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
                           required
                         />
+                        {formErrors.expiryDate && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.expiryDate}</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">CVV *</label>
+                        <label className="block text-sm font-semibold mb-2">CVV *</label>
                         <input
                           type="text"
                           value={paymentInfo.cvv}
                           onChange={(e) => handlePaymentChange('cvv', e.target.value.replace(/\D/g, ''))}
                           placeholder="123"
                           maxLength="4"
-                          className={`w-full px-4 py-3 border rounded-lg ${
-                            darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                          className={`w-full px-4 py-3 border rounded-xl ${
+                            formErrors.cvv 
+                              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                              : darkMode 
+                                ? 'bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent' 
+                                : 'bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
                           }`}
                           required
                         />
+                        {formErrors.cvv && (
+                          <p className="text-red-500 text-sm mt-1">{formErrors.cvv}</p>
+                        )}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Other Payment Methods */}
-                {paymentInfo.method === 'paypal' && (
-                  <div className={`p-6 rounded-lg border-2 border-dashed ${
+                {paymentInfo.method === 'afterpay' && (
+                  <div className={`p-6 rounded-xl border-2 border-dashed ${
                     darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'
                   }`}>
                     <div className="text-center">
-                      <div className="text-4xl mb-2">🅿️</div>
-                      <p className="font-medium">PayPal Payment</p>
-                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        You will be redirected to PayPal to complete your payment
+                      <div className="text-4xl mb-3">💰</div>
+                      <p className="font-semibold text-lg">Afterpay Payment</p>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                        Split your purchase into 4 equal payments, due every 2 weeks
+                      </p>
+                      <div className="mt-3 text-xs text-green-600 font-medium">
+                        No interest if paid on time
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {paymentInfo.method === 'bank_transfer' && (
+                  <div className={`p-6 rounded-xl border-2 border-dashed ${
+                    darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'
+                  }`}>
+                    <div className="text-center">
+                      <div className="text-4xl mb-3">🏦</div>
+                      <p className="font-semibold text-lg">Bank Transfer</p>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                        Bank details will be provided after order confirmation
                       </p>
                     </div>
                   </div>
@@ -919,8 +1103,8 @@ const Checkout = () => {
 
             {/* Step 3: Review Order */}
             {step === 3 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
-                <h2 className="text-xl font-semibold mb-6">Review Your Order</h2>
+              <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg border p-8`}>
+                <h2 className="text-2xl font-bold mb-6">Review Your Order</h2>
                 
                 {/* Order Items */}
                 <div className="space-y-4 mb-6">
