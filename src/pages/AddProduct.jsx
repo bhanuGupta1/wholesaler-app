@@ -331,6 +331,10 @@ const AddProduct = () => {
         ? formData.tags.split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag)
         : [formData.category.toLowerCase(), formData.name.toLowerCase().split(' ')[0]];
 
+      // Process image URLs - filter out empty strings
+      const additionalImages = formData.imageUrls.filter(url => url.trim());
+      const allImages = formData.imageUrl ? [formData.imageUrl, ...additionalImages] : additionalImages;
+
       const productData = {
         // Basic product info
         name: formData.name.trim(),
@@ -341,7 +345,9 @@ const AddProduct = () => {
         stock: stockQuantity,
         stockQuantity: stockQuantity,
         category: formData.category,
-        imageUrl: formData.imageUrl.trim() || '',
+        imageUrl: formData.imageUrl.trim() || '', // Primary image
+        imageUrls: additionalImages, // Additional images array
+        allImages: allImages, // All images combined for easy access
         sku: formData.sku.trim() || '',
         supplier: formData.supplier.trim() || '',
         tags: tags,
