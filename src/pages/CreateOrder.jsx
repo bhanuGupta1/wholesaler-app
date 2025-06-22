@@ -122,7 +122,7 @@ const CreateOrder = () => {
   useEffect(() => {
     if (location.state?.fromCart && cart.length > 0) {
       setOrderSource('cart');
-      // Convert cart items to selected products format
+      // Convert cart items to selected products format with bulk pricing pre-applied
       const cartProducts = cart.map(item => ({
         ...item,
         quantity: item.quantity
@@ -132,15 +132,64 @@ const CreateOrder = () => {
     }
   }, [location.state, cart]);
 
-  // User role detection
-  const getUserRole = () => {
-    if (!user) return 'guest';
-    if (user.email?.includes('admin')) return 'admin';
-    if (user.email?.includes('business')) return 'business';
-    return 'customer';
-  };
+  // Enhanced user role detection using Firestore data
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user?.uid) {
+        setUserRole('guest');
+        setUserAccountType(null);
+        return;
+      }
 
-  const userRole = getUserRole();
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const accountType = userData.accountType;
+          const businessType = userData.businessType;
+          
+          // Set proper role based on Firestore data
+          if (accountType === 'admin') {
+            setUserRole('admin');
+          } else if (accountType === 'manager') {
+            setUserRole('admin'); // Managers get same privileges as admin for orders
+          } else if (accountType === 'business') {
+            // Business users get business discounts regardless of seller/buyer type
+            setUserRole('business');
+          } else {
+            setUserRole('customer'); // Regular users are customers
+          }
+          
+          setUserAccountType({ accountType, businessType });
+        } else {
+          // Fallback to email-based detection if no Firestore document
+          if (user.email?.includes('admin')) {
+            setUserRole('admin');
+          } else if (user.email?.includes('business')) {
+            setUserRole('business');
+          } else {
+            setUserRole('customer');
+          }
+          setUserAccountType(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+        // Fallback to email-based detection
+        if (user.email?.includes('admin')) {
+          setUserRole('admin');
+        } else if (user.email?.includes('business')) {
+          setUserRole('business');
+        } else {
+          setUserRole('customer');
+        }
+        setUserAccountType(null);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   // Fetch products on component mount
   useEffect(() => {
@@ -213,26 +262,91 @@ const CreateOrder = () => {
     setSelectedProducts(updated);
   };
 
-  // Calculate pricing based on user role
+  // ENHANCED: Complete pricing calculation with auto-applied bulk discounts + business discounts
   const calculatePricing = () => {
     let subtotal = 0;
-    let discount = 0;
+    let originalSubtotal = 0;
+    let itemLevelBulkSavings = 0;
+    let businessDiscount = 0;
+    let additionalBulkDiscount = 0; // Business-only 5% additional bulk discount
     let tax = 0;
 
-    selectedProducts.forEach(product => {
-      subtotal += product.price * product.quantity;
+    // Calculate base pricing with auto-applied item-level bulk discounts
+    processedSelectedProducts.forEach(product => {
+      const effectivePrice = product.effectivePrice || product.price;
+      const originalPrice = product.price;
+      
+      subtotal += effectivePrice * product.quantity;
+      originalSubtotal += originalPrice * product.quantity;
+      
+      // Track item-level bulk savings
+      if (product.hasBulkDiscount) {
+        itemLevelBulkSavings += (originalPrice - effectivePrice) * product.quantity;
+      }
     });
 
+    // Apply business user discounts (15% standard business discount)
     if (userRole === 'business') {
-      discount = subtotal * 0.15;
+      businessDiscount = subtotal * 0.15;
+      
+      // Additional 5% bulk discount for businesses with qualifying criteria
+      const totalItems = processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0);
+      if (totalItems >= 10 || subtotal >= 500) {
+        additionalBulkDiscount = subtotal * 0.05;
+      }
     }
 
+    // Apply tax for customers (on final discounted amount)
     if (userRole === 'customer') {
-      tax = (subtotal - discount) * 0.10;
+      tax = (subtotal - businessDiscount - additionalBulkDiscount) * 0.15;
     }
 
-    const total = subtotal - discount + tax;
-    return { subtotal, discount, tax, total };
+    const total = subtotal - businessDiscount - additionalBulkDiscount + tax;
+    
+    return { 
+      subtotal, 
+      originalSubtotal,
+      itemLevelBulkSavings,
+      businessDiscount, 
+      additionalBulkDiscount,
+      totalBulkSavings: itemLevelBulkSavings, // Item-level bulk savings
+      totalBusinessSavings: businessDiscount + additionalBulkDiscount, // All business-related savings
+      totalSavings: itemLevelBulkSavings + businessDiscount + additionalBulkDiscount, // Grand total savings
+      tax, 
+      total 
+    };
+  };
+
+  // Enhanced bulk discount qualification status for businesses
+  const getBulkDiscountStatus = () => {
+    if (userRole !== 'business') return null;
+    
+    const totalItems = processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0);
+    const subtotal = processedSelectedProducts.reduce((sum, p) => sum + ((p.effectivePrice || p.price) * p.quantity), 0);
+    
+    if (totalItems >= 10 || subtotal >= 500) {
+      return { qualified: true, message: "✓ Additional 5% Bulk Qualified" };
+    }
+    
+    const itemsNeeded = Math.max(0, 10 - totalItems);
+    const amountNeeded = Math.max(0, 500 - subtotal);
+    
+    if (itemsNeeded > 0 && amountNeeded > 0) {
+      return { 
+        qualified: false, 
+        message: `Need ${itemsNeeded} more items OR $${amountNeeded.toFixed(0)} more for extra 5% bulk discount` 
+      };
+    } else if (itemsNeeded > 0) {
+      return { 
+        qualified: false, 
+        message: `Need ${itemsNeeded} more items for extra 5% bulk discount` 
+      };
+    } else {
+      return { 
+        qualified: false, 
+        message: `Need $${amountNeeded.toFixed(0)} more for extra 5% bulk discount` 
+      };
+    }
   };
 
   // Handle customer info changes
