@@ -1187,11 +1187,15 @@ const CreateOrder = () => {
                   </div>
                 )}
                 
-                {/* Order Items */}
+                {/* ENHANCED: Order Items with Auto-Applied Bulk Pricing Display */}
                 <div className="mb-8">
                   <h3 className="text-lg font-medium mb-4">Order Items</h3>
                   <div className="space-y-3">
-                    {selectedProducts.map(product => (
+                    {processedSelectedProducts.map(product => {
+                      const effectivePrice = product.effectivePrice || product.price;
+                      const itemSavings = product.hasBulkDiscount ? (product.price - effectivePrice) * product.quantity : 0;
+
+                      return (
                       <div key={product.id} className={`flex justify-between items-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
                         <div className="flex items-center space-x-4">
                           <div className={`w-12 h-12 ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-lg flex items-center justify-center`}>
@@ -1203,16 +1207,38 @@ const CreateOrder = () => {
                           </div>
                           <div>
                             <p className="font-medium">{product.name}</p>
+                              <div className="space-y-1">
                             <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              ${product.price.toFixed(2)} × {product.quantity}
-                            </p>
+                                  ${effectivePrice.toFixed(2)} × {product.quantity}
+                                  {product.hasBulkDiscount && (
+                                    <span className="ml-2 text-green-600 font-medium">
+                                      (was ${product.price.toFixed(2)})
+                                    </span>
+                                  )}
+                                </p>
+                                {product.hasBulkDiscount && (
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-xs font-medium text-green-600">
+                                      🎯 Auto bulk: {product.bulkPricing.bulkDiscount.toFixed(0)}% off • {product.bulkPricing.bulkTier}+ units
+                                    </span>
                           </div>
+                                )}
                         </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
                         <p className="font-semibold text-lg">
-                          ${(product.price * product.quantity).toFixed(2)}
+                              ${(effectivePrice * product.quantity).toFixed(2)}
                         </p>
+                            {itemSavings > 0 && (
+                              <p className="text-sm text-green-600 font-medium">
+                                Saved ${itemSavings.toFixed(2)}
+                              </p>
+                            )}
                       </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
