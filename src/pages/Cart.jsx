@@ -444,42 +444,84 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
             </h3>
           </Link>
           
+          {/* Pricing Information */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-3">
+              <span className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                ${effectivePrice.toFixed(2)}
+                <span className="text-sm font-normal text-gray-500 ml-1">each</span>
+              </span>
+              
+              {hasBulkPricing && (
+                <>
+                  <span className={`text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    ${item.bulkPricing.originalPrice.toFixed(2)}
+                  </span>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                    {item.bulkPricing.bulkDiscount.toFixed(0)}% OFF
+                  </span>
+                </>
+              )}
+            </div>
+            
+            {/* Bulk Pricing Info */}
+            {hasBulkPricing && (
+              <div className={`p-2 rounded-lg ${darkMode ? 'bg-green-900/20' : 'bg-green-50'} border border-green-200 dark:border-green-800`}>
+                <div className="flex items-center text-sm">
+                  <Tag className="w-4 h-4 mr-1 text-green-600" />
+                  <span className={`font-medium ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+                    Bulk Pricing Active - {item.bulkPricing.bulkTier}+ units
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {/* Product Meta */}
           <div className="flex items-center space-x-4 text-sm">
-            <span className={`font-medium ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
-              ${Number(item.price).toFixed(2)}
+              {item.sku && (
+                <span className={`font-mono ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  SKU: {item.sku}
             </span>
+              )}
             {item.category && (
-              <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                <span className={`px-2 py-1 rounded-md text-xs font-medium ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
                 {item.category}
               </span>
             )}
             <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {item.stock} available
             </span>
+            </div>
           </div>
           
-          {/* Add stock warning if quantity is close to stock limit */}
+          {/* Stock Warning */}
           {quantity >= item.stock * 0.8 && (
-            <p className={`text-xs mt-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-              ⚠️ Limited stock available
+            <div className={`mt-2 p-2 rounded-lg ${darkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border`}>
+              <p className={`text-xs font-medium ${darkMode ? 'text-yellow-400' : 'text-yellow-700'} flex items-center`}>
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Limited stock - only {item.stock - quantity} left after this quantity
             </p>
+            </div>
           )}
         </div>
 
-        {/* Quantity Controls */}
-        <div className="flex items-center space-x-3">
+        {/* Enhanced Quantity Controls */}
+        <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => handleQuantityChange(quantity - 1)}
               disabled={quantity <= 1}
-              className={`w-8 h-8 rounded-full ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                 quantity <= 1 
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
                   : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              } flex items-center justify-center text-sm transition-colors`}
+              }`}
             >
-              −
+              <Minus className="w-4 h-4" />
             </button>
+            
             <input
               type="number"
               min="1"
@@ -489,42 +531,59 @@ const EnhancedCartItem = ({ item, onRemove, onUpdateQuantity, darkMode }) => {
                 const newQty = parseInt(e.target.value) || 1;
                 handleQuantityChange(newQty);
               }}
-              className={`w-16 text-center py-1 px-2 border rounded-lg ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}`}
+              className={`w-20 text-center py-2 px-3 border rounded-lg font-medium ${
+                darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+              } focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
             />
+            
             <button
               onClick={() => handleQuantityChange(quantity + 1)}
               disabled={quantity >= item.stock}
-              className={`w-8 h-8 rounded-full ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                 quantity >= item.stock 
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500' 
                   : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              } flex items-center justify-center text-sm transition-colors`}
+              }`}
             >
-              +
+              <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Subtotal */}
+          {/* Enhanced Subtotal Display */}
           <div className="text-right min-w-0">
-            <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              ${(item.price * quantity).toFixed(2)}
+            <div className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              ${itemTotal.toFixed(2)}
             </div>
+            
+            {hasBulkPricing && itemSavings > 0 && (
+              <div className="space-y-1">
+                <div className={`text-sm line-through ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  ${originalItemTotal.toFixed(2)}
+                </div>
+                <div className="text-sm font-semibold text-green-600">
+                  Saved ${itemSavings.toFixed(2)}
+                </div>
+              </div>
+            )}
+            
             {quantity > 1 && (
-              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                ${item.price.toFixed(2)} each
+              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                ${effectivePrice.toFixed(2)} × {quantity}
               </div>
             )}
           </div>
 
-          {/* Remove Button */}
+          {/* Enhanced Remove Button */}
           <button
             onClick={() => onRemove(item.id)}
-            className={`p-2 rounded-lg ${darkMode ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'} transition-colors`}
+            className={`p-3 rounded-full transition-colors ${
+              darkMode 
+                ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20' 
+                : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+            } group`}
             title="Remove from cart"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         </div>
       </div>
