@@ -645,7 +645,30 @@ const AddProduct = () => {
                 placeholder="0"
                 required
               />
-              {formData.stock && (
+              </div>
+
+              {/* Reorder Point */}
+              <div>
+                <label htmlFor="reorderPoint" className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Reorder Point
+                  <span className={`text-xs ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    (When to restock)
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  id="reorderPoint"
+                  name="reorderPoint"
+                  value={formData.reorderPoint}
+                  onChange={handleInputChange}
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder="Auto-calculated"
+                />
                 <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   Auto reorder point: {Math.max(5, Math.floor(parseInt(formData.stock) * 0.1))} units
                 </p>
