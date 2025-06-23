@@ -1,4 +1,4 @@
-// src/pages/admin/LegacyPanel.jsx - Legacy Admin Interface with Real Firebase Data
+// src/pages/admin/LegacyPanel.jsx - Legacy Admin Interface with All Routes
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -314,16 +314,23 @@ const LegacyPanel = () => {
     businessAccounts: 0,
     totalProducts: 0,
     totalOrders: 0,
-    activeUsers: 0
+    activeUsers: 0,
+    totalDeals: 0,
+    activeDials: 0,
+    feedbackCount: 0,
+    supportTickets: 0
   });
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     try {
-      const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
+      const [usersSnapshot, productsSnapshot, ordersSnapshot, dealsSnapshot, feedbackSnapshot, supportSnapshot] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collection(db, 'products')),
-        getDocs(collection(db, 'orders'))
+        getDocs(collection(db, 'orders')),
+        getDocs(collection(db, 'deals')).catch(() => ({ size: 0 })), // Handle if collection doesn't exist
+        getDocs(collection(db, 'feedback')).catch(() => ({ size: 0 })),
+        getDocs(collection(db, 'support_tickets')).catch(() => ({ size: 0 }))
       ]);
 
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -335,13 +342,22 @@ const LegacyPanel = () => {
       const businessAccounts = users.filter(u => u.accountType === 'business').length;
       const activeUsers = users.filter(u => u.status === 'active' && u.approved).length;
 
+      // Get deals data if available
+      const deals = dealsSnapshot.docs ? dealsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+      const totalDeals = deals.length;
+      const activeDeals = deals.filter(d => d.status === 'active').length;
+
       setStats({
         totalUsers,
         pendingApprovals,
         businessAccounts,
         totalProducts: productsSnapshot.size,
         totalOrders: ordersSnapshot.size,
-        activeUsers
+        activeUsers,
+        totalDeals,
+        activeDeals,
+        feedbackCount: feedbackSnapshot.size,
+        supportTickets: supportSnapshot.size
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -355,6 +371,17 @@ const LegacyPanel = () => {
   }, []);
 
   const legacyTools = [
+    // Main Section
+    {
+      title: 'Dashboard',
+      description: 'Overview & Analytics dashboard with key metrics',
+      href: '/admin/dashboard',
+      icon: '📊',
+      metrics: [
+        { label: 'Status', value: 'Live' },
+        { label: 'Data', value: 'Real-time' }
+      ]
+    },
     {
       title: 'User Management',
       description: 'Manage user accounts, approvals, and permissions',
@@ -376,25 +403,39 @@ const LegacyPanel = () => {
       ]
     },
     {
-      title: 'System Settings',
-      description: 'Configure system-wide settings and preferences',
-      href: '/admin/settings',
-      icon: '⚙️',
+      title: 'Deal Management',
+      description: 'Manage deals & offers across the platform',
+      href: '/admin/deals',
+      icon: '💼',
       metrics: [
-        { label: 'Config', value: 'OK' },
-        { label: 'Status', value: 'Active' }
+        { label: 'Total', value: stats.totalDeals },
+        { label: 'Active', value: stats.activeDeals }
       ]
     },
+    
+    // Analytics Section
     {
       title: 'Analytics',
       description: 'View system analytics and performance metrics',
       href: '/admin/analytics',
-      icon: '📊',
+      icon: '📈',
       metrics: [
         { label: 'Reports', value: 'Live' },
         { label: 'Data', value: 'Current' }
       ]
     },
+    {
+      title: 'Reports',
+      description: 'Generate detailed reports and export data',
+      href: '/admin/reports',
+      icon: '📋',
+      metrics: [
+        { label: 'Generated', value: 'Daily' },
+        { label: 'Format', value: 'PDF/CSV' }
+      ]
+    },
+
+    // System Section
     {
       title: 'Security Center',
       description: 'Monitor security and manage access controls',
@@ -406,6 +447,38 @@ const LegacyPanel = () => {
       ]
     },
     {
+      title: 'System Settings',
+      description: 'Configure system-wide settings and preferences',
+      href: '/admin/settings',
+      icon: '⚙️',
+      metrics: [
+        { label: 'Config', value: 'OK' },
+        { label: 'Status', value: 'Active' }
+      ]
+    },
+    {
+      title: 'User Feedback',
+      description: 'User feedback & support management system',
+      href: '/admin/feedback',
+      icon: '💬',
+      metrics: [
+        { label: 'Total', value: stats.feedbackCount },
+        { label: 'Pending', value: 'Review' }
+      ]
+    },
+    {
+      title: 'Support Tickets',
+      description: 'Manage user support requests and tickets',
+      href: '/admin/support',
+      icon: '🎧',
+      metrics: [
+        { label: 'Open', value: stats.supportTickets },
+        { label: 'Response', value: '24h' }
+      ]
+    },
+
+    // Additional Tools
+    {
       title: 'Inventory Management',
       description: 'Manage products and inventory across the platform',
       href: '/inventory',
@@ -413,6 +486,16 @@ const LegacyPanel = () => {
       metrics: [
         { label: 'Products', value: stats.totalProducts },
         { label: 'Orders', value: stats.totalOrders }
+      ]
+    },
+    {
+      title: 'Home Portal',
+      description: 'Return to main application homepage',
+      href: '/',
+      icon: '🏠',
+      metrics: [
+        { label: 'Status', value: 'Online' },
+        { label: 'Users', value: stats.activeUsers }
       ]
     }
   ];
@@ -467,7 +550,7 @@ const LegacyPanel = () => {
             { title: 'Total Users', value: stats.totalUsers, icon: '👤', color: 'blue' },
             { title: 'Pending Approvals', value: stats.pendingApprovals, icon: '⏳', color: 'yellow' },
             { title: 'Business Accounts', value: stats.businessAccounts, icon: '🏢', color: 'green' },
-            { title: 'Total Products', value: stats.totalProducts, icon: '📦', color: 'purple' }
+            { title: 'Support Tickets', value: stats.supportTickets, icon: '🎧', color: 'purple' }
           ].map((stat, index) => (
             <div key={index} className={`${
               darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
