@@ -1,4 +1,4 @@
-// src/pages/AdminDashboard.jsx - ENHANCED WITH SIDEBAR (FULL SCREEN)
+// src/pages/AdminDashboard.jsx - FIXED SPACING ISSUES
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -49,10 +49,18 @@ import {
   FileText,
   Briefcase,
   LogOut,
-  ChevronLeft,
   Archive,
   MessageCircle,
-  Headphones
+  Headphones,
+  PieChart,
+  TrendingDown,
+  Star,
+  Target,
+  Layers,
+  Globe,
+  Database,
+  Cpu,
+  HardDrive
 } from 'lucide-react';
 
 // ===============================================
