@@ -574,72 +574,379 @@ const RealTimeToggle = ({ enabled, onToggle, darkMode }) => (
 );
 
 // ===============================================
-// ENHANCED FILTER DROPDOWN WITH PROPER Z-INDEX
+// ADVANCED DATA EXPORT PANEL
 // ===============================================
-const FilterDropdown = ({ title, options, selected, onSelect, darkMode }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const AdvancedDataExportPanel = ({ darkMode, stats }) => {
+  const [exportFormat, setExportFormat] = useState('json');
+  const [exportType, setExportType] = useState('dashboard');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportOptions = [
+    { id: 'dashboard', label: 'Dashboard Data', icon: BarChart3 },
+    { id: 'users', label: 'User Analytics', icon: Users },
+    { id: 'orders', label: 'Order Reports', icon: ShoppingCart },
+    { id: 'system', label: 'System Metrics', icon: Settings }
+  ];
+
+  const formatOptions = [
+    { id: 'json', label: 'JSON', extension: '.json' },
+    { id: 'csv', label: 'CSV', extension: '.csv' },
+    { id: 'pdf', label: 'PDF', extension: '.pdf' }
+  ];
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    
+    // Simulate export process
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const exportData = {
+      type: exportType,
+      format: exportFormat,
+      timestamp: new Date().toISOString(),
+      data: stats,
+      metadata: {
+        exportedBy: 'Admin',
+        version: '2.0'
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+      type: exportFormat === 'json' ? 'application/json' : 'text/csv' 
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${exportType}-export-${Date.now()}${formatOptions.find(f => f.id === exportFormat)?.extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setIsExporting(false);
+  };
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg border ${
-          darkMode 
-            ? 'bg-gray-800 border-gray-600 text-white hover:bg-gray-700' 
-            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-        } transition-colors`}
-      >
-        <Filter className="h-4 w-4" />
-        <span className="text-sm">{title}: {selected}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[300px]`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'DATA EXPORT' : 'Smart Export'}
+      </h3>
+      
+      <div className="space-y-3 relative z-10">
+        {/* Export Type Selection */}
+        <div>
+          <label className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} block mb-2`}>
+            Export Type
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {exportOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <motion.button
+                  key={option.id}
+                  onClick={() => setExportType(option.id)}
+                  className={`p-2 rounded-lg text-xs transition-all ${
+                    exportType === option.id
+                      ? darkMode 
+                        ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-600/30' 
+                        : 'bg-indigo-100 text-indigo-600 border border-indigo-200'
+                      : darkMode
+                        ? 'bg-gray-800/50 text-gray-400 hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Icon className="h-3 w-3 mx-auto mb-1" />
+                  {option.label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop to close dropdown */}
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setIsOpen(false)}
-            />
-            
-            {/* Dropdown Menu */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`absolute top-full left-0 mt-2 w-48 rounded-lg border shadow-xl z-50 ${
-                darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
-              }`}
-            >
-              <div className="py-2">
-                {options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      onSelect(option);
-                      setIsOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      selected === option
-                        ? darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
-                        : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+        {/* Format Selection */}
+        <div>
+          <label className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} block mb-2`}>
+            Format
+          </label>
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            className={`w-full p-2 text-xs rounded-lg border ${
+          darkMode 
+                ? 'bg-gray-800 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+          >
+            {formatOptions.map((format) => (
+              <option key={format.id} value={format.id}>
+                {format.label} ({format.extension})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Export Button */}
+        <motion.button
+          onClick={handleExport}
+          disabled={isExporting}
+          className={`w-full flex items-center justify-center p-3 rounded-lg transition-colors ${
+            darkMode 
+              ? 'bg-cyan-900/30 hover:bg-cyan-900/50 text-cyan-400 border border-cyan-600/30' 
+              : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-600 border border-indigo-200'
+          } disabled:opacity-50`}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {isExporting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-transparent border-t-current mr-2" />
+              <span className="text-xs font-medium">Exporting...</span>
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4 mr-2" />
+              <span className="text-xs font-medium">Export Data</span>
+            </>
+          )}
+        </motion.button>
+      </div>
+    </motion.div>
   );
 };
 
 // ===============================================
-// REAL PERFORMANCE RADAR CHART (FROM ORIGINAL)
+// ENHANCED SYSTEM STATUS PANEL
+// ===============================================
+const EnhancedSystemStatusPanel = ({ darkMode }) => {
+  const [systemStatus, setSystemStatus] = useState({
+    database: { status: 'online', latency: '12ms', uptime: '99.9%', load: 45 },
+    api: { status: 'online', latency: '8ms', uptime: '99.8%', load: 23 },
+    storage: { status: 'online', latency: '15ms', uptime: '99.7%', load: 67 },
+    cache: { status: 'optimal', latency: '2ms', uptime: '100%', load: 12 }
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSystemStatus(prev => ({
+        database: { ...prev.database, latency: `${Math.floor(Math.random() * 10) + 8}ms`, load: Math.floor(Math.random() * 30) + 35 },
+        api: { ...prev.api, latency: `${Math.floor(Math.random() * 8) + 5}ms`, load: Math.floor(Math.random() * 20) + 15 },
+        storage: { ...prev.storage, latency: `${Math.floor(Math.random() * 12) + 10}ms`, load: Math.floor(Math.random() * 25) + 55 },
+        cache: { ...prev.cache, latency: `${Math.floor(Math.random() * 3) + 1}ms`, load: Math.floor(Math.random() * 15) + 5 }
+      }));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'online':
+      case 'optimal':
+        return 'green';
+      case 'warning':
+        return 'yellow';
+      case 'offline':
+      case 'error':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getLoadColor = (load) => {
+    if (load < 30) return 'green';
+    if (load < 70) return 'yellow';
+    return 'red';
+  };
+
+  const statusItems = [
+    { key: 'database', label: 'Database', icon: Database },
+    { key: 'api', label: 'API Gateway', icon: Globe },
+    { key: 'storage', label: 'File Storage', icon: HardDrive },
+    { key: 'cache', label: 'Cache Layer', icon: Cpu }
+  ];
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[400px]`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'SYSTEM MATRIX' : 'System Health'}
+      </h3>
+      
+      <div className="space-y-3 relative z-10">
+        {statusItems.map((item, index) => {
+          const Icon = item.icon;
+          const status = systemStatus[item.key];
+          const statusColor = getStatusColor(status.status);
+          const loadColor = getLoadColor(status.load);
+          
+          return (
+            <motion.div 
+              key={item.key}
+              className={`p-3 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'} hover:scale-102 transition-all cursor-pointer`}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02, x: 5 }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Icon className={`h-4 w-4 mr-2 text-${statusColor}-500`} />
+                  <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {item.label}
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className={`text-xs font-bold text-${statusColor}-500 mr-2`}>
+                    {status.status.toUpperCase()}
+                  </span>
+                  <div className={`w-2 h-2 rounded-full bg-${statusColor}-500`}>
+                    <motion.div
+                      className={`w-2 h-2 rounded-full bg-${statusColor}-500`}
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between text-xs mb-2">
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Latency: {status.latency}
+                </span>
+                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Uptime: {status.uptime}
+                </span>
+              </div>
+              
+              {/* Load Bar */}
+              <div className="relative">
+                <div className={`h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
+            <motion.div
+                    className={`h-full bg-${loadColor}-500 rounded-full`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${status.load}%` }}
+                    transition={{ duration: 1, delay: index * 0.2 }}
+                  />
+                </div>
+                <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1 block`}>
+                  Load: {status.load}%
+                </span>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// QUICK METRICS PANEL
+// ===============================================
+const QuickMetricsPanel = ({ darkMode, stats }) => {
+  const quickMetrics = [
+    { 
+      label: 'Active Sessions', 
+      value: Math.floor(Math.random() * 50) + 10, 
+      icon: Activity, 
+      color: 'blue',
+      trend: '+12%'
+    },
+    { 
+      label: 'Response Time', 
+      value: '120ms', 
+      icon: Zap, 
+      color: 'green',
+      trend: '-5%'
+    },
+    { 
+      label: 'Error Rate', 
+      value: '0.02%', 
+      icon: AlertTriangle, 
+      color: 'red',
+      trend: '-80%'
+    },
+    { 
+      label: 'Data Usage', 
+      value: '2.4GB', 
+      icon: Database, 
+      color: 'purple',
+      trend: '+15%'
+    }
+  ];
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
+      initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'NEURAL METRICS' : 'Quick Metrics'}
+      </h3>
+      
+      <div className="grid grid-cols-2 gap-3 relative z-10">
+        {quickMetrics.map((metric, index) => {
+          const Icon = metric.icon;
+          
+          return (
+            <motion.div 
+              key={index}
+              className={`p-3 rounded-lg ${
+                darkMode ? 'bg-gray-800/50' : 'bg-gray-50'
+              }`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex items-center mb-2">
+                <Icon className={`h-4 w-4 mr-2 text-${metric.color}-500`} />
+                <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {metric.label}
+                </span>
+              </div>
+              <div className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {metric.value}
+              </div>
+              <div className={`text-xs ${
+                metric.trend.startsWith('+') 
+                  ? 'text-green-500' 
+                  : metric.trend.startsWith('-') && metric.label !== 'Response Time' && metric.label !== 'Error Rate'
+                    ? 'text-red-500'
+                    : 'text-green-500'
+              }`}>
+                {metric.trend}
+              </div>
+            </motion.div>
+          );
+        })}
+    </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// REAL PERFORMANCE RADAR CHART
 // ===============================================
 const RealPerformanceRadarChart = ({ darkMode }) => {
   const [radarData, setRadarData] = useState([]);
@@ -658,7 +965,6 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
         const totalOrders = ordersSnapshot.size;
         const totalProducts = productsSnapshot.size;
 
-        // Calculate performance metrics based on real data
         const performance = Math.min(85 + (totalUsers > 50 ? 10 : 0), 100);
         const reliability = Math.min(90 + (totalOrders > 20 ? 5 : 0), 100);
         const scalability = Math.min(75 + (totalProducts > 30 ? 15 : 0), 100);
@@ -694,9 +1000,9 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
     fetchPerformanceData();
   }, []);
 
-  const size = 200;
+  const size = 160; // Reduced from 180
   const center = size / 2;
-  const radius = size / 2 - 40;
+  const radius = size / 2 - 25; // Reduced margin
   const maxValue = 100;
   
   const getPointPosition = (index, value) => {
@@ -710,7 +1016,7 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
 
   const getLabelPosition = (index) => {
     const angle = (index * 2 * Math.PI) / radarData.length - Math.PI / 2;
-    const labelRadius = radius + 25;
+    const labelRadius = radius + 15; // Reduced label distance
     return {
       x: center + labelRadius * Math.cos(angle),
       y: center + labelRadius * Math.sin(angle)
@@ -719,14 +1025,10 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
 
   if (loading) {
     return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}>
         {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <Activity className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading performance radar...</div>
-          </div>
-        </div>
+        <SkeletonLoader className="h-6 w-24 mb-2" darkMode={darkMode} />
+        <SkeletonLoader className="h-40 w-full" darkMode={darkMode} />
       </motion.div>
     );
   }
@@ -740,27 +1042,26 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
 
   return (
     <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
       {darkMode && <div className="card-glow"></div>}
       
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 text-center relative z-10`}>
-        {darkMode ? 'SYSTEM PERFORMANCE MATRIX' : 'Performance Radar'}
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 text-center relative z-10`}>
+        {darkMode ? 'PERFORMANCE MATRIX' : 'Performance Radar'}
       </h3>
       
       {!hasData ? (
-        <div className="text-center py-8 relative z-10">
-          <div className="text-4xl mb-2 opacity-50">📡</div>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No data available - Add users and orders to see performance
+        <div className="text-center py-6 relative z-10">
+          <div className="text-2xl mb-1 opacity-50">📡</div>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No data available
           </p>
         </div>
       ) : (
-        <>
-          <div className="flex justify-center relative z-10">
+        <div className="w-full flex justify-center relative z-10">
             <svg width={size} height={size} className="overflow-visible">
               <defs>
                 <radialGradient id="radarGradient" cx="50%" cy="50%">
