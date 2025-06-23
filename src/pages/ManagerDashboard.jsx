@@ -1,9 +1,10 @@
-// src/pages/ManagerDashboard.jsx - Enhanced with real data charts, bulk operations, and actionable alerts
+// src/pages/ManagerDashboard.jsx - Enhanced with theme integration and SecretInvasion background
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, where, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
+import SecretInvasionBackground from '../components/common/SecretInvasionBackground';
 
 // Enhanced chart component with real data visualization
 const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar' }) => {
