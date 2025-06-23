@@ -1119,7 +1119,7 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
                   key={index}
                   cx={point.x}
                   cy={point.y}
-                  r="4"
+                r="3"
                   fill={darkMode ? "#00FFFF" : "#4F46E5"}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -1145,211 +1145,13 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
               })}
             </svg>
           </div>
-          
-          {/* Legend */}
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs relative z-10">
-            {radarData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{item.name}:</span>
-                <span className={`font-bold ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}>{item.value}</span>
-              </div>
-            ))}
-          </div>
-        </>
       )}
     </motion.div>
   );
 };
 
 // ===============================================
-// REAL MONTHLY REVENUE CHART (FROM ORIGINAL)
-// ===============================================
-const RealMonthlyRevenueChart = ({ darkMode }) => {
-  const [revenueData, setRevenueData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRevenueData = async () => {
-      try {
-        const ordersSnapshot = await getDocs(collection(db, 'orders'));
-        const orders = ordersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            total: data.total || 0,
-            createdAt: data.createdAt?.toDate() || new Date()
-          };
-        });
-
-        // Group orders by month
-        const monthlyRevenue = {};
-        const currentYear = new Date().getFullYear();
-        
-        // Initialize all months
-        for (let i = 0; i < 12; i++) {
-          const monthName = new Date(currentYear, i, 1).toLocaleDateString('en-US', { month: 'short' });
-          monthlyRevenue[monthName] = 0;
-        }
-
-        // Sum revenue by month
-        orders.forEach(order => {
-          const monthName = order.createdAt.toLocaleDateString('en-US', { month: 'short' });
-          monthlyRevenue[monthName] += order.total;
-        });
-
-        const data = Object.entries(monthlyRevenue).map(([name, value]) => ({
-          name,
-          value: Math.round(value)
-        }));
-
-        setRevenueData(data);
-      } catch (error) {
-        console.error('Error fetching revenue data:', error);
-        setRevenueData(Array.from({ length: 12 }, (_, i) => ({
-          name: new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' }),
-          value: 0
-        })));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRevenueData();
-  }, []);
-
-  const width = 300;
-  const height = 150;
-  const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-  const chartWidth = width - margin.left - margin.right;
-  const chartHeight = height - margin.top - margin.bottom;
-  
-  const maxValue = Math.max(...revenueData.map(d => d.value), 1);
-  const minValue = Math.min(...revenueData.map(d => d.value));
-  
-  const xScale = (index) => (index / Math.max(revenueData.length - 1, 1)) * chartWidth;
-  const yScale = (value) => chartHeight - ((value - minValue) / Math.max(maxValue - minValue, 1)) * chartHeight;
-  
-  const pathData = revenueData.reduce((path, item, index) => {
-    const x = xScale(index);
-    const y = yScale(item.value);
-    return path + (index === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
-  }, '');
-  
-  const areaData = pathData + ` L ${xScale(revenueData.length - 1)} ${chartHeight} L ${xScale(0)} ${chartHeight} Z`;
-
-  if (loading) {
-    return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-        {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading revenue data...</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  const hasRevenue = revenueData.some(item => item.value > 0);
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-        {darkMode ? 'REVENUE TEMPORAL MATRIX' : 'Monthly Revenue'}
-      </h3>
-      
-      {!hasRevenue ? (
-        <div className="text-center py-8 relative z-10">
-          <div className="text-4xl mb-2 opacity-50">📈</div>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No revenue data - Add orders to see monthly trends
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="flex justify-center relative z-10">
-            <svg width={width} height={height}>
-              <defs>
-                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor={darkMode ? "rgba(0, 255, 255, 0.6)" : "rgba(79, 70, 229, 0.6)"} />
-                  <stop offset="100%" stopColor={darkMode ? "rgba(0, 255, 255, 0.1)" : "rgba(79, 70, 229, 0.1)"} />
-                </linearGradient>
-              </defs>
-              
-              <g transform={`translate(${margin.left}, ${margin.top})`}>
-                {/* Grid lines */}
-                {[0.25, 0.5, 0.75].map((ratio, index) => (
-                  <line
-                    key={index}
-                    x1={0}
-                    y1={chartHeight * ratio}
-                    x2={chartWidth}
-                    y2={chartHeight * ratio}
-                    stroke={darkMode ? "rgba(0, 255, 255, 0.1)" : "rgba(79, 70, 229, 0.1)"}
-                    strokeWidth="1"
-                  />
-                ))}
-                
-                {/* Area */}
-                <motion.path
-                  d={areaData}
-                  fill="url(#areaGradient)"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1 }}
-                />
-                
-                {/* Line */}
-                <motion.path
-                  d={pathData}
-                  fill="none"
-                  stroke={darkMode ? "#00FFFF" : "#4F46E5"}
-                  strokeWidth="2"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 1 }}
-                />
-                
-                {/* Data points */}
-                {revenueData.map((item, index) => (
-                  <motion.circle
-                    key={index}
-                    cx={xScale(index)}
-                    cy={yScale(item.value)}
-                    r="3"
-                    fill={darkMode ? "#00FFFF" : "#4F46E5"}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                  />
-                ))}
-              </g>
-            </svg>
-          </div>
-          
-          {/* Month labels */}
-          <div className="flex justify-between text-xs mt-2 relative z-10">
-            {revenueData.slice(0, 6).map((item, index) => (
-              <span key={index} className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {item.name}
-              </span>
-            ))}
-          </div>
-        </>
-      )}
-    </motion.div>
-  );
-};
-
-// ===============================================
-// REAL USER ACTIVITY HEATMAP (FROM ORIGINAL)
+// REAL USER ACTIVITY HEATMAP
 // ===============================================
 const RealUserActivityHeatmap = ({ darkMode }) => {
   const [heatmapData, setHeatmapData] = useState([]);
@@ -1376,7 +1178,6 @@ const RealUserActivityHeatmap = ({ darkMode }) => {
           date.setDate(today.getDate() - i);
           const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
           
-          // Count activities for this day
           const dayActivity = users.filter(user => {
             const userDate = user.lastLogin || user.createdAt;
             return userDate.toDateString() === date.toDateString();
@@ -1408,14 +1209,10 @@ const RealUserActivityHeatmap = ({ darkMode }) => {
 
   if (loading) {
     return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[150px]`}>
         {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <Activity className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading activity heatmap...</div>
-          </div>
-        </div>
+        <SkeletonLoader className="h-6 w-24 mb-2" darkMode={darkMode} />
+        <SkeletonLoader className="h-24 w-full" darkMode={darkMode} />
       </motion.div>
     );
   }
@@ -1424,33 +1221,33 @@ const RealUserActivityHeatmap = ({ darkMode }) => {
 
   return (
     <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[150px]`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
       {darkMode && <div className="card-glow"></div>}
       
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-        {darkMode ? 'NEURAL ACTIVITY HEATMAP' : 'User Activity Heatmap'}
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'USER ACTIVITY MAP' : 'User Activity'}
       </h3>
       
       {maxActivity === 1 && heatmapData[0].activity === 0 ? (
-        <div className="text-center py-8 relative z-10">
-          <div className="text-4xl mb-2 opacity-50">🔥</div>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No activity data - Users will appear here when they log in
+        <div className="text-center py-6 relative z-10">
+          <div className="text-2xl mb-1 opacity-50">🔥</div>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No activity data
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-2 relative z-10">
+        <div className="grid grid-cols-7 gap-1 relative z-10">
           {heatmapData.map((item, index) => {
             const intensity = item.activity / maxActivity;
             
             return (
               <motion.div
                 key={index}
-                className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all duration-300 cursor-pointer`}
+                className={`aspect-square rounded flex flex-col items-center justify-center text-xs font-bold transition-all duration-300 cursor-pointer`}
                 style={{
                   backgroundColor: intensity > 0 
                     ? darkMode 
@@ -1467,54 +1264,29 @@ const RealUserActivityHeatmap = ({ darkMode }) => {
                 whileHover={{ scale: 1.1 }}
                 title={`${item.day}: ${item.activity} activities`}
               >
-                <span className="text-xs mb-1">{item.day}</span>
-                <span className="text-lg">{item.activity}</span>
+                <span className="text-xs">{item.day}</span>
+                <span className="text-xs">{item.activity}</span>
               </motion.div>
             );
           })}
         </div>
       )}
-      
-      {/* Legend */}
-      <div className="mt-4 flex items-center justify-between text-xs relative z-10">
-        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          {darkMode ? 'LESS ACTIVE' : 'Less active'}
-        </span>
-        <div className="flex gap-1">
-          {[0.2, 0.4, 0.6, 0.8, 1].map((intensity, index) => (
-            <div
-              key={index}
-              className="w-3 h-3 rounded-sm"
-              style={{
-                backgroundColor: darkMode 
-                  ? `rgba(0, 255, 255, ${intensity})`
-                  : `rgba(79, 70, 229, ${intensity})`
-              }}
-            />
-          ))}
-        </div>
-        <span className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          {darkMode ? 'MORE ACTIVE' : 'More active'}
-        </span>
-      </div>
     </motion.div>
   );
 };
 
 // ===============================================
-// REAL ACTIVITY FEED (FROM ORIGINAL)
+// REAL ACTIVITY FEED
 // ===============================================
 const RealActivityFeed = ({ darkMode }) => {
   const [activities, setActivities] = useState([]);
-  const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        // Fetch recent user activities
         const usersSnapshot = await getDocs(
-          query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(10))
+          query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(6))
         );
         
         const realActivities = [];
@@ -1524,43 +1296,18 @@ const RealActivityFeed = ({ darkMode }) => {
           const createdAt = userData.createdAt?.toDate();
           
           if (createdAt) {
-            // User registration activity
             realActivities.push({
               id: `user-created-${index}`,
               type: 'user',
               title: 'New User Registration',
-              description: `${userData.email} joined the platform`,
+              description: `${userData.email} joined`,
               timestamp: formatTimeAgo(createdAt),
               value: '+1'
             });
-            
-            // Status change activities
-            if (userData.status && userData.updatedAt) {
-              let title = 'User Status Updated';
-              let description = `${userData.email} status changed to ${userData.status}`;
-              
-              if (userData.status === 'approved') {
-                title = 'User Approved';
-                description = `${userData.email} account approved`;
-              } else if (userData.status === 'suspended') {
-                title = 'User Suspended';
-                description = `${userData.email} account suspended`;
-              }
-              
-              realActivities.push({
-                id: `user-updated-${index}`,
-                type: 'system',
-                title,
-                description,
-                timestamp: formatTimeAgo(userData.updatedAt.toDate())
-              });
-            }
           }
         });
 
-        // Sort by most recent first
-        realActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        setActivities(realActivities.slice(0, 8));
+        setActivities(realActivities.slice(0, 6));
         
       } catch (error) {
         console.error('Error fetching activities:', error);
@@ -1579,15 +1326,11 @@ const RealActivityFeed = ({ darkMode }) => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
     return 'Just now';
   };
-
-  const filteredActivities = activities.filter(activity => 
-    filter === 'all' || activity.type === filter
-  );
 
   const getActivityIcon = (type) => {
     switch (type) {
@@ -1599,29 +1342,15 @@ const RealActivityFeed = ({ darkMode }) => {
     }
   };
 
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'user': return darkMode ? 'text-cyan-400' : 'text-blue-600';
-      case 'order': return darkMode ? 'text-green-400' : 'text-green-600';
-      case 'system': return darkMode ? 'text-yellow-400' : 'text-yellow-600';
-      case 'revenue': return darkMode ? 'text-purple-400' : 'text-purple-600';
-      default: return darkMode ? 'text-gray-400' : 'text-gray-600';
-    }
-  };
-
   if (loading) {
     return (
-      <motion.div 
-        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[250px]`}>
         {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <Activity className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading activity feed...</div>
-          </div>
+        <SkeletonLoader className="h-6 w-24 mb-2" darkMode={darkMode} />
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => (
+            <SkeletonLoader key={i} className="h-12 w-full" darkMode={darkMode} />
+          ))}
         </div>
       </motion.div>
     );
@@ -1629,72 +1358,53 @@ const RealActivityFeed = ({ darkMode }) => {
 
   return (
     <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[250px]`}
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
     >
       {darkMode && <div className="card-glow"></div>}
       
-      <div className="flex justify-between items-center mb-4 relative z-10">
-        <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
-          {darkMode ? 'NEURAL ACTIVITY STREAM' : 'Activity Feed'}
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'ACTIVITY STREAM' : 'Recent Activity'}
         </h3>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className={`text-xs rounded ${
-            darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
-          } border px-2 py-1`}
-        >
-          <option value="all">{darkMode ? 'ALL ACTIVITIES' : 'All'}</option>
-          <option value="user">{darkMode ? 'USER EVENTS' : 'Users'}</option>
-          <option value="order">{darkMode ? 'ORDER EVENTS' : 'Orders'}</option>
-          <option value="system">{darkMode ? 'SYSTEM EVENTS' : 'System'}</option>
-        </select>
-      </div>
       
-      <div className="space-y-3 max-h-80 overflow-y-auto relative z-10">
+      <div className="space-y-2 max-h-64 overflow-y-auto relative z-10">
         <AnimatePresence>
-          {filteredActivities.length > 0 ? (
-            filteredActivities.map((activity, index) => (
+          {activities.length > 0 ? (
+            activities.map((activity, index) => (
               <motion.div
                 key={activity.id}
-                className={`flex items-start space-x-3 p-3 rounded-lg ${
+                className={`flex items-start space-x-2 p-2 rounded ${
                   darkMode ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
                 } transition-colors cursor-pointer`}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.02, x: 5 }}
+                whileHover={{ scale: 1.02, x: 2 }}
               >
-                <div className={`text-lg ${getActivityColor(activity.type)}`}>
+                <div className="text-sm">
                   {getActivityIcon(activity.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                  <p className={`text-xs font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                     {activity.title}
                   </p>
-                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     {activity.description}
                   </p>
-                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
+                  <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     {activity.timestamp}
                   </p>
                 </div>
-                {activity.value && (
-                  <div className={`text-sm font-bold ${getActivityColor(activity.type)}`}>
-                    {activity.value}
-                  </div>
-                )}
               </motion.div>
             ))
           ) : (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-2 opacity-50">📡</div>
-              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                {darkMode ? 'NO NEURAL ACTIVITIES DETECTED' : 'No activities found'}
+            <div className="text-center py-6">
+              <div className="text-2xl mb-1 opacity-50">📡</div>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                No activities found
               </p>
             </div>
           )}
@@ -1705,270 +1415,313 @@ const RealActivityFeed = ({ darkMode }) => {
 };
 
 // ===============================================
-// REAL PERFORMANCE METRICS (FROM ORIGINAL)
+// REAL MONTHLY REVENUE CHART
 // ===============================================
-const RealPerformanceMetrics = ({ darkMode }) => {
-  const [metrics, setMetrics] = useState({
-    systemLoad: 0,
-    memoryUsage: 0,
-    networkLatency: 0,
-    errorRate: 0
-  });
+const RealMonthlyRevenueChart = ({ darkMode }) => {
+  const [revenueData, setRevenueData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const updateMetrics = () => {
-      // Simulate real-time performance metrics
-      setMetrics({
-        systemLoad: Math.floor(Math.random() * 30) + 20, // 20-50%
-        memoryUsage: Math.floor(Math.random() * 25) + 45, // 45-70%
-        networkLatency: Math.floor(Math.random() * 50) + 10, // 10-60ms
-        errorRate: Math.random() * 2 // 0-2%
-      });
+    const fetchRevenueData = async () => {
+      try {
+        const ordersSnapshot = await getDocs(collection(db, 'orders'));
+        const orders = ordersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            total: data.total || 0,
+            createdAt: data.createdAt?.toDate() || new Date()
+          };
+        });
+
+        // Group orders by last 6 months
+        const monthlyRevenue = {};
+        
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+          monthlyRevenue[monthName] = 0;
+        }
+
+        orders.forEach(order => {
+          const monthName = order.createdAt.toLocaleDateString('en-US', { month: 'short' });
+          if (monthlyRevenue.hasOwnProperty(monthName)) {
+            monthlyRevenue[monthName] += order.total;
+          }
+        });
+
+        const data = Object.entries(monthlyRevenue).map(([name, value]) => ({
+          name,
+          value: Math.round(value)
+        }));
+
+        setRevenueData(data);
+      } catch (error) {
+        console.error('Error fetching revenue data:', error);
+        setRevenueData([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    updateMetrics();
-    const interval = setInterval(updateMetrics, 5000); // Update every 5 seconds
-    setLoading(false);
-
-    return () => clearInterval(interval);
+    fetchRevenueData();
   }, []);
 
-  const getStatusColor = (value, type) => {
-    if (type === 'load' || type === 'memory') {
-      return value < 60 ? 'green' : value < 80 ? 'yellow' : 'red';
-    } else if (type === 'latency') {
-      return value < 30 ? 'green' : value < 50 ? 'yellow' : 'red';
-    } else if (type === 'error') {
-      return value < 1 ? 'green' : value < 2 ? 'yellow' : 'red';
-    }
-    return 'gray';
-  };
+  const width = 240; // Reduced from 280
+  const height = 120;
+  const margin = { top: 10, right: 10, bottom: 20, left: 30 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  
+  const maxValue = Math.max(...revenueData.map(d => d.value), 1);
+  const minValue = Math.min(...revenueData.map(d => d.value));
+  
+  const xScale = (index) => (index / Math.max(revenueData.length - 1, 1)) * chartWidth;
+  const yScale = (value) => chartHeight - ((value - minValue) / Math.max(maxValue - minValue, 1)) * chartHeight;
+  
+  const pathData = revenueData.reduce((path, item, index) => {
+    const x = xScale(index);
+    const y = yScale(item.value);
+    return path + (index === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+  }, '');
 
   if (loading) {
     return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}>
         {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <Activity className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading performance metrics...</div>
-          </div>
-        </div>
+        <SkeletonLoader className="h-6 w-24 mb-2" darkMode={darkMode} />
+        <SkeletonLoader className="h-32 w-full" darkMode={darkMode} />
       </motion.div>
     );
   }
 
-  const performanceData = [
-    { 
-      label: darkMode ? 'SYSTEM LOAD' : 'System Load', 
-      value: `${metrics.systemLoad}%`, 
-      type: 'load', 
-      icon: '⚡' 
-    },
-    { 
-      label: darkMode ? 'MEMORY USAGE' : 'Memory Usage', 
-      value: `${metrics.memoryUsage}%`, 
-      type: 'memory', 
-      icon: '🧠' 
-    },
-    { 
-      label: darkMode ? 'NETWORK LATENCY' : 'Network Latency', 
-      value: `${metrics.networkLatency}ms`, 
-      type: 'latency', 
-      icon: '🌐' 
-    },
-    { 
-      label: darkMode ? 'ERROR RATE' : 'Error Rate', 
-      value: `${metrics.errorRate.toFixed(2)}%`, 
-      type: 'error', 
-      icon: '⚠️' 
-    }
-  ];
+  const hasRevenue = revenueData.some(item => item.value > 0);
 
   return (
     <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {darkMode && <div className="card-glow"></div>}
       
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-        {darkMode ? 'NEURAL PERFORMANCE MATRIX' : 'Performance Metrics'}
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'REVENUE FLOW' : 'Monthly Revenue'}
       </h3>
       
-      <div className="space-y-4 relative z-10">
-        {performanceData.map((item, index) => {
-          const color = getStatusColor(
-            parseFloat(item.value), 
-            item.type
-          );
-          
-          return (
-            <motion.div 
-              key={index}
-              className="flex items-center justify-between"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div className="flex items-center">
-                <span className="text-lg mr-3">{item.icon}</span>
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {item.label}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span className={`font-bold text-${color}-500 mr-2`}>
-                  {item.value}
-                </span>
-                <div className={`w-3 h-3 rounded-full bg-${color}-500 animate-pulse`}></div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-};
-
-// ===============================================
-// REAL USER ANALYTICS CHART (FROM ORIGINAL)
-// ===============================================
-const RealUserAnalyticsChart = ({ darkMode }) => {
-  const [analyticsData, setAnalyticsData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const users = usersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            createdAt: data.createdAt?.toDate() || new Date(),
-            status: data.status || 'active'
-          };
-        });
-
-        // Group users by status
-        const statusGroups = users.reduce((acc, user) => {
-          const status = user.status;
-          acc[status] = (acc[status] || 0) + 1;
-          return acc;
-        }, {});
-
-        const data = Object.entries(statusGroups).map(([status, count]) => ({
-          name: status.replace('_', ' ').toUpperCase(),
-          value: count,
-          percentage: ((count / users.length) * 100).toFixed(1)
-        }));
-
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error('Error fetching analytics data:', error);
-        setAnalyticsData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnalyticsData();
-  }, []);
-
-  if (loading) {
-    return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-        {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <BarChart3 className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading user analytics...</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  const colors = darkMode 
-    ? ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF6600']
-    : ['#4F46E5', '#7C3AED', '#DC2626', '#059669', '#D97706'];
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-        {darkMode ? 'USER STATUS MATRIX' : 'User Analytics'}
-      </h3>
-      
-      {analyticsData.length === 0 ? (
-        <div className="text-center py-8 relative z-10">
-          <div className="text-4xl mb-2 opacity-50">📊</div>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No user data available
+      {!hasRevenue ? (
+        <div className="text-center py-6 relative z-10">
+          <div className="text-2xl mb-1 opacity-50">📈</div>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            No revenue data
           </p>
         </div>
       ) : (
-        <div className="space-y-3 relative z-10">
-          {analyticsData.map((item, index) => (
-            <motion.div 
+        <div className="w-full flex justify-center relative z-10">
+          <svg width={width} height={height}>
+            <g transform={`translate(${margin.left}, ${margin.top})`}>
+              {/* Line */}
+              <motion.path
+                d={pathData}
+                fill="none"
+                stroke={darkMode ? "#00FFFF" : "#4F46E5"}
+                strokeWidth="2"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1 }}
+              />
+              
+              {/* Data points */}
+              {revenueData.map((item, index) => (
+                <motion.circle
               key={index}
-              className="flex items-center justify-between"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+                  cx={xScale(index)}
+                  cy={yScale(item.value)}
+                  r="2"
+                  fill={darkMode ? "#00FFFF" : "#4F46E5"}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
               transition={{ delay: index * 0.1 }}
-            >
-              <div className="flex items-center">
-                <div 
-                  className="w-4 h-4 rounded-full mr-3"
-                  style={{ backgroundColor: colors[index % colors.length] }}
-                ></div>
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {item.name}
-                </span>
+                />
+              ))}
+            </g>
+          </svg>
               </div>
-              <div className="text-right">
-                <div className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {item.value}
-                </div>
-                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {item.percentage}%
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
       )}
     </motion.div>
   );
 };
 
 // ===============================================
-// ENHANCED METRICS CARD WITH ANIMATIONS
+// DONUT CHART COMPONENT
+// ===============================================
+const DonutChart = ({ data, title, darkMode }) => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || !data || data.length === 0) {
+    return (
+      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}>
+        {darkMode && <div className="card-glow"></div>}
+        <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+          {title}
+        </h3>
+        <div className="flex items-center justify-center h-32 relative z-10">
+          {loading ? (
+            <div className={`animate-spin rounded-full h-12 w-12 border-4 ${
+              darkMode ? 'border-cyan-400 border-t-transparent' : 'border-indigo-600 border-t-transparent'
+            }`}></div>
+          ) : (
+            <div className="text-center">
+              <PieChart className={`h-8 w-8 mx-auto mb-1 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+              <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>No data</p>
+          </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const colors = darkMode 
+    ? ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF6600']
+    : ['#4F46E5', '#7C3AED', '#DC2626', '#059669', '#D97706'];
+
+  const size = 100; // Reduced from 120
+  const center = size / 2;
+  const radius = 35; // Reduced from 45
+  const innerRadius = 20; // Reduced from 25
+
+  let currentAngle = -90;
+  const segments = data.map((item, index) => {
+    const percentage = (item.value / total) * 100;
+    const angle = (item.value / total) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    
+    const x1 = center + radius * Math.cos((startAngle * Math.PI) / 180);
+    const y1 = center + radius * Math.sin((startAngle * Math.PI) / 180);
+    const x2 = center + radius * Math.cos((endAngle * Math.PI) / 180);
+    const y2 = center + radius * Math.sin((endAngle * Math.PI) / 180);
+    
+    const largeArcFlag = angle > 180 ? 1 : 0;
+    
+    const pathData = [
+      `M ${center} ${center}`,
+      `L ${x1} ${y1}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      'Z'
+    ].join(' ');
+
+    currentAngle += angle;
+    
+    return {
+      ...item,
+      pathData,
+      color: colors[index % colors.length],
+      percentage: percentage.toFixed(1)
+    };
+  });
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {title}
+      </h3>
+      
+      <div className="flex items-center justify-between relative z-10">
+        {/* Chart */}
+        <div className="relative flex-shrink-0">
+          <svg width={size} height={size} className="transform -rotate-90">
+            {segments.map((segment, index) => (
+              <motion.path
+                key={index}
+                d={segment.pathData}
+                fill={segment.color}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="hover:opacity-80 cursor-pointer"
+              />
+            ))}
+            
+            {/* Inner circle */}
+            <circle
+              cx={center}
+              cy={center}
+              r={innerRadius}
+              fill={darkMode ? '#1F2937' : '#F9FAFB'}
+            />
+          </svg>
+          
+          {/* Center text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                {total}
+        </div>
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Total
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex-1 ml-3 space-y-1">
+          {segments.map((segment, index) => (
+            <motion.div 
+              key={index}
+              className="flex items-center text-xs"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+                <div 
+                className="w-2 h-2 rounded-full mr-1 flex-shrink-0"
+                style={{ backgroundColor: segment.color }}
+              />
+              <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} truncate`}>
+                {segment.name}: {segment.value}
+                </span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// ENHANCED METRICS CARD
 // ===============================================
 const EnhancedMetricsCard = ({ title, value, change, icon: Icon, color, trend, darkMode, loading }) => {
   if (loading) {
     return (
       <motion.div 
-        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
+        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <SkeletonLoader className="h-4 w-20" darkMode={darkMode} />
-            <SkeletonLoader className="h-8 w-16" darkMode={darkMode} />
-            <SkeletonLoader className="h-3 w-12" darkMode={darkMode} />
+            <SkeletonLoader className="h-3 w-16" darkMode={darkMode} />
+            <SkeletonLoader className="h-6 w-12" darkMode={darkMode} />
+            <SkeletonLoader className="h-2 w-10" darkMode={darkMode} />
           </div>
-          <SkeletonLoader className="h-12 w-12 rounded-full" darkMode={darkMode} />
+          <SkeletonLoader className="h-10 w-10 rounded-full" darkMode={darkMode} />
         </div>
       </motion.div>
     );
@@ -1976,35 +1729,35 @@ const EnhancedMetricsCard = ({ title, value, change, icon: Icon, color, trend, d
 
   return (
     <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden group`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden group w-full`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, scale: 1.02 }}
+      whileHover={{ y: -2, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
       {darkMode && <div className="card-glow"></div>}
       
       <div className="flex items-center justify-between relative z-10">
         <div>
-          <p className={`text-sm font-medium ${darkMode ? 'text-gray-400 cyber-title' : 'text-gray-600'} uppercase tracking-wide`}>
+          <p className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'} uppercase tracking-wide`}>
             {title}
           </p>
           <motion.p 
-            className={`text-3xl font-bold mt-2 ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}
+            className={`text-2xl font-bold mt-1 ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}
             key={value}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
           >
             {value}
           </motion.p>
           {change && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1">
               {trend === 'up' ? (
-                <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
               ) : (
-                <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
               )}
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs font-medium ${
                 trend === 'up' ? 'text-green-500' : 'text-red-500'
               }`}>
                 {change}
@@ -2013,12 +1766,12 @@ const EnhancedMetricsCard = ({ title, value, change, icon: Icon, color, trend, d
           )}
         </div>
         <motion.div 
-          className={`p-3 rounded-lg ${
+          className={`p-2 rounded-lg ${
             darkMode ? `bg-${color}-900/30` : `bg-${color}-100`
           } group-hover:scale-110 transition-transform`}
           animate={{ 
             scale: [1, 1.05, 1],
-            rotateZ: [0, 5, 0]
+            rotateZ: [0, 3, 0]
           }}
           transition={{ 
             duration: 3,
@@ -2026,7 +1779,7 @@ const EnhancedMetricsCard = ({ title, value, change, icon: Icon, color, trend, d
             repeatType: "reverse"
           }}
         >
-          <Icon className={`h-6 w-6 ${darkMode ? `text-${color}-400` : `text-${color}-600`}`} />
+          <Icon className={`h-5 w-5 ${darkMode ? `text-${color}-400` : `text-${color}-600`}`} />
         </motion.div>
       </div>
     </motion.div>
@@ -2034,798 +1787,12 @@ const EnhancedMetricsCard = ({ title, value, change, icon: Icon, color, trend, d
 };
 
 // ===============================================
-// ENHANCED ACTIVITY TIMELINE
-// ===============================================
-const EnhancedActivityTimeline = ({ activities, darkMode }) => {
-  const [expandedItems, setExpandedItems] = useState(new Set());
-  const [filter, setFilter] = useState('All');
-
-  const toggleExpanded = useCallback((id) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'order':
-        return <ShoppingCart className="h-4 w-4" />;
-      case 'inventory':
-        return <Package className="h-4 w-4" />;
-      case 'user':
-        return <Users className="h-4 w-4" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
-
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'order':
-        return 'blue';
-      case 'inventory':
-        return 'green';
-      case 'user':
-        return 'purple';
-      default:
-        return 'gray';
-    }
-  };
-
-  const formatRelativeTime = (date) => {
-    const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
-  };
-
-  const filteredActivities = activities.filter(activity => 
-    filter === 'All' || activity.type === filter.toLowerCase()
-  );
-
-  if (!activities || activities.length === 0) {
-    return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-        {darkMode && <div className="card-glow"></div>}
-        <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'} relative z-10`}>
-          {darkMode ? 'NEURAL ACTIVITY STREAM' : 'Recent Activity'}
-        </h3>
-        <div className="text-center py-8 relative z-10">
-          <Activity className={`h-12 w-12 mx-auto mb-2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-          <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            {darkMode ? 'NO NEURAL ACTIVITIES DETECTED' : 'No recent activity'}
-          </p>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'}`}>
-          {darkMode ? 'NEURAL ACTIVITY STREAM' : 'Recent Activity'}
-        </h3>
-        <FilterDropdown
-          title="Filter"
-          options={['All', 'Orders', 'Inventory', 'Users']}
-          selected={filter}
-          onSelect={setFilter}
-          darkMode={darkMode}
-        />
-      </div>
-      
-      <div className="space-y-4 max-h-80 overflow-y-auto relative z-10">
-        <AnimatePresence>
-          {filteredActivities.map((activity, index) => {
-            const isExpanded = expandedItems.has(activity.id);
-            const color = getActivityColor(activity.type);
-            
-            return (
-              <motion.div 
-                key={activity.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex items-start space-x-3 p-3 rounded-lg ${
-                  darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'
-                } transition-colors cursor-pointer`}
-                onClick={() => toggleExpanded(activity.id)}
-                whileHover={{ x: 5 }}
-              >
-                <div className={`p-2 rounded-full ${
-                  darkMode ? `bg-${color}-900/30` : `bg-${color}-100`
-                } flex-shrink-0`}>
-                  {getActivityIcon(activity.type)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {activity.action}
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {formatRelativeTime(activity.timestamp)}
-                      </span>
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {activity.description}
-                  </p>
-                  
-                  <AnimatePresence>
-                    {isExpanded && activity.details && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className={`mt-3 p-3 rounded-md ${
-                          darkMode ? 'bg-gray-800 border border-gray-600' : 'bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {activity.details}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
-};
-
-// ===============================================
-// ENHANCED ANALYTICS COMPONENT
-// ===============================================
-const EnhancedAnalytics = ({ darkMode }) => {
-  const [analyticsData, setAnalyticsData] = useState({
-    salesTrend: [],
-    categoryDistribution: [],
-    performanceMetrics: [],
-    loading: true
-  });
-
-  useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        // Fetch orders for sales trend
-        const ordersSnapshot = await getDocs(
-          query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
-        );
-        
-        // Fetch products for category distribution
-        const productsSnapshot = await getDocs(collection(db, 'products'));
-        
-        // Process sales trend data (last 7 days)
-        const salesByDay = {};
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          return date.toDateString();
-        }).reverse();
-
-        last7Days.forEach(day => {
-          salesByDay[day] = 0;
-        });
-
-        ordersSnapshot.docs.forEach(doc => {
-          const order = doc.data();
-          const orderDate = order.createdAt?.toDate?.()?.toDateString() || new Date().toDateString();
-          if (salesByDay.hasOwnProperty(orderDate)) {
-            salesByDay[orderDate] += order.total || 0;
-          }
-        });
-
-        const salesTrend = last7Days.map(day => ({
-          label: new Date(day).toLocaleDateString('en-US', { weekday: 'short' }),
-          value: Math.round(salesByDay[day])
-        }));
-
-        // Process category distribution
-        const categoryCount = {};
-        productsSnapshot.docs.forEach(doc => {
-          const product = doc.data();
-          const category = product.category || 'Uncategorized';
-          categoryCount[category] = (categoryCount[category] || 0) + 1;
-        });
-
-        const categoryDistribution = Object.entries(categoryCount).map(([category, count]) => ({
-          label: category,
-          value: count
-        }));
-
-        // Performance metrics
-        const totalRevenue = ordersSnapshot.docs.reduce((sum, doc) => {
-          return sum + (doc.data().total || 0);
-        }, 0);
-
-        const avgOrderValue = ordersSnapshot.size > 0 ? totalRevenue / ordersSnapshot.size : 0;
-
-        const performanceMetrics = [
-          { label: 'Avg Order Value', value: Math.round(avgOrderValue) },
-          { label: 'Total Products', value: productsSnapshot.size },
-          { label: 'Total Orders', value: ordersSnapshot.size },
-          { label: 'Revenue', value: Math.round(totalRevenue) }
-        ];
-
-        setAnalyticsData({
-          salesTrend,
-          categoryDistribution,
-          performanceMetrics,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Error fetching analytics data:', error);
-        setAnalyticsData(prev => ({ ...prev, loading: false }));
-      }
-    };
-
-    fetchAnalyticsData();
-  }, []);
-
-  // Simple Bar Chart Component
-  const SimpleBarChart = ({ data, title }) => {
-    if (!data || data.length === 0) {
-      return (
-        <div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-          {darkMode && <div className="card-glow"></div>}
-          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'} relative z-10`}>
-            {title}
-          </h3>
-          <div className="text-center py-8 relative z-10">
-            <BarChart3 className={`h-12 w-12 mx-auto mb-2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
-            <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              No data available
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    const max = Math.max(...data.map(item => item.value));
-
-    return (
-      <div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-        {darkMode && <div className="card-glow"></div>}
-        <h3 className={`text-lg font-semibold mb-6 ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'} relative z-10`}>
-          {title}
-        </h3>
-        <div className="space-y-4 relative z-10">
-          {data.map((item, index) => {
-            const percentage = max > 0 ? (item.value / max) * 100 : 0;
-            return (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {item.label}
-                  </span>
-                  <span className={`text-sm font-bold ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}>
-                    {item.value}
-                  </span>
-                </div>
-                <div className={`h-3 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
-                  <motion.div 
-                    className={`h-full rounded-full ${
-                      darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gradient-to-r from-blue-500 to-purple-600'
-                    }`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 1, delay: index * 0.1 }}
-                  />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  if (analyticsData.loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-            {darkMode && <div className="card-glow"></div>}
-            <SkeletonLoader className="h-6 w-32 mb-4" darkMode={darkMode} />
-            <div className="space-y-3 relative z-10">
-              {[...Array(4)].map((_, j) => (
-                <div key={j} className="space-y-2">
-                  <div className="flex justify-between">
-                    <SkeletonLoader className="h-4 w-20" darkMode={darkMode} />
-                    <SkeletonLoader className="h-4 w-12" darkMode={darkMode} />
-                  </div>
-                  <SkeletonLoader className="h-3 w-full" darkMode={darkMode} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      <SimpleBarChart 
-        data={analyticsData.salesTrend} 
-        title={darkMode ? "7-DAY SALES MATRIX" : "7-Day Sales Trend"} 
-      />
-      <SimpleBarChart 
-        data={analyticsData.categoryDistribution} 
-        title={darkMode ? "CATEGORY DISTRIBUTION" : "Product Categories"} 
-      />
-      <SimpleBarChart 
-        data={analyticsData.performanceMetrics} 
-        title={darkMode ? "KEY PERFORMANCE METRICS" : "Key Metrics"} 
-      />
-    </div>
-  );
-};
-
-// ===============================================
-// REAL-TIME ACTIVITY CALENDAR COMPONENT (KEPT FROM ORIGINAL)
-// ===============================================
-const RealActivityCalendar = ({ darkMode, onDateSelect }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [calendarData, setCalendarData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCalendarData = async () => {
-      try {
-        // Fetch real user registrations and orders
-        const [usersSnapshot, ordersSnapshot] = await Promise.all([
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'orders'))
-        ]);
-
-        const processedData = {};
-        
-        // Process user registrations
-        usersSnapshot.docs.forEach(doc => {
-          const userData = doc.data();
-          const createdAt = userData.createdAt?.toDate();
-          if (createdAt) {
-            const dateKey = createdAt.toDateString();
-            if (!processedData[dateKey]) {
-              processedData[dateKey] = { orders: 0, revenue: 0, users: 0 };
-            }
-            processedData[dateKey].users += 1;
-          }
-        });
-
-        // Process orders
-        ordersSnapshot.docs.forEach(doc => {
-          const orderData = doc.data();
-          const createdAt = orderData.createdAt?.toDate();
-          if (createdAt) {
-            const dateKey = createdAt.toDateString();
-            if (!processedData[dateKey]) {
-              processedData[dateKey] = { orders: 0, revenue: 0, users: 0 };
-            }
-            processedData[dateKey].orders += 1;
-            processedData[dateKey].revenue += orderData.total || 0;
-          }
-        });
-
-        setCalendarData(processedData);
-      } catch (error) {
-        console.error('Error fetching calendar data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCalendarData();
-  }, []);
-
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    const days = [];
-    
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
-    }
-    
-    return days;
-  };
-
-  const getIntensity = (date) => {
-    if (!date) return 0;
-    const dateKey = date.toDateString();
-    const dayData = calendarData[dateKey];
-    if (!dayData) return 0;
-    
-    const maxRevenue = Math.max(...Object.values(calendarData).map(d => d.revenue));
-    return maxRevenue > 0 ? Math.min(dayData.revenue / maxRevenue, 1) : 0;
-  };
-
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
-    onDateSelect?.(date, calendarData[date?.toDateString()]);
-  };
-
-  const navigateMonth = (direction) => {
-    setSelectedDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + direction);
-      return newDate;
-    });
-  };
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  if (loading) {
-    return (
-      <motion.div 
-        className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <Calendar className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading calendar data...</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      {/* Calendar Header */}
-      <div className="flex justify-between items-center mb-6 relative z-10">
-        <h3 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
-          {darkMode ? 'ACTIVITY MATRIX' : 'Activity Calendar'}
-        </h3>
-        <div className="flex items-center gap-2">
-          <motion.button
-            onClick={() => navigateMonth(-1)}
-            className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} p-2`}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            ←
-          </motion.button>
-          <span className={`text-lg font-bold ${darkMode ? 'text-cyan-400 cyber-glow' : 'text-indigo-600'} px-4`}>
-            {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-          </span>
-          <motion.button
-            onClick={() => navigateMonth(1)}
-            className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} p-2`}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            →
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Calendar Grid */}
-      <div className="relative z-10">
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {dayNames.map(day => (
-            <div key={day} className={`text-center text-xs font-bold ${darkMode ? 'text-gray-400' : 'text-gray-500'} py-2`}>
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-1">
-          {getDaysInMonth(selectedDate).map((date, index) => {
-            const intensity = getIntensity(date);
-            const dayData = date ? calendarData[date.toDateString()] : null;
-            const isToday = date && date.toDateString() === new Date().toDateString();
-            const isSelected = date && date.toDateString() === selectedDate.toDateString();
-
-            return (
-              <motion.div
-                key={index}
-                className={`aspect-square flex flex-col items-center justify-center text-xs cursor-pointer relative overflow-hidden ${
-                  !date ? 'invisible' : 
-                  isSelected ? 
-                    darkMode ? 'bg-cyan-600 text-black' : 'bg-indigo-600 text-white' :
-                  isToday ?
-                    darkMode ? 'bg-cyan-900/50 text-cyan-400 border border-cyan-400' : 'bg-indigo-100 text-indigo-800 border border-indigo-400' :
-                    darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'
-                } rounded transition-all duration-200`}
-                style={{
-                  backgroundColor: !isSelected && !isToday && intensity > 0 ? 
-                    darkMode ? `rgba(0, 255, 255, ${intensity * 0.3})` : `rgba(79, 70, 229, ${intensity * 0.3})` : 
-                    undefined
-                }}
-                onClick={() => date && handleDateClick(date)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.01 }}
-              >
-                {date && (
-                  <>
-                    <span className="font-bold">{date.getDate()}</span>
-                    {dayData && (
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs opacity-75">{dayData.orders}</span>
-                        <span className="text-xs opacity-75">${Math.round(dayData.revenue)}</span>
-                      </div>
-                    )}
-                    {intensity > 0.5 && (
-                      <div className={`absolute top-0 right-0 w-2 h-2 rounded-full ${
-                        darkMode ? 'bg-cyan-400' : 'bg-indigo-500'
-                      } animate-pulse`}></div>
-                    )}
-                  </>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Selected Date Info */}
-      {selectedDate && calendarData[selectedDate.toDateString()] && (
-        <motion.div 
-          className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} relative z-10`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h4 className={`font-bold ${darkMode ? 'text-cyan-400' : 'text-indigo-600'} mb-2`}>
-            {selectedDate.toLocaleDateString()}
-          </h4>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Orders:</span>
-              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {calendarData[selectedDate.toDateString()].orders}
-              </span>
-            </div>
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Revenue:</span>
-              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                ${calendarData[selectedDate.toDateString()].revenue.toFixed(2)}
-              </span>
-            </div>
-            <div>
-              <span className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Users:</span>
-              <span className={`ml-2 font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {calendarData[selectedDate.toDateString()].users}
-              </span>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </motion.div>
-  );
-};
-
-// ===============================================
-// REAL SALES FUNNEL CHART (KEPT FROM ORIGINAL)
-// ===============================================
-const RealSalesFunnelChart = ({ darkMode }) => {
-  const [funnelData, setFunnelData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFunnelData = async () => {
-      try {
-        const [usersSnapshot, ordersSnapshot, productsSnapshot] = await Promise.all([
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'orders')),
-          getDocs(collection(db, 'products'))
-        ]);
-
-        const totalUsers = usersSnapshot.size;
-        const totalOrders = ordersSnapshot.size;
-        const totalProducts = productsSnapshot.size;
-
-        // Simulate funnel stages based on real data
-        const estimatedVisitors = totalUsers * 10; // Assume 10x visitors vs registered users
-        const productViews = Math.floor(estimatedVisitors * 0.75);
-        const addToCart = Math.floor(productViews * 0.4);
-        const checkout = Math.floor(addToCart * 0.4);
-        const purchases = totalOrders;
-
-        const data = [
-          { name: 'Visitors', value: estimatedVisitors || 100 },
-          { name: 'Product Views', value: productViews || 75 },
-          { name: 'Add to Cart', value: addToCart || 30 },
-          { name: 'Checkout', value: checkout || 12 },
-          { name: 'Purchase', value: purchases || 8 }
-        ];
-
-        setFunnelData(data);
-      } catch (error) {
-        console.error('Error fetching funnel data:', error);
-        // Fallback data if Firebase is empty
-        setFunnelData([
-          { name: 'Visitors', value: 0 },
-          { name: 'Product Views', value: 0 },
-          { name: 'Add to Cart', value: 0 },
-          { name: 'Checkout', value: 0 },
-          { name: 'Purchase', value: 0 }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFunnelData();
-  }, []);
-
-  if (loading) {
-    return (
-      <motion.div className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-        {darkMode && <div className="card-glow"></div>}
-        <div className="flex items-center justify-center h-64 relative z-10">
-          <div className={`text-center ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`}>
-            <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-            <div>Loading sales funnel...</div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  const maxValue = Math.max(...funnelData.map(d => d.value));
-  
-  return (
-    <motion.div 
-      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {darkMode && <div className="card-glow"></div>}
-      
-      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-        {darkMode ? 'CONVERSION FUNNEL' : 'Sales Funnel'}
-      </h3>
-      
-      {funnelData[0].value === 0 ? (
-        <div className="text-center py-8 relative z-10">
-          <div className="text-4xl mb-2 opacity-50">📊</div>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            No data available - Add users and orders to see funnel
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2 relative z-10">
-          {funnelData.map((item, index) => {
-            const percentage = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-            const conversionRate = index > 0 ? ((item.value / funnelData[index - 1].value) * 100).toFixed(1) : 100;
-            const overallRate = ((item.value / funnelData[0].value) * 100).toFixed(1);
-            
-            return (
-              <motion.div 
-                key={item.name}
-                className="relative"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {item.name}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-bold ${darkMode ? 'text-white cyber-glow' : 'text-gray-900'}`}>
-                      {item.value.toLocaleString()}
-                    </span>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      parseFloat(overallRate) >= 50 
-                        ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
-                        : parseFloat(overallRate) >= 25
-                        ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                        : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {overallRate}%
-                    </span>
-                  </div>
-                </div>
-                
-                <div className={`h-12 relative rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} overflow-hidden`}>
-                  <motion.div 
-                    className={`h-full ${
-                      index === 0 ? darkMode ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500' :
-                      index === 1 ? darkMode ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-purple-500 to-pink-500' :
-                      index === 2 ? darkMode ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-pink-500 to-red-500' :
-                      index === 3 ? darkMode ? 'bg-gradient-to-r from-pink-500 to-red-500' : 'bg-gradient-to-r from-red-500 to-orange-500' :
-                      darkMode ? 'bg-gradient-to-r from-orange-500 to-yellow-500' : 'bg-gradient-to-r from-orange-500 to-amber-500'
-                    } flex items-center justify-center`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.8, delay: index * 0.2 }}
-                    style={{
-                      clipPath: index === funnelData.length - 1 ? 'none' : 'polygon(0 0, calc(100% - 20px) 0, 100% 100%, 0 100%)'
-                    }}
-                  >
-                    <span className="text-white font-bold text-sm mix-blend-difference">
-                      {index > 0 && `${conversionRate}%`}
-                    </span>
-                  </motion.div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
-    </motion.div>
-  );
-};
-
-// ===============================================
-// MAIN ENHANCED ADMIN DASHBOARD WITH SIDEBAR (FULL SCREEN)
+// MAIN ADMIN DASHBOARD
 // ===============================================
 const AdminDashboard = () => {
   const { darkMode } = useTheme();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   
-  // Enhanced state management
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
@@ -2842,10 +1809,8 @@ const AdminDashboard = () => {
   const [notification, setNotification] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [realTimeEnabled, setRealTimeEnabled] = useState(false);
-  const [activities, setActivities] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [activityFilter, setActivityFilter] = useState('All');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userStatusData, setUserStatusData] = useState([]);
+  const [orderStatusData, setOrderStatusData] = useState([]);
 
   // Memoized calculations for enhanced metrics
   const processedStats = useMemo(() => {
@@ -2867,7 +1832,7 @@ const AdminDashboard = () => {
         trend: 'up'
       },
       revenue: {
-        value: `${stats.totalRevenue.toLocaleString()}`,
+        value: `$${stats.totalRevenue.toLocaleString()}`,
         change: calculateChange(stats.totalRevenue, stats.totalRevenue * 0.92),
         trend: 'up'
       },
@@ -2879,13 +1844,12 @@ const AdminDashboard = () => {
     };
   }, [stats]);
 
-  // Fetch real Firebase data with enhanced processing
+  // Fetch real Firebase data
   const fetchAdminData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all collections in parallel
       const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(collection(db, 'products')),
