@@ -136,269 +136,359 @@ const DigitalClock = ({ darkMode }) => {
   );
 };
 
+// ===============================================
+// COMPREHENSIVE ACTIONS PANEL
+// ===============================================
+const ComprehensiveActionsPanel = ({ darkMode }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { logout } = useAuth(); // Add this line to get logout function
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('main');
 
-  const menuItems = [
-    {
-      title: 'Main',
-      items: [
+  const menuSections = {
+    main: [
         { 
           icon: Home, 
           label: 'Home', 
           path: '/',
-          description: 'Go to Home Page'
+        color: 'gray',
+        description: 'Return to main homepage and overview'
         },
         { 
-          icon: Home, 
+        icon: BarChart3, 
           label: 'Dashboard', 
           path: '/admin/dashboard',
-          description: 'Overview & Analytics'
+        color: 'blue',
+        description: 'Analytics overview and key metrics'
         },
         { 
           icon: Users, 
           label: 'User Management', 
           path: '/admin/users',
-          description: 'Manage Users'
+        color: 'blue',
+        description: 'Manage users, roles and permissions'
         },
         { 
           icon: UserCheck, 
           label: 'Approvals', 
           path: '/admin/approvals',
-          description: 'Pending Approvals'
+        color: 'green',
+        description: 'Review and approve pending users'
         },
         { 
           icon: Briefcase, 
           label: 'Deal Management', 
           path: '/admin/deals',
-          description: 'Manage Deals & Offers'
+        color: 'purple',
+        description: 'Manage deals, offers and promotions'
         }
-      ]
-    },
-    {
-      title: 'Analytics',
-      items: [
+    ],
+    analytics: [
         { 
           icon: BarChart3, 
           label: 'Analytics', 
           path: '/admin/analytics',
-          description: 'Detailed Analytics'
+        color: 'purple',
+        description: 'Detailed analytics and reporting dashboard'
         },
         { 
           icon: FileText, 
           label: 'Reports', 
           path: '/admin/reports',
-          description: 'Generate Reports'
+        color: 'indigo',
+        description: 'Generate and export custom reports'
         }
-      ]
-    },
-    {
-      title: 'System',
-      items: [
+    ],
+    system: [
         { 
           icon: Shield, 
           label: 'Security', 
           path: '/admin/security',
-          description: 'Security Settings'
+        color: 'red',
+        description: 'Security settings and access control'
         },
         { 
           icon: Settings, 
           label: 'Settings', 
           path: '/admin/settings',
-          description: 'System Settings'
+        color: 'yellow',
+        description: 'System configuration and preferences'
         },
         { 
           icon: Archive, 
           label: 'Legacy Panel', 
           path: '/admin/panel',
-          description: 'Legacy Admin Interface'
+        color: 'gray',
+        description: 'Access legacy admin interface'
         },
         { 
       icon: MessageCircle, 
       label: 'Feedback', 
       path: '/admin/feedback',
-      description: 'User Feedback & Support'
+        color: 'pink',
+        description: 'User feedback and support requests'
     },
     { 
   icon: Headphones, 
   label: 'Support Tickets', 
   path: '/admin/support',
-  description: 'Manage User Support Requests'
+        color: 'indigo',
+        description: 'Manage customer support tickets'
 }
       ]
-    }
-  ];
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    if (window.innerWidth < 1024) {
-      setIsOpen(false);
-    }
   };
 
-  // Add this new function for logout
+  const tabs = [
+    { id: 'main', label: 'Main', icon: Home },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'system', label: 'System', icon: Settings }
+  ];
+
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login'); // Redirect to login after logout
-      if (window.innerWidth < 1024) {
-        setIsOpen(false);
-      }
+      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // You might want to show a toast notification here
     }
   };
 
   return (
-    <>
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isOpen && window.innerWidth < 1024 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -320 }}
-        animate={{ x: isOpen ? 0 : -320 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 left-0 h-full ${
-          isCollapsed ? 'w-20' : 'w-80'
-        } ${
-          darkMode ? 'bg-gray-900 border-r border-gray-800' : 'bg-white border-r border-gray-200'
-        } z-50 transition-all duration-300 lg:translate-x-0 lg:static lg:z-30`}
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
       >
-        <div className="flex flex-col h-full">
-          {/* Sidebar Header */}
-          <div className={`p-6 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              {!isCollapsed && (
-                <div>
-                  <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Admin Panel
-                  </h2>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Management Dashboard
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                {/* Collapse Toggle */}
-                <button
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    darkMode 
-                      ? 'hover:bg-gray-800 text-gray-400' 
-                      : 'hover:bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <ChevronLeft className={`h-5 w-5 transition-transform ${isCollapsed ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {/* Close Button (Mobile) */}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className={`lg:hidden p-2 rounded-lg transition-colors ${
-                    darkMode 
-                      ? 'hover:bg-gray-800 text-gray-400' 
-                      : 'hover:bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Menu */}
-          <nav className="flex-1 overflow-y-auto p-4">
-            {menuItems.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="mb-6">
-                {!isCollapsed && (
-                  <h3 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-                    darkMode ? 'text-gray-500' : 'text-gray-400'
-                  }`}>
-                    {section.title}
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-4 relative z-10 text-center`}>
+        {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Navigation'}
                   </h3>
-                )}
-                
-                <div className="space-y-1">
-                  {section.items.map((item, itemIndex) => {
-                    const isActive = location.pathname === item.path;
-                    const Icon = item.icon;
+      
+      {/* Tab Navigation */}
+      <div className="flex mb-4 relative z-10">
+        {tabs.map((tab, index) => {
+          const TabIcon = tab.icon;
+          const isActive = activeTab === tab.id;
                     
                     return (
                       <motion.button
-                        key={itemIndex}
-                        onClick={() => handleNavigation(item.path)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex flex-col items-center py-3 px-2 rounded-lg transition-all ${
                           isActive
                             ? darkMode 
-                              ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-600/30' 
-                              : 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                    ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-600/30' 
+                    : 'bg-indigo-100 text-indigo-600 border border-indigo-200'
                             : darkMode
-                              ? 'hover:bg-gray-800 text-gray-300 hover:text-white'
-                              : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
+                    ? 'hover:bg-gray-800 text-gray-400 hover:text-gray-300'
+                    : 'hover:bg-gray-100 text-gray-600 hover:text-gray-700'
                         }`}
-                        whileHover={{ x: 2 }}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Icon className={`h-5 w-5 flex-shrink-0 ${
-                          isActive && darkMode ? 'text-cyan-400' : ''
-                        }`} />
-                        
-                        {!isCollapsed && (
-                          <div className="flex-1 text-left">
-                            <div className="font-medium text-sm">{item.label}</div>
-                            <div className={`text-xs ${
-                              darkMode ? 'text-gray-500' : 'text-gray-400'
-                            }`}>
-                              {item.description}
+              <TabIcon className="h-4 w-4 mb-2" />
+              <span className="text-sm font-medium">{tab.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          className="relative z-10"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className={`grid grid-cols-1 gap-3 mb-4`}>
+            {menuSections[activeTab].map((action, index) => {
+              const Icon = action.icon;
+              
+              return (
+                <motion.button
+                  key={action.path}
+                  onClick={() => navigate(action.path)}
+                  className={`p-4 rounded-xl transition-all group text-left w-full ${
+                    darkMode 
+                      ? 'bg-gray-800/50 hover:bg-gray-700 border border-gray-600 hover:border-gray-500' 
+                      : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md'
+                  }`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`p-2 rounded-lg ${
+                      darkMode ? `bg-${action.color}-900/30` : `bg-${action.color}-100`
+                    } group-hover:scale-110 transition-transform flex-shrink-0`}>
+                      <Icon className={`h-5 w-5 ${darkMode ? `text-${action.color}-400` : `text-${action.color}-600`}`} />
                             </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`font-semibold text-sm mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {action.label}
+                      </h4>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} leading-relaxed`}>
+                        {action.description}
+                      </p>
                           </div>
-                        )}
-                        
-                        {!isCollapsed && isActive && (
-                          <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                        )}
+                  </div>
                       </motion.button>
                     );
                   })}
                 </div>
-              </div>
-            ))}
-          </nav>
+        </motion.div>
+      </AnimatePresence>
 
-          {/* Sidebar Footer with Working Logout - UPDATED */}
-          <div className={`p-4 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+      {/* Logout Button */}
             <motion.button
-              onClick={handleLogout} // Updated to use proper logout function
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+        onClick={handleLogout}
+        className={`w-full flex items-center justify-center px-4 py-3 rounded-xl transition-colors ${
                 darkMode 
-                  ? 'hover:bg-red-900/20 text-gray-300 hover:text-red-400' 
-                  : 'hover:bg-red-50 text-gray-700 hover:text-red-600'
+            ? 'bg-red-900/20 hover:bg-red-900/30 text-red-400 border border-red-800/50' 
+            : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
               }`}
-              whileHover={{ x: 2 }}
+        whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <LogOut className="h-5 w-5 flex-shrink-0" />
-              {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
+        <LogOut className="h-4 w-4 mr-2" />
+        <span className="text-sm font-medium">Logout</span>
             </motion.button>
+    </motion.div>
+  );
+};
+
+// ===============================================
+// SMART NOTIFICATIONS SYSTEM
+// ===============================================
+const SmartNotificationSystem = ({ darkMode }) => {
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: 'warning',
+      title: 'Low Stock Alert',
+      message: '3 products need restocking',
+      timestamp: new Date(),
+      priority: 'high'
+    },
+    {
+      id: 2,
+      type: 'info',
+      title: 'New User Registrations',
+      message: '5 users pending approval',
+      timestamp: new Date(),
+      priority: 'medium'
+    },
+    {
+      id: 3,
+      type: 'success',
+      title: 'Revenue Milestone',
+      message: 'Monthly target achieved!',
+      timestamp: new Date(),
+      priority: 'low'
+    }
+  ]);
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'warning': return AlertTriangle;
+      case 'info': return Bell;
+      case 'success': return Star;
+      case 'error': return X;
+      default: return Bell;
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'red';
+      case 'medium': return 'yellow';
+      case 'low': return 'green';
+      default: return 'blue';
+    }
+  };
+
+  const dismissNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <div className="flex items-center justify-between mb-3 relative z-10">
+        <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'}`}>
+          {darkMode ? 'NEURAL ALERTS' : 'Smart Notifications'}
+        </h3>
+        <Bell className={`h-4 w-4 ${darkMode ? 'text-cyan-400' : 'text-indigo-600'} animate-pulse`} />
           </div>
+      
+      <div className="space-y-2 max-h-64 overflow-y-auto relative z-10">
+        <AnimatePresence>
+          {notifications.map((notification, index) => {
+            const Icon = getNotificationIcon(notification.type);
+            const priorityColor = getPriorityColor(notification.priority);
+            
+            return (
+              <motion.div
+                key={notification.id}
+                className={`p-3 rounded-lg border-l-4 border-${priorityColor}-500 ${
+                  darkMode ? 'bg-gray-800/50' : 'bg-gray-50'
+                } group cursor-pointer`}
+                initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, x: 5 }}
+                onClick={() => dismissNotification(notification.id)}
+              >
+                <div className="flex items-start space-x-2">
+                  <Icon className={`h-4 w-4 mt-0.5 text-${priorityColor}-500 flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-medium text-xs ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {notification.title}
+                    </h4>
+                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
+                      {notification.message}
+                    </p>
+                    <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1 block`}>
+                      {notification.timestamp.toLocaleTimeString()}
+                    </span>
         </div>
-      </motion.aside>
-    </>
+                  <button className={`opacity-0 group-hover:opacity-100 transition-opacity ${
+                    darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
+                  }`}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+      
+      {notifications.length === 0 && (
+        <div className="text-center py-6 relative z-10">
+          <Bell className={`h-8 w-8 mx-auto mb-2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+          <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            No notifications
+          </p>
+        </div>
+      )}
+    </motion.div>
   );
 };
 
