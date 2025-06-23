@@ -71,9 +71,71 @@ const SkeletonLoader = ({ className = "h-4 w-full", darkMode = false }) => (
 );
 
 // ===============================================
-// ENHANCED SIDEBAR COMPONENT - UPDATED VERSION
+// DIGITAL CLOCK COMPONENT
 // ===============================================
-const AdminSidebar = ({ darkMode, isOpen, setIsOpen }) => {
+const DigitalClock = ({ darkMode }) => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <div className="text-center relative z-10">
+        <div className="flex items-center justify-center mb-2">
+          <Clock className={`h-5 w-5 mr-2 ${darkMode ? 'text-cyan-400' : 'text-indigo-600'}`} />
+          <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'}`}>
+            {darkMode ? 'SYS TIME' : 'Time'}
+          </h3>
+        </div>
+        
+        <motion.div 
+          className={`text-2xl font-mono font-bold mb-1 ${darkMode ? 'text-cyan-400 cyber-glow' : 'text-indigo-600'}`}
+          key={formatTime(time)}
+          initial={{ opacity: 0.7 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {formatTime(time)}
+        </motion.div>
+        
+        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {formatDate(time)}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth(); // Add this line to get logout function
