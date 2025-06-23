@@ -22,7 +22,7 @@ const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar'
   
   return (
     <div className="mb-6">
-      <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{title}</h3>
+      <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300 cyber-glow' : 'text-gray-700'} mb-1`}>{title}</h3>
       {description && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>{description}</p>}
       
       {type === 'pie' ? (
@@ -33,11 +33,11 @@ const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar'
             return (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full bg-${color}-${500 + (index * 100)} mr-2`}></div>
+                  <div className={`w-3 h-3 rounded-full bg-${color}-${500 + (index * 100)} mr-2 ${darkMode ? 'shadow-lg shadow-cyan-500/20' : ''}`}></div>
                   <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300 cyber-glow' : 'text-gray-700'}`}>
                     {item.value} ({percentage}%)
                   </span>
                 </div>
@@ -52,14 +52,18 @@ const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar'
             <div key={index} className="flex items-center">
               <span className={`text-xs w-16 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.name}</span>
               <div className="flex-1 ml-2">
-                <div className={`h-4 rounded-full bg-${color}-${darkMode ? '900/30' : '100'} overflow-hidden`}>
+                <div className={`h-4 rounded-full ${darkMode ? 'bg-gray-800 border border-cyan-500/30' : 'bg-gray-100'} overflow-hidden`}>
                   <div 
-                    className={`h-4 rounded-full bg-${color}-${darkMode ? '500' : '600'} transition-all duration-500`} 
+                    className={`h-4 rounded-full ${
+                      darkMode 
+                        ? `bg-gradient-to-r from-cyan-500 to-purple-500 shadow-lg shadow-cyan-500/30` 
+                        : `bg-${color}-600`
+                    } transition-all duration-500`} 
                     style={{ width: `${(item.value / max) * 100}%` }}
                   ></div>
                 </div>
               </div>
-              <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <span className={`ml-2 text-xs font-medium ${darkMode ? 'text-gray-300 cyber-glow' : 'text-gray-700'}`}>
                 {typeof item.value === 'number' && item.value > 1000 ? `$${(item.value/1000).toFixed(1)}k` : item.value}
               </span>
             </div>
@@ -70,7 +74,7 @@ const RealDataChart = ({ data, title, description, color, darkMode, type = 'bar'
   );
 };
 
-// Low Stock Alerts with actual actions
+// Low Stock Alerts with actual actions - enhanced theme integration
 const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
   const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [restockAmount, setRestockAmount] = useState(50);
@@ -111,23 +115,37 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
 
   if (lowStockProducts.length === 0) {
     return (
-      <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-        <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Stock Alerts</h2>
+      <div className={`${
+        darkMode 
+          ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+          : 'neumorph-card bg-white border-gray-100'
+      } rounded-xl overflow-hidden border`}>
+        <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'}`}>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+            {darkMode ? 'INVENTORY SURVEILLANCE' : 'Stock Alerts'}
+          </h2>
         </div>
         <div className="p-6 text-center">
           <div className="text-4xl mb-3">✅</div>
-          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>All products are well stocked!</p>
+          <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {darkMode ? 'ALL SYSTEMS OPERATIONAL' : 'All products are well stocked!'}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
+    <div className={`${
+      darkMode 
+        ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+        : 'neumorph-card bg-white border-gray-100'
+    } rounded-xl overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'} flex justify-between items-center`}>
         <div>
-          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Stock Alerts</h2>
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+            {darkMode ? 'INVENTORY SURVEILLANCE' : 'Stock Alerts'}
+          </h2>
           <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {criticalStockProducts.length} critical • {lowStockProducts.length} total low stock
           </p>
@@ -139,7 +157,9 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
               value={restockAmount}
               onChange={(e) => setRestockAmount(parseInt(e.target.value) || 0)}
               className={`w-20 px-2 py-1 text-sm rounded ${
-                darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                darkMode 
+                  ? 'cyber-btn bg-gray-800 border-cyan-500/50 text-cyan-300' 
+                  : 'neumorph-btn bg-white border-gray-300'
               } border`}
               min="1"
               placeholder="50"
@@ -147,16 +167,24 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
             <button
               onClick={handleBulkRestock}
               disabled={isRestocking}
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+              className={`${
+                darkMode 
+                  ? 'cyber-btn bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-lg shadow-green-500/20' 
+                  : 'neumorph-btn bg-green-600 hover:bg-green-700'
+              } text-white px-3 py-1 rounded text-sm disabled:opacity-50 transition-all duration-300`}
             >
-              {isRestocking ? 'Restocking...' : `Restock ${selectedProducts.size}`}
+              {isRestocking ? 'RESTOCKING...' : `RESTOCK ${selectedProducts.size}`}
             </button>
           </div>
         )}
       </div>
 
       {/* Bulk selection controls */}
-      <div className={`px-6 py-3 border-b ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-100 bg-gray-50'}`}>
+      <div className={`px-6 py-3 border-b ${
+        darkMode 
+          ? 'border-cyan-500/30 bg-gray-800/50' 
+          : 'border-gray-100 bg-gray-50'
+      }`}>
         <label className="flex items-center">
           <input
             type="checkbox"
@@ -172,7 +200,9 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
 
       <div className="max-h-80 overflow-y-auto">
         {lowStockProducts.map((product) => (
-          <div key={product.id} className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} hover:bg-gray-50 dark:hover:bg-gray-700`}>
+          <div key={product.id} className={`p-4 border-b ${
+            darkMode ? 'border-cyan-500/20 hover:bg-gray-800/50' : 'border-gray-100 hover:bg-gray-50'
+          } transition-colors duration-200`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -193,14 +223,22 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
               <div className="flex items-center space-x-3">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   product.stock <= 3
-                    ? darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
-                    : darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
+                    ? darkMode 
+                      ? 'bg-red-900/30 text-red-400 border border-red-500/30' 
+                      : 'bg-red-100 text-red-800'
+                    : darkMode 
+                      ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30' 
+                      : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   {product.stock} left
                 </span>
                 <Link 
                   to={`/inventory/${product.id}`}
-                  className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
+                  className={`text-sm ${
+                    darkMode 
+                      ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' 
+                      : 'text-indigo-600 hover:text-indigo-800'
+                  } font-medium transition-colors duration-200`}
                 >
                   Edit
                 </Link>
@@ -211,11 +249,19 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
       </div>
 
       {/* Quick actions */}
-      <div className={`px-6 py-3 border-t ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-100 bg-gray-50'}`}>
+      <div className={`px-6 py-3 border-t ${
+        darkMode 
+          ? 'border-cyan-500/30 bg-gray-800/50' 
+          : 'border-gray-100 bg-gray-50'
+      }`}>
         <div className="flex space-x-2">
           <button 
             onClick={() => setSelectedProducts(new Set(criticalStockProducts.map(p => p.id)))}
-            className="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+            className={`text-sm ${
+              darkMode 
+                ? 'cyber-btn bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20' 
+                : 'neumorph-btn bg-red-600 hover:bg-red-700'
+            } text-white px-3 py-1 rounded transition-all duration-300`}
           >
             Select Critical ({criticalStockProducts.length})
           </button>
@@ -229,7 +275,11 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
               }));
               console.log('Purchase order suggestions:', orderData);
             }}
-            className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+            className={`text-sm ${
+              darkMode 
+                ? 'cyber-btn bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20' 
+                : 'neumorph-btn bg-blue-600 hover:bg-blue-700'
+            } text-white px-3 py-1 rounded transition-all duration-300`}
           >
             Generate Orders
           </button>
@@ -239,7 +289,7 @@ const LowStockAlerts = ({ products, darkMode, onBulkRestock }) => {
   );
 };
 
-// Enhanced Order Processing with bulk operations
+// Enhanced Order Processing with bulk operations and theme integration
 const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }) => {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [selectedOrders, setSelectedOrders] = useState(new Set());
