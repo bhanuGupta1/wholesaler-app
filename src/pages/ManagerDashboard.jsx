@@ -1236,7 +1236,9 @@ const ManagerDashboard = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${
+          darkMode ? 'border-cyan-500' : 'border-indigo-500'
+        }`}></div>
       </div>
     );
   }
@@ -1252,99 +1254,154 @@ const ManagerDashboard = () => {
   }
 
   return (
-    <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-      {/* Notification */}
-      {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-          notification.type === 'success' 
-            ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
-            : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
-        } border`}>
-          {notification.message}
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Manager Dashboard</h1>
-            <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Real-time operations management with bulk actions and smart alerts
-            </p>
+    <div className={`min-h-screen ${darkMode ? 'cyberpunk-layout-wrapper' : 'neumorph-layout-wrapper'} relative`}>
+      {/* SecretInvasion Background */}
+      <SecretInvasionBackground 
+        intensity={darkMode ? 0.8 : 0.6} 
+        enableGlitch={darkMode} 
+      />
+      
+      <div className={`container mx-auto px-4 py-8 max-w-7xl ${darkMode ? 'text-gray-200' : 'text-gray-800'} relative z-10`}>
+        {/* Notification */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
+            notification.type === 'success' 
+              ? darkMode 
+                ? 'bg-green-900/90 border-green-500/50 text-green-100 shadow-green-500/20' 
+                : 'bg-green-100 border-green-400 text-green-800'
+              : darkMode 
+                ? 'bg-red-900/90 border-red-500/50 text-red-100 shadow-red-500/20' 
+                : 'bg-red-100 border-red-400 text-red-800'
+          }`}>
+            {notification.message}
           </div>
-          <button
-            onClick={fetchManagerData}
-            disabled={loading}
-            className={`px-4 py-2 rounded-lg ${
-              darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
-            } text-white disabled:opacity-50 transition-colors`}
-          >
-            {loading ? 'Refreshing...' : 'Refresh Data'}
-          </button>
-        </div>
-      </div>
+        )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[
-          { title: 'Total Revenue', value: `$${stats.revenue.toFixed(2)}`, icon: '💰', color: 'green' },
-          { title: 'Today\'s Orders', value: stats.todayOrders, icon: '📋', color: 'blue' },
-          { title: 'Pending Orders', value: stats.pendingOrders, icon: '⏳', color: 'yellow' },
-          { title: 'Low Stock Items', value: stats.lowStockProducts, icon: '📦', color: 'red' }
-        ].map((stat, index) => (
-          <div key={index} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-md border p-6`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
-                  {stat.title}
-                </p>
-                <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mt-1`}>
-                  {stat.value}
-                </p>
-              </div>
-              <div className={`text-3xl p-3 rounded-full bg-${stat.color}-${darkMode ? '900/30' : '100'}`}>
-                {stat.icon}
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className={`text-3xl font-bold ${
+                darkMode 
+                  ? 'text-white cyber-title cyber-glow' 
+                  : 'text-gray-900 neumorph-title'
+              }`}>
+                {darkMode ? 'NEURAL COMMAND CENTER' : 'Manager Dashboard'}
+              </h1>
+              <p className={`mt-1 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {darkMode 
+                  ? 'Real-time operations control with quantum analytics and neural processing' 
+                  : 'Real-time operations management with bulk actions and smart alerts'
+                }
+              </p>
+            </div>
+            <button
+              onClick={fetchManagerData}
+              disabled={loading}
+              className={`px-4 py-2 rounded-lg ${
+                darkMode 
+                  ? 'cyber-btn bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 shadow-lg shadow-cyan-500/20' 
+                  : 'neumorph-btn bg-blue-600 hover:bg-blue-700'
+              } text-white disabled:opacity-50 transition-all duration-300`}
+            >
+              {loading ? 'SYNCING...' : darkMode ? 'SYNC DATA' : 'Refresh Data'}
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            { 
+              title: darkMode ? 'REVENUE STREAM' : 'Total Revenue', 
+              value: `$${stats.revenue.toFixed(2)}`, 
+              icon: '💰', 
+              color: 'green' 
+            },
+            { 
+              title: darkMode ? 'TODAY\'S FEED' : 'Today\'s Orders', 
+              value: stats.todayOrders, 
+              icon: '📋', 
+              color: 'blue' 
+            },
+            { 
+              title: darkMode ? 'PENDING QUEUE' : 'Pending Orders', 
+              value: stats.pendingOrders, 
+              icon: '⏳', 
+              color: 'yellow' 
+            },
+            { 
+              title: darkMode ? 'LOW STOCK ALERTS' : 'Low Stock Items', 
+              value: stats.lowStockProducts, 
+              icon: '📦', 
+              color: 'red' 
+            }
+          ].map((stat, index) => (
+            <div key={index} className={`${
+              darkMode 
+                ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+                : 'neumorph-card bg-white border-gray-100'
+            } rounded-xl border p-6`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wide`}>
+                    {stat.title}
+                  </p>
+                  <p className={`text-2xl font-bold ${
+                    darkMode 
+                      ? 'text-white cyber-glow' 
+                      : 'text-gray-900'
+                  } mt-1`}>
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`text-3xl p-3 rounded-full ${
+                  darkMode 
+                    ? `bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30` 
+                    : `bg-${stat.color}-100`
+                }`}>
+                  {stat.icon}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Inventory Overview */}
-          <InventoryOverview products={stats.allProducts} darkMode={darkMode} />
-          
-          {/* Order Processing with Bulk Operations */}
-          <OrderProcessing 
-            orders={stats.allOrders} 
-            darkMode={darkMode}
-            onUpdateOrderStatus={handleUpdateOrderStatus}
-            onBulkUpdate={handleBulkOrderUpdate}
-          />
+          ))}
         </div>
 
-        {/* Right Column - 1/3 width */}
-        <div className="space-y-8">
-          {/* Low Stock Alerts with Actions */}
-          <LowStockAlerts 
-            products={stats.allProducts} 
-            darkMode={darkMode}
-            onBulkRestock={handleBulkRestock}
-          />
-          
-          {/* Business Performance with Real Data */}
-          <BusinessPerformance stats={stats} darkMode={darkMode} />
-          
-          {/* Enhanced Manager Actions */}
-          <QuickActions 
-            darkMode={darkMode}
-            onGenerateReport={handleGenerateReport}
-            onScheduleMeeting={handleScheduleMeeting}
-          />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - 2/3 width */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Inventory Overview */}
+            <InventoryOverview products={stats.allProducts} darkMode={darkMode} />
+            
+            {/* Order Processing with Bulk Operations */}
+            <OrderProcessing 
+              orders={stats.allOrders} 
+              darkMode={darkMode}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onBulkUpdate={handleBulkOrderUpdate}
+            />
+          </div>
+
+          {/* Right Column - 1/3 width */}
+          <div className="space-y-8">
+            {/* Low Stock Alerts with Actions */}
+            <LowStockAlerts 
+              products={stats.allProducts} 
+              darkMode={darkMode}
+              onBulkRestock={handleBulkRestock}
+            />
+            
+            {/* Business Performance with Real Data */}
+            <BusinessPerformance stats={stats} darkMode={darkMode} />
+            
+            {/* Enhanced Manager Actions (Updated - removed user management and new orders) */}
+            <QuickActions 
+              darkMode={darkMode}
+              onGenerateReport={handleGenerateReport}
+              onScheduleMeeting={handleScheduleMeeting}
+            />
+          </div>
         </div>
       </div>
     </div>
