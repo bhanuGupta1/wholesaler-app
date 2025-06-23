@@ -146,95 +146,95 @@ const ComprehensiveActionsPanel = ({ darkMode }) => {
 
   const menuSections = {
     main: [
-        { 
-          icon: Home, 
-          label: 'Home', 
-          path: '/',
+      { 
+        icon: Home, 
+        label: 'Home', 
+        path: '/', 
         color: 'gray',
         description: 'Return to main homepage and overview'
-        },
-        { 
+      },
+      { 
         icon: BarChart3, 
-          label: 'Dashboard', 
-          path: '/admin/dashboard',
+        label: 'Dashboard', 
+        path: '/admin/dashboard', 
         color: 'blue',
         description: 'Analytics overview and key metrics'
-        },
-        { 
-          icon: Users, 
-          label: 'User Management', 
-          path: '/admin/users',
+      },
+      { 
+        icon: Users, 
+        label: 'User Management', 
+        path: '/admin/users', 
         color: 'blue',
         description: 'Manage users, roles and permissions'
-        },
-        { 
-          icon: UserCheck, 
-          label: 'Approvals', 
-          path: '/admin/approvals',
+      },
+      { 
+        icon: UserCheck, 
+        label: 'Approvals', 
+        path: '/admin/approvals', 
         color: 'green',
         description: 'Review and approve pending users'
-        },
-        { 
-          icon: Briefcase, 
-          label: 'Deal Management', 
-          path: '/admin/deals',
+      },
+      { 
+        icon: Briefcase, 
+        label: 'Deal Management', 
+        path: '/admin/deals', 
         color: 'purple',
         description: 'Manage deals, offers and promotions'
-        }
+      }
     ],
     analytics: [
-        { 
-          icon: BarChart3, 
-          label: 'Analytics', 
-          path: '/admin/analytics',
+      { 
+        icon: BarChart3, 
+        label: 'Analytics', 
+        path: '/admin/analytics', 
         color: 'purple',
         description: 'Detailed analytics and reporting dashboard'
-        },
-        { 
-          icon: FileText, 
-          label: 'Reports', 
-          path: '/admin/reports',
+      },
+      { 
+        icon: FileText, 
+        label: 'Reports', 
+        path: '/admin/reports', 
         color: 'indigo',
         description: 'Generate and export custom reports'
-        }
+      }
     ],
     system: [
-        { 
-          icon: Shield, 
-          label: 'Security', 
-          path: '/admin/security',
+      { 
+        icon: Shield, 
+        label: 'Security', 
+        path: '/admin/security', 
         color: 'red',
         description: 'Security settings and access control'
-        },
-        { 
-          icon: Settings, 
-          label: 'Settings', 
-          path: '/admin/settings',
+      },
+      { 
+        icon: Settings, 
+        label: 'Settings', 
+        path: '/admin/settings', 
         color: 'yellow',
         description: 'System configuration and preferences'
-        },
-        { 
-          icon: Archive, 
-          label: 'Legacy Panel', 
-          path: '/admin/panel',
+      },
+      { 
+        icon: Archive, 
+        label: 'Legacy Panel', 
+        path: '/admin/panel', 
         color: 'gray',
         description: 'Access legacy admin interface'
-        },
-        { 
-      icon: MessageCircle, 
-      label: 'Feedback', 
-      path: '/admin/feedback',
+      },
+      { 
+        icon: MessageCircle, 
+        label: 'Feedback', 
+        path: '/admin/feedback', 
         color: 'pink',
         description: 'User feedback and support requests'
-    },
-    { 
-  icon: Headphones, 
-  label: 'Support Tickets', 
-  path: '/admin/support',
+      },
+      { 
+        icon: Headphones, 
+        label: 'Support Tickets', 
+        path: '/admin/support', 
         color: 'indigo',
         description: 'Manage customer support tickets'
-}
-      ]
+      }
+    ]
   };
 
   const tabs = [
@@ -253,43 +253,43 @@ const ComprehensiveActionsPanel = ({ darkMode }) => {
   };
 
   return (
-          <motion.div
+    <motion.div 
       className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      >
+    >
       {darkMode && <div className="card-glow"></div>}
       
       <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-4 relative z-10 text-center`}>
         {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Navigation'}
-                  </h3>
+      </h3>
       
       {/* Tab Navigation */}
       <div className="flex mb-4 relative z-10">
         {tabs.map((tab, index) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
-                    
-                    return (
-                      <motion.button
+          
+          return (
+            <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex flex-col items-center py-3 px-2 rounded-lg transition-all ${
-                          isActive
-                            ? darkMode 
+                isActive
+                  ? darkMode 
                     ? 'bg-cyan-900/30 text-cyan-400 border border-cyan-600/30' 
                     : 'bg-indigo-100 text-indigo-600 border border-indigo-200'
-                            : darkMode
+                  : darkMode
                     ? 'hover:bg-gray-800 text-gray-400 hover:text-gray-300'
                     : 'hover:bg-gray-100 text-gray-600 hover:text-gray-700'
-                        }`}
+              }`}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
+              whileTap={{ scale: 0.98 }}
+            >
               <TabIcon className="h-4 w-4 mb-2" />
               <span className="text-sm font-medium">{tab.label}</span>
             </motion.button>
@@ -331,7 +331,7 @@ const ComprehensiveActionsPanel = ({ darkMode }) => {
                       darkMode ? `bg-${action.color}-900/30` : `bg-${action.color}-100`
                     } group-hover:scale-110 transition-transform flex-shrink-0`}>
                       <Icon className={`h-5 w-5 ${darkMode ? `text-${action.color}-400` : `text-${action.color}-600`}`} />
-                            </div>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className={`font-semibold text-sm mb-1 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                         {action.label}
@@ -339,29 +339,29 @@ const ComprehensiveActionsPanel = ({ darkMode }) => {
                       <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} leading-relaxed`}>
                         {action.description}
                       </p>
-                          </div>
+                    </div>
                   </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </motion.div>
       </AnimatePresence>
 
       {/* Logout Button */}
-            <motion.button
+      <motion.button
         onClick={handleLogout}
         className={`w-full flex items-center justify-center px-4 py-3 rounded-xl transition-colors ${
-                darkMode 
+          darkMode 
             ? 'bg-red-900/20 hover:bg-red-900/30 text-red-400 border border-red-800/50' 
             : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
-              }`}
+        }`}
         whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+        whileTap={{ scale: 0.98 }}
+      >
         <LogOut className="h-4 w-4 mr-2" />
         <span className="text-sm font-medium">Logout</span>
-            </motion.button>
+      </motion.button>
     </motion.div>
   );
 };
@@ -434,7 +434,7 @@ const SmartNotificationSystem = ({ darkMode }) => {
           {darkMode ? 'NEURAL ALERTS' : 'Smart Notifications'}
         </h3>
         <Bell className={`h-4 w-4 ${darkMode ? 'text-cyan-400' : 'text-indigo-600'} animate-pulse`} />
-          </div>
+      </div>
       
       <div className="space-y-2 max-h-64 overflow-y-auto relative z-10">
         <AnimatePresence>
@@ -467,7 +467,7 @@ const SmartNotificationSystem = ({ darkMode }) => {
                     <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1 block`}>
                       {notification.timestamp.toLocaleTimeString()}
                     </span>
-        </div>
+                  </div>
                   <button className={`opacity-0 group-hover:opacity-100 transition-opacity ${
                     darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
                   }`}>
@@ -546,7 +546,7 @@ const EnhancedActivityAnalytics = ({ darkMode }) => {
         ))}
       </div>
     </motion.div>
-);
+  );
 };
 
 // ===============================================
@@ -681,7 +681,7 @@ const AdvancedDataExportPanel = ({ darkMode, stats }) => {
             value={exportFormat}
             onChange={(e) => setExportFormat(e.target.value)}
             className={`w-full p-2 text-xs rounded-lg border ${
-          darkMode 
+              darkMode 
                 ? 'bg-gray-800 border-gray-600 text-white' 
                 : 'bg-white border-gray-300 text-gray-900'
             }`}
@@ -837,7 +837,7 @@ const EnhancedSystemStatusPanel = ({ darkMode }) => {
               {/* Load Bar */}
               <div className="relative">
                 <div className={`h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} overflow-hidden`}>
-            <motion.div
+                  <motion.div 
                     className={`h-full bg-${loadColor}-500 rounded-full`}
                     initial={{ width: 0 }}
                     animate={{ width: `${status.load}%` }}
@@ -895,7 +895,7 @@ const QuickMetricsPanel = ({ darkMode, stats }) => {
     <motion.div 
       className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
       initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       {darkMode && <div className="card-glow"></div>}
@@ -940,7 +940,7 @@ const QuickMetricsPanel = ({ darkMode, stats }) => {
             </motion.div>
           );
         })}
-    </div>
+      </div>
     </motion.div>
   );
 };
@@ -1062,89 +1062,89 @@ const RealPerformanceRadarChart = ({ darkMode }) => {
         </div>
       ) : (
         <div className="w-full flex justify-center relative z-10">
-            <svg width={size} height={size} className="overflow-visible">
-              <defs>
-                <radialGradient id="radarGradient" cx="50%" cy="50%">
-                  <stop offset="0%" stopColor={darkMode ? "rgba(0, 255, 255, 0.3)" : "rgba(79, 70, 229, 0.3)"} />
-                  <stop offset="100%" stopColor={darkMode ? "rgba(0, 255, 255, 0.05)" : "rgba(79, 70, 229, 0.05)"} />
-                </radialGradient>
-              </defs>
+          <svg width={size} height={size} className="overflow-visible">
+            <defs>
+              <radialGradient id="radarGradient" cx="50%" cy="50%">
+                <stop offset="0%" stopColor={darkMode ? "rgba(0, 255, 255, 0.3)" : "rgba(79, 70, 229, 0.3)"} />
+                <stop offset="100%" stopColor={darkMode ? "rgba(0, 255, 255, 0.05)" : "rgba(79, 70, 229, 0.05)"} />
+              </radialGradient>
+            </defs>
+            
+            {/* Grid circles */}
+            {[0.2, 0.4, 0.6, 0.8, 1].map((scale, index) => (
+              <circle
+                key={index}
+                cx={center}
+                cy={center}
+                r={radius * scale}
+                fill="none"
+                stroke={darkMode ? "rgba(0, 255, 255, 0.2)" : "rgba(79, 70, 229, 0.2)"}
+                strokeWidth="1"
+              />
+            ))}
+            
+            {/* Grid lines */}
+            {radarData.map((_, index) => {
+              const angle = (index * 2 * Math.PI) / radarData.length - Math.PI / 2;
+              const endX = center + radius * Math.cos(angle);
+              const endY = center + radius * Math.sin(angle);
               
-              {/* Grid circles */}
-              {[0.2, 0.4, 0.6, 0.8, 1].map((scale, index) => (
-                <circle
+              return (
+                <line
                   key={index}
-                  cx={center}
-                  cy={center}
-                  r={radius * scale}
-                  fill="none"
+                  x1={center}
+                  y1={center}
+                  x2={endX}
+                  y2={endY}
                   stroke={darkMode ? "rgba(0, 255, 255, 0.2)" : "rgba(79, 70, 229, 0.2)"}
                   strokeWidth="1"
                 />
-              ))}
-              
-              {/* Grid lines */}
-              {radarData.map((_, index) => {
-                const angle = (index * 2 * Math.PI) / radarData.length - Math.PI / 2;
-                const endX = center + radius * Math.cos(angle);
-                const endY = center + radius * Math.sin(angle);
-                
-                return (
-                  <line
-                    key={index}
-                    x1={center}
-                    y1={center}
-                    x2={endX}
-                    y2={endY}
-                    stroke={darkMode ? "rgba(0, 255, 255, 0.2)" : "rgba(79, 70, 229, 0.2)"}
-                    strokeWidth="1"
-                  />
-                );
-              })}
-              
-              {/* Data area */}
-              <motion.path
-                d={pathData}
-                fill="url(#radarGradient)"
-                stroke={darkMode ? "#00FFFF" : "#4F46E5"}
-                strokeWidth="2"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1, ease: "easeInOut" }}
-              />
-              
-              {/* Data points */}
-              {points.map((point, index) => (
-                <motion.circle
-                  key={index}
-                  cx={point.x}
-                  cy={point.y}
+              );
+            })}
+            
+            {/* Data area */}
+            <motion.path
+              d={pathData}
+              fill="url(#radarGradient)"
+              stroke={darkMode ? "#00FFFF" : "#4F46E5"}
+              strokeWidth="2"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1, ease: "easeInOut" }}
+            />
+            
+            {/* Data points */}
+            {points.map((point, index) => (
+              <motion.circle
+                key={index}
+                cx={point.x}
+                cy={point.y}
                 r="3"
-                  fill={darkMode ? "#00FFFF" : "#4F46E5"}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.1, type: "spring" }}
-                />
-              ))}
-              
-              {/* Labels */}
-              {radarData.map((item, index) => {
-                const labelPos = getLabelPosition(index);
-                return (
-                  <text
-                    key={index}
-                    x={labelPos.x}
-                    y={labelPos.y}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-xs font-medium ${darkMode ? 'fill-gray-300' : 'fill-gray-700'}`}
-                  >
-                    {item.name}
-                  </text>
-                );
-              })}
-            </svg>
-          </div>
+                fill={darkMode ? "#00FFFF" : "#4F46E5"}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.1, type: "spring" }}
+              />
+            ))}
+            
+            {/* Labels */}
+            {radarData.map((item, index) => {
+              const labelPos = getLabelPosition(index);
+              return (
+                <text
+                  key={index}
+                  x={labelPos.x}
+                  y={labelPos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className={`text-xs font-medium ${darkMode ? 'fill-gray-300' : 'fill-gray-700'}`}
+                >
+                  {item.name}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
       )}
     </motion.div>
   );
@@ -1367,7 +1367,7 @@ const RealActivityFeed = ({ darkMode }) => {
       
       <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
         {darkMode ? 'ACTIVITY STREAM' : 'Recent Activity'}
-        </h3>
+      </h3>
       
       <div className="space-y-2 max-h-64 overflow-y-auto relative z-10">
         <AnimatePresence>
@@ -1535,19 +1535,19 @@ const RealMonthlyRevenueChart = ({ darkMode }) => {
               {/* Data points */}
               {revenueData.map((item, index) => (
                 <motion.circle
-              key={index}
+                  key={index}
                   cx={xScale(index)}
                   cy={yScale(item.value)}
                   r="2"
                   fill={darkMode ? "#00FFFF" : "#4F46E5"}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-              transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.1 }}
                 />
               ))}
             </g>
           </svg>
-              </div>
+        </div>
       )}
     </motion.div>
   );
@@ -1580,7 +1580,7 @@ const DonutChart = ({ data, title, darkMode }) => {
             <div className="text-center">
               <PieChart className={`h-8 w-8 mx-auto mb-1 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
               <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>No data</p>
-          </div>
+            </div>
           )}
         </div>
       </motion.div>
@@ -1671,7 +1671,7 @@ const DonutChart = ({ data, title, darkMode }) => {
             <div className="text-center">
               <div className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                 {total}
-        </div>
+              </div>
               <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Total
               </div>
@@ -1689,13 +1689,13 @@ const DonutChart = ({ data, title, darkMode }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-                <div 
+              <div 
                 className="w-2 h-2 rounded-full mr-1 flex-shrink-0"
                 style={{ backgroundColor: segment.color }}
               />
               <span className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} truncate`}>
                 {segment.name}: {segment.value}
-                </span>
+              </span>
             </motion.div>
           ))}
         </div>
@@ -2061,7 +2061,7 @@ const AdminDashboard = () => {
         <SecretInvasionBackground 
           intensity={darkMode ? 0.8 : 0.6} 
           enableGlitch={darkMode} 
-      />
+        />
       </div>
 
       {/* Main Content */}
@@ -2073,10 +2073,10 @@ const AdminDashboard = () => {
           <div className="flex items-center gap-4">
             <div>
               <h1 className={`text-xl md:text-2xl font-bold ${
-              darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
-            }`}>
-              {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Dashboard'}
-            </h1>
+                darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
+              }`}>
+                {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Dashboard'}
+              </h1>
               <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {darkMode ? 'QUANTUM INTERFACE ACTIVE' : 'Management & Analytics Hub'}
               </p>
@@ -2108,88 +2108,88 @@ const AdminDashboard = () => {
 
         {/* Scrollable Content */}
         <main className="p-4 md:p-6 xl:p-8 max-w-[1600px] mx-auto overflow-x-auto">
-            {/* Global Notification */}
-            <AnimatePresence>
-              {notification && (
-                <motion.div 
-                  className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-                    notification.type === 'success' 
-                      ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
-                      : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
-                  } border font-bold`}
-                  initial={{ opacity: 0, y: -50, x: 50 }}
-                  animate={{ opacity: 1, y: 0, x: 0 }}
-                  exit={{ opacity: 0, y: -50, x: 50 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {notification.message}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Global Notification */}
+          <AnimatePresence>
+            {notification && (
+              <motion.div 
+                className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+                  notification.type === 'success' 
+                    ? darkMode ? 'bg-green-900 border-green-700 text-green-100' : 'bg-green-100 border-green-400 text-green-800'
+                    : darkMode ? 'bg-red-900 border-red-700 text-red-100' : 'bg-red-100 border-red-400 text-red-800'
+                } border font-bold`}
+                initial={{ opacity: 0, y: -50, x: 50 }}
+                animate={{ opacity: 1, y: 0, x: 0 }}
+                exit={{ opacity: 0, y: -50, x: 50 }}
+                transition={{ duration: 0.3 }}
+              >
+                {notification.message}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Header Section */}
-            <motion.div 
+          <motion.div 
             className="text-center space-y-4 mb-8"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h1 className={`text-2xl md:text-4xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'}`}>
               {darkMode ? 'NEURAL ANALYTICS HUB' : 'Enhanced Analytics Dashboard'}
-                  </h1>
+            </h1>
             <p className={`text-sm md:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} max-w-2xl mx-auto`}>
-                    {darkMode 
+              {darkMode 
                 ? 'REAL-TIME QUANTUM DATA PROCESSING WITH ADVANCED NEURAL MONITORING' 
                 : 'Comprehensive real-time analytics with advanced data visualization'
-                    }
-                  </p>
+              }
+            </p>
             <div className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'} flex items-center justify-center gap-2 flex-wrap`}>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
-                </div>
-                    {realTimeEnabled && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse" />
-                        Live
-                      </span>
-                    )}
               </div>
-            </motion.div>
+              {realTimeEnabled && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse" />
+                  Live
+                </span>
+              )}
+            </div>
+          </motion.div>
 
-            {/* Alert Section */}
-            {(stats.lowStockProducts > 0 || stats.pendingApprovals > 0) && (
-              <motion.div 
+          {/* Alert Section */}
+          {(stats.lowStockProducts > 0 || stats.pendingApprovals > 0) && (
+            <motion.div 
               className={`p-4 rounded-xl border-l-4 ${
-                  darkMode 
-                    ? 'bg-yellow-900/20 border-yellow-500 text-yellow-200' 
-                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                darkMode 
+                  ? 'bg-yellow-900/20 border-yellow-500 text-yellow-200' 
+                  : 'bg-yellow-50 border-yellow-400 text-yellow-800'
               } mb-8`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
-                <div className="flex items-center">
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="flex items-center">
                 <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
-                  <div>
+                <div>
                   <h3 className="font-bold">
-                      {darkMode ? 'SYSTEM ALERTS DETECTED' : 'Action Required'}
-                    </h3>
+                    {darkMode ? 'SYSTEM ALERTS DETECTED' : 'Action Required'}
+                  </h3>
                   <div className="mt-1 text-sm grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {stats.lowStockProducts > 0 && (
+                    {stats.lowStockProducts > 0 && (
                       <div>{stats.lowStockProducts} products are running low on stock</div>
-                      )}
-                      {stats.pendingApprovals > 0 && (
+                    )}
+                    {stats.pendingApprovals > 0 && (
                       <div>{stats.pendingApprovals} users are pending approval</div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
-              </motion.div>
-            )}
+              </div>
+            </motion.div>
+          )}
 
           {/* Main Grid Layout - FIXED FOR SPACING */}
           <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
-              
+            
             {/* Left Column - Stats & Actions */}
             <div className="xl:col-span-4 space-y-4 md:space-y-6 w-full">
               {/* Stats Cards */}
@@ -2203,18 +2203,18 @@ const AdminDashboard = () => {
                     trend={stat.trend}
                     icon={stat.icon}
                     color={stat.color}
-                  darkMode={darkMode} 
+                    darkMode={darkMode}
                     loading={loading}
                   />
-                            ))}
-                          </div>
+                ))}
+              </div>
 
               {/* Comprehensive Actions Panel */}
               <ComprehensiveActionsPanel darkMode={darkMode} />
 
               {/* Digital Clock */}
               <DigitalClock darkMode={darkMode} />
-                        </div>
+            </div>
 
             {/* Middle Column - Charts */}
             <div className="xl:col-span-5 space-y-4 md:space-y-6 w-full">
@@ -2230,43 +2230,43 @@ const AdminDashboard = () => {
                   title={darkMode ? 'ORDER STATUS MATRIX' : 'Order Status'} 
                   darkMode={darkMode} 
                 />
-                </div>
-                
+              </div>
+
               {/* Bottom Row - Performance & Revenue */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                  <RealPerformanceRadarChart darkMode={darkMode} />
-                  <RealMonthlyRevenueChart darkMode={darkMode} />
-                </div>
+                <RealPerformanceRadarChart darkMode={darkMode} />
+                <RealMonthlyRevenueChart darkMode={darkMode} />
+              </div>
 
               {/* Quick Metrics Panel */}
               <QuickMetricsPanel darkMode={darkMode} stats={stats} />
-              </div>
+            </div>
 
             {/* Right Column - Enhanced Activity, Analytics & System */}
             <div className="xl:col-span-3 space-y-4 md:space-y-6 w-full">
-                <RealActivityFeed darkMode={darkMode} />
+              <RealActivityFeed darkMode={darkMode} />
               <RealUserActivityHeatmap darkMode={darkMode} />
               <SmartNotificationSystem darkMode={darkMode} />
               <EnhancedActivityAnalytics darkMode={darkMode} />
               <EnhancedSystemStatusPanel darkMode={darkMode} />
               <AdvancedDataExportPanel darkMode={darkMode} stats={stats} />
-              </div>
-                            </div>
+            </div>
+          </div>
 
           {/* Footer Section */}
-                <motion.div 
+          <motion.div 
             className={`text-center py-6 md:py-8 mt-8 border-t ${darkMode ? 'border-gray-800 text-gray-500' : 'border-gray-200 text-gray-400'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-            >
+            transition={{ delay: 1 }}
+          >
             <p className="text-xs md:text-sm">
               {darkMode 
                 ? 'NEURAL INTERFACE v2.0 - QUANTUM ANALYTICS SYSTEM ACTIVE' 
                 : 'Enhanced Admin Dashboard v2.0 - Real-time Analytics Enabled'
               }
             </p>
-            </motion.div>
+          </motion.div>
         </main>
       </div>
     </div>
