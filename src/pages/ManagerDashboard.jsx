@@ -352,9 +352,15 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Order Processing</h2>
+    <div className={`${
+      darkMode 
+        ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+        : 'neumorph-card bg-white border-gray-100'
+    } rounded-xl overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'} flex justify-between items-center`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'ORDER STREAM CONTROL' : 'Order Processing'}
+        </h2>
         <div className="flex items-center space-x-3">
           {selectedOrders.size > 0 && (
             <div className="flex items-center space-x-2">
@@ -364,21 +370,33 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
               <button
                 onClick={() => handleBulkStatusUpdate('processing')}
                 disabled={bulkUpdating}
-                className="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 disabled:opacity-50"
+                className={`${
+                  darkMode 
+                    ? 'cyber-btn bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20' 
+                    : 'neumorph-btn bg-blue-600 hover:bg-blue-700'
+                } text-white px-2 py-1 rounded text-xs disabled:opacity-50 transition-all duration-300`}
               >
                 Process
               </button>
               <button
                 onClick={() => handleBulkStatusUpdate('completed')}
                 disabled={bulkUpdating}
-                className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                className={`${
+                  darkMode 
+                    ? 'cyber-btn bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/20' 
+                    : 'neumorph-btn bg-green-600 hover:bg-green-700'
+                } text-white px-2 py-1 rounded text-xs disabled:opacity-50 transition-all duration-300`}
               >
                 Complete
               </button>
               <button
                 onClick={() => handleBulkStatusUpdate('cancelled')}
                 disabled={bulkUpdating}
-                className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 disabled:opacity-50"
+                className={`${
+                  darkMode 
+                    ? 'cyber-btn bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/20' 
+                    : 'neumorph-btn bg-red-600 hover:bg-red-700'
+                } text-white px-2 py-1 rounded text-xs disabled:opacity-50 transition-all duration-300`}
               >
                 Cancel
               </button>
@@ -388,7 +406,9 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className={`px-3 py-1 rounded-md text-sm ${
-              darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+              darkMode 
+                ? 'cyber-btn bg-gray-800 border-cyan-500/50 text-cyan-300' 
+                : 'neumorph-btn bg-white border-gray-300'
             } border focus:ring-indigo-500 focus:border-indigo-500`}
           >
             <option value="pending">Pending ({orderCounts.pending})</option>
@@ -401,28 +421,28 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
       </div>
       
       {/* Status Summary */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className={`p-6 border-b ${darkMode ? 'border-cyan-500/20' : 'border-gray-200'}`}>
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}`}>
               {orderCounts.pending}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Pending</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400 cyber-glow' : 'text-blue-600'}`}>
               {orderCounts.processing}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Processing</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}`}>
               {orderCounts.completed}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Completed</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-red-400 cyber-glow' : 'text-red-600'}`}>
               {orderCounts.cancelled}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Cancelled</div>
@@ -432,7 +452,11 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
 
       {/* Bulk selection controls */}
       {filteredOrders.length > 0 && (
-        <div className={`px-6 py-3 border-b ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-100 bg-gray-50'}`}>
+        <div className={`px-6 py-3 border-b ${
+          darkMode 
+            ? 'border-cyan-500/30 bg-gray-800/50' 
+            : 'border-gray-100 bg-gray-50'
+        }`}>
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -450,9 +474,11 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
       {/* Orders List */}
       <div className="max-h-80 overflow-y-auto">
         {filteredOrders.length > 0 ? (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className={`divide-y ${darkMode ? 'divide-cyan-500/20' : 'divide-gray-200'}`}>
             {filteredOrders.slice(0, 15).map((order) => (
-              <div key={order.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <div key={order.id} className={`p-4 ${
+                darkMode ? 'hover:bg-gray-800/50' : 'hover:bg-gray-50'
+              } transition-colors duration-200`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <input
@@ -479,7 +505,9 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
                       onChange={(e) => handleStatusChange(order.id, e.target.value)}
                       disabled={updating === order.id}
                       className={`text-xs rounded-md ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+                        darkMode 
+                          ? 'cyber-btn bg-gray-800 border-cyan-500/50 text-cyan-300' 
+                          : 'neumorph-btn bg-white border-gray-300'
                       } border focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50`}
                     >
                       <option value="pending">Pending</option>
@@ -488,11 +516,17 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
                       <option value="cancelled">Cancelled</option>
                     </select>
                     {updating === order.id && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-indigo-500"></div>
+                      <div className={`animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 ${
+                        darkMode ? 'border-cyan-500' : 'border-indigo-500'
+                      }`}></div>
                     )}
                     <Link 
                       to={`/orders/${order.id}`}
-                      className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
+                      className={`text-sm ${
+                        darkMode 
+                          ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' 
+                          : 'text-indigo-600 hover:text-indigo-800'
+                      } font-medium transition-colors duration-200`}
                     >
                       View
                     </Link>
@@ -510,10 +544,18 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
         )}
       </div>
       
-      <div className={`border-t ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-100 bg-gray-50'} px-6 py-3`}>
+      <div className={`border-t ${
+        darkMode 
+          ? 'border-cyan-500/30 bg-gray-800/50' 
+          : 'border-gray-100 bg-gray-50'
+      } px-6 py-3`}>
         <Link 
           to="/orders" 
-          className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} flex items-center justify-center`}
+          className={`text-sm font-medium ${
+            darkMode 
+              ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' 
+              : 'text-indigo-600 hover:text-indigo-800'
+          } flex items-center justify-center transition-colors duration-200`}
         >
           View All Orders
           <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -525,7 +567,7 @@ const OrderProcessing = ({ orders, darkMode, onUpdateOrderStatus, onBulkUpdate }
   );
 };
 
-// Enhanced Business Performance with real data
+// Enhanced Business Performance with real data and theme integration
 const BusinessPerformance = ({ stats, darkMode }) => {
   // Generate real sales data from orders
   const generateRealSalesData = () => {
