@@ -1863,6 +1863,18 @@ const AdminDashboard = () => {
         user.status === 'pending_approval' || user.status === 'pending'
       ).length;
 
+      // User status distribution for donut chart
+      const userStatusCounts = users.reduce((acc, user) => {
+        const status = user.status || 'unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const userStatusChartData = Object.entries(userStatusCounts).map(([status, count]) => ({
+        name: status.replace('_', ' ').toUpperCase(),
+        value: count
+      }));
+
       // Process products data
       const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const lowStock = products.filter(product => (product.stock || 0) <= 10).length;
@@ -1875,8 +1887,6 @@ const AdminDashboard = () => {
           total: data.total || 0,
           status: data.status || 'pending',
           createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-          customerName: data.customerName || 'Unknown Customer',
-          itemCount: data.itemCount || 0,
           ...data
         };
       });
@@ -1884,33 +1894,17 @@ const AdminDashboard = () => {
       const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
       const pendingOrders = allOrders.filter(order => order.status === 'pending').length;
 
-      // Generate enhanced activities from real data
-      const recentActivities = [
-        ...allOrders.slice(0, 3).map(order => ({
-          id: `order-${order.id}`,
-          type: 'order',
-          action: 'New Order Placed',
-          description: `Order #${order.id.substring(0, 8)} for ${order.total}`,
-          timestamp: order.createdAt,
-          details: `Customer: ${order.customerName}, Items: ${order.itemCount}`
-        })),
-        ...products.filter(p => (p.stock || 0) <= 10).slice(0, 2).map(product => ({
-          id: `inventory-${product.id}`,
-          type: 'inventory',
-          action: 'Low Stock Alert',
-          description: `${product.name} is running low`,
-          timestamp: new Date(),
-          details: `Current stock: ${product.stock} units, Threshold: 10 units`
-        })),
-        ...users.filter(u => u.status === 'pending' || u.status === 'pending_approval').slice(0, 2).map(user => ({
-          id: `user-${user.id}`,
-          type: 'user',
-          action: 'User Registration',
-          description: `${user.username || user.email || 'New user'} registered`,
-          timestamp: user.createdAt ? user.createdAt.toDate() : new Date(),
-          details: `Email: ${user.email}, Status: Pending approval`
-        }))
-      ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
+      // Order status distribution for donut chart
+      const orderStatusCounts = allOrders.reduce((acc, order) => {
+        const status = order.status || 'unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const orderStatusChartData = Object.entries(orderStatusCounts).map(([status, count]) => ({
+        name: status.replace('_', ' ').toUpperCase(),
+        value: count
+      }));
 
       setStats({
         totalUsers: users.length,
@@ -1923,7 +1917,8 @@ const AdminDashboard = () => {
         activeUsers
       });
 
-      setActivities(recentActivities);
+      setUserStatusData(userStatusChartData);
+      setOrderStatusData(orderStatusChartData);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -1946,22 +1941,13 @@ const AdminDashboard = () => {
     }
   }, [realTimeEnabled, fetchAdminData]);
 
-  // Initial data fetch
   useEffect(() => {
     fetchAdminData();
   }, [fetchAdminData]);
 
-  // Enhanced notification system
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleDateSelect = (date, data) => {
-    showNotification(
-      `${darkMode ? 'DATE SELECTED:' : 'Selected:'} ${date?.toLocaleDateString()} - ${data?.orders || 0} orders, ${data?.revenue?.toFixed(2) || '0.00'} revenue`,
-      'success'
-    );
   };
 
   const toggleRealTime = useCallback(() => {
@@ -1972,39 +1958,14 @@ const AdminDashboard = () => {
     );
   }, [realTimeEnabled, darkMode]);
 
-  // Manual refresh function
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
     await fetchAdminData();
     showNotification(darkMode ? 'NEURAL DATA REFRESHED' : 'Data refreshed successfully', 'success');
-    setTimeout(() => setIsRefreshing(false), 500);
   }, [fetchAdminData, darkMode]);
 
-  // Export function
-  const handleExportReport = useCallback(() => {
-    const data = {
-      stats,
-      activities: activities.slice(0, 10),
-      timestamp: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `admin-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    showNotification(darkMode ? 'NEURAL REPORT EXPORTED' : 'Report exported successfully', 'success');
-  }, [stats, activities, darkMode]);
-
-  // Enhanced stat cards with real data
   const statCards = useMemo(() => [
     { 
-      title: darkMode ? 'NEURAL ENTITIES' : 'Total Users', 
+      title: darkMode ? 'TOTAL ENTITIES' : 'Total Users', 
       value: processedStats.users.value, 
       icon: Users, 
       color: 'blue',
@@ -2028,23 +1989,23 @@ const AdminDashboard = () => {
       trend: processedStats.revenue.trend
     },
     { 
-      title: darkMode ? 'PENDING TASKS' : 'Pending Approvals', 
-      value: stats.pendingApprovals, 
-      icon: Clock, 
-      color: 'yellow',
-      change: stats.pendingApprovals > 0 ? 'Action Required' : 'All Clear',
-      trend: stats.pendingApprovals > 0 ? 'neutral' : 'up'
+      title: darkMode ? 'INVENTORY COUNT' : 'Total Products', 
+      value: processedStats.products.value, 
+      icon: Package, 
+      color: 'orange',
+      change: processedStats.products.change,
+      trend: processedStats.products.trend
     }
   ], [processedStats, stats, darkMode]);
 
   if (loading) {
     return (
-      <div className={`flex h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} relative`}>
         <div className="fixed inset-0 pointer-events-none z-0">
           <SecretInvasionBackground intensity={0.3} enableGlitch={false} />
         </div>
         
-        <div className="flex items-center justify-center w-full relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10">
           <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
@@ -2062,13 +2023,13 @@ const AdminDashboard = () => {
 
   if (error) {
     return (
-      <div className={`flex h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} relative`}>
         <div className="fixed inset-0 pointer-events-none z-0">
           <SecretInvasionBackground intensity={0.3} enableGlitch={darkMode} />
         </div>
         
         <motion.div 
-          className="flex items-center justify-center w-full relative z-10"
+          className="flex items-center justify-center min-h-screen relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -2094,38 +2055,35 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className={`flex h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Sidebar */}
-      <AdminSidebar 
-        darkMode={darkMode} 
-        isOpen={sidebarOpen} 
-        setIsOpen={setSidebarOpen} 
+    <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} relative`}>
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <SecretInvasionBackground 
+          intensity={darkMode ? 0.8 : 0.6} 
+          enableGlitch={darkMode} 
       />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content */}
+      <div className="relative z-10">
         {/* Top Header Bar */}
-        <header className={`flex items-center justify-between px-6 py-4 border-b ${
-          darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
-        } relative z-20`}>
+        <header className={`flex items-center justify-between px-4 md:px-6 py-4 border-b backdrop-blur-sm ${
+          darkMode ? 'bg-gray-900/80 border-gray-800' : 'bg-white/80 border-gray-200'
+        }`}>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-              }`}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            
-            <h1 className={`text-2xl font-bold ${
+            <div>
+              <h1 className={`text-xl md:text-2xl font-bold ${
               darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'
             }`}>
               {darkMode ? 'NEURAL COMMAND CENTER' : 'Admin Dashboard'}
             </h1>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                {darkMode ? 'QUANTUM INTERFACE ACTIVE' : 'Management & Analytics Hub'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <RealTimeToggle 
               enabled={realTimeEnabled} 
               onToggle={toggleRealTime} 
@@ -2134,42 +2092,22 @@ const AdminDashboard = () => {
             
             <button
               onClick={handleRefresh}
-              disabled={isRefreshing}
               className={`p-2 rounded-lg transition-colors ${
                 darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
               }`}
               title="Refresh Data"
             >
-              <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''} ${
+              <RefreshCw className={`h-5 w-5 ${
                 darkMode ? 'text-gray-400' : 'text-gray-600'
               }`} />
-            </button>
-
-            <button
-              onClick={handleExportReport}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
-              }`}
-              title="Export Report"
-            >
-              <Download className={`h-5 w-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
             </button>
             
             <ThemeToggle />
           </div>
         </header>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-y-auto relative">
-          {/* SecretInvasion Background */}
-          <div className="fixed inset-0 pointer-events-none z-0">
-            <SecretInvasionBackground 
-              intensity={darkMode ? 0.8 : 0.6} 
-              enableGlitch={darkMode} 
-            />
-          </div>
-
-          <div className="container mx-auto px-6 py-8 max-w-7xl relative z-10">
+        {/* Scrollable Content */}
+        <main className="p-4 md:p-6 xl:p-8 max-w-[1600px] mx-auto overflow-x-auto">
             {/* Global Notification */}
             <AnimatePresence>
               {notification && (
@@ -2189,70 +2127,73 @@ const AdminDashboard = () => {
               )}
             </AnimatePresence>
 
-            {/* Breadcrumb Navigation */}
+          {/* Header Section */}
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Breadcrumb darkMode={darkMode} />
-            </motion.div>
-
-            {/* Enhanced Header */}
-            <motion.div 
-              className="mb-8"
+            className="text-center space-y-4 mb-8"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-                <div>
-                  <h1 className={`text-4xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900 neumorph-title'} mb-2`}>
-                    {darkMode ? 'NEURAL COMMAND CENTER' : 'Main Admin Components'}
+            <h1 className={`text-2xl md:text-4xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'}`}>
+              {darkMode ? 'NEURAL ANALYTICS HUB' : 'Enhanced Analytics Dashboard'}
                   </h1>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
+            <p className={`text-sm md:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'} max-w-2xl mx-auto`}>
                     {darkMode 
-                      ? 'ADVANCED NEURAL INTERFACE WITH QUANTUM ANALYTICS AND REAL-TIME MONITORING' 
-                      : 'Comprehensive analytics, real-time monitoring, and advanced data visualization'
+                ? 'REAL-TIME QUANTUM DATA PROCESSING WITH ADVANCED NEURAL MONITORING' 
+                : 'Comprehensive real-time analytics with advanced data visualization'
                     }
                   </p>
+            <div className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'} flex items-center justify-center gap-2 flex-wrap`}>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <span className={`text-sm ${darkMode ? 'text-gray-400 cyber-title' : 'text-gray-500'} font-medium`}>
-                    {darkMode ? 'LAST SYNC: ' : 'Updated: '}{lastUpdated.toLocaleTimeString()}
                     {realTimeEnabled && (
-                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse" />
                         Live
                       </span>
                     )}
-                  </span>
-                </div>
-              </div>
-
-              {/* Filter Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
-                <FilterDropdown
-                  title="Status"
-                  options={['All', 'Active', 'Pending', 'Suspended']}
-                  selected={statusFilter}
-                  onSelect={setStatusFilter}
-                  darkMode={darkMode}
-                />
-                
-                <FilterDropdown
-                  title="Activity"
-                  options={['All', 'Orders', 'Inventory', 'Users']}
-                  selected={activityFilter}
-                  onSelect={setActivityFilter}
-                  darkMode={darkMode}
-                />
               </div>
             </motion.div>
 
-            {/* Enhanced Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <AnimatePresence>
+            {/* Alert Section */}
+            {(stats.lowStockProducts > 0 || stats.pendingApprovals > 0) && (
+              <motion.div 
+              className={`p-4 rounded-xl border-l-4 ${
+                  darkMode 
+                    ? 'bg-yellow-900/20 border-yellow-500 text-yellow-200' 
+                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+              } mb-8`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                  <div>
+                  <h3 className="font-bold">
+                      {darkMode ? 'SYSTEM ALERTS DETECTED' : 'Action Required'}
+                    </h3>
+                  <div className="mt-1 text-sm grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {stats.lowStockProducts > 0 && (
+                      <div>{stats.lowStockProducts} products are running low on stock</div>
+                      )}
+                      {stats.pendingApprovals > 0 && (
+                      <div>{stats.pendingApprovals} users are pending approval</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+          {/* Main Grid Layout - FIXED FOR SPACING */}
+          <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-6">
+              
+            {/* Left Column - Stats & Actions */}
+            <div className="xl:col-span-4 space-y-4 md:space-y-6 w-full">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 gap-3 md:gap-4">
                 {statCards.map((stat, index) => (
                   <EnhancedMetricsCard
                     key={index}
@@ -2262,269 +2203,70 @@ const AdminDashboard = () => {
                     trend={stat.trend}
                     icon={stat.icon}
                     color={stat.color}
-                    darkMode={darkMode}
+                  darkMode={darkMode} 
                     loading={loading}
                   />
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* Alert Section */}
-            {(stats.lowStockProducts > 0 || stats.pendingApprovals > 0) && (
-              <motion.div 
-                className={`mb-8 p-4 rounded-xl border-l-4 ${
-                  darkMode 
-                    ? 'bg-yellow-900/20 border-yellow-500 text-yellow-200' 
-                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
-                }`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
-                <div className="flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-3" />
-                  <div>
-                    <h3 className="font-medium">
-                      {darkMode ? 'SYSTEM ALERTS DETECTED' : 'Action Required'}
-                    </h3>
-                    <div className="mt-1 text-sm space-y-1">
-                      {stats.lowStockProducts > 0 && (
-                        <p>{stats.lowStockProducts} products are running low on stock</p>
-                      )}
-                      {stats.pendingApprovals > 0 && (
-                        <p>{stats.pendingApprovals} users are pending approval</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Main Dashboard Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
-              {/* Left Column - Calendar & Charts */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Activity Calendar */}
-                <RealActivityCalendar 
-                  darkMode={darkMode} 
-                  onDateSelect={handleDateSelect}
-                />
-                
-                {/* Enhanced Analytics Section */}
-                <div className="mb-8">
-                  <h2 className={`text-xl font-semibold mb-6 ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-900'}`}>
-                    {darkMode ? 'NEURAL ANALYTICS MATRIX' : 'Analytics Overview'}
-                  </h2>
-                  <Suspense fallback={
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}>
-                          {darkMode && <div className="card-glow"></div>}
-                          <SkeletonLoader className="h-6 w-32 mb-4" darkMode={darkMode} />
-                          <div className="space-y-3 relative z-10">
-                            {[...Array(4)].map((_, j) => (
-                              <SkeletonLoader key={j} className="h-8 w-full" darkMode={darkMode} />
                             ))}
                           </div>
+
+              {/* Comprehensive Actions Panel */}
+              <ComprehensiveActionsPanel darkMode={darkMode} />
+
+              {/* Digital Clock */}
+              <DigitalClock darkMode={darkMode} />
                         </div>
-                      ))}
-                    </div>
-                  }>
-                    <EnhancedAnalytics darkMode={darkMode} />
-                  </Suspense>
+
+            {/* Middle Column - Charts */}
+            <div className="xl:col-span-5 space-y-4 md:space-y-6 w-full">
+              {/* Top Row - Donut Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                <DonutChart 
+                  data={userStatusData} 
+                  title={darkMode ? 'USER STATUS MATRIX' : 'User Status'} 
+                  darkMode={darkMode} 
+                />
+                <DonutChart 
+                  data={orderStatusData} 
+                  title={darkMode ? 'ORDER STATUS MATRIX' : 'Order Status'} 
+                  darkMode={darkMode} 
+                />
                 </div>
                 
-                {/* Charts Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                  <RealSalesFunnelChart darkMode={darkMode} />
+              {/* Bottom Row - Performance & Revenue */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                   <RealPerformanceRadarChart darkMode={darkMode} />
                   <RealMonthlyRevenueChart darkMode={darkMode} />
-                  <RealUserActivityHeatmap darkMode={darkMode} />
                 </div>
+
+              {/* Quick Metrics Panel */}
+              <QuickMetricsPanel darkMode={darkMode} stats={stats} />
               </div>
 
-              {/* Right Column - Activity Feed & Performance */}
-              <div className="space-y-8">
+            {/* Right Column - Enhanced Activity, Analytics & System */}
+            <div className="xl:col-span-3 space-y-4 md:space-y-6 w-full">
                 <RealActivityFeed darkMode={darkMode} />
-                <RealPerformanceMetrics darkMode={darkMode} />
-                <RealUserAnalyticsChart darkMode={darkMode} />
+              <RealUserActivityHeatmap darkMode={darkMode} />
+              <SmartNotificationSystem darkMode={darkMode} />
+              <EnhancedActivityAnalytics darkMode={darkMode} />
+              <EnhancedSystemStatusPanel darkMode={darkMode} />
+              <AdvancedDataExportPanel darkMode={darkMode} stats={stats} />
               </div>
-
-              {/* Right Column - Activity Feed & Quick Actions */}
-              <div className="space-y-8">
-                <EnhancedActivityTimeline activities={activities} darkMode={darkMode} />
-                
-                {/* Quick Actions Panel */}
-                <motion.div 
-                  className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  {darkMode && <div className="card-glow"></div>}
-                  <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-6 relative z-10`}>
-                    {darkMode ? 'NEURAL COMMAND INTERFACE' : 'Quick Actions'}
-                  </h3>
-                  
-                  <div className="grid grid-cols-2 gap-4 relative z-10">
-                    {[
-                      { title: 'Manage Users', icon: Users, link: '/admin/users', color: 'blue' },
-                      { title: 'View Analytics', icon: BarChart3, link: '/admin/analytics', color: 'green' },
-                      { title: 'System Settings', icon: Settings, link: '/admin/settings', color: 'purple' },
-                      { title: 'Security Center', icon: Eye, link: '/admin/security', color: 'red' }
-                    ].map((action, index) => (
-                      <motion.div
-                        key={action.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <Link
-                          to={action.link}
-                          className={`block p-4 rounded-lg border transition-all group ${
-                            darkMode 
-                              ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-800 hover:border-gray-600' 
-                              : 'bg-white border-gray-200 hover:shadow-lg hover:border-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className={`font-medium text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {action.title}
-                              </h4>
-                              <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {darkMode ? 'EXECUTE' : 'Manage'}
-                              </p>
                             </div>
-                            <div className={`p-2 rounded-lg ${
-                              darkMode ? `bg-${action.color}-900/30` : `bg-${action.color}-100`
-                            } group-hover:scale-110 transition-transform`}>
-                              <action.icon className={`h-4 w-4 ${
-                                darkMode ? `text-${action.color}-400` : `text-${action.color}-600`
-                              }`} />
-                            </div>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-                
-                {/* System Status Panel */}
-                <motion.div 
-                  className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-6 relative overflow-hidden`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  {darkMode && <div className="card-glow"></div>}
-                  <h3 className={`text-lg font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'} mb-4 relative z-10`}>
-                    {darkMode ? 'SYSTEM STATUS' : 'System Health'}
-                  </h3>
-                  
-                  <div className="space-y-3 relative z-10">
-                    {[
-                      { label: darkMode ? 'DATABASE' : 'Database', status: 'online', color: 'green' },
-                      { label: darkMode ? 'API' : 'API', status: 'online', color: 'green' },
-                      { label: darkMode ? 'STORAGE' : 'Storage', status: 'online', color: 'green' },
-                      { label: darkMode ? 'CACHE' : 'Cache', status: 'optimal', color: 'blue' }
-                    ].map((item, index) => (
-                      <motion.div 
-                        key={index}
-                        className="flex items-center justify-between"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {item.label}
-                        </span>
-                        <div className="flex items-center">
-                          <span className={`text-xs font-bold text-${item.color}-500 mr-2`}>
-                            {item.status.toUpperCase()}
-                          </span>
-                          <div className={`w-2 h-2 rounded-full bg-${item.color}-500 animate-pulse`}></div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-            </div>
 
-            {/* Enhanced Quick Actions Panel (Bottom) */}
-            <motion.div 
-              className={`fixed bottom-6 left-6 ${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative z-50`}
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
+          {/* Footer Section */}
+                <motion.div 
+            className={`text-center py-6 md:py-8 mt-8 border-t ${darkMode ? 'border-gray-800 text-gray-500' : 'border-gray-200 text-gray-400'}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
             >
-              {darkMode && <div className="card-glow"></div>}
-              <div className="relative z-10">
-                <div className="flex items-center mb-3">
-                  <span className={`text-sm font-bold ${darkMode ? 'cyber-title text-cyan-400' : 'text-gray-700'}`}>
-                    {darkMode ? 'QUICK ACCESS MATRIX' : 'Quick Actions'}
-                  </span>
-                </div>
-                
-                {/* Primary Actions Row */}
-                <div className="flex items-center gap-2 mb-2">
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-primary' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/users')}
-                    whileHover={{ scale: 1.05 }}
-                    title="User Management Panel"
-                  >
-                    👥 Users
-                  </motion.button>
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-secondary' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/approvals')}
-                    whileHover={{ scale: 1.05 }}
-                    title="Pending User Approvals"
-                  >
-                    ⏳ Approvals
-                  </motion.button>
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-success' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/analytics')}
-                    whileHover={{ scale: 1.05 }}
-                    title="Advanced Analytics Dashboard"
-                  >
-                    📊 Analytics
-                  </motion.button>
-                </div>
-
-                {/* Secondary Actions Row */}
-                <div className="flex items-center gap-2">
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/security')}
-                    whileHover={{ scale: 1.05 }}
-                    title="Security Center"
-                  >
-                    🔒 Security
-                  </motion.button>
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/settings')}
-                    whileHover={{ scale: 1.05 }}
-                    title="System Settings"
-                  >
-                    ⚙️ Settings
-                  </motion.button>
-                  <motion.button 
-                    className={`${darkMode ? 'cyber-btn cyber-btn-ghost' : 'neumorph-btn'} px-3 py-1 text-xs`}
-                    onClick={() => navigate('/admin/panel')}
-                    whileHover={{ scale: 1.05 }}
-                    title="Legacy Admin Panel"
-                  >
-                    🏛️ Legacy
-                  </motion.button>
-                </div>
-              </div>
+            <p className="text-xs md:text-sm">
+              {darkMode 
+                ? 'NEURAL INTERFACE v2.0 - QUANTUM ANALYTICS SYSTEM ACTIVE' 
+                : 'Enhanced Admin Dashboard v2.0 - Real-time Analytics Enabled'
+              }
+            </p>
             </motion.div>
-          </div>
         </main>
       </div>
     </div>
