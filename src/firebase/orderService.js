@@ -1,4 +1,4 @@
-// src/firebase/orderService.js - Fixed Order Service
+// src/firebase/orderService.js - Fixed Order Service with Bulk Pricing Support
 import { 
   collection, 
   doc, 
@@ -29,14 +29,19 @@ export const createOrderWithStockUpdate = async (orderData) => {
     // Extract items from order data
     const { items, ...orderDetails } = orderData;
     
-    // Calculate subtotal from items
-    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    // Validate items before proceeding
+    validateOrderItems(items);
     
-    // Calculate 10% tax
-    const taxAmount = subtotal * 0.10;
+    // Calculate subtotal from items using the effective price (handles bulk pricing)
+    const subtotal = items.reduce((total, item) => {
+      // Use effectivePrice if available (for bulk pricing), otherwise use price
+      const itemPrice = item.effectivePrice ?? item.price ?? 0;
+      return total + (itemPrice * (item.quantity ?? 0));
+    }, 0);
     
-    // Calculate final total (subtotal + tax)
-    const finalTotal = subtotal + taxAmount;
+    // Use provided totals if available, otherwise calculate
+    const taxAmount = orderDetails.taxAmount ?? orderDetails.gst ?? (subtotal * 0.15); // 15% GST for NZ
+    const finalTotal = orderDetails.totalAmount ?? orderDetails.total ?? (subtotal + taxAmount);
     
     // Validate stock availability before creating order
     for (const item of items) {
@@ -59,10 +64,10 @@ export const createOrderWithStockUpdate = async (orderData) => {
     
     batch.set(orderRef, {
       ...orderDetails,
-      subtotal: subtotal,
-      taxAmount: taxAmount,
-      totalAmount: finalTotal,
-      total: finalTotal, // Keep both for compatibility
+      subtotal: orderDetails.subtotal ?? subtotal,
+      taxAmount: orderDetails.taxAmount ?? orderDetails.gst ?? taxAmount,
+      totalAmount: orderDetails.totalAmount ?? orderDetails.total ?? finalTotal,
+      total: orderDetails.total ?? orderDetails.totalAmount ?? finalTotal, // Keep both for compatibility
       createdAt: timestamp,
       dateCreated: timestamp, // Added for compatibility with OrderDetails component
       updatedAt: timestamp,
@@ -79,15 +84,34 @@ export const createOrderWithStockUpdate = async (orderData) => {
       });
     }
     
-    // Add order items as subcollection
+    // Add order items as subcollection - FIXED: Handle undefined price values
     for (const item of items) {
       const itemRef = doc(collection(db, ORDERS_COLLECTION, orderRef.id, 'orderItems'));
+      
+      // Use effectivePrice if available (for bulk pricing), otherwise use price, default to 0
+      const itemPrice = item.effectivePrice ?? item.price ?? 0;
+      const originalPrice = item.price ?? 0;
+      const itemQuantity = item.quantity ?? 0;
+      
+      // Ensure all values are valid (not undefined)
       batch.set(itemRef, {
-        productId: item.productId,
-        productName: item.productName,
-        price: item.price,
-        quantity: item.quantity,
-        subtotal: item.price * item.quantity
+        productId: item.productId || '',
+        productName: item.productName || '',
+        price: originalPrice, // Original price before any discounts
+        effectivePrice: itemPrice, // Price after bulk discounts
+        quantity: itemQuantity,
+        subtotal: itemPrice * itemQuantity,
+        // Include bulk pricing info if available
+        hasBulkDiscount: item.hasBulkDiscount ?? false,
+        ...(item.hasBulkDiscount && {
+          originalPrice: originalPrice,
+          bulkSavings: (originalPrice - itemPrice) * itemQuantity,
+          bulkPricingInfo: item.bulkPricing || null
+        }),
+        // Additional item metadata
+        sku: item.sku || '',
+        category: item.category || '',
+        imageUrl: item.imageUrl || ''
       });
     }
     
@@ -97,6 +121,57 @@ export const createOrderWithStockUpdate = async (orderData) => {
     return orderRef.id;
   } catch (error) {
     console.error('Error creating order with stock update:', error);
+    throw error;
+  }
+};
+
+// Additional helper function to validate item data before order creation
+export const validateOrderItems = (items) => {
+  const errors = [];
+  
+  if (!items || items.length === 0) {
+    throw new Error('Order must contain at least one item');
+  }
+  
+  items.forEach((item, index) => {
+    // Check for required fields
+    if (!item.productId) {
+      errors.push(`Item ${index + 1}: Missing product ID`);
+    }
+    
+    if (!item.productName) {
+      errors.push(`Item ${index + 1}: Missing product name`);
+    }
+    
+    // Check price - should not be undefined, null, or negative
+    const itemPrice = item.effectivePrice ?? item.price;
+    if (itemPrice === undefined || itemPrice === null || itemPrice < 0) {
+      errors.push(`Item ${index + 1} (${item.productName}): Invalid price`);
+    }
+    
+    // Check quantity
+    if (!item.quantity || item.quantity <= 0) {
+      errors.push(`Item ${index + 1} (${item.productName}): Invalid quantity`);
+    }
+  });
+  
+  if (errors.length > 0) {
+    throw new Error(`Order validation failed:\n${errors.join('\n')}`);
+  }
+  
+  return true;
+};
+
+// Enhanced create order function with validation
+export const createValidatedOrder = async (orderData) => {
+  try {
+    // Validate items before proceeding
+    validateOrderItems(orderData.items);
+    
+    // Proceed with order creation
+    return await createOrderWithStockUpdate(orderData);
+  } catch (error) {
+    console.error('Error creating validated order:', error);
     throw error;
   }
 };
@@ -111,11 +186,12 @@ export const getOrderWithItems = async (orderId) => {
       throw new Error(`Order with ID ${orderId} not found`);
     }
     
-    const orderData = orderDoc.data(); // FIXED: Get the actual data
+    const orderData = orderDoc.data();
     
     // Get order items from subcollection
     const itemsQuery = query(
-      collection(db, ORDERS_COLLECTION, orderId, 'orderItems')
+      collection(db, ORDERS_COLLECTION, orderId, 'orderItems'),
+      orderBy('productName', 'asc')
     );
     
     const itemsSnapshot = await getDocs(itemsQuery);
@@ -128,11 +204,10 @@ export const getOrderWithItems = async (orderId) => {
       });
     });
     
-    // Return combined data with proper field mapping
     return {
       id: orderDoc.id,
       ...orderData,
-      items: items, // FIXED: Use the actual items fetched
+      items,
       // Ensure we have totals with proper field names
       totalAmount: orderData.totalAmount || orderData.total || 0,
       total: orderData.total || orderData.totalAmount || 0
@@ -380,9 +455,42 @@ export const getOrdersByDateRange = async (startDate, endDate, options = {}) => 
   }
 };
 
+// Utility function to calculate order totals from items (useful for validation)
+export const calculateOrderTotals = (items, options = {}) => {
+  const subtotal = items.reduce((total, item) => {
+    const itemPrice = item.effectivePrice ?? item.price ?? 0;
+    return total + (itemPrice * (item.quantity ?? 0));
+  }, 0);
+  
+  const taxRate = options.taxRate ?? 0.15; // Default to 15% GST
+  const taxAmount = subtotal * taxRate;
+  const total = subtotal + taxAmount;
+  
+  // Calculate savings if bulk pricing is applied
+  const originalSubtotal = items.reduce((total, item) => {
+    const originalPrice = item.price ?? 0;
+    return total + (originalPrice * (item.quantity ?? 0));
+  }, 0);
+  
+  const savings = originalSubtotal - subtotal;
+  
+  return {
+    subtotal,
+    originalSubtotal,
+    savings,
+    taxAmount,
+    total,
+    itemCount: items.reduce((count, item) => count + (item.quantity ?? 0), 0),
+    hasBulkDiscount: savings > 0
+  };
+};
+
 // Export all functions
 export default {
   createOrderWithStockUpdate,
+  createValidatedOrder,
+  validateOrderItems,
+  calculateOrderTotals,
   getOrderWithItems,
   updateOrderStatus,
   getOrders,
