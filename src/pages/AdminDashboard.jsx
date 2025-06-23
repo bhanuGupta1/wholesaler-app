@@ -493,17 +493,61 @@ const SmartNotificationSystem = ({ darkMode }) => {
 };
 
 // ===============================================
-// BREADCRUMB NAVIGATION
+// ENHANCED ACTIVITY ANALYTICS
 // ===============================================
-const Breadcrumb = ({ darkMode }) => (
-  <nav className="flex items-center space-x-2 text-sm mb-4">
-    <Link to="/" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'} transition-colors`}>
-      Home
-    </Link>
-    <span className={darkMode ? 'text-gray-600' : 'text-gray-400'}>/</span>
-    <span className={darkMode ? 'text-white' : 'text-gray-900'}>Admin Dashboard</span>
-  </nav>
+const EnhancedActivityAnalytics = ({ darkMode }) => {
+  const [insights, setInsights] = useState([
+    { label: 'Peak Hours', value: '2-4 PM', trend: 'up', insight: 'Most user activity' },
+    { label: 'Conversion Rate', value: '12.8%', trend: 'up', insight: '+2.3% from last week' },
+    { label: 'Avg Session', value: '8m 32s', trend: 'down', insight: 'Quality over quantity' },
+    { label: 'User Retention', value: '78%', trend: 'up', insight: 'Above industry average' }
+  ]);
+
+  return (
+    <motion.div 
+      className={`${darkMode ? 'cyber-card' : 'neumorph-card'} p-4 relative overflow-hidden w-full min-h-[200px]`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {darkMode && <div className="card-glow"></div>}
+      
+      <h3 className={`text-sm font-bold ${darkMode ? 'text-white cyber-title' : 'text-gray-800'} mb-3 relative z-10`}>
+        {darkMode ? 'SMART INSIGHTS' : 'Activity Insights'}
+      </h3>
+      
+      <div className="space-y-3 relative z-10">
+        {insights.map((insight, index) => (
+          <motion.div 
+            key={index}
+            className={`p-3 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'} hover:scale-102 transition-transform cursor-pointer`}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ scale: 1.02, x: 5 }}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {insight.label}
+              </span>
+              {insight.trend === 'up' ? (
+                <TrendingUp className="h-3 w-3 text-green-500" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-500" />
+              )}
+            </div>
+            <div className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              {insight.value}
+            </div>
+            <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              {insight.insight}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
 );
+};
 
 // ===============================================
 // REAL-TIME TOGGLE SWITCH
