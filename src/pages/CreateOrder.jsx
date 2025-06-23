@@ -1,4 +1,4 @@
-// src/pages/CreateOrder.jsx - Complete with Auto-Apply Bulk Discounts + Business Discounts
+// src/pages/CreateOrder.jsx - Complete with Auto-Apply Bulk Discounts + Business Discounts + Fixed Validation
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -6,7 +6,7 @@ import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { useCart } from '../context/CartContext';
-import { createOrderWithStockUpdate } from '../firebase/orderService';
+import { createOrderWithStockUpdate, validateOrderItems } from '../firebase/orderService';
 
 const CreateOrder = () => {
   const navigate = useNavigate();
@@ -433,7 +433,7 @@ const CreateOrder = () => {
     setStep(1);
   };
 
-  // ENHANCED: Submit order with complete bulk pricing and business discount data
+  // ENHANCED: Submit order with complete validation and bulk pricing data
   const submitOrder = async () => {
     if (!user) {
       setError('Please sign in to place an order');
@@ -459,6 +459,18 @@ const CreateOrder = () => {
       setSubmitting(true);
       setError('');
 
+      // CRITICAL: Validate all items have valid prices before proceeding
+      const invalidItems = processedSelectedProducts.filter(product => {
+        const effectivePrice = product.effectivePrice ?? product.price;
+        return effectivePrice === undefined || effectivePrice === null || effectivePrice < 0;
+      });
+
+      if (invalidItems.length > 0) {
+        console.error('Items with invalid prices:', invalidItems);
+        setError('Some items have invalid pricing. Please refresh the page and try again.');
+        return;
+      }
+
       const pricing = calculatePricing();
       
       // Prepare billing address
@@ -471,6 +483,37 @@ const CreateOrder = () => {
         city: paymentInfo.billingCity,
         zipCode: paymentInfo.billingZipCode
       };
+
+      // Prepare items for order creation - ensure all prices are valid
+      const orderItems = processedSelectedProducts.map(product => {
+        const effectivePrice = product.effectivePrice ?? product.price ?? 0;
+        const originalPrice = product.price ?? 0;
+        const quantity = product.quantity ?? 0;
+        
+        return {
+          productId: product.id || product.productId,
+          productName: product.name || product.productName,
+          price: originalPrice, // Original product price
+          effectivePrice: effectivePrice, // Price after item-level bulk discounts
+          quantity: quantity,
+          subtotal: effectivePrice * quantity,
+          // Item-level bulk pricing details
+          hasBulkDiscount: product.hasBulkDiscount || false,
+          bulkPricing: product.bulkPricing || null,
+          // Add any other item properties
+          sku: product.sku || '',
+          category: product.category || '',
+          imageUrl: product.imageUrl || ''
+        };
+      });
+
+      // Validate items before sending to order service
+      try {
+        validateOrderItems(orderItems);
+      } catch (validationError) {
+        setError(validationError.message);
+        return;
+      }
 
       const orderData = {
         customerName: customerInfo.name,
@@ -503,23 +546,10 @@ const CreateOrder = () => {
         userBusinessType: userAccountType?.businessType,
         orderSource: orderSource,
         
-        // ENHANCED: Complete item data with auto-applied bulk pricing
-        items: processedSelectedProducts.map(product => ({
-          productId: product.id,
-          productName: product.name,
-          originalPrice: product.price, // Original product price
-          effectivePrice: product.effectivePrice || product.price, // Price after item-level bulk discounts
-          quantity: product.quantity,
-          subtotal: (product.effectivePrice || product.price) * product.quantity,
-          // Item-level bulk pricing details
-          hasItemBulkPricing: !!product.hasBulkDiscount,
-          itemBulkTier: product.bulkPricing?.bulkTier || null,
-          itemBulkDiscount: product.bulkPricing?.bulkDiscount || 0,
-          itemBulkSavings: product.hasBulkDiscount ? (product.price - product.effectivePrice) * product.quantity : 0,
-          wasAutoApplied: !!product.hasBulkDiscount
-        })),
+        // VALIDATED order items with guaranteed valid prices
+        items: orderItems,
         
-        itemCount: processedSelectedProducts.reduce((sum, p) => sum + p.quantity, 0),
+        itemCount: processedSelectedProducts.reduce((sum, p) => sum + (p.quantity || 0), 0),
         
         // ENHANCED: Complete pricing breakdown
         originalSubtotal: pricing.originalSubtotal,
@@ -530,8 +560,10 @@ const CreateOrder = () => {
         totalBusinessSavings: pricing.totalBusinessSavings,
         totalBulkSavings: pricing.totalBulkSavings,
         totalSavings: pricing.totalSavings,
+        taxAmount: pricing.tax, // Include taxAmount for compatibility
         tax: pricing.tax,
         total: pricing.total,
+        totalAmount: pricing.total, // Include totalAmount for compatibility
         
         // Enhanced metadata
         hasItemLevelBulkDiscounts: pricing.itemLevelBulkSavings > 0,
@@ -539,9 +571,17 @@ const CreateOrder = () => {
         qualifiesForAdditionalBulkDiscount: pricing.additionalBulkDiscount > 0,
         
         status: 'pending',
-        paymentStatus: 'pending'
+        paymentStatus: 'pending',
+        
+        // Add currency and location info
+        currency: 'NZD',
+        country: 'New Zealand',
+        timezone: 'Pacific/Auckland'
       };
 
+      console.log('Creating order with validated data:', orderData); // For debugging
+
+      // Create the order using the fixed order service
       const orderId = await createOrderWithStockUpdate(orderData);
       
       // Clear cart if order was created from cart
