@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { createOrderWithStockUpdate } from '../firebase/orderService';
+import { createOrderWithStockUpdate, validateOrderItems } from '../firebase/orderService';
 import { CreditCard, Truck, Shield, Package, MapPin, User, Mail, Phone, Tag } from 'lucide-react';
 
 const Checkout = () => {
@@ -395,18 +395,76 @@ const Checkout = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  // UPDATED: Enhanced handlePlaceOrder with comprehensive validation
   const handlePlaceOrder = async () => {
     try {
       setLoading(true);
       setError('');
 
+      // Validate that cart is not empty
+      if (processedCart.length === 0) {
+        setError('Your cart is empty');
+        return;
+      }
+
+      // CRITICAL: Validate all items have valid prices before proceeding
+      const invalidItems = processedCart.filter(item => {
+        const effectivePrice = item.effectivePrice ?? item.price;
+        return effectivePrice === undefined || effectivePrice === null || effectivePrice < 0;
+      });
+
+      if (invalidItems.length > 0) {
+        console.error('Items with invalid prices:', invalidItems);
+        setError('Some items have invalid pricing. Please refresh the page and try again.');
+        return;
+      }
+
+      // Validate required contact information
+      if (isGuest) {
+        if (!guestContact.firstName?.trim() || !guestContact.lastName?.trim() || !guestContact.email?.trim()) {
+          setError('Please fill in all required contact information');
+          return;
+        }
+      }
+
       const pricing = calculateTotal();
-      
+
+      // Prepare items for order creation - ensure all prices are valid
+      const orderItems = processedCart.map(item => {
+        const effectivePrice = item.effectivePrice ?? item.price ?? 0;
+        const originalPrice = item.price ?? 0;
+        const quantity = item.quantity ?? 0;
+        
+        return {
+          productId: item.id || item.productId,
+          productName: item.name || item.productName,
+          price: originalPrice, // Original price
+          effectivePrice: effectivePrice, // Price after bulk discounts
+          quantity: quantity,
+          subtotal: effectivePrice * quantity,
+          // Include bulk pricing info if available
+          hasBulkDiscount: item.hasBulkDiscount || false,
+          bulkPricing: item.bulkPricing || null,
+          // Add any other item properties
+          sku: item.sku || '',
+          category: item.category || '',
+          imageUrl: item.imageUrl || ''
+        };
+      });
+
+      // Validate items before sending to order service
+      try {
+        validateOrderItems(orderItems);
+      } catch (validationError) {
+        setError(validationError.message);
+        return;
+      }
+
       const orderData = {
         // Customer info - handle guests differently
         customerName: isGuest 
-          ? `${guestContact.firstName} ${guestContact.lastName}` 
-          : `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+          ? `${guestContact.firstName} ${guestContact.lastName}`.trim()
+          : `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim(),
         customerEmail: isGuest ? guestContact.email : shippingInfo.email,
         customerPhone: isGuest ? guestContact.phone : shippingInfo.phone,
         
@@ -433,23 +491,8 @@ const Checkout = () => {
           email: guestContact.email
         } : (paymentInfo.billingAddressSame ? shippingInfo : paymentInfo.billingAddress),
         
-        // UPDATED: Enhanced order items with auto-applied bulk pricing info
-        items: processedCart.map(item => ({
-          productId: item.id,
-          productName: item.name,
-          originalPrice: item.price, // Always the original price
-          effectivePrice: item.effectivePrice || item.price, // Bulk-discounted price if applicable
-          quantity: item.quantity,
-          subtotal: (item.effectivePrice || item.price) * item.quantity,
-          // Enhanced bulk pricing details
-          hasBulkPricing: !!item.hasBulkDiscount,
-          bulkTier: item.bulkPricing?.bulkTier || null,
-          bulkDiscount: item.bulkPricing?.bulkDiscount || 0,
-          bulkSavings: item.hasBulkDiscount 
-            ? (item.price - item.effectivePrice) * item.quantity 
-            : 0,
-          wasAutoApplied: !!item.hasBulkDiscount // Track if this was auto-applied
-        })),
+        // VALIDATED order items with guaranteed valid prices
+        items: orderItems,
         
         // Enhanced pricing with auto-applied bulk savings
         originalSubtotal: pricing.originalSubtotal,
@@ -457,7 +500,9 @@ const Checkout = () => {
         totalBulkSavings: pricing.totalBulkSavings,
         deliveryFee: pricing.deliveryFee,
         gst: pricing.gst, // GST instead of tax
+        taxAmount: pricing.gst, // Also include taxAmount for compatibility
         total: pricing.total,
+        totalAmount: pricing.total, // Include totalAmount for compatibility
         currency: 'NZD',
         
         // Delivery
@@ -473,23 +518,29 @@ const Checkout = () => {
         userId: isGuest ? null : (user?.uid || null),
         
         // Metadata
-        itemCount: processedCart.reduce((sum, item) => sum + item.quantity, 0),
+        itemCount: processedCart.reduce((sum, item) => sum + (item.quantity || 0), 0),
         hasBulkDiscounts: pricing.totalBulkSavings > 0,
-        bulkDiscountsAutoApplied: processedCart.some(item => item.hasBulkDiscount), // NEW: Track auto-application
+        bulkDiscountsAutoApplied: processedCart.some(item => item.hasBulkDiscount),
+        
+        // Order source and analytics
+        orderSource: 'checkout',
         
         // New Zealand specific
         country: 'New Zealand',
         timezone: 'Pacific/Auckland'
       };
 
+      console.log('Creating order with validated data:', orderData); // For debugging
+
+      // Create the order using the fixed order service
       const orderId = await createOrderWithStockUpdate(orderData);
       
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Clear cart and redirect
       clearCart();
       
-      // For guests, redirect to a special order confirmation that doesn't require login
       if (isGuest) {
         navigate(`/guest-order-confirmation/${orderId}?email=${encodeURIComponent(guestContact.email)}`);
       } else {
@@ -497,6 +548,7 @@ const Checkout = () => {
       }
       
     } catch (err) {
+      console.error('Checkout error:', err);
       setError(err.message || 'Failed to place order. Please try again.');
     } finally {
       setLoading(false);
