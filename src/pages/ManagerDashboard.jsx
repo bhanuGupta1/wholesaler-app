@@ -626,27 +626,43 @@ const BusinessPerformance = ({ stats, darkMode }) => {
     : 0;
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Performance Analytics</h2>
-        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Real-time data from your business</p>
+    <div className={`${
+      darkMode 
+        ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+        : 'neumorph-card bg-white border-gray-100'
+    } rounded-xl overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'NEURAL ANALYTICS' : 'Performance Analytics'}
+        </h2>
+        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {darkMode ? 'Real-time data stream analysis' : 'Real-time data from your business'}
+        </p>
       </div>
       
       <div className="p-6">
         {/* Real KPI Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <div className={`p-4 rounded-lg ${
+            darkMode 
+              ? 'bg-gray-800/50 border border-cyan-500/30 shadow-lg shadow-cyan-500/10' 
+              : 'bg-gray-50 border border-gray-200'
+          }`}>
             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Daily Avg Revenue</div>
-            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}`}>
               ${avgDailyRevenue}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
               Based on last 30 days
             </div>
           </div>
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <div className={`p-4 rounded-lg ${
+            darkMode 
+              ? 'bg-gray-800/50 border border-cyan-500/30 shadow-lg shadow-cyan-500/10' 
+              : 'bg-gray-50 border border-gray-200'
+          }`}>
             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Order Completion</div>
-            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400 cyber-glow' : 'text-blue-600'}`}>
               {completionRate}%
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
@@ -656,7 +672,7 @@ const BusinessPerformance = ({ stats, darkMode }) => {
         </div>
         
         <RealDataChart 
-          title="7-Day Sales Trend" 
+          title={darkMode ? "7-DAY REVENUE STREAM" : "7-Day Sales Trend"} 
           description={`Total revenue: $${salesData.reduce((sum, day) => sum + day.value, 0)}`}
           data={salesData} 
           color="indigo" 
@@ -664,7 +680,7 @@ const BusinessPerformance = ({ stats, darkMode }) => {
         />
         
         <RealDataChart 
-          title="Revenue by Category" 
+          title={darkMode ? "CATEGORY BREAKDOWN" : "Revenue by Category"} 
           description="Estimated revenue based on product sales"
           data={categoryData} 
           color="green" 
@@ -673,9 +689,13 @@ const BusinessPerformance = ({ stats, darkMode }) => {
         />
 
         {/* Sales insights */}
-        <div className={`mt-4 p-3 rounded-lg ${darkMode ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-100'} border`}>
-          <div className={`text-sm font-medium ${darkMode ? 'text-blue-300' : 'text-blue-800'} mb-1`}>
-            📊 Business Insights
+        <div className={`mt-4 p-3 rounded-lg ${
+          darkMode 
+            ? 'bg-blue-900/20 border border-blue-500/30 shadow-lg shadow-blue-500/10' 
+            : 'bg-blue-50 border border-blue-100'
+        }`}>
+          <div className={`text-sm font-medium ${darkMode ? 'text-blue-300 cyber-glow' : 'text-blue-800'} mb-1`}>
+            {darkMode ? '🔮 NEURAL INSIGHTS' : '📊 Business Insights'}
           </div>
           <div className={`text-xs ${darkMode ? 'text-blue-200' : 'text-blue-700'} space-y-1`}>
             <div>• Best performing day: {salesData.reduce((best, day) => day.value > best.value ? day : best, salesData[0])?.name}</div>
@@ -688,7 +708,7 @@ const BusinessPerformance = ({ stats, darkMode }) => {
   );
 };
 
-// Inventory Overview Component (keeping existing structure but enhancing)
+// Inventory Overview Component with enhanced theme integration
 const InventoryOverview = ({ products, darkMode }) => {
   const [filter, setFilter] = useState('all');
   
@@ -713,14 +733,22 @@ const InventoryOverview = ({ products, darkMode }) => {
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'} flex justify-between items-center`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Inventory Overview</h2>
+    <div className={`${
+      darkMode 
+        ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+        : 'neumorph-card bg-white border-gray-100'
+    } rounded-xl overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'} flex justify-between items-center`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'INVENTORY MATRIX' : 'Inventory Overview'}
+        </h2>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className={`px-3 py-1 rounded-md text-sm ${
-            darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-white border-gray-300'
+            darkMode 
+              ? 'cyber-btn bg-gray-800 border-cyan-500/50 text-cyan-300' 
+              : 'neumorph-btn bg-white border-gray-300'
           } border focus:ring-indigo-500 focus:border-indigo-500`}
         >
           <option value="all">All Products ({stockSummary.total})</option>
@@ -731,28 +759,28 @@ const InventoryOverview = ({ products, darkMode }) => {
       </div>
       
       {/* Stock Summary Cards */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className={`p-6 border-b ${darkMode ? 'border-cyan-500/20' : 'border-gray-200'}`}>
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-blue-400 cyber-glow' : 'text-blue-600'}`}>
               {stockSummary.total}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-green-400 cyber-glow' : 'text-green-600'}`}>
               {stockSummary.inStock}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>In Stock</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-yellow-400 cyber-glow' : 'text-yellow-600'}`}>
               {stockSummary.lowStock}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Low Stock</div>
           </div>
           <div className="text-center">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${darkMode ? 'text-red-400 cyber-glow' : 'text-red-600'}`}>
               {stockSummary.outOfStock}
             </div>
             <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Out of Stock</div>
@@ -763,9 +791,11 @@ const InventoryOverview = ({ products, darkMode }) => {
       {/* Product List */}
       <div className="max-h-80 overflow-y-auto">
         {filteredProducts.length > 0 ? (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className={`divide-y ${darkMode ? 'divide-cyan-500/20' : 'divide-gray-200'}`}>
             {filteredProducts.slice(0, 10).map((product) => (
-              <div key={product.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <div key={product.id} className={`p-4 ${
+                darkMode ? 'hover:bg-gray-800/50' : 'hover:bg-gray-50'
+              } transition-colors duration-200`}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
@@ -778,16 +808,26 @@ const InventoryOverview = ({ products, darkMode }) => {
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       product.stock > 10 
-                        ? darkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800'
+                        ? darkMode 
+                          ? 'bg-green-900/30 text-green-400 border border-green-500/30' 
+                          : 'bg-green-100 text-green-800'
                         : product.stock > 0
-                          ? darkMode ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
-                          : darkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-800'
+                          ? darkMode 
+                            ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30' 
+                            : 'bg-yellow-100 text-yellow-800'
+                          : darkMode 
+                            ? 'bg-red-900/30 text-red-400 border border-red-500/30' 
+                            : 'bg-red-100 text-red-800'
                     }`}>
                       {product.stock} units
                     </span>
                     <Link 
                       to={`/inventory/${product.id}`}
-                      className={`text-sm ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} font-medium`}
+                      className={`text-sm ${
+                        darkMode 
+                          ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' 
+                          : 'text-indigo-600 hover:text-indigo-800'
+                      } font-medium transition-colors duration-200`}
                     >
                       Edit
                     </Link>
@@ -805,10 +845,18 @@ const InventoryOverview = ({ products, darkMode }) => {
         )}
       </div>
       
-      <div className={`border-t ${darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-100 bg-gray-50'} px-6 py-3`}>
+      <div className={`border-t ${
+        darkMode 
+          ? 'border-cyan-500/30 bg-gray-800/50' 
+          : 'border-gray-100 bg-gray-50'
+      } px-6 py-3`}>
         <Link 
           to="/inventory" 
-          className={`text-sm font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'} flex items-center justify-center`}
+          className={`text-sm font-medium ${
+            darkMode 
+              ? 'text-cyan-400 hover:text-cyan-300 cyber-glow' 
+              : 'text-indigo-600 hover:text-indigo-800'
+          } flex items-center justify-center transition-colors duration-200`}
         >
           Manage Full Inventory
           <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -820,7 +868,7 @@ const InventoryOverview = ({ products, darkMode }) => {
   );
 };
 
-// Enhanced Quick Actions Component with improved styling and additional features
+// Enhanced Quick Actions Component - UPDATED: Removed manage users and new orders
 const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
   const [hoverIndex, setHoverIndex] = useState(null);
   
@@ -828,8 +876,8 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
     {
       id: 'add-product',
       to: '/add-product',
-      name: 'Add Product',
-      description: 'List new products',
+      name: darkMode ? 'ADD TO MATRIX' : 'Add Product',
+      description: darkMode ? 'Insert new item' : 'List new products',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -838,22 +886,10 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
       color: 'indigo'
     },
     {
-      id: 'new-order',
-      to: '/create-order',
-      name: 'New Order',
-      description: 'Create customer order',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-      ),
-      color: 'blue'
-    },
-    {
       id: 'manage-inventory',
       to: '/inventory',
-      name: 'Manage Inventory',
-      description: 'View all products',
+      name: darkMode ? 'INVENTORY CONTROL' : 'Manage Inventory',
+      description: darkMode ? 'Monitor systems' : 'View all products',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
@@ -864,8 +900,8 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
     {
       id: 'pending-orders',
       to: '/orders',
-      name: 'Process Orders',
-      description: 'Manage orders',
+      name: darkMode ? 'ORDER STREAM' : 'Process Orders',
+      description: darkMode ? 'Handle requests' : 'Manage orders',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -874,22 +910,10 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
       color: 'purple'
     },
     {
-      id: 'user-management',
-      to: '/admin/users',
-      name: 'Manage Users',
-      description: 'User approvals',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1a1.5 1.5 0 01-1.5 1.5H9c-.83 0-1.5-.672-1.5-1.5 0-.829.67-1.5 1.5-1.5h12c.83 0 1.5.671 1.5 1.5z" />
-        </svg>
-      ),
-      color: 'orange'
-    },
-    {
       id: 'generate-report',
       action: onGenerateReport,
-      name: 'Generate Report',
-      description: 'Download analytics',
+      name: darkMode ? 'DATA EXTRACTION' : 'Generate Report',
+      description: darkMode ? 'Export intel' : 'Download analytics',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -900,10 +924,18 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
   ];
   
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-xl shadow-lg overflow-hidden border`}>
-      <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-        <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Manager Actions</h2>
-        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Quick access to key functions</p>
+    <div className={`${
+      darkMode 
+        ? 'cyber-card bg-gray-900 border-cyan-500/30 shadow-lg shadow-cyan-500/20' 
+        : 'neumorph-card bg-white border-gray-100'
+    } rounded-xl overflow-hidden border`}>
+      <div className={`px-6 py-4 border-b ${darkMode ? 'border-cyan-500/30' : 'border-gray-100'}`}>
+        <h2 className={`text-xl font-bold ${darkMode ? 'text-white cyber-title cyber-glow' : 'text-gray-800 neumorph-title'}`}>
+          {darkMode ? 'COMMAND INTERFACE' : 'Manager Actions'}
+        </h2>
+        <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+          {darkMode ? 'Neural access to core functions' : 'Quick access to key functions'}
+        </p>
       </div>
       <div className="p-5 grid grid-cols-2 gap-4">
         {actions.map((action, index) => {
@@ -917,35 +949,39 @@ const QuickActions = ({ darkMode, onGenerateReport, onScheduleMeeting }) => {
             <Component 
               key={action.id}
               {...props}
-              className={`flex flex-col items-center p-4 rounded-xl 
-                hover:bg-${action.color}-${darkMode ? '900/20' : '50'} 
-                transition-all duration-300 transform ${hoverIndex === index ? 'scale-105' : 'scale-100'}
-                group border ${darkMode ? 
-                  `border-gray-700 hover:border-${action.color}-800` : 
-                  `border-gray-100 hover:border-${action.color}-100`}`}
+              className={`flex flex-col items-center p-4 rounded-xl transition-all duration-300 transform ${
+                hoverIndex === index ? 'scale-105' : 'scale-100'
+              } group border ${
+                darkMode ? 
+                  `border-cyan-500/30 hover:border-cyan-400/50 bg-gray-800/30 hover:bg-gray-800/50 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20` : 
+                  `border-gray-100 hover:border-${action.color}-100 hover:bg-${action.color}-50`
+              }`}
               onMouseEnter={() => setHoverIndex(index)}
               onMouseLeave={() => setHoverIndex(null)}
             >
-              <div className={`h-12 w-12 rounded-full ${darkMode ? 
-                `bg-${action.color}-900/30` : 
-                `bg-${action.color}-100`} 
-                flex items-center justify-center mb-3 
-                ${darkMode ? 
-                  `group-hover:bg-${action.color}-900/50` : 
-                  `group-hover:bg-${action.color}-200`} 
-                transition-colors`}
+              <div className={`h-12 w-12 rounded-full ${
+                darkMode ? 
+                  `bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30` : 
+                  `bg-${action.color}-100`
+              } flex items-center justify-center mb-3 ${
+                darkMode ? 
+                  `group-hover:shadow-lg group-hover:shadow-cyan-500/30` : 
+                  `group-hover:bg-${action.color}-200`
+              } transition-all duration-300`}
               >
-                <span className={`${darkMode ? 
-                  `text-${action.color}-400` : 
-                  `text-${action.color}-600`}`}
-                >
+                <span className={`${
+                  darkMode ? 
+                    `text-cyan-400 group-hover:text-cyan-300` : 
+                    `text-${action.color}-600`
+                }`}>
                   {action.icon}
                 </span>
               </div>
-              <span className={`text-sm font-medium text-center ${darkMode ? 
-                `text-gray-200 group-hover:text-${action.color}-400` : 
-                `text-gray-800 group-hover:text-${action.color}-700`}`}
-              >
+              <span className={`text-sm font-medium text-center ${
+                darkMode ? 
+                  `text-gray-200 group-hover:text-cyan-400 group-hover:cyber-glow` : 
+                  `text-gray-800 group-hover:text-${action.color}-700`
+              } transition-colors duration-300`}>
                 {action.name}
               </span>
               <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1 text-center`}>
