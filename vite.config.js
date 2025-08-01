@@ -22,6 +22,47 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Remove comments and minimize bundle
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        // Remove console statements
+        drop_console: true,
+        drop_debugger: true,
+        // Remove comments
+        comments: false
+      },
+      format: {
+        // Remove all comments
+        comments: false,
+        // Remove ASCII art and decorative comments
+        ascii_only: true
+      },
+      mangle: {
+        // Obfuscate function and variable names
+        toplevel: true
+      }
+    },
+    rollupOptions: {
+      output: {
+        // Remove comments in production build
+        banner: '',
+        // Chunk splitting for better caching
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+          router: ['react-router-dom']
+        },
+        // Remove source map comments and minimize file info
+        sourcemapExcludeSources: true,
+        // Use consistent naming without timestamps
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    },
+    // Don't generate source maps in production
+    sourcemap: false
   },
   // Define the entry point explicitly
   optimizeDeps: {
