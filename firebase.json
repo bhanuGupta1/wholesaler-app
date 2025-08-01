@@ -20,6 +20,10 @@
         "source": "**",
         "headers": [
           {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.googleapis.com https://apis.google.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://firebase.googleapis.com https://www.googleapis.com wss: ws:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+          },
+          {
             "key": "Strict-Transport-Security",
             "value": "max-age=31536000; includeSubDomains; preload"
           },
@@ -46,7 +50,7 @@
         ]
       },
       {
-        "source": "**/*.@(js|css)",
+        "source": "**/*.@(js|css|map)",
         "headers": [
           {
             "key": "Cache-Control",
@@ -55,7 +59,7 @@
         ]
       },
       {
-        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico)",
+        "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|ico|woff|woff2|ttf|eot)",
         "headers": [
           {
             "key": "Cache-Control",
