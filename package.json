@@ -10,16 +10,12 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-
-    "lint": "eslint src",                     // local dev: shows warnings
+    "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "lint:ci": "eslint src --quiet",          // CI: only fail on errors
-
+    "lint:ci": "eslint src --quiet",
     "format": "prettier --write \"src/**/*.{js,jsx,css,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css,json,md}\"",
-
     "ci": "npm run lint:ci && npm run format:check && npm run test:run && npm run build",
-
     "deploy": "npm run build && firebase deploy",
     "deploy:hosting": "npm run build && firebase deploy --only hosting"
   },
