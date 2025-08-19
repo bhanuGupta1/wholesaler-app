@@ -12,12 +12,23 @@ export default [
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: globals.browser
+      // ✅ tell ESLint to parse JSX
+      parserOptions: {
+        ecmaFeatures: { jsx: true }
+      },
+      // ✅ browser + node (so `global` in tests isn’t flagged)
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      }
     },
     plugins: {
       react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh
+    },
+    settings: {
+      react: { version: "detect" }
     },
     rules: {
       "no-unused-vars": "warn",
@@ -26,6 +37,14 @@ export default [
       "react/prop-types": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn"
+    }
+  },
+  // Optional: test-only tweaks
+  {
+    files: ["**/*.{test,spec}.{js,jsx}", "src/test/**"],
+    rules: {
+      // loosen a bit in tests if you like
+      "no-undef": "off"
     }
   }
 ];
