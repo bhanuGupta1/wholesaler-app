@@ -65,3 +65,9 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }} # JSON string
           channelId: live
           projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
+           
+    - name: Print Hosting URL (and add to summary)
+      run: |
+        echo "Deployed to: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
+        echo "### Deployment\n- Live: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app" >> $GITHUB_STEP_SUMMARY
