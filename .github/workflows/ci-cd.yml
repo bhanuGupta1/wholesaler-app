@@ -24,18 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
+          cache: npm
       - run: npm ci --no-audit --progress=false
-
-      # Run your whole CI chain (lint -> format check -> tests -> build)
       - run: npm run ci
-
-      # Optional: keep build output for debugging
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -50,24 +44,22 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
+          cache: npm
       - run: npm ci --no-audit --progress=false
       - run: npm run build
-
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }} # JSON string
           channelId: live
           projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-
-           
-    - name: Print Hosting URL (and add to summary)
-      run: |
-        echo "Deployed to: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
-        echo "### Deployment\n- Live: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app" >> $GITHUB_STEP_SUMMARY
+      - name: Print Hosting URL (and add to summary)
+        run: |
+          echo "Deployed to: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
+          {
+            echo "### Deployment"
+            echo "- Live: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
+          } >> $GITHUB_STEP_SUMMARY
