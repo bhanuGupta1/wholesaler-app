@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import ImageUploader from "../common/ImageUploader"; // Import the unified ImageUploader
-import { uploadProductImage } from "../../services/ImageService"; // Import the image service
+import { uploadProductImage } from "../../services/imageService";
 
 const ProductModal = ({ product, onClose, categories, darkMode }) => {
   const isEditing = !!product;
