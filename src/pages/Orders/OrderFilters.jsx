@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // Reusable filter component for order status, date, and customer name
 const OrderFilters = ({ filters, onFilterChange }) => {
@@ -7,7 +7,7 @@ const OrderFilters = ({ filters, onFilterChange }) => {
     const { name, value } = e.target;
     onFilterChange({
       ...filters,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -15,7 +15,12 @@ const OrderFilters = ({ filters, onFilterChange }) => {
     <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4">
       {/* Status Dropdown */}
       <div className="flex items-center">
-        <label htmlFor="status" className="mr-2 text-sm font-medium text-gray-700">Status:</label>
+        <label
+          htmlFor="status"
+          className="mr-2 text-sm font-medium text-gray-700"
+        >
+          Status:
+        </label>
         <select
           id="status"
           name="status"
@@ -33,7 +38,12 @@ const OrderFilters = ({ filters, onFilterChange }) => {
 
       {/* Date Filter */}
       <div className="flex items-center">
-        <label htmlFor="date" className="mr-2 text-sm font-medium text-gray-700">Date:</label>
+        <label
+          htmlFor="date"
+          className="mr-2 text-sm font-medium text-gray-700"
+        >
+          Date:
+        </label>
         <select
           id="date"
           name="date"
@@ -51,7 +61,12 @@ const OrderFilters = ({ filters, onFilterChange }) => {
 
       {/* Customer Search Input */}
       <div className="flex items-center">
-        <label htmlFor="customer" className="mr-2 text-sm font-medium text-gray-700">Customer:</label>
+        <label
+          htmlFor="customer"
+          className="mr-2 text-sm font-medium text-gray-700"
+        >
+          Customer:
+        </label>
         <input
           type="text"
           id="customer"
@@ -68,7 +83,9 @@ const OrderFilters = ({ filters, onFilterChange }) => {
         <button
           type="button"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          onClick={() => {/* Add export functionality */}}
+          onClick={() => {
+            /* Add export functionality */
+          }}
         >
           Export
         </button>

@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useAuth } from '../../hooks/useAuth';
-import React from 'react';
+import { useState } from "react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { useAuth } from "../../hooks/useAuth";
+import React from "react";
 
 const RatingForm = ({ productId, onSuccess }) => {
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
-      setError('Please select a rating');
+      setError("Please select a rating");
       return;
     }
 
@@ -23,24 +23,24 @@ const RatingForm = ({ productId, onSuccess }) => {
       setSubmitting(true);
       setError(null);
 
-      const feedbackRef = collection(db, 'products', productId, 'feedback');
+      const feedbackRef = collection(db, "products", productId, "feedback");
       const newFeedback = {
         rating,
         comment,
         userId: user?.uid || null,
-        userName: user?.displayName || 'Anonymous',
-        createdAt: serverTimestamp()
+        userName: user?.displayName || "Anonymous",
+        createdAt: serverTimestamp(),
       };
 
       const docRef = await addDoc(feedbackRef, newFeedback);
       onSuccess({
         id: docRef.id,
         ...newFeedback,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     } catch (err) {
-      console.error('Error submitting feedback:', err);
-      setError('Failed to submit feedback. Please try again.');
+      console.error("Error submitting feedback:", err);
+      setError("Failed to submit feedback. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +53,7 @@ const RatingForm = ({ productId, onSuccess }) => {
           {error}
         </div>
       )}
-       <div className="mb-4">
+      <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Your Rating
         </label>
@@ -66,7 +66,7 @@ const RatingForm = ({ productId, onSuccess }) => {
               className="focus:outline-none"
             >
               <svg
-                className={`h-8 w-8 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                className={`h-8 w-8 ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -78,7 +78,10 @@ const RatingForm = ({ productId, onSuccess }) => {
       </div>
 
       <div className="mb-4">
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          htmlFor="comment"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Your Review
         </label>
         <textarea
@@ -97,7 +100,7 @@ const RatingForm = ({ productId, onSuccess }) => {
           disabled={submitting}
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70"
         >
-          {submitting ? 'Submitting...' : 'Submit Review'}
+          {submitting ? "Submitting..." : "Submit Review"}
         </button>
       </div>
     </form>

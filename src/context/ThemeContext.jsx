@@ -1,5 +1,5 @@
 // src/context/ThemeContext.jsx
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext } from "react";
 
 export const ThemeContext = createContext(null);
 
@@ -7,12 +7,15 @@ export const ThemeProvider = ({ children }) => {
   // Check local storage for user's theme preference or fallback to system preference
   const [darkMode, setDarkMode] = useState(() => {
     // First try to get from localStorage
-    const savedTheme = localStorage.getItem('wholesaler-theme');
+    const savedTheme = localStorage.getItem("wholesaler-theme");
     if (savedTheme) {
-      return savedTheme === 'dark';
+      return savedTheme === "dark";
     }
     // Otherwise check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
       return true;
     }
     // Default to light mode
@@ -21,44 +24,44 @@ export const ThemeProvider = ({ children }) => {
 
   // Toggle between light and dark mode
   const toggleDarkMode = () => {
-    setDarkMode(prevMode => !prevMode);
+    setDarkMode((prevMode) => !prevMode);
   };
 
   // Update localStorage and document class when darkMode changes
   useEffect(() => {
     // Update localStorage
-    localStorage.setItem('wholesaler-theme', darkMode ? 'dark' : 'light');
-    
+    localStorage.setItem("wholesaler-theme", darkMode ? "dark" : "light");
+
     // Update document class for global styling
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
 
   // Listen for system preference changes
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e) => {
       // Only apply if user hasn't manually set a preference
-      if (!localStorage.getItem('wholesaler-theme')) {
+      if (!localStorage.getItem("wholesaler-theme")) {
         setDarkMode(e.matches);
       }
     };
-    
+
     // Add listener
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange);
+      mediaQuery.addEventListener("change", handleChange);
     } else {
       // For older browsers
       mediaQuery.addListener(handleChange);
     }
-    
+
     // Clean up
     return () => {
       if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handleChange);
+        mediaQuery.removeEventListener("change", handleChange);
       } else {
         mediaQuery.removeListener(handleChange);
       }
@@ -76,7 +79,7 @@ export const ThemeProvider = ({ children }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === null) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 };

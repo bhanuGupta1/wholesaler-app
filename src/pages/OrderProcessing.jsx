@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   FaCogs,
   FaShippingFast,
@@ -7,18 +7,20 @@ import {
   FaPhoneAlt,
   FaEnvelope,
   FaRegClock,
-  FaBoxOpen
-} from 'react-icons/fa';
+  FaBoxOpen,
+} from "react-icons/fa";
 
 const OrderProcessing = () => {
   return (
     <div className="bg-gray-50 py-12 px-6 min-h-screen">
       <div className="max-w-6xl mx-auto bg-white p-10 rounded-lg shadow-md text-gray-800">
-
         {/* This is the Header section */}
-        <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">Order Processing</h1>
+        <h1 className="text-4xl font-extrabold text-indigo-700 mb-4">
+          Order Processing
+        </h1>
         <p className="text-lg mb-10 text-gray-600">
-          Our order processing system ensures accuracy, transparency, and fast fulfillment — designed for both bulk and individual buyers.
+          Our order processing system ensures accuracy, transparency, and fast
+          fulfillment — designed for both bulk and individual buyers.
         </p>
 
         {/* Lifecycle Section */}
@@ -29,14 +31,32 @@ const OrderProcessing = () => {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              ['Product Selection', 'Browse inventory with live stock updates.'],
-              ['Order Submission', 'Validate and place items into the cart.'],
-              ['Secure Payment', 'Complete checkout via safe, encrypted gateways.'],
-              ['Order Confirmation', 'Receive in-app and email confirmation instantly.'],
-              ['Packaging & Fulfillment', 'Products packed and marked for dispatch.'],
-              ['Shipping & Delivery', 'Tracked delivery with real-time updates.'],
+              [
+                "Product Selection",
+                "Browse inventory with live stock updates.",
+              ],
+              ["Order Submission", "Validate and place items into the cart."],
+              [
+                "Secure Payment",
+                "Complete checkout via safe, encrypted gateways.",
+              ],
+              [
+                "Order Confirmation",
+                "Receive in-app and email confirmation instantly.",
+              ],
+              [
+                "Packaging & Fulfillment",
+                "Products packed and marked for dispatch.",
+              ],
+              [
+                "Shipping & Delivery",
+                "Tracked delivery with real-time updates.",
+              ],
             ].map(([title, desc], i) => (
-              <div key={i} className="border-l-4 border-indigo-600 bg-indigo-50 p-4 rounded shadow-sm">
+              <div
+                key={i}
+                className="border-l-4 border-indigo-600 bg-indigo-50 p-4 rounded shadow-sm"
+              >
                 <h3 className="font-semibold text-indigo-700">{title}</h3>
                 <p className="text-gray-700 text-sm">{desc}</p>
               </div>
@@ -51,10 +71,22 @@ const OrderProcessing = () => {
             Automation & Smart Features
           </h2>
           <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li><strong>Auto-Inventory Sync:</strong> Inventory adjusts in real-time upon order.</li>
-            <li><strong>Order Alerts:</strong> Get alerts on urgent or delayed orders instantly.</li>
-            <li><strong>Smart Routing:</strong> Auto-scheduling deliveries based on your location.</li>
-            <li><strong>Bulk Discounts:</strong> Dynamic pricing for wholesale and large orders.</li>
+            <li>
+              <strong>Auto-Inventory Sync:</strong> Inventory adjusts in
+              real-time upon order.
+            </li>
+            <li>
+              <strong>Order Alerts:</strong> Get alerts on urgent or delayed
+              orders instantly.
+            </li>
+            <li>
+              <strong>Smart Routing:</strong> Auto-scheduling deliveries based
+              on your location.
+            </li>
+            <li>
+              <strong>Bulk Discounts:</strong> Dynamic pricing for wholesale and
+              large orders.
+            </li>
           </ul>
         </section>
 
@@ -64,7 +96,10 @@ const OrderProcessing = () => {
             <FaShippingFast className="text-indigo-600 mr-2" />
             Shipping & Delivery Options
           </h2>
-          <p className="text-gray-700 mb-4">We collaborate with reliable logistics partners for all your shipping needs:</p>
+          <p className="text-gray-700 mb-4">
+            We collaborate with reliable logistics partners for all your
+            shipping needs:
+          </p>
           <div className="overflow-x-auto">
             <table className="table-auto w-full border text-sm">
               <thead className="bg-indigo-100 text-indigo-800">
@@ -106,12 +141,16 @@ const OrderProcessing = () => {
             Modify or Cancel Orders
           </h2>
           <p className="mb-3 text-gray-700">
-            Need to make changes? You can modify or cancel your order under certain conditions:
+            Need to make changes? You can modify or cancel your order under
+            certain conditions:
           </p>
           <ul className="list-disc pl-6 text-gray-700 space-y-2">
             <li>Orders can be edited within 1 hour of placement.</li>
             <li>Cancel directly from the "My Orders" page before shipping.</li>
-            <li>For scheduled dispatch, changes are allowed up to 24 hours before shipping.</li>
+            <li>
+              For scheduled dispatch, changes are allowed up to 24 hours before
+              shipping.
+            </li>
           </ul>
         </section>
 
@@ -122,7 +161,8 @@ const OrderProcessing = () => {
             Real-Time Tracking
           </h2>
           <p className="text-gray-700 mb-2">
-            Stay updated every step of the way. Your order status is visible under <strong>Dashboard → Orders</strong>:
+            Stay updated every step of the way. Your order status is visible
+            under <strong>Dashboard → Orders</strong>:
           </p>
           <ul className="list-disc pl-6 text-gray-700 space-y-1">
             <li>Order Confirmed</li>
@@ -142,7 +182,13 @@ const OrderProcessing = () => {
           <ul className="list-disc pl-6 text-gray-700">
             <li>
               <FaEnvelope className="inline-block text-indigo-600 mr-2" />
-              Email: <a href="mailto:orders@wholesaler.com" className="text-indigo-600 underline">orders@wholesaler.com</a>
+              Email:{" "}
+              <a
+                href="mailto:orders@wholesaler.com"
+                className="text-indigo-600 underline"
+              >
+                orders@wholesaler.com
+              </a>
             </li>
             <li>
               <FaPhoneAlt className="inline-block text-indigo-600 mr-2" />

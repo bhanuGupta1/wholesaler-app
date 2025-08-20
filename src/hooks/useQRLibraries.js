@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export const useQRLibraries = () => {
   const [libraries, setLibraries] = useState({
     qrcode: false,
     html5qrcode: false,
     zxing: false,
-    loading: true
+    loading: true,
   });
 
   useEffect(() => {
@@ -17,53 +17,53 @@ export const useQRLibraries = () => {
       qrcode: false,
       html5qrcode: false,
       zxing: false,
-      loading: false
+      loading: false,
     };
 
     // Check QRCode
     try {
-      await import('qrcode');
+      await import("qrcode");
       result.qrcode = true;
     } catch (err) {
-      console.log('QRCode library not available');
+      console.log("QRCode library not available");
     }
 
     // Check Html5-qrcode
     try {
-      const html5Lib = await import('html5-qrcode');
+      const html5Lib = await import("html5-qrcode");
       if (html5Lib.Html5QrcodeScanner) {
         result.html5qrcode = true;
       }
     } catch (err) {
-      console.log('Html5-qrcode library not available');
+      console.log("Html5-qrcode library not available");
     }
 
     // Check ZXing
     try {
-      const zxingLib = await import('@zxing/library');
+      const zxingLib = await import("@zxing/library");
       if (zxingLib.BrowserQRCodeReader) {
         result.zxing = true;
       }
     } catch (err) {
-      console.log('ZXing library not available');
+      console.log("ZXing library not available");
     }
 
     setLibraries(result);
   };
 
   const getStatus = () => {
-    const available = Object.entries(libraries)
-      .filter(([key, value]) => key !== 'loading' && value)
-      .length;
+    const available = Object.entries(libraries).filter(
+      ([key, value]) => key !== "loading" && value,
+    ).length;
     const total = Object.keys(libraries).length - 1; // Exclude 'loading'
-    
+
     return {
       available,
       total,
       percentage: Math.round((available / total) * 100),
       allAvailable: available === total,
       someAvailable: available > 0,
-      noneAvailable: available === 0
+      noneAvailable: available === 0,
     };
   };
 
@@ -77,6 +77,6 @@ export const useQRLibraries = () => {
     canUseCamera,
     canGenerateQR,
     canScanFiles,
-    refresh: checkLibraries
+    refresh: checkLibraries,
   };
 };

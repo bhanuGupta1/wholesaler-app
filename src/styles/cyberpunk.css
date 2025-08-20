@@ -29,7 +29,7 @@
 
 /* Grid Background */
 .cyberpunk-grid {
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -39,8 +39,12 @@
 }
 
 @keyframes gridMove {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(40px, 40px); }
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(40px, 40px);
+  }
 }
 
 /* Scanlines Effect */
@@ -57,8 +61,12 @@
 }
 
 @keyframes scanlineMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 3px; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 3px;
+  }
 }
 
 /* ==============================================
@@ -67,7 +75,7 @@
 
 /* Cyberpunk Title */
 .cyberpunk-title {
-  font-family: 'Orbitron', 'Courier New', monospace;
+  font-family: "Orbitron", "Courier New", monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   position: relative;
@@ -75,7 +83,7 @@
 
 /* Cyber Glow Effect */
 .cyber-glow {
-  text-shadow: 
+  text-shadow:
     0 0 5px currentColor,
     0 0 10px currentColor,
     0 0 15px currentColor,
@@ -85,14 +93,14 @@
 
 @keyframes pulseGlow {
   from {
-    text-shadow: 
+    text-shadow:
       0 0 5px currentColor,
       0 0 10px currentColor,
       0 0 15px currentColor,
       0 0 20px currentColor;
   }
   to {
-    text-shadow: 
+    text-shadow:
       0 0 10px currentColor,
       0 0 20px currentColor,
       0 0 30px currentColor,
@@ -111,7 +119,7 @@
   top: 0;
   left: 2px;
   width: 100%;
-  color: #FF00FF;
+  color: #ff00ff;
   z-index: -1;
   animation: glitch 0.3s infinite;
 }
@@ -122,22 +130,33 @@
   top: 0;
   left: -2px;
   width: 100%;
-  color: #00FFFF;
+  color: #00ffff;
   z-index: -1;
   animation: glitch 0.3s infinite reverse;
 }
 
 @keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
 }
 
 /* Holographic Text */
 .holographic-text {
-  background: linear-gradient(45deg, #00FFFF, #FF00FF, #FFFF00, #00FFFF);
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
   background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -146,27 +165,43 @@
 }
 
 @keyframes holographicShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Typewriter Text */
 .typewriter-text {
   overflow: hidden;
-  border-right: 2px solid #00FFFF;
+  border-right: 2px solid #00ffff;
   white-space: nowrap;
   margin: 0 auto;
-  animation: typing 3s steps(80, end), blink-caret 0.75s step-end infinite;
+  animation:
+    typing 3s steps(80, end),
+    blink-caret 0.75s step-end infinite;
 }
 
 @keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 @keyframes blink-caret {
-  from, to { border-color: transparent; }
-  50% { border-color: #00FFFF; }
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #00ffff;
+  }
 }
 
 /* ==============================================
@@ -187,19 +222,31 @@
   letter-spacing: 1px;
   overflow: hidden;
   transition: all 0.3s ease;
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  clip-path: polygon(
+    0 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
   font-size: 14px;
   cursor: pointer;
 }
 
 .cyber-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -209,35 +256,35 @@
 
 /* Button Variants */
 .cyber-btn-primary {
-  border-color: #00FFFF;
-  color: #00FFFF;
+  border-color: #00ffff;
+  color: #00ffff;
 }
 
 .cyber-btn-primary:hover {
   background: rgba(0, 255, 255, 0.1);
-  box-shadow: 0 0 20px #00FFFF;
+  box-shadow: 0 0 20px #00ffff;
   transform: translateY(-2px);
 }
 
 .cyber-btn-secondary {
-  border-color: #00FF88;
-  color: #00FF88;
+  border-color: #00ff88;
+  color: #00ff88;
 }
 
 .cyber-btn-secondary:hover {
   background: rgba(0, 255, 136, 0.1);
-  box-shadow: 0 0 20px #00FF88;
+  box-shadow: 0 0 20px #00ff88;
   transform: translateY(-2px);
 }
 
 .cyber-btn-success {
-  border-color: #FFFF00;
-  color: #FFFF00;
+  border-color: #ffff00;
+  color: #ffff00;
 }
 
 .cyber-btn-success:hover {
   background: rgba(255, 255, 0, 0.1);
-  box-shadow: 0 0 20px #FFFF00;
+  box-shadow: 0 0 20px #ffff00;
   transform: translateY(-2px);
 }
 
@@ -247,88 +294,88 @@
 }
 
 .cyber-btn-ghost:hover {
-  border-color: #00FFFF;
-  color: #00FFFF;
-  box-shadow: 0 0 20px #00FFFF;
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow: 0 0 20px #00ffff;
   transform: translateY(-2px);
 }
 
 .cyber-btn-outline {
-  border-color: #FF00FF;
-  color: #FF00FF;
+  border-color: #ff00ff;
+  color: #ff00ff;
 }
 
 .cyber-btn-outline:hover {
   background: rgba(255, 0, 255, 0.1);
-  box-shadow: 0 0 20px #FF00FF;
+  box-shadow: 0 0 20px #ff00ff;
   transform: translateY(-2px);
 }
 
 .cyber-btn-red {
-  border-color: #FF073A;
-  color: #FF073A;
+  border-color: #ff073a;
+  color: #ff073a;
 }
 
 .cyber-btn-red:hover {
   background: rgba(255, 7, 58, 0.1);
-  box-shadow: 0 0 20px #FF073A;
+  box-shadow: 0 0 20px #ff073a;
   transform: translateY(-2px);
 }
 
 .cyber-btn-purple {
-  border-color: #9D4EDD;
-  color: #9D4EDD;
+  border-color: #9d4edd;
+  color: #9d4edd;
 }
 
 .cyber-btn-purple:hover {
   background: rgba(157, 78, 221, 0.1);
-  box-shadow: 0 0 20px #9D4EDD;
+  box-shadow: 0 0 20px #9d4edd;
   transform: translateY(-2px);
 }
 
 .cyber-btn-green {
-  border-color: #00FF41;
-  color: #00FF41;
+  border-color: #00ff41;
+  color: #00ff41;
 }
 
 .cyber-btn-green:hover {
   background: rgba(0, 255, 65, 0.1);
-  box-shadow: 0 0 20px #00FF41;
+  box-shadow: 0 0 20px #00ff41;
   transform: translateY(-2px);
 }
 
 .cyber-btn-blue {
-  border-color: #0099FF;
-  color: #0099FF;
+  border-color: #0099ff;
+  color: #0099ff;
 }
 
 .cyber-btn-blue:hover {
   background: rgba(0, 153, 255, 0.1);
-  box-shadow: 0 0 20px #0099FF;
+  box-shadow: 0 0 20px #0099ff;
   transform: translateY(-2px);
 }
 
 .cyber-btn-cyan {
-  border-color: #00FFFF;
-  color: #00FFFF;
+  border-color: #00ffff;
+  color: #00ffff;
 }
 
 .cyber-btn-cyan:hover {
   background: rgba(0, 255, 255, 0.1);
-  box-shadow: 0 0 20px #00FFFF;
+  box-shadow: 0 0 20px #00ffff;
   transform: translateY(-2px);
 }
 
 .cyber-btn-dashboard {
-  border-color: #FFD700;
-  color: #FFD700;
+  border-color: #ffd700;
+  color: #ffd700;
   font-size: 18px;
   padding: 20px 40px;
 }
 
 .cyber-btn-dashboard:hover {
   background: rgba(255, 215, 0, 0.1);
-  box-shadow: 0 0 30px #FFD700;
+  box-shadow: 0 0 30px #ffd700;
   transform: translateY(-3px);
 }
 
@@ -365,30 +412,34 @@
   width: 60px;
   height: 60px;
   border: 3px solid transparent;
-  border-top: 3px solid #00FFFF;
-  border-right: 3px solid #FF00FF;
+  border-top: 3px solid #00ffff;
+  border-right: 3px solid #ff00ff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   position: relative;
 }
 
 .cyber-loading-spinner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -6px;
   left: -6px;
   right: -6px;
   bottom: -6px;
   border: 3px solid transparent;
-  border-bottom: 3px solid #FFFF00;
-  border-left: 3px solid #00FF88;
+  border-bottom: 3px solid #ffff00;
+  border-left: 3px solid #00ff88;
   border-radius: 50%;
   animation: spin 1.5s linear infinite reverse;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==============================================
@@ -408,22 +459,22 @@
 }
 
 .status-online {
-  background: #00FF88;
-  box-shadow: 0 0 10px #00FF88;
+  background: #00ff88;
+  box-shadow: 0 0 10px #00ff88;
 }
 
 .status-quantum {
-  background: #FFFF00;
-  box-shadow: 0 0 10px #FFFF00;
+  background: #ffff00;
+  box-shadow: 0 0 10px #ffff00;
 }
 
 .status-neural {
-  background: #FF00FF;
-  box-shadow: 0 0 10px #FF00FF;
+  background: #ff00ff;
+  box-shadow: 0 0 10px #ff00ff;
 }
 
 .status-text {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   color: #999;
   font-size: 12px;
@@ -431,8 +482,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ==============================================
@@ -443,14 +499,24 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
-.hologram-cube, .hologram-pyramid {
+.hologram-cube,
+.hologram-pyramid {
   width: 40px;
   height: 40px;
-  background: linear-gradient(45deg, rgba(0, 255, 255, 0.3), rgba(255, 0, 255, 0.3));
+  background: linear-gradient(
+    45deg,
+    rgba(0, 255, 255, 0.3),
+    rgba(255, 0, 255, 0.3)
+  );
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
   animation: rotate 10s linear infinite;
 }
@@ -460,8 +526,12 @@
 }
 
 @keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==============================================
@@ -478,12 +548,19 @@
   border: 2px solid rgba(0, 255, 255, 0.3);
   padding: 32px;
   transition: all 0.3s ease;
-  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  clip-path: polygon(
+    0 0,
+    calc(100% - 20px) 0,
+    100% 20px,
+    100% 100%,
+    20px 100%,
+    0 calc(100% - 20px)
+  );
   overflow: hidden;
 }
 
 .cyber-card:hover {
-  border-color: #00FFFF;
+  border-color: #00ffff;
   transform: translateY(-10px);
   box-shadow: 0 20px 40px rgba(0, 255, 255, 0.3);
 }
@@ -494,7 +571,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #00FFFF, #FF00FF, #FFFF00, #00FFFF);
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
   background-size: 400% 400%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -507,8 +584,13 @@
 }
 
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .card-content {
@@ -528,7 +610,7 @@
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 12px;
-  color: #00FFFF;
+  color: #00ffff;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -553,7 +635,7 @@
 }
 
 .feature-card:hover {
-  border-color: #00FFFF;
+  border-color: #00ffff;
   transform: translateY(-10px);
   box-shadow: 0 20px 40px rgba(0, 255, 255, 0.2);
 }
@@ -562,7 +644,7 @@
   position: relative;
   display: inline-flex;
   margin-bottom: 24px;
-  color: #00FFFF;
+  color: #00ffff;
 }
 
 .icon-glow {
@@ -587,7 +669,14 @@
   position: relative;
   background: rgba(0, 0, 0, 0.8);
   border: 2px solid rgba(255, 215, 0, 0.5);
-  clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+  clip-path: polygon(
+    0 0,
+    calc(100% - 30px) 0,
+    100% 30px,
+    100% 100%,
+    30px 100%,
+    0 calc(100% - 30px)
+  );
   overflow: hidden;
 }
 
@@ -597,7 +686,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(0, 255, 255, 0.1));
+  background: linear-gradient(
+    45deg,
+    rgba(255, 215, 0, 0.1),
+    rgba(0, 255, 255, 0.1)
+  );
   opacity: 0.5;
 }
 
@@ -607,8 +700,13 @@
 }
 
 @keyframes iconFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 /* ==============================================
@@ -618,7 +716,14 @@
   position: relative;
   background: rgba(0, 0, 0, 0.9);
   border: 3px solid rgba(0, 255, 255, 0.5);
-  clip-path: polygon(0 0, calc(100% - 40px) 0, 100% 40px, 100% 100%, 40px 100%, 0 calc(100% - 40px));
+  clip-path: polygon(
+    0 0,
+    calc(100% - 40px) 0,
+    100% 40px,
+    100% 100%,
+    40px 100%,
+    0 calc(100% - 40px)
+  );
   overflow: hidden;
 }
 
@@ -628,20 +733,30 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1), rgba(255, 255, 0, 0.1));
+  background: linear-gradient(
+    45deg,
+    rgba(0, 255, 255, 0.1),
+    rgba(255, 0, 255, 0.1),
+    rgba(255, 255, 0, 0.1)
+  );
   background-size: 400% 400%;
   animation: ctaGlow 4s ease infinite;
 }
 
 @keyframes ctaGlow {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* ==============================================
    NAVBAR STYLES
    ============================================== */
-   
+
 .cyber-navbar-wrapper {
   position: relative;
   background: rgba(0, 0, 0, 0.9);
@@ -655,9 +770,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, 
-    rgba(0, 255, 255, 0.1), 
-    rgba(255, 0, 255, 0.1), 
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 255, 0.1),
+    rgba(255, 0, 255, 0.1),
     rgba(0, 255, 255, 0.1)
   );
   opacity: 0;
@@ -679,9 +795,9 @@
   width: 56px;
   height: 56px;
   background: rgba(0, 0, 0, 0.9);
-  border: 2px solid #00FFFF;
+  border: 2px solid #00ffff;
   border-radius: 50%;
-  color: #00FFFF;
+  color: #00ffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -693,14 +809,14 @@
 
 .cyber-fab-button:hover {
   background: rgba(0, 255, 255, 0.1);
-  box-shadow: 0 0 25px #00FFFF;
+  box-shadow: 0 0 25px #00ffff;
   transform: scale(1.1);
 }
 
 .fab-glow {
   position: absolute;
   inset: -2px;
-  background: linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF);
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -728,8 +844,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, 
-    rgba(0, 255, 255, 0.05), 
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 255, 0.05),
     rgba(255, 0, 255, 0.05),
     rgba(0, 255, 255, 0.05)
   );
@@ -749,18 +866,18 @@
   width: 32px;
   height: 32px;
   background: rgba(0, 255, 255, 0.2);
-  border: 2px solid #00FFFF;
+  border: 2px solid #00ffff;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #00FFFF;
+  color: #00ffff;
 }
 
 .logo-glow {
   position: absolute;
   inset: -2px;
-  background: #00FFFF;
+  background: #00ffff;
   border-radius: 10px;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -781,7 +898,7 @@
 }
 
 .cyber-close-btn:hover {
-  color: #00FFFF;
+  color: #00ffff;
   background: rgba(0, 255, 255, 0.1);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
 }
@@ -802,7 +919,7 @@
 .user-card-glow {
   position: absolute;
   inset: -2px;
-  background: linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF);
+  background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
   border-radius: 14px;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -818,19 +935,19 @@
   width: 40px;
   height: 40px;
   background: rgba(0, 255, 255, 0.2);
-  border: 2px solid #00FFFF;
+  border: 2px solid #00ffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  color: #00FFFF;
+  color: #00ffff;
 }
 
 .avatar-glow {
   position: absolute;
   inset: -2px;
-  background: #00FFFF;
+  background: #00ffff;
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -843,7 +960,7 @@
 
 .user-name {
   font-weight: 600;
-  color: #00FFFF;
+  color: #00ffff;
   font-size: 14px;
   margin: 0;
 }
@@ -856,7 +973,7 @@
 
 .user-role {
   font-size: 10px;
-  color: #FF00FF;
+  color: #ff00ff;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 0;
@@ -882,7 +999,7 @@
 
 .cyber-nav-link:hover,
 .cyber-nav-link.active {
-  color: #00FFFF;
+  color: #00ffff;
   background: rgba(0, 255, 255, 0.1);
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
@@ -890,7 +1007,7 @@
 .nav-link-glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #00FFFF, #FF00FF, #00FFFF);
+  background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: -1;
@@ -915,9 +1032,9 @@
   justify-content: center;
   padding: 12px 16px;
   background: rgba(255, 7, 58, 0.1);
-  border: 2px solid #FF073A;
+  border: 2px solid #ff073a;
   border-radius: 8px;
-  color: #FF073A;
+  color: #ff073a;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -929,14 +1046,14 @@
 
 .cyber-signout-btn:hover {
   background: rgba(255, 7, 58, 0.2);
-  box-shadow: 0 0 20px #FF073A;
+  box-shadow: 0 0 20px #ff073a;
   transform: translateY(-2px);
 }
 
 .signout-glow {
   position: absolute;
   inset: 0;
-  background: #FF073A;
+  background: #ff073a;
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: -1;
@@ -963,8 +1080,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, 
-    rgba(0, 255, 255, 0.05), 
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 255, 0.05),
     rgba(255, 0, 255, 0.05),
     rgba(0, 255, 255, 0.05)
   );
@@ -979,11 +1097,11 @@
 .footer-heading {
   font-size: 12px;
   font-weight: 700;
-  color: #00FFFF;
+  color: #00ffff;
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 16px;
-  text-shadow: 0 0 10px #00FFFF;
+  text-shadow: 0 0 10px #00ffff;
 }
 
 .footer-links {
@@ -1006,8 +1124,8 @@
 }
 
 .footer-link:hover {
-  color: #00FFFF;
-  text-shadow: 0 0 10px #00FFFF;
+  color: #00ffff;
+  text-shadow: 0 0 10px #00ffff;
   transform: translateX(5px);
 }
 
@@ -1023,7 +1141,7 @@
   width: 16px;
   height: 16px;
   margin-right: 8px;
-  color: #00FFFF;
+  color: #00ffff;
 }
 
 .cyber-social-links {
@@ -1040,9 +1158,9 @@
   width: 36px;
   height: 36px;
   background: rgba(0, 255, 255, 0.1);
-  border: 2px solid #00FFFF;
+  border: 2px solid #00ffff;
   border-radius: 8px;
-  color: #00FFFF;
+  color: #00ffff;
   text-decoration: none;
   font-weight: bold;
   font-size: 12px;
@@ -1052,14 +1170,14 @@
 
 .social-link:hover {
   background: rgba(0, 255, 255, 0.2);
-  box-shadow: 0 0 15px #00FFFF;
+  box-shadow: 0 0 15px #00ffff;
   transform: translateY(-2px);
 }
 
 .social-glow {
   position: absolute;
   inset: -2px;
-  background: #00FFFF;
+  background: #00ffff;
   border-radius: 10px;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -1083,7 +1201,7 @@
 .footer-copyright {
   color: #666;
   font-size: 12px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1111,24 +1229,24 @@
   .cyberpunk-title {
     font-size: 3rem;
   }
-  
+
   .cyber-btn {
     padding: 10px 20px;
     font-size: 12px;
   }
-  
+
   .cyber-card {
     padding: 24px;
   }
-  
+
   .card-icon {
     font-size: 36px;
   }
-  
+
   .card-title {
     font-size: 20px;
   }
-  
+
   .footer-bottom {
     flex-direction: row;
     justify-content: space-between;
@@ -1146,7 +1264,7 @@
    UTILITY CLASSES
    ============================================== */
 .cyber-title {
-  font-family: 'Orbitron', 'Courier New', monospace;
+  font-family: "Orbitron", "Courier New", monospace;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -1156,7 +1274,7 @@
 .cyber-nav-link:focus,
 .cyber-close-btn:focus,
 .cyber-fab-button:focus {
-  outline: 2px solid #00FFFF;
+  outline: 2px solid #00ffff;
   outline-offset: 2px;
 }
 
@@ -1168,7 +1286,7 @@
   .hologram-float {
     display: none;
   }
-  
+
   .cyber-btn,
   .cyber-card,
   .feature-card {

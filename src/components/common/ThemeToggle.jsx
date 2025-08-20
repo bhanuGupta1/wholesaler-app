@@ -1,7 +1,7 @@
 // src/components/common/ThemeToggle.jsx - Enhanced theme-aware version
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from "../../context/ThemeContext";
 
-const ThemeToggle = ({ className = '' }) => {
+const ThemeToggle = ({ className = "" }) => {
   const { darkMode, toggleDarkMode } = useTheme();
 
   return (
@@ -9,32 +9,36 @@ const ThemeToggle = ({ className = '' }) => {
       onClick={toggleDarkMode}
       className={`relative inline-flex items-center rounded-full transition-all duration-300 focus:outline-none ${className} ${
         darkMode
-          ? 'bg-gradient-to-r from-cyan-500 to-purple-500 shadow-lg shadow-cyan-500/25'
-          : 'bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg shadow-blue-500/25'
+          ? "bg-gradient-to-r from-cyan-500 to-purple-500 shadow-lg shadow-cyan-500/25"
+          : "bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg shadow-blue-500/25"
       }`}
-      style={{ width: '56px', height: '28px' }}
+      style={{ width: "56px", height: "28px" }}
       aria-pressed={darkMode}
-      aria-label={darkMode ? 'Switch to neumorphism theme' : 'Switch to cyberpunk theme'}
-      title={darkMode ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+      aria-label={
+        darkMode ? "Switch to neumorphism theme" : "Switch to cyberpunk theme"
+      }
+      title={darkMode ? "Switch to Light Theme" : "Switch to Dark Theme"}
     >
       {/* Background glow effect */}
-      <div className={`absolute inset-0 rounded-full opacity-75 ${
-        darkMode 
-          ? 'bg-gradient-to-r from-cyan-400 to-purple-400' 
-          : 'bg-gradient-to-r from-blue-400 to-purple-400'
-      } animate-pulse`}></div>
-      
+      <div
+        className={`absolute inset-0 rounded-full opacity-75 ${
+          darkMode
+            ? "bg-gradient-to-r from-cyan-400 to-purple-400"
+            : "bg-gradient-to-r from-blue-400 to-purple-400"
+        } animate-pulse`}
+      ></div>
+
       {/* Toggle handle */}
       <span
         className={`relative inline-block h-6 w-6 transform rounded-full transition-all duration-300 shadow-lg ${
-          darkMode 
-            ? 'translate-x-7 bg-black border-2 border-cyan-400' 
-            : 'translate-x-0.5 bg-white border-2 border-blue-400'
+          darkMode
+            ? "translate-x-7 bg-black border-2 border-cyan-400"
+            : "translate-x-0.5 bg-white border-2 border-blue-400"
         }`}
         style={{
-          boxShadow: darkMode 
-            ? '0 0 15px rgba(0, 255, 255, 0.5)' 
-            : '0 4px 8px rgba(0, 0, 0, 0.1)'
+          boxShadow: darkMode
+            ? "0 0 15px rgba(0, 255, 255, 0.5)"
+            : "0 4px 8px rgba(0, 0, 0, 0.1)",
         }}
       >
         {/* Icon container */}
@@ -66,17 +70,21 @@ const ThemeToggle = ({ className = '' }) => {
           )}
         </div>
       </span>
-      
+
       {/* Screen reader text */}
       <span className="sr-only">
-        {darkMode ? 'Switch to Light Neumorphism Theme' : 'Switch to Dark Cyberpunk Theme'}
+        {darkMode
+          ? "Switch to Light Neumorphism Theme"
+          : "Switch to Dark Cyberpunk Theme"}
       </span>
-      
+
       {/* Theme indicator text (optional, shows on hover) */}
-      <div className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap ${
-        darkMode ? 'text-cyan-400' : 'text-blue-600'
-      }`}>
-        {darkMode ? 'Cyberpunk' : 'Neumorphism'}
+      <div
+        className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap ${
+          darkMode ? "text-cyan-400" : "text-blue-600"
+        }`}
+      >
+        {darkMode ? "Cyberpunk" : "Neumorphism"}
       </div>
     </button>
   );

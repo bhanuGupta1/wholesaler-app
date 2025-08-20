@@ -1,15 +1,15 @@
 // src/utils/categoryUtils.js
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebase/config";
 
 // Default categories if none are found in database
 const DEFAULT_CATEGORIES = [
-  'Electronics',
-  'Office Supplies',
-  'Furniture',
-  'Kitchen',
-  'Clothing',
-  'Miscellaneous'
+  "Electronics",
+  "Office Supplies",
+  "Furniture",
+  "Kitchen",
+  "Clothing",
+  "Miscellaneous",
 ];
 
 /**
@@ -18,26 +18,26 @@ const DEFAULT_CATEGORIES = [
  */
 export const getAllCategories = async () => {
   try {
-    const productsRef = collection(db, 'products');
+    const productsRef = collection(db, "products");
     const productsSnapshot = await getDocs(productsRef);
-    
+
     // Extract unique categories from products
     const categorySet = new Set();
-    
-    productsSnapshot.docs.forEach(doc => {
+
+    productsSnapshot.docs.forEach((doc) => {
       const category = doc.data().category;
       if (category) {
         categorySet.add(category);
       }
     });
-    
+
     // Convert to array and sort alphabetically
     const categories = Array.from(categorySet).sort();
-    
+
     // If no categories found, return defaults
     return categories.length > 0 ? categories : DEFAULT_CATEGORIES;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
     return DEFAULT_CATEGORIES;
   }
 };
@@ -48,22 +48,22 @@ export const getAllCategories = async () => {
  */
 export const getCategoryCounts = async () => {
   try {
-    const productsRef = collection(db, 'products');
+    const productsRef = collection(db, "products");
     const productsSnapshot = await getDocs(productsRef);
-    
+
     // Count products by category
     const categoryCounts = {};
-    
-    productsSnapshot.docs.forEach(doc => {
+
+    productsSnapshot.docs.forEach((doc) => {
       const category = doc.data().category;
       if (category) {
         categoryCounts[category] = (categoryCounts[category] || 0) + 1;
       }
     });
-    
+
     return categoryCounts;
   } catch (error) {
-    console.error('Error fetching category counts:', error);
+    console.error("Error fetching category counts:", error);
     return {};
   }
 };
@@ -75,10 +75,10 @@ export const getCategoryCounts = async () => {
  */
 export const getCategoryStats = async (category) => {
   try {
-    const productsRef = collection(db, 'products');
-    const q = query(productsRef, where('category', '==', category));
+    const productsRef = collection(db, "products");
+    const q = query(productsRef, where("category", "==", category));
     const productsSnapshot = await getDocs(q);
-    
+
     if (productsSnapshot.empty) {
       return {
         count: 0,
@@ -87,36 +87,36 @@ export const getCategoryStats = async (category) => {
         lowestPrice: 0,
         highestPrice: 0,
         totalStock: 0,
-        lowStockCount: 0
+        lowStockCount: 0,
       };
     }
-    
+
     let totalValue = 0;
     let totalStock = 0;
     let lowStockCount = 0;
     let prices = [];
-    
-    productsSnapshot.docs.forEach(doc => {
+
+    productsSnapshot.docs.forEach((doc) => {
       const product = doc.data();
       const price = product.price || 0;
       const stock = product.stock || 0;
       const reorderPoint = product.reorderPoint || 10;
-      
+
       totalValue += price * stock;
       totalStock += stock;
       prices.push(price);
-      
+
       if (stock <= reorderPoint) {
         lowStockCount++;
       }
     });
-    
+
     // Calculate stats
     const count = productsSnapshot.size;
     const averagePrice = count > 0 ? totalValue / totalStock : 0;
     const lowestPrice = prices.length > 0 ? Math.min(...prices) : 0;
     const highestPrice = prices.length > 0 ? Math.max(...prices) : 0;
-    
+
     return {
       count,
       totalValue,
@@ -124,7 +124,7 @@ export const getCategoryStats = async (category) => {
       lowestPrice,
       highestPrice,
       totalStock,
-      lowStockCount
+      lowStockCount,
     };
   } catch (error) {
     console.error(`Error fetching stats for category ${category}:`, error);
@@ -137,7 +137,7 @@ const categoryUtils = {
   getAllCategories,
   getCategoryCounts,
   getCategoryStats,
-  DEFAULT_CATEGORIES
+  DEFAULT_CATEGORIES,
 };
 
 export default categoryUtils;

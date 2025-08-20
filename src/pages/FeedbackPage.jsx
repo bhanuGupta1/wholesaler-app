@@ -1,8 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { collection, addDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { Star, Send, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
+import {
+  Star,
+  Send,
+  MessageCircle,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 
 const FeedbackPage = () => {
   const { user } = useAuth();
@@ -11,31 +24,31 @@ const FeedbackPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [userFeedbacks, setUserFeedbacks] = useState([]);
-  
+
   // Form state
   const [formData, setFormData] = useState({
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     rating: 0,
-    category: 'general',
-    priority: 'medium'
+    category: "general",
+    priority: "medium",
   });
 
   const categories = [
-    { value: 'general', label: 'General Feedback' },
-    { value: 'product', label: 'Product Related' },
-    { value: 'service', label: 'Customer Service' },
-    { value: 'website', label: 'Website/App' },
-    { value: 'delivery', label: 'Delivery & Shipping' },
-    { value: 'billing', label: 'Billing & Payment' },
-    { value: 'suggestion', label: 'Suggestion' },
-    { value: 'complaint', label: 'Complaint' }
+    { value: "general", label: "General Feedback" },
+    { value: "product", label: "Product Related" },
+    { value: "service", label: "Customer Service" },
+    { value: "website", label: "Website/App" },
+    { value: "delivery", label: "Delivery & Shipping" },
+    { value: "billing", label: "Billing & Payment" },
+    { value: "suggestion", label: "Suggestion" },
+    { value: "complaint", label: "Complaint" },
   ];
 
   const priorities = [
-    { value: 'low', label: 'Low', color: 'text-green-600' },
-    { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-    { value: 'high', label: 'High', color: 'text-red-600' }
+    { value: "low", label: "Low", color: "text-green-600" },
+    { value: "medium", label: "Medium", color: "text-yellow-600" },
+    { value: "high", label: "High", color: "text-red-600" },
   ];
 
   useEffect(() => {
@@ -48,21 +61,21 @@ const FeedbackPage = () => {
     try {
       setLoading(true);
       const feedbackQuery = query(
-        collection(db, 'feedbacks'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        collection(db, "feedbacks"),
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc"),
       );
-      
+
       const querySnapshot = await getDocs(feedbackQuery);
-      const feedbacks = querySnapshot.docs.map(doc => ({
+      const feedbacks = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
-      
+
       setUserFeedbacks(feedbacks);
     } catch (err) {
-      console.error('Error fetching feedbacks:', err);
-      setError('Failed to load your previous feedbacks');
+      console.error("Error fetching feedbacks:", err);
+      setError("Failed to load your previous feedbacks");
     } finally {
       setLoading(false);
     }
@@ -70,29 +83,29 @@ const FeedbackPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleRatingClick = (rating) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      rating
+      rating,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.message.trim()) {
-      setError('Please fill in both title and message');
+      setError("Please fill in both title and message");
       return;
     }
 
     if (formData.rating === 0) {
-      setError('Please provide a rating');
+      setError("Please provide a rating");
       return;
     }
 
@@ -106,55 +119,59 @@ const FeedbackPage = () => {
         userEmail: user.email,
         userName: user.displayName || user.email,
         createdAt: new Date(),
-        status: 'pending',
+        status: "pending",
         adminResponse: null,
-        adminResponseAt: null
+        adminResponseAt: null,
       };
 
-      await addDoc(collection(db, 'feedbacks'), feedbackData);
-      
+      await addDoc(collection(db, "feedbacks"), feedbackData);
+
       // Reset form
       setFormData({
-        title: '',
-        message: '',
+        title: "",
+        message: "",
         rating: 0,
-        category: 'general',
-        priority: 'medium'
+        category: "general",
+        priority: "medium",
       });
-      
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 5000);
-      
+
       // Refresh feedbacks list
       fetchUserFeedbacks();
-      
     } catch (err) {
-      console.error('Error submitting feedback:', err);
-      setError('Failed to submit feedback. Please try again.');
+      console.error("Error submitting feedback:", err);
+      setError("Failed to submit feedback. Please try again.");
     } finally {
       setSubmitLoading(false);
     }
   };
 
   const formatDate = (date) => {
-    if (!date) return 'N/A';
+    if (!date) return "N/A";
     const dateObj = date.toDate ? date.toDate() : new Date(date);
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return dateObj.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'reviewed': return 'text-blue-600 bg-blue-100';
-      case 'resolved': return 'text-green-600 bg-green-100';
-      case 'closed': return 'text-gray-600 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case "pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "reviewed":
+        return "text-blue-600 bg-blue-100";
+      case "resolved":
+        return "text-green-600 bg-green-100";
+      case "closed":
+        return "text-gray-600 bg-gray-100";
+      default:
+        return "text-gray-600 bg-gray-100";
     }
   };
 
@@ -181,7 +198,8 @@ const FeedbackPage = () => {
           Feedback & Support
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          We value your feedback! Help us improve our service by sharing your thoughts and experiences.
+          We value your feedback! Help us improve our service by sharing your
+          thoughts and experiences.
         </p>
       </div>
 
@@ -216,7 +234,10 @@ const FeedbackPage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Title *
             </label>
             <input
@@ -235,7 +256,10 @@ const FeedbackPage = () => {
           {/* Category and Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Category
               </label>
               <select
@@ -245,14 +269,19 @@ const FeedbackPage = () => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
               >
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                {categories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="priority"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Priority
               </label>
               <select
@@ -262,8 +291,10 @@ const FeedbackPage = () => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
               >
-                {priorities.map(priority => (
-                  <option key={priority.value} value={priority.value}>{priority.label}</option>
+                {priorities.map((priority) => (
+                  <option key={priority.value} value={priority.value}>
+                    {priority.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -285,21 +316,24 @@ const FeedbackPage = () => {
                   <Star
                     className={`h-6 w-6 ${
                       star <= formData.rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300 dark:text-gray-600'
+                        ? "text-yellow-400 fill-current"
+                        : "text-gray-300 dark:text-gray-600"
                     } hover:text-yellow-400 transition-colors`}
                   />
                 </button>
               ))}
               <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                {formData.rating > 0 ? `${formData.rating}/5` : 'Click to rate'}
+                {formData.rating > 0 ? `${formData.rating}/5` : "Click to rate"}
               </span>
             </div>
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Your Feedback *
             </label>
             <textarea
@@ -361,16 +395,22 @@ const FeedbackPage = () => {
         ) : (
           <div className="space-y-4">
             {userFeedbacks.map((feedback) => (
-              <div key={feedback.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div
+                key={feedback.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-gray-900 dark:text-white">
                     {feedback.title}
                   </h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}>
-                    {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}
+                  >
+                    {feedback.status.charAt(0).toUpperCase() +
+                      feedback.status.slice(1)}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center mb-2">
                   <div className="flex items-center mr-4">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -378,8 +418,8 @@ const FeedbackPage = () => {
                         key={star}
                         className={`h-4 w-4 ${
                           star <= feedback.rating
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
+                            ? "text-yellow-400 fill-current"
+                            : "text-gray-300"
                         }`}
                       />
                     ))}
@@ -387,20 +427,26 @@ const FeedbackPage = () => {
                       {feedback.rating}/5
                     </span>
                   </div>
-                  
+
                   <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
                     {feedback.category}
                   </span>
-                  
-                  <span className={`text-sm font-medium ${priorities.find(p => p.value === feedback.priority)?.color}`}>
-                    {priorities.find(p => p.value === feedback.priority)?.label} Priority
+
+                  <span
+                    className={`text-sm font-medium ${priorities.find((p) => p.value === feedback.priority)?.color}`}
+                  >
+                    {
+                      priorities.find((p) => p.value === feedback.priority)
+                        ?.label
+                    }{" "}
+                    Priority
                   </span>
                 </div>
-                
+
                 <p className="text-gray-700 dark:text-gray-300 mb-2">
                   {feedback.message}
                 </p>
-                
+
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Submitted: {formatDate(feedback.createdAt)}
                 </p>

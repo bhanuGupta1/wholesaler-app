@@ -1,22 +1,22 @@
 // src/firebase/productService.js - Enhanced with seller filtering
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
   limit,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from './config';
-import { generateProductImageUrl } from '../utils/imageUtils';
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "./config";
+import { generateProductImageUrl } from "../utils/imageUtils";
 
-const PRODUCTS_COLLECTION = 'products';
+const PRODUCTS_COLLECTION = "products";
 
 // Export the products collection reference - single source of truth
 export const productsRef = collection(db, PRODUCTS_COLLECTION);
@@ -33,20 +33,24 @@ export const createProduct = async (productData, userId) => {
     const productRef = await addDoc(productsRef, {
       ...productData,
       createdBy: userId, // Track who created this product
-      ownedBy: userId,   // Track who owns this product
+      ownedBy: userId, // Track who owns this product
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     return productRef.id;
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error("Error creating product:", error);
     throw error;
   }
 };
 
 // Fetch a product by ID with ownership check
-export const getProduct = async (productId, userId = null, userRole = 'user') => {
+export const getProduct = async (
+  productId,
+  userId = null,
+  userRole = "user",
+) => {
   try {
     const productDoc = await getDoc(doc(db, PRODUCTS_COLLECTION, productId));
 
@@ -55,30 +59,35 @@ export const getProduct = async (productId, userId = null, userRole = 'user') =>
     }
 
     const productData = productDoc.data();
-    
+
     // Check if user has permission to view this product
-    if (userId && userRole === 'business' && productData.ownedBy !== userId) {
-      throw new Error('You do not have permission to view this product');
+    if (userId && userRole === "business" && productData.ownedBy !== userId) {
+      throw new Error("You do not have permission to view this product");
     }
 
     return {
       id: productDoc.id,
-      ...productData
+      ...productData,
     };
   } catch (error) {
-    console.error('Error getting product:', error);
+    console.error("Error getting product:", error);
     throw error;
   }
 };
 
 // Update product with ownership verification
-export const updateProduct = async (productId, productData, userId = null, userRole = 'user') => {
+export const updateProduct = async (
+  productId,
+  productData,
+  userId = null,
+  userRole = "user",
+) => {
   try {
     // First check if user has permission to update this product
-    if (userId && userRole !== 'admin' && userRole !== 'manager') {
+    if (userId && userRole !== "admin" && userRole !== "manager") {
       const currentProduct = await getProduct(productId);
       if (currentProduct.ownedBy !== userId) {
-        throw new Error('You do not have permission to update this product');
+        throw new Error("You do not have permission to update this product");
       }
     }
 
@@ -95,67 +104,75 @@ export const updateProduct = async (productId, productData, userId = null, userR
     // Update product document
     await updateDoc(doc(db, PRODUCTS_COLLECTION, productId), {
       ...productData,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     return productId;
   } catch (error) {
-    console.error('Error updating product:', error);
+    console.error("Error updating product:", error);
     throw error;
   }
 };
 
 // Delete product with ownership verification
-export const deleteProduct = async (productId, userId = null, userRole = 'user') => {
+export const deleteProduct = async (
+  productId,
+  userId = null,
+  userRole = "user",
+) => {
   try {
     // Check if user has permission to delete this product
-    if (userId && userRole !== 'admin' && userRole !== 'manager') {
+    if (userId && userRole !== "admin" && userRole !== "manager") {
       const currentProduct = await getProduct(productId);
       if (currentProduct.ownedBy !== userId) {
-        throw new Error('You do not have permission to delete this product');
+        throw new Error("You do not have permission to delete this product");
       }
     }
 
     await deleteDoc(doc(db, PRODUCTS_COLLECTION, productId));
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error("Error deleting product:", error);
     throw error;
   }
 };
 
 // Enhanced getProducts with user-specific filtering
-export const getProducts = async (options = {}, userId = null, userRole = 'user') => {
+export const getProducts = async (
+  options = {},
+  userId = null,
+  userRole = "user",
+) => {
   try {
     let productsQuery = productsRef;
     const constraints = [];
 
     // Apply ownership filter for business sellers
-    if (userId && userRole === 'business') {
-      constraints.push(where('ownedBy', '==', userId));
+    if (userId && userRole === "business") {
+      constraints.push(where("ownedBy", "==", userId));
     }
 
     // Apply category filter
     if (options.category) {
-      constraints.push(where('category', '==', options.category));
+      constraints.push(where("category", "==", options.category));
     }
 
     // Apply price range filters
     if (options.minPrice !== undefined) {
-      constraints.push(where('price', '>=', options.minPrice));
+      constraints.push(where("price", ">=", options.minPrice));
     }
 
     if (options.maxPrice !== undefined) {
-      constraints.push(where('price', '<=', options.maxPrice));
+      constraints.push(where("price", "<=", options.maxPrice));
     }
 
     // Filter in-stock products
     if (options.inStock === true) {
-      constraints.push(where('stockQuantity', '>', 0));
+      constraints.push(where("stockQuantity", ">", 0));
     }
 
     // Apply sorting by specified field and direction
-    const sortField = options.sortBy || 'createdAt';
-    const sortDirection = options.sortDirection || 'desc';
+    const sortField = options.sortBy || "createdAt";
+    const sortDirection = options.sortDirection || "desc";
     constraints.push(orderBy(sortField, sortDirection));
 
     // Apply result limit for pagination
@@ -175,39 +192,39 @@ export const getProducts = async (options = {}, userId = null, userRole = 'user'
     querySnapshot.forEach((doc) => {
       products.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     return products;
   } catch (error) {
-    console.error('Error getting products:', error);
+    console.error("Error getting products:", error);
     throw error;
   }
 };
 
 // Get all products for admin/manager view
 export const getAllProducts = async (options = {}) => {
-  return getProducts(options, null, 'admin');
+  return getProducts(options, null, "admin");
 };
 
 // Get products owned by specific user
 export const getUserProducts = async (userId, options = {}) => {
   try {
-    const constraints = [where('ownedBy', '==', userId)];
+    const constraints = [where("ownedBy", "==", userId)];
 
     // Apply additional filters
     if (options.category) {
-      constraints.push(where('category', '==', options.category));
+      constraints.push(where("category", "==", options.category));
     }
 
     if (options.inStock === true) {
-      constraints.push(where('stockQuantity', '>', 0));
+      constraints.push(where("stockQuantity", ">", 0));
     }
 
     // Apply sorting
-    const sortField = options.sortBy || 'createdAt';
-    const sortDirection = options.sortDirection || 'desc';
+    const sortField = options.sortBy || "createdAt";
+    const sortDirection = options.sortDirection || "desc";
     constraints.push(orderBy(sortField, sortDirection));
 
     if (options.limit) {
@@ -221,29 +238,33 @@ export const getUserProducts = async (userId, options = {}) => {
     querySnapshot.forEach((doc) => {
       products.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     return products;
   } catch (error) {
-    console.error('Error getting user products:', error);
+    console.error("Error getting user products:", error);
     throw error;
   }
 };
 
 // Retrieve low-stock products with ownership filtering
-export const getLowStockProducts = async (threshold = 5, userId = null, userRole = 'user') => {
+export const getLowStockProducts = async (
+  threshold = 5,
+  userId = null,
+  userRole = "user",
+) => {
   try {
     let constraints = [
-      where('stockQuantity', '<=', threshold),
-      where('stockQuantity', '>', 0),
-      orderBy('stockQuantity')
+      where("stockQuantity", "<=", threshold),
+      where("stockQuantity", ">", 0),
+      orderBy("stockQuantity"),
     ];
 
     // Apply ownership filter for business sellers
-    if (userId && userRole === 'business') {
-      constraints.unshift(where('ownedBy', '==', userId));
+    if (userId && userRole === "business") {
+      constraints.unshift(where("ownedBy", "==", userId));
     }
 
     const q = query(productsRef, ...constraints);
@@ -253,23 +274,23 @@ export const getLowStockProducts = async (threshold = 5, userId = null, userRole
     querySnapshot.forEach((doc) => {
       products.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
     return products;
   } catch (error) {
-    console.error('Error getting low stock products:', error);
+    console.error("Error getting low stock products:", error);
     throw error;
   }
 };
 
 // Get product statistics for user
-export const getProductStats = async (userId = null, userRole = 'user') => {
+export const getProductStats = async (userId = null, userRole = "user") => {
   try {
     let products;
-    
-    if (userRole === 'admin' || userRole === 'manager') {
+
+    if (userRole === "admin" || userRole === "manager") {
       products = await getAllProducts();
     } else if (userId) {
       products = await getUserProducts(userId);
@@ -278,17 +299,20 @@ export const getProductStats = async (userId = null, userRole = 'user') => {
     }
 
     const totalProducts = products.length;
-    const lowStockCount = products.filter(p => p.stockQuantity <= 5).length;
-    const totalValue = products.reduce((sum, p) => sum + (p.price * p.stockQuantity), 0);
+    const lowStockCount = products.filter((p) => p.stockQuantity <= 5).length;
+    const totalValue = products.reduce(
+      (sum, p) => sum + p.price * p.stockQuantity,
+      0,
+    );
 
     return {
       totalProducts,
       lowStockCount,
       totalValue,
-      averagePrice: totalProducts > 0 ? totalValue / totalProducts : 0
+      averagePrice: totalProducts > 0 ? totalValue / totalProducts : 0,
     };
   } catch (error) {
-    console.error('Error getting product stats:', error);
+    console.error("Error getting product stats:", error);
     throw error;
   }
 };
@@ -302,5 +326,5 @@ export default {
   getAllProducts,
   getUserProducts,
   getLowStockProducts,
-  getProductStats
+  getProductStats,
 };

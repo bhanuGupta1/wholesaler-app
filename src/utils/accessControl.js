@@ -8,17 +8,19 @@
  */
 export const canManageProducts = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
-  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
-  const isRegularUser = user.accountType === 'user';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+  const isSeller =
+    user.accountType === "business" && user.businessType === "seller";
+  const isBuyer =
+    user.accountType === "business" && user.businessType === "buyer";
+  const isRegularUser = user.accountType === "user";
+
   // FIXED: Block both business buyers AND regular users
   // Regular users are customers who buy, not sellers who add products
   if (isBuyer || isRegularUser) return false;
-  
+
   // Only allow admin, manager, and business sellers
   return isAdmin || isManager || isSeller;
 };
@@ -31,17 +33,19 @@ export const canManageProducts = (user) => {
  */
 export const canAccessInventory = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  const isSeller = user.accountType === 'business' && user.businessType === 'seller';
-  const isBuyer = user.accountType === 'business' && user.businessType === 'buyer';
-  const isRegularUser = user.accountType === 'user';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+  const isSeller =
+    user.accountType === "business" && user.businessType === "seller";
+  const isBuyer =
+    user.accountType === "business" && user.businessType === "buyer";
+  const isRegularUser = user.accountType === "user";
+
   // FIXED: Block both business buyers AND regular users from inventory
   // Regular users shop in the catalog, they don't manage inventory
   if (isBuyer || isRegularUser) return false;
-  
+
   // Only allow admin, manager, and business sellers
   return isAdmin || isManager || isSeller;
 };
@@ -54,10 +58,10 @@ export const canAccessInventory = (user) => {
  */
 export const canViewAllProducts = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   return isAdmin || isManager;
 };
 
@@ -68,10 +72,10 @@ export const canViewAllProducts = (user) => {
  */
 export const canViewAllOrders = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   return isAdmin || isManager;
 };
 
@@ -82,10 +86,10 @@ export const canViewAllOrders = (user) => {
  */
 export const canDeleteOrders = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   return isAdmin || isManager;
 };
 
@@ -106,10 +110,10 @@ export const canManageInventory = (user) => {
  */
 export const canApproveUsers = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   return isAdmin || isManager;
 };
 
@@ -120,8 +124,8 @@ export const canApproveUsers = (user) => {
  */
 export const canAccessAdminPanel = (user) => {
   if (!user) return false;
-  
-  return user.accountType === 'admin';
+
+  return user.accountType === "admin";
 };
 
 /**
@@ -131,10 +135,10 @@ export const canAccessAdminPanel = (user) => {
  */
 export const canAccessManagerPanel = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   return isAdmin || isManager;
 };
 
@@ -146,13 +150,13 @@ export const canAccessManagerPanel = (user) => {
  */
 export const canCreateOrders = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   // Admin and Manager cannot create personal orders - they manage the platform
   if (isAdmin || isManager) return false;
-  
+
   // All other authenticated users can create orders (regular users, business users)
   return true;
 };
@@ -165,13 +169,13 @@ export const canCreateOrders = (user) => {
  */
 export const canAccessCart = (user) => {
   if (!user) return true; // Guests can shop
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+
   // Admin and Manager cannot shop
   if (isAdmin || isManager) return false;
-  
+
   // All other users can shop (regular users, business users)
   return true;
 };
@@ -193,11 +197,11 @@ export const canAccessCheckout = (user) => {
  */
 export const canManageBusinessSettings = (user) => {
   if (!user) return false;
-  
-  const isAdmin = user.accountType === 'admin';
-  const isManager = user.accountType === 'manager';
-  const isBusiness = user.accountType === 'business';
-  
+
+  const isAdmin = user.accountType === "admin";
+  const isManager = user.accountType === "manager";
+  const isBusiness = user.accountType === "business";
+
   return isAdmin || isManager || isBusiness;
 };
 
@@ -207,17 +211,17 @@ export const canManageBusinessSettings = (user) => {
  * @returns {string}
  */
 export const getUserAccessLevel = (user) => {
-  if (!user) return 'Guest';
-  
-  if (user.accountType === 'admin') return 'Administrator';
-  if (user.accountType === 'manager') return 'Manager';
-  if (user.accountType === 'business') {
-    if (user.businessType === 'seller') return 'Business Seller';
-    if (user.businessType === 'buyer') return 'Business Buyer';
-    return 'Business User';
+  if (!user) return "Guest";
+
+  if (user.accountType === "admin") return "Administrator";
+  if (user.accountType === "manager") return "Manager";
+  if (user.accountType === "business") {
+    if (user.businessType === "seller") return "Business Seller";
+    if (user.businessType === "buyer") return "Business Buyer";
+    return "Business User";
   }
-  
-  return 'Customer'; // FIXED: Regular users are customers, not "Regular User"
+
+  return "Customer"; // FIXED: Regular users are customers, not "Regular User"
 };
 
 /**
@@ -228,74 +232,89 @@ export const getUserAccessLevel = (user) => {
  */
 export const getAvailableNavItems = (user) => {
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: '🏠', available: true },
-    { name: 'Catalog', path: '/catalog', icon: '📋', available: true }
+    { name: "Dashboard", path: "/", icon: "🏠", available: true },
+    { name: "Catalog", path: "/catalog", icon: "📋", available: true },
   ];
 
   // Only show cart for users who can shop (excludes admin/manager)
   if (canAccessCart(user)) {
-    navItems.push(
-      { name: 'Cart', path: '/cart', icon: '🛒', available: true }
-    );
+    navItems.push({ name: "Cart", path: "/cart", icon: "🛒", available: true });
   }
 
   if (user) {
     // Only show orders for users who can create them (excludes admin/manager)
     if (canCreateOrders(user)) {
-      navItems.push(
-        { name: 'Orders', path: '/orders', icon: '📦', available: true }
-      );
+      navItems.push({
+        name: "Orders",
+        path: "/orders",
+        icon: "📦",
+        available: true,
+      });
     }
 
     // Show "All Orders" for admin/manager who can view but not create
     if (canViewAllOrders(user) && !canCreateOrders(user)) {
-      navItems.push(
-        { name: 'All Orders', path: '/orders', icon: '📦', available: true }
-      );
+      navItems.push({
+        name: "All Orders",
+        path: "/orders",
+        icon: "📦",
+        available: true,
+      });
     }
 
     // FIXED: Only show inventory/add product for users who can access inventory
     // This excludes regular users and business buyers
     if (canAccessInventory(user)) {
       navItems.push(
-        { name: 'Inventory', path: '/inventory', icon: '📊', available: true },
-        { name: 'Add Product', path: '/add-product', icon: '➕', available: true }
+        { name: "Inventory", path: "/inventory", icon: "📊", available: true },
+        {
+          name: "Add Product",
+          path: "/add-product",
+          icon: "➕",
+          available: true,
+        },
       );
     }
 
     if (canAccessManagerPanel(user)) {
-      navItems.push(
-        { name: 'Manager Panel', path: '/manager', icon: '👔', available: true }
-      );
+      navItems.push({
+        name: "Manager Panel",
+        path: "/manager",
+        icon: "👔",
+        available: true,
+      });
     }
 
     if (canAccessAdminPanel(user)) {
-      navItems.push(
-        { name: 'Admin Panel', path: '/admin', icon: '⚙️', available: true }
-      );
+      navItems.push({
+        name: "Admin Panel",
+        path: "/admin",
+        icon: "⚙️",
+        available: true,
+      });
     }
   }
 
-  return navItems.filter(item => item.available);
+  return navItems.filter((item) => item.available);
 };
 
 /**
  * Permission constants for easy reference
  */
 export const PERMISSIONS = {
-  MANAGE_PRODUCTS: 'canManageProducts',
-  ACCESS_INVENTORY: 'canAccessInventory',
-  VIEW_ALL_PRODUCTS: 'canViewAllProducts',
-  VIEW_ALL_ORDERS: 'canViewAllOrders',
-  DELETE_ORDERS: 'canDeleteOrders',
-  MANAGE_INVENTORY: 'canManageInventory',
-  APPROVE_USERS: 'canApproveUsers',
-  ACCESS_ADMIN_PANEL: 'canAccessAdminPanel',
-  ACCESS_MANAGER_PANEL: 'canAccessManagerPanel',
-  CREATE_ORDERS: 'canCreateOrders',
-  ACCESS_CART: 'canAccessCart',
-  ACCESS_CHECKOUT: 'canAccessCheckout',
-  MANAGE_BUSINESS_SETTINGS: 'canManageBusinessSettings'
+  MANAGE_PRODUCTS: "canManageProducts",
+  ACCESS_INVENTORY: "canAccessInventory",
+  VIEW_ALL_PRODUCTS: "canViewAllProducts",
+  VIEW_ALL_ORDERS: "canViewAllOrders",
+  DELETE_ORDERS: "canDeleteOrders",
+  MANAGE_INVENTORY: "canManageInventory",
+  APPROVE_USERS: "canApproveUsers",
+  ACCESS_ADMIN_PANEL: "canAccessAdminPanel",
+  ACCESS_MANAGER_PANEL: "canAccessManagerPanel",
+  CREATE_ORDERS: "canCreateOrders",
+  ACCESS_CART: "canAccessCart",
+  ACCESS_CHECKOUT: "canAccessCheckout",
+  MANAGE_BUSINESS_SETTINGS: "canManageBusinessSettings",
 };
 
 /**
@@ -354,5 +373,5 @@ export default {
   getUserAccessLevel,
   getAvailableNavItems,
   hasPermission,
-  PERMISSIONS
+  PERMISSIONS,
 };

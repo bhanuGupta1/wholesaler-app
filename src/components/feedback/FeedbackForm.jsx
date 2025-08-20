@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const FeedbackForm = ({ onSubmit }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [rating, setRating] = useState(0);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -12,22 +12,27 @@ const FeedbackForm = ({ onSubmit }) => {
 
     // Trim whitespace to prevent empty inputs
     if (!name.trim() || !email.trim() || !message.trim() || rating === 0) {
-      alert('Please fill all fields and give a rating.');
+      alert("Please fill all fields and give a rating.");
       return;
     }
 
     try {
-      await onSubmit({ name: name.trim(), email: email.trim(), rating, message: message.trim() });
+      await onSubmit({
+        name: name.trim(),
+        email: email.trim(),
+        rating,
+        message: message.trim(),
+      });
       setSubmitted(true);
 
       // Reset form
-      setName('');
-      setEmail('');
+      setName("");
+      setEmail("");
       setRating(0);
-      setMessage('');
+      setMessage("");
     } catch (error) {
-      alert('Failed to submit feedback. Please try again.');
-      console.error('Feedback submission error:', error);
+      alert("Failed to submit feedback. Please try again.");
+      console.error("Feedback submission error:", error);
     }
   };
 
@@ -42,7 +47,10 @@ const FeedbackForm = ({ onSubmit }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700"
+        >
           Name
         </label>
         <input
@@ -54,9 +62,12 @@ const FeedbackForm = ({ onSubmit }) => {
           required
         />
       </div>
-      
+
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
           Email
         </label>
         <input
@@ -70,14 +81,16 @@ const FeedbackForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Rating</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Rating
+        </label>
         <div className="flex space-x-2 mt-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => setRating(star)}
-              className={`h-8 w-8 rounded-full ${rating >= star ? 'bg-yellow-400' : 'bg-gray-200'}`}
+              className={`h-8 w-8 rounded-full ${rating >= star ? "bg-yellow-400" : "bg-gray-200"}`}
             >
               {star}
             </button>
@@ -86,7 +99,10 @@ const FeedbackForm = ({ onSubmit }) => {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="message"
+          className="block text-sm font-medium text-gray-700"
+        >
           Message
         </label>
         <textarea

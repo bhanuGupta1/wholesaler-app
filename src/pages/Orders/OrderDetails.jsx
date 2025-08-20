@@ -1,37 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getOrderWithItems } from '../../firebase/orderService'; // Import the service function
-import { format } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { getOrderWithItems } from "../../firebase/orderService"; // Import the service function
+import { format } from "date-fns";
 
 /**
  * OrderDetails Component - FIXED VERSION
- * 
+ *
  * This component displays detailed information about a specific order,
- * including customer info, items in the order, and total price. 
+ * including customer info, items in the order, and total price.
  */
 const OrderDetails = () => {
   const { id } = useParams(); // Get order ID from route params
   const [order, setOrder] = useState(null); // State to store order details
-  const [items, setItems] = useState([]);   // State to store order items
+  const [items, setItems] = useState([]); // State to store order items
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // Add error state
 
   useEffect(() => {
-    
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Use the getOrderWithItems function from orderService
         const orderWithItems = await getOrderWithItems(id);
-        
-        console.log('Fetched order:', orderWithItems); // Debug log
-        
+
+        console.log("Fetched order:", orderWithItems); // Debug log
+
         // Set the order and items from the service response
         setOrder(orderWithItems);
         setItems(orderWithItems.items || []);
-        
       } catch (error) {
         console.error("Error fetching order details:", error);
         setError(error.message);
@@ -59,7 +57,9 @@ const OrderDetails = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h1 className="text-2xl font-bold mb-4 text-red-800">Error Loading Order</h1>
+          <h1 className="text-2xl font-bold mb-4 text-red-800">
+            Error Loading Order
+          </h1>
           <p className="text-red-600 mb-4">{error}</p>
           <Link to="/orders" className="text-indigo-600 hover:text-indigo-900">
             ← Back to Orders
@@ -85,25 +85,25 @@ const OrderDetails = () => {
 
   // Helper function to format date - handles both Firestore timestamp and regular date
   const formatOrderDate = (dateField) => {
-    if (!dateField) return '-';
-    
+    if (!dateField) return "-";
+
     try {
       // Handle Firestore timestamp
-      if (dateField.toDate && typeof dateField.toDate === 'function') {
-        return format(dateField.toDate(), 'dd MMM yyyy, hh:mm a');
+      if (dateField.toDate && typeof dateField.toDate === "function") {
+        return format(dateField.toDate(), "dd MMM yyyy, hh:mm a");
       }
       // Handle regular Date object
       if (dateField instanceof Date) {
-        return format(dateField, 'dd MMM yyyy, hh:mm a');
+        return format(dateField, "dd MMM yyyy, hh:mm a");
       }
       // Handle string dates
-      if (typeof dateField === 'string') {
-        return format(new Date(dateField), 'dd MMM yyyy, hh:mm a');
+      if (typeof dateField === "string") {
+        return format(new Date(dateField), "dd MMM yyyy, hh:mm a");
       }
-      return '-';
+      return "-";
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return '-';
+      console.error("Error formatting date:", error);
+      return "-";
     }
   };
 
@@ -117,7 +117,10 @@ const OrderDetails = () => {
             <h1 className="text-2xl font-bold">
               {order.orderId || `Order #${id.substring(0, 5)}`}
             </h1>
-            <Link to="/orders" className="text-indigo-600 hover:text-indigo-900">
+            <Link
+              to="/orders"
+              className="text-indigo-600 hover:text-indigo-900"
+            >
               ← Back to Orders
             </Link>
           </div>
@@ -131,18 +134,25 @@ const OrderDetails = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-500">Status:</span>
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {order.status || 'pending'}
+                <span
+                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    order.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : order.status === "processing"
+                        ? "bg-blue-100 text-blue-800"
+                        : order.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {order.status || "pending"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Date:</span>
-                <span>{formatOrderDate(order.dateCreated || order.createdAt)}</span>
+                <span>
+                  {formatOrderDate(order.dateCreated || order.createdAt)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Total:</span>
@@ -159,15 +169,15 @@ const OrderDetails = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-500">Name:</span>
-                <span>{order.customerName || '-'}</span>
+                <span>{order.customerName || "-"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Email:</span>
-                <span>{order.customerEmail || '-'}</span>
+                <span>{order.customerEmail || "-"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Phone:</span>
-                <span>{order.customerPhone || '-'}</span>
+                <span>{order.customerPhone || "-"}</span>
               </div>
             </div>
           </div>
@@ -200,7 +210,7 @@ const OrderDetails = () => {
                     <tr key={item.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          {item.productName || 'Unknown Product'}
+                          {item.productName || "Unknown Product"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -209,18 +219,26 @@ const OrderDetails = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{item.quantity || 0}</div>
+                        <div className="text-sm text-gray-500">
+                          {item.quantity || 0}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          ${((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                          $
+                          {((item.price || 0) * (item.quantity || 0)).toFixed(
+                            2,
+                          )}
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td
+                      colSpan="4"
+                      className="px-6 py-4 text-center text-sm text-gray-500"
+                    >
                       No items found for this order
                     </td>
                   </tr>
@@ -228,7 +246,7 @@ const OrderDetails = () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* Show order summary if items exist */}
           {items.length > 0 && (
             <div className="mt-4 flex justify-end">

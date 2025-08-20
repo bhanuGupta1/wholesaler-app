@@ -1,33 +1,47 @@
 // src/pages/admin/AdminAnalytics.jsx - Real Firebase Analytics Dashboard
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  orderBy, 
-  where, 
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../../firebase/config';
-import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../hooks/useAuth';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  where,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../hooks/useAuth";
 
 // Real Chart Component with Firebase Data
-const AnalyticsChart = ({ data, title, type = 'bar', color = 'blue', darkMode }) => {
+const AnalyticsChart = ({
+  data,
+  title,
+  type = "bar",
+  color = "blue",
+  darkMode,
+}) => {
   if (!data || data.length === 0) {
     return (
-      <div className={`p-6 rounded-lg border ${
-        darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div
+        className={`p-6 rounded-lg border ${
+          darkMode
+            ? "bg-gray-800/50 border-gray-700"
+            : "bg-white border-gray-200"
+        }`}
+      >
         <h3 className={`text-lg font-semibold mb-4 text-${color}-500`}>
           {title}
         </h3>
         <div className="text-center py-8">
-          <div className={`text-4xl mb-2 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+          <div
+            className={`text-4xl mb-2 ${darkMode ? "text-gray-600" : "text-gray-400"}`}
+          >
             📊
           </div>
-          <div className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+          <div
+            className={`text-sm ${darkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
             No data available
           </div>
         </div>
@@ -35,38 +49,45 @@ const AnalyticsChart = ({ data, title, type = 'bar', color = 'blue', darkMode })
     );
   }
 
-  const max = Math.max(...data.map(item => item.value));
+  const max = Math.max(...data.map((item) => item.value));
 
   return (
-    <div className={`p-6 rounded-lg border ${
-      darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-    } hover:shadow-lg transition-all`}>
-      
-      <h3 className={`text-lg font-semibold mb-4 text-${color}-500 flex items-center`}>
+    <div
+      className={`p-6 rounded-lg border ${
+        darkMode ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"
+      } hover:shadow-lg transition-all`}
+    >
+      <h3
+        className={`text-lg font-semibold mb-4 text-${color}-500 flex items-center`}
+      >
         <span className="mr-2">📊</span>
         {title}
       </h3>
 
-      {type === 'bar' && (
+      {type === "bar" && (
         <div className="space-y-3">
           {data.map((item, index) => {
             const percentage = max > 0 ? (item.value / max) * 100 : 0;
             return (
               <div key={index} className="relative">
                 <div className="flex justify-between items-center mb-1">
-                  <span className={`text-sm ${
-                    darkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
+                  <span
+                    className={`text-sm ${
+                      darkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     {item.label}
                   </span>
                   <span className={`text-sm font-bold text-${color}-500`}>
                     {item.value}
                   </span>
                 </div>
-                <div className={`w-full h-3 rounded-full ${
-                  darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                }`}>
-                  <div 
+                <div
+                  className={`w-full h-3 rounded-full ${
+                    darkMode ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
+                  <div
                     className={`h-full rounded-full bg-${color}-500 transition-all duration-1000`}
                     style={{ width: `${percentage}%` }}
                   ></div>
@@ -77,24 +98,21 @@ const AnalyticsChart = ({ data, title, type = 'bar', color = 'blue', darkMode })
         </div>
       )}
 
-      {type === 'line' && (
+      {type === "line" && (
         <div className="relative h-32">
           <svg className="w-full h-full" viewBox="0 0 400 100">
             {data.map((item, index) => {
               const x = (index / Math.max(data.length - 1, 1)) * 380 + 10;
-              const y = 90 - ((item.value / (max || 1)) * 80);
+              const y = 90 - (item.value / (max || 1)) * 80;
               return (
                 <g key={index}>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="4"
-                    className={`fill-${color}-500`}
-                  />
+                  <circle cx={x} cy={y} r="4" className={`fill-${color}-500`} />
                   {index > 0 && (
                     <line
-                      x1={((index - 1) / Math.max(data.length - 1, 1)) * 380 + 10}
-                      y1={90 - ((data[index - 1].value / (max || 1)) * 80)}
+                      x1={
+                        ((index - 1) / Math.max(data.length - 1, 1)) * 380 + 10
+                      }
+                      y1={90 - (data[index - 1].value / (max || 1)) * 80}
                       x2={x}
                       y2={y}
                       className={`stroke-${color}-500`}
@@ -108,16 +126,21 @@ const AnalyticsChart = ({ data, title, type = 'bar', color = 'blue', darkMode })
         </div>
       )}
 
-      {type === 'pie' && (
+      {type === "pie" && (
         <div className="space-y-2">
           {data.map((item, index) => {
             const total = data.reduce((sum, d) => sum + d.value, 0);
-            const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
+            const percentage =
+              total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
             return (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full bg-${color}-${400 + (index * 100)} mr-3`}></div>
-                  <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <div
+                    className={`w-4 h-4 rounded-full bg-${color}-${400 + index * 100} mr-3`}
+                  ></div>
+                  <span
+                    className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                  >
                     {item.label}
                   </span>
                 </div>
@@ -143,32 +166,40 @@ const RealTimeStats = ({ darkMode }) => {
     pendingApprovals: 0,
     businessUsers: 0,
     regularUsers: 0,
-    recentRegistrations: 0
+    recentRegistrations: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRealTimeStats = async () => {
       try {
-        const [usersSnapshot, productsSnapshot, ordersSnapshot] = await Promise.all([
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'products')),
-          getDocs(collection(db, 'orders'))
-        ]);
+        const [usersSnapshot, productsSnapshot, ordersSnapshot] =
+          await Promise.all([
+            getDocs(collection(db, "users")),
+            getDocs(collection(db, "products")),
+            getDocs(collection(db, "orders")),
+          ]);
 
-        const users = usersSnapshot.docs.map(doc => doc.data());
-        
+        const users = usersSnapshot.docs.map((doc) => doc.data());
+
         // Calculate user statistics
-        const activeUsers = users.filter(user => user.status === 'active' && user.approved).length;
-        const pendingApprovals = users.filter(user => 
-          user.status === 'pending_approval' || user.status === 'pending'
+        const activeUsers = users.filter(
+          (user) => user.status === "active" && user.approved,
         ).length;
-        const businessUsers = users.filter(user => user.accountType === 'business').length;
-        const regularUsers = users.filter(user => user.accountType === 'user').length;
-        
+        const pendingApprovals = users.filter(
+          (user) =>
+            user.status === "pending_approval" || user.status === "pending",
+        ).length;
+        const businessUsers = users.filter(
+          (user) => user.accountType === "business",
+        ).length;
+        const regularUsers = users.filter(
+          (user) => user.accountType === "user",
+        ).length;
+
         // Recent registrations (last 7 days)
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const recentRegistrations = users.filter(user => {
+        const recentRegistrations = users.filter((user) => {
           const createdAt = user.createdAt?.toDate();
           return createdAt && createdAt > weekAgo;
         }).length;
@@ -181,65 +212,67 @@ const RealTimeStats = ({ darkMode }) => {
           pendingApprovals,
           businessUsers,
           regularUsers,
-          recentRegistrations
+          recentRegistrations,
         });
       } catch (error) {
-        console.error('Error fetching real-time stats:', error);
+        console.error("Error fetching real-time stats:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchRealTimeStats();
-    
+
     // Refresh stats every 30 seconds
     const interval = setInterval(fetchRealTimeStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const statCards = [
-    { 
-      label: 'Total Users', 
-      value: stats.totalUsers, 
-      color: 'blue',
-      icon: '👥'
+    {
+      label: "Total Users",
+      value: stats.totalUsers,
+      color: "blue",
+      icon: "👥",
     },
-    { 
-      label: 'Active Users', 
-      value: stats.activeUsers, 
-      color: 'green',
-      icon: '✅'
+    {
+      label: "Active Users",
+      value: stats.activeUsers,
+      color: "green",
+      icon: "✅",
     },
-    { 
-      label: 'Total Products', 
-      value: stats.totalProducts, 
-      color: 'purple',
-      icon: '📦'
+    {
+      label: "Total Products",
+      value: stats.totalProducts,
+      color: "purple",
+      icon: "📦",
     },
-    { 
-      label: 'Total Orders', 
-      value: stats.totalOrders, 
-      color: 'orange',
-      icon: '📋'
+    {
+      label: "Total Orders",
+      value: stats.totalOrders,
+      color: "orange",
+      icon: "📋",
     },
-    { 
-      label: 'Pending Approvals', 
-      value: stats.pendingApprovals, 
-      color: 'yellow',
-      icon: '⏳'
+    {
+      label: "Pending Approvals",
+      value: stats.pendingApprovals,
+      color: "yellow",
+      icon: "⏳",
     },
-    { 
-      label: 'Recent Registrations', 
-      value: stats.recentRegistrations, 
-      color: 'cyan',
-      icon: '🆕'
-    }
+    {
+      label: "Recent Registrations",
+      value: stats.recentRegistrations,
+      color: "cyan",
+      icon: "🆕",
+    },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div
+          className={`text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+        >
           <div className="text-2xl mb-2">📊</div>
           <div>Loading statistics...</div>
         </div>
@@ -248,35 +281,42 @@ const RealTimeStats = ({ darkMode }) => {
   }
 
   return (
-    <div className={`p-6 rounded-lg border ${
-      darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-    }`}>
-      
-      <h3 className={`text-lg font-semibold mb-6 ${
-        darkMode ? 'text-blue-400' : 'text-blue-600'
-      } flex items-center`}>
+    <div
+      className={`p-6 rounded-lg border ${
+        darkMode ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"
+      }`}
+    >
+      <h3
+        className={`text-lg font-semibold mb-6 ${
+          darkMode ? "text-blue-400" : "text-blue-600"
+        } flex items-center`}
+      >
         <span className="mr-3">📡</span>
         Real-time Statistics
       </h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {statCards.map((stat, index) => (
-          <div key={index} className={`p-4 rounded border ${
-            darkMode 
-              ? 'bg-gray-700/50 border-gray-600' 
-              : 'bg-gray-50 border-gray-200'
-          } hover:shadow-md transition-all`}>
-            
+          <div
+            key={index}
+            className={`p-4 rounded border ${
+              darkMode
+                ? "bg-gray-700/50 border-gray-600"
+                : "bg-gray-50 border-gray-200"
+            } hover:shadow-md transition-all`}
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="text-2xl">{stat.icon}</div>
               <div className={`text-2xl font-bold text-${stat.color}-500`}>
                 {stat.value}
               </div>
             </div>
-            
-            <div className={`text-sm ${
-              darkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+
+            <div
+              className={`text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               {stat.label}
             </div>
           </div>
@@ -285,17 +325,25 @@ const RealTimeStats = ({ darkMode }) => {
 
       {/* Additional Insights */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className={`p-4 rounded border ${
-          darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <h4 className={`text-sm font-medium mb-2 ${
-            darkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
+        <div
+          className={`p-4 rounded border ${
+            darkMode
+              ? "bg-gray-700/50 border-gray-600"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <h4
+            className={`text-sm font-medium mb-2 ${
+              darkMode ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             User Distribution
           </h4>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <span
+                className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+              >
                 Business Users:
               </span>
               <span className="text-xs font-bold text-blue-500">
@@ -303,7 +351,9 @@ const RealTimeStats = ({ darkMode }) => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <span
+                className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+              >
                 Regular Users:
               </span>
               <span className="text-xs font-bold text-green-500">
@@ -313,19 +363,27 @@ const RealTimeStats = ({ darkMode }) => {
           </div>
         </div>
 
-        <div className={`p-4 rounded border ${
-          darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'
-        }`}>
-          <h4 className={`text-sm font-medium mb-2 ${
-            darkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}>
+        <div
+          className={`p-4 rounded border ${
+            darkMode
+              ? "bg-gray-700/50 border-gray-600"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <h4
+            className={`text-sm font-medium mb-2 ${
+              darkMode ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             System Health
           </h4>
           <div className="flex items-center">
             <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-            <span className={`text-xs ${
-              darkMode ? 'text-green-400' : 'text-green-600'
-            }`}>
+            <span
+              className={`text-xs ${
+                darkMode ? "text-green-400" : "text-green-600"
+              }`}
+            >
               All systems operational
             </span>
           </div>
@@ -343,19 +401,19 @@ const UserActivityAnalysis = ({ darkMode, timeRange }) => {
   useEffect(() => {
     const fetchUserActivity = async () => {
       try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const users = usersSnapshot.docs.map(doc => ({
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const users = usersSnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
 
         // Group users by registration date
         const activityMap = new Map();
-        
-        users.forEach(user => {
+
+        users.forEach((user) => {
           const createdAt = user.createdAt?.toDate();
           if (createdAt) {
-            const dateKey = createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+            const dateKey = createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
             activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + 1);
           }
         });
@@ -363,16 +421,19 @@ const UserActivityAnalysis = ({ darkMode, timeRange }) => {
         // Convert to chart data and sort by date
         const chartData = Array.from(activityMap.entries())
           .map(([date, count]) => ({
-            label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            label: new Date(date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }),
             value: count,
-            fullDate: date
+            fullDate: date,
           }))
           .sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
           .slice(-7); // Last 7 days
 
         setActivityData(chartData);
       } catch (error) {
-        console.error('Error fetching user activity:', error);
+        console.error("Error fetching user activity:", error);
       } finally {
         setLoading(false);
       }
@@ -384,7 +445,9 @@ const UserActivityAnalysis = ({ darkMode, timeRange }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div
+          className={`text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+        >
           <div className="text-2xl mb-2">📈</div>
           <div>Loading user activity...</div>
         </div>
@@ -411,28 +474,28 @@ const AccountTypeDistribution = ({ darkMode }) => {
   useEffect(() => {
     const fetchAccountDistribution = async () => {
       try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        const users = usersSnapshot.docs.map(doc => doc.data());
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const users = usersSnapshot.docs.map((doc) => doc.data());
 
         // Count account types
         const distribution = users.reduce((acc, user) => {
-          let accountType = user.accountType || 'user';
-          
+          let accountType = user.accountType || "user";
+
           // More specific categorization for business users
-          if (accountType === 'business') {
-            if (user.businessType === 'seller') {
-              accountType = 'Business Seller';
-            } else if (user.businessType === 'buyer') {
-              accountType = 'Business Buyer';
+          if (accountType === "business") {
+            if (user.businessType === "seller") {
+              accountType = "Business Seller";
+            } else if (user.businessType === "buyer") {
+              accountType = "Business Buyer";
             } else {
-              accountType = 'Business User';
+              accountType = "Business User";
             }
-          } else if (accountType === 'user') {
-            accountType = 'Regular User';
-          } else if (accountType === 'admin') {
-            accountType = 'Administrator';
-          } else if (accountType === 'manager') {
-            accountType = 'Manager';
+          } else if (accountType === "user") {
+            accountType = "Regular User";
+          } else if (accountType === "admin") {
+            accountType = "Administrator";
+          } else if (accountType === "manager") {
+            accountType = "Manager";
           }
 
           acc[accountType] = (acc[accountType] || 0) + 1;
@@ -441,12 +504,12 @@ const AccountTypeDistribution = ({ darkMode }) => {
 
         const chartData = Object.entries(distribution).map(([type, count]) => ({
           label: type,
-          value: count
+          value: count,
         }));
 
         setDistributionData(chartData);
       } catch (error) {
-        console.error('Error fetching account distribution:', error);
+        console.error("Error fetching account distribution:", error);
       } finally {
         setLoading(false);
       }
@@ -458,7 +521,9 @@ const AccountTypeDistribution = ({ darkMode }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div
+          className={`text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+        >
           <div className="text-2xl mb-2">👥</div>
           <div>Loading account distribution...</div>
         </div>
@@ -486,34 +551,42 @@ const ProductAnalytics = ({ darkMode }) => {
     const fetchProductAnalytics = async () => {
       try {
         const [productsSnapshot, usersSnapshot] = await Promise.all([
-          getDocs(collection(db, 'products')),
-          getDocs(collection(db, 'users'))
+          getDocs(collection(db, "products")),
+          getDocs(collection(db, "users")),
         ]);
 
-        const products = productsSnapshot.docs.map(doc => doc.data());
-        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const products = productsSnapshot.docs.map((doc) => doc.data());
+        const users = usersSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
         // Group products by creator (business sellers)
         const productsByCreator = products.reduce((acc, product) => {
           const creatorId = product.createdBy;
-          const creator = users.find(user => user.id === creatorId);
-          const creatorName = creator?.businessName || creator?.displayName || creator?.email || 'Unknown';
-          
+          const creator = users.find((user) => user.id === creatorId);
+          const creatorName =
+            creator?.businessName ||
+            creator?.displayName ||
+            creator?.email ||
+            "Unknown";
+
           acc[creatorName] = (acc[creatorName] || 0) + 1;
           return acc;
         }, {});
 
         const chartData = Object.entries(productsByCreator)
           .map(([creator, count]) => ({
-            label: creator.length > 15 ? creator.substring(0, 15) + '...' : creator,
-            value: count
+            label:
+              creator.length > 15 ? creator.substring(0, 15) + "..." : creator,
+            value: count,
           }))
           .sort((a, b) => b.value - a.value)
           .slice(0, 5); // Top 5 creators
 
         setProductData(chartData);
       } catch (error) {
-        console.error('Error fetching product analytics:', error);
+        console.error("Error fetching product analytics:", error);
       } finally {
         setLoading(false);
       }
@@ -525,7 +598,9 @@ const ProductAnalytics = ({ darkMode }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div
+          className={`text-center ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+        >
           <div className="text-2xl mb-2">📦</div>
           <div>Loading product analytics...</div>
         </div>
@@ -549,56 +624,73 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   const exportToCSV = async () => {
     try {
       // Fetch fresh data for export
-      const [usersSnapshot, ordersSnapshot, productsSnapshot] = await Promise.all([
-        getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'orders')),
-        getDocs(collection(db, 'products'))
-      ]);
+      const [usersSnapshot, ordersSnapshot, productsSnapshot] =
+        await Promise.all([
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "orders")),
+          getDocs(collection(db, "products")),
+        ]);
 
-      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const orders = ordersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const products = productsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
       // Create CSV content
-      let csvContent = 'ANALYTICS EXPORT REPORT\n';
+      let csvContent = "ANALYTICS EXPORT REPORT\n";
       csvContent += `Generated on: ${new Date().toLocaleString()}\n\n`;
-      
+
       // Users data
-      csvContent += 'USERS DATA\n';
-      csvContent += 'ID,Name,Email,Account Type,Status,Created Date\n';
-      users.forEach(user => {
-        const createdAt = user.createdAt?.toDate ? user.createdAt.toDate().toLocaleDateString() : 'N/A';
-        csvContent += `"${user.id}","${user.displayName || ''}","${user.email}","${user.accountType}","${user.status || 'active'}","${createdAt}"\n`;
+      csvContent += "USERS DATA\n";
+      csvContent += "ID,Name,Email,Account Type,Status,Created Date\n";
+      users.forEach((user) => {
+        const createdAt = user.createdAt?.toDate
+          ? user.createdAt.toDate().toLocaleDateString()
+          : "N/A";
+        csvContent += `"${user.id}","${user.displayName || ""}","${user.email}","${user.accountType}","${user.status || "active"}","${createdAt}"\n`;
       });
-      
-      csvContent += '\nORDERS DATA\n';
-      csvContent += 'Order ID,Customer Email,Total,Status,Date,Items Count\n';
-      orders.forEach(order => {
-        const createdAt = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'N/A';
-        csvContent += `"${order.id}","${order.customerEmail || ''}","${order.total || 0}","${order.status || ''}","${createdAt}","${order.items?.length || 0}"\n`;
+
+      csvContent += "\nORDERS DATA\n";
+      csvContent += "Order ID,Customer Email,Total,Status,Date,Items Count\n";
+      orders.forEach((order) => {
+        const createdAt = order.createdAt?.toDate
+          ? order.createdAt.toDate().toLocaleDateString()
+          : "N/A";
+        csvContent += `"${order.id}","${order.customerEmail || ""}","${order.total || 0}","${order.status || ""}","${createdAt}","${order.items?.length || 0}"\n`;
       });
-      
-      csvContent += '\nPRODUCTS DATA\n';
-      csvContent += 'ID,Name,Category,Price,Stock,Creator\n';
-      products.forEach(product => {
-        csvContent += `"${product.id}","${product.name || ''}","${product.category || ''}","${product.price || 0}","${product.stock || 0}","${product.createdBy || ''}"\n`;
+
+      csvContent += "\nPRODUCTS DATA\n";
+      csvContent += "ID,Name,Category,Price,Stock,Creator\n";
+      products.forEach((product) => {
+        csvContent += `"${product.id}","${product.name || ""}","${product.category || ""}","${product.price || 0}","${product.stock || 0}","${product.createdBy || ""}"\n`;
       });
 
       // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `analytics-report-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `analytics-report-${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      alert('CSV export completed successfully!');
+
+      alert("CSV export completed successfully!");
     } catch (error) {
-      console.error('CSV Export Error:', error);
-      alert('Error exporting CSV. Please try again.');
+      console.error("CSV Export Error:", error);
+      alert("Error exporting CSV. Please try again.");
     }
   };
 
@@ -606,20 +698,36 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   const exportToPDF = async () => {
     try {
       // Fetch fresh data
-      const [usersSnapshot, ordersSnapshot, productsSnapshot] = await Promise.all([
-        getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'orders')),
-        getDocs(collection(db, 'products'))
-      ]);
+      const [usersSnapshot, ordersSnapshot, productsSnapshot] =
+        await Promise.all([
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "orders")),
+          getDocs(collection(db, "products")),
+        ]);
 
-      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const orders = ordersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const products = productsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
       // Calculate summary stats
-      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
-      const businessUsers = users.filter(u => u.accountType === 'business').length;
+      const totalRevenue = orders.reduce(
+        (sum, order) => sum + (order.total || 0),
+        0,
+      );
+      const averageOrderValue =
+        orders.length > 0 ? totalRevenue / orders.length : 0;
+      const businessUsers = users.filter(
+        (u) => u.accountType === "business",
+      ).length;
 
       // Create HTML content for PDF
       const htmlContent = `
@@ -768,15 +876,20 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
                 </tr>
               </thead>
               <tbody>
-                ${users.slice(0, 15).map(user => `
+                ${users
+                  .slice(0, 15)
+                  .map(
+                    (user) => `
                   <tr>
-                    <td>${user.displayName || 'N/A'}</td>
+                    <td>${user.displayName || "N/A"}</td>
                     <td>${user.email}</td>
                     <td>${user.accountType}</td>
-                    <td>${user.status || 'active'}</td>
-                    <td>${user.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}</td>
+                    <td>${user.status || "active"}</td>
+                    <td>${user.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -795,16 +908,21 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
                 </tr>
               </thead>
               <tbody>
-                ${orders.slice(0, 15).map(order => `
+                ${orders
+                  .slice(0, 15)
+                  .map(
+                    (order) => `
                   <tr>
                     <td>${order.id.substring(0, 8)}...</td>
-                    <td>${order.customerEmail || 'N/A'}</td>
+                    <td>${order.customerEmail || "N/A"}</td>
                     <td>${(order.total || 0).toFixed(2)}</td>
-                    <td>${order.status || 'N/A'}</td>
+                    <td>${order.status || "N/A"}</td>
                     <td>${order.items?.length || 0}</td>
-                    <td>${order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}</td>
+                    <td>${order.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -822,15 +940,20 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
                 </tr>
               </thead>
               <tbody>
-                ${products.slice(0, 15).map(product => `
+                ${products
+                  .slice(0, 15)
+                  .map(
+                    (product) => `
                   <tr>
-                    <td>${product.name || 'N/A'}</td>
-                    <td>${product.category || 'N/A'}</td>
+                    <td>${product.name || "N/A"}</td>
+                    <td>${product.category || "N/A"}</td>
                     <td>${(product.price || 0).toFixed(2)}</td>
                     <td>${product.stock || 0}</td>
-                    <td>${product.createdBy || 'N/A'}</td>
+                    <td>${product.createdBy || "N/A"}</td>
                   </tr>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -844,10 +967,10 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
       `;
 
       // Open in new window and trigger print
-      const printWindow = window.open('', '_blank');
+      const printWindow = window.open("", "_blank");
       printWindow.document.write(htmlContent);
       printWindow.document.close();
-      
+
       setTimeout(() => {
         printWindow.print();
         setTimeout(() => {
@@ -855,10 +978,10 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
         }, 1000);
       }, 500);
 
-      alert('PDF export initiated! Please check your print dialog.');
+      alert("PDF export initiated! Please check your print dialog.");
     } catch (error) {
-      console.error('PDF Export Error:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error("PDF Export Error:", error);
+      alert("Error generating PDF. Please try again.");
     }
   };
 
@@ -866,20 +989,36 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
   const sendEmailReport = async () => {
     try {
       // Fetch fresh data for email summary
-      const [usersSnapshot, ordersSnapshot, productsSnapshot] = await Promise.all([
-        getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'orders')),
-        getDocs(collection(db, 'products'))
-      ]);
+      const [usersSnapshot, ordersSnapshot, productsSnapshot] =
+        await Promise.all([
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "orders")),
+          getDocs(collection(db, "products")),
+        ]);
 
-      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const orders = ordersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const products = productsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-      const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
-      const businessUsers = users.filter(u => u.accountType === 'business').length;
-      const pendingOrders = orders.filter(o => o.status === 'pending').length;
+      const totalRevenue = orders.reduce(
+        (sum, order) => sum + (order.total || 0),
+        0,
+      );
+      const averageOrderValue =
+        orders.length > 0 ? totalRevenue / orders.length : 0;
+      const businessUsers = users.filter(
+        (u) => u.accountType === "business",
+      ).length;
+      const pendingOrders = orders.filter((o) => o.status === "pending").length;
 
       const subject = `📊 Admin Analytics Report - ${new Date().toLocaleDateString()}`;
       const body = `🎯 ADMIN ANALYTICS DASHBOARD REPORT
@@ -899,9 +1038,12 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
 
 🔍 RECENT ACTIVITY:
 ──────────────────
-• Last 5 Users: ${users.slice(-5).map(u => u.displayName || u.email).join(', ')}
+• Last 5 Users: ${users
+        .slice(-5)
+        .map((u) => u.displayName || u.email)
+        .join(", ")}
 • Recent Orders: ${orders.slice(-3).length} in last batch
-• Low Stock Items: ${products.filter(p => (p.stock || 0) < 10).length} products
+• Low Stock Items: ${products.filter((p) => (p.stock || 0) < 10).length} products
 
 ⚡ SYSTEM HEALTH:
 ────────────────
@@ -912,9 +1054,9 @@ const ExportOptions = ({ darkMode, analyticsData = {} }) => {
 
 📌 ACTION ITEMS:
 ───────────────
-${pendingOrders > 0 ? `🔴 ${pendingOrders} orders pending review` : '✅ No pending orders'}
-${products.filter(p => (p.stock || 0) < 5).length > 0 ? `🔴 ${products.filter(p => (p.stock || 0) < 5).length} products critically low stock` : '✅ Stock levels healthy'}
-${users.filter(u => u.status === 'pending').length > 0 ? `🔴 ${users.filter(u => u.status === 'pending').length} user approvals pending` : '✅ No pending user approvals'}
+${pendingOrders > 0 ? `🔴 ${pendingOrders} orders pending review` : "✅ No pending orders"}
+${products.filter((p) => (p.stock || 0) < 5).length > 0 ? `🔴 ${products.filter((p) => (p.stock || 0) < 5).length} products critically low stock` : "✅ Stock levels healthy"}
+${users.filter((u) => u.status === "pending").length > 0 ? `🔴 ${users.filter((u) => u.status === "pending").length} user approvals pending` : "✅ No pending user approvals"}
 
 ═══════════════════════════════════════
 📧 This is an automated report from your Admin Dashboard.
@@ -924,66 +1066,69 @@ Generated by: Admin Analytics System
 Timestamp: ${new Date().toISOString()}`;
 
       const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.open(mailtoLink, '_self');
-      
-      alert('Email client opened with report summary!');
+      window.open(mailtoLink, "_self");
+
+      alert("Email client opened with report summary!");
     } catch (error) {
-      console.error('Email Report Error:', error);
-      alert('Error preparing email report. Please try again.');
+      console.error("Email Report Error:", error);
+      alert("Error preparing email report. Please try again.");
     }
   };
 
   return (
-    <div className={`p-6 rounded-lg border ${
-      darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-    }`}>
-      
-      <h3 className={`text-lg font-semibold mb-4 ${
-        darkMode ? 'text-blue-400' : 'text-blue-600'
-      } flex items-center`}>
+    <div
+      className={`p-6 rounded-lg border ${
+        darkMode ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"
+      }`}
+    >
+      <h3
+        className={`text-lg font-semibold mb-4 ${
+          darkMode ? "text-blue-400" : "text-blue-600"
+        } flex items-center`}
+      >
         <span className="mr-3">📤</span>
         Export Options
       </h3>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { 
-            label: 'CSV Export', 
-            icon: '📊', 
-            color: 'green',
+          {
+            label: "CSV Export",
+            icon: "📊",
+            color: "green",
             action: exportToCSV,
-            description: 'Download raw data'
+            description: "Download raw data",
           },
-          { 
-            label: 'PDF Report', 
-            icon: '📄', 
-            color: 'red',
+          {
+            label: "PDF Report",
+            icon: "📄",
+            color: "red",
             action: exportToPDF,
-            description: 'Generate formatted report'
+            description: "Generate formatted report",
           },
-          { 
-            label: 'Email Report', 
-            icon: '📧', 
-            color: 'blue',
+          {
+            label: "Email Report",
+            icon: "📧",
+            color: "blue",
             action: sendEmailReport,
-            description: 'Send via email'
-          }
+            description: "Send via email",
+          },
         ].map((option, index) => (
           <button
             key={index}
             onClick={option.action}
             className={`p-4 rounded border transition-all hover:scale-105 text-center ${
               darkMode
-                ? option.color === 'green' 
-                  ? 'bg-green-800/20 border-green-700 text-green-400 hover:bg-green-800/30'
-                  : option.color === 'red'
-                    ? 'bg-red-800/20 border-red-700 text-red-400 hover:bg-red-800/30'
-                    : 'bg-blue-800/20 border-blue-700 text-blue-400 hover:bg-blue-800/30'
-                : option.color === 'green'
-                  ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
-                  : option.color === 'red'
-                    ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
-                    : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+                ? option.color === "green"
+                  ? "bg-green-800/20 border-green-700 text-green-400 hover:bg-green-800/30"
+                  : option.color === "red"
+                    ? "bg-red-800/20 border-red-700 text-red-400 hover:bg-red-800/30"
+                    : "bg-blue-800/20 border-blue-700 text-blue-400 hover:bg-blue-800/30"
+                : option.color === "green"
+                  ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                  : option.color === "red"
+                    ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                    : "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
             }`}
           >
             <div className="text-2xl mb-2">{option.icon}</div>
@@ -1001,23 +1146,27 @@ const AdminAnalytics = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [timeRange, setTimeRange] = useState('7d');
+  const [timeRange, setTimeRange] = useState("7d");
   const [notification, setNotification] = useState(null);
 
-  const showNotification = (message, type = 'success') => {
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
+    <div
+      className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"} p-6`}
+    >
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-          notification.type === 'success' 
-            ? 'bg-green-600 text-white' 
-            : 'bg-red-600 text-white'
-        }`}>
+        <div
+          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+            notification.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
           {notification.message}
         </div>
       )}
@@ -1026,19 +1175,23 @@ const AdminAnalytics = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className={`text-3xl font-bold ${
-              darkMode ? 'text-white' : 'text-gray-900'
-            } flex items-center`}>
+            <h1
+              className={`text-3xl font-bold ${
+                darkMode ? "text-white" : "text-gray-900"
+              } flex items-center`}
+            >
               <span className="mr-3">📊</span>
               Analytics Dashboard
             </h1>
-            <p className={`text-sm ${
-              darkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <p
+              className={`text-sm ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               Real-time business intelligence and performance metrics
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {/* Time Range Selector */}
             <select
@@ -1046,8 +1199,8 @@ const AdminAnalytics = () => {
               onChange={(e) => setTimeRange(e.target.value)}
               className={`p-2 rounded border text-sm ${
                 darkMode
-                  ? 'bg-gray-800 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
               }`}
             >
               <option value="24h">Last 24 Hours</option>
@@ -1055,13 +1208,13 @@ const AdminAnalytics = () => {
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
             </select>
-            
+
             <Link
               to="/admin"
               className={`px-4 py-2 rounded-lg text-sm transition-all border ${
                 darkMode
-                  ? 'bg-gray-800 hover:bg-gray-700 text-blue-400 border-blue-500/50'
-                  : 'bg-white hover:bg-gray-50 text-blue-600 border-blue-500/50'
+                  ? "bg-gray-800 hover:bg-gray-700 text-blue-400 border-blue-500/50"
+                  : "bg-white hover:bg-gray-50 text-blue-600 border-blue-500/50"
               }`}
             >
               ← Back to Admin
@@ -1075,13 +1228,13 @@ const AdminAnalytics = () => {
         <div className="xl:col-span-2">
           <RealTimeStats darkMode={darkMode} />
         </div>
-        
+
         <UserActivityAnalysis darkMode={darkMode} timeRange={timeRange} />
-        
+
         <AccountTypeDistribution darkMode={darkMode} />
-        
+
         <ProductAnalytics darkMode={darkMode} />
-        
+
         <ExportOptions darkMode={darkMode} />
       </div>
     </div>
