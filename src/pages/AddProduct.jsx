@@ -1,12 +1,13 @@
 // src/pages/AddProduct.jsx - Enhanced with all necessary product fields
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, doc, deleteDoc, where } from 'firebase/firestore';
+import { addDoc, serverTimestamp, query, orderBy, limit, getDocs, doc, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAccessControl } from '../hooks/useAccessControl';
 import ImageUploader from '../components/common/ImageUploader';
+import { productsRef } from "../firebase/productService";
 
 const AddProduct = () => {
   const { darkMode } = useTheme();
@@ -131,7 +132,6 @@ const AddProduct = () => {
   const fetchRecentProducts = async () => {
     setLoadingProducts(true);
     try {
-      const productsRef = collection(db, 'products');
       let q;
       
       if (isAdmin || isManager) {
@@ -376,7 +376,7 @@ const AddProduct = () => {
         } : {}
       };
 
-      const docRef = await addDoc(collection(db, 'products'), productData);
+      const docRef = await addDoc(productsRef, productData);
       
       console.log('Product added with ID:', docRef.id);
       setSuccess(true);

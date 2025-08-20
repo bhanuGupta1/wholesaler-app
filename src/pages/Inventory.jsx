@@ -1,13 +1,14 @@
 // src/pages/Inventory.jsx - FIXED: Proper seller product filtering and error handling
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { getDocs, query, where, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAccessControl } from '../hooks/useAccessControl';
 import ProductModal from '../components/inventory/ProductModal';
 import LowStockAlert from '../components/inventory/LowStockAlert';
+import { productsRef } from "../firebase/productService";
 
 const Inventory = () => {
   const { darkMode } = useTheme();
@@ -70,7 +71,6 @@ const Inventory = () => {
       setLoading(true);
       setError(null);
 
-      const productsRef = collection(db, 'products');
       let productsQuery;
 
       if (shouldShowAllProducts) {
