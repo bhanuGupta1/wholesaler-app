@@ -18,6 +18,9 @@ import { generateProductImageUrl } from '../utils/imageUtils';
 
 const PRODUCTS_COLLECTION = 'products';
 
+// Export the products collection reference - single source of truth
+export const productsRef = collection(db, PRODUCTS_COLLECTION);
+
 // Create a new product with owner tracking
 export const createProduct = async (productData, userId) => {
   try {
@@ -27,7 +30,7 @@ export const createProduct = async (productData, userId) => {
     }
 
     // Add product to Firestore with timestamps and ownership
-    const productRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
+    const productRef = await addDoc(productsRef, {
       ...productData,
       createdBy: userId, // Track who created this product
       ownedBy: userId,   // Track who owns this product
@@ -123,7 +126,7 @@ export const deleteProduct = async (productId, userId = null, userRole = 'user')
 // Enhanced getProducts with user-specific filtering
 export const getProducts = async (options = {}, userId = null, userRole = 'user') => {
   try {
-    let productsQuery = collection(db, PRODUCTS_COLLECTION);
+    let productsQuery = productsRef;
     const constraints = [];
 
     // Apply ownership filter for business sellers
@@ -191,7 +194,6 @@ export const getAllProducts = async (options = {}) => {
 // Get products owned by specific user
 export const getUserProducts = async (userId, options = {}) => {
   try {
-    const productsRef = collection(db, PRODUCTS_COLLECTION);
     const constraints = [where('ownedBy', '==', userId)];
 
     // Apply additional filters
@@ -244,7 +246,7 @@ export const getLowStockProducts = async (threshold = 5, userId = null, userRole
       constraints.unshift(where('ownedBy', '==', userId));
     }
 
-    const q = query(collection(db, PRODUCTS_COLLECTION), ...constraints);
+    const q = query(productsRef, ...constraints);
     const querySnapshot = await getDocs(q);
     const products = [];
 
