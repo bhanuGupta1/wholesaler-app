@@ -1,0 +1,45 @@
+name: OWASP Lite (Semgrep + Gitleaks)
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: Secrets scan (A08)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gitleaks/gitleaks-action@v2
+        with:
+          # keep it simple; action defaults to "detect"
+          args: "--verbose --redact"
+          # optionally exclude build artifacts if they cause noise
+          # path: "."
+
+  semgrep:
+    name: SAST OWASP Top 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Run Semgrep with OWASP Top 10 rules and emit SARIF for GH Security tab
+      - uses: semgrep/semgrep-action@v1
+        with:
+          config: p/owasp-top-ten
+          args: >
+            --sarif --output=semgrep.sarif
+            --exclude node_modules
+            --exclude dist
+            --exclude .git
+
+      - name: Upload SARIF to Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
