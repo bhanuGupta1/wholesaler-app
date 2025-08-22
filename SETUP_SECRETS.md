@@ -2,7 +2,7 @@
 Go to: GitHub Repo → Settings → Secrets and variables → Actions
 
 Add these secrets:
-VITE_FIREBASE_API_KEY=AIzaSyC_kUWaN1D5n9BeRSTsKf7wdS6-4CHREAo
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY   # do not use 'AIza'
 VITE_FIREBASE_AUTH_DOMAIN=wholesaler-app-841b7.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=wholesaler-app-841b7
 VITE_FIREBASE_STORAGE_BUCKET=wholesaler-app-841b7.firebasestorage.app
