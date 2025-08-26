@@ -21,7 +21,7 @@ import { productsRef } from "../firebase/productService";
 
 // Simple scheme whitelist for image URLs.
 function isSafeImageUrl(url) {
-  if (!url || typeof url !== 'string') return false;
+  if (!url || typeof url !== "string") return false;
   try {
     const parsed = new URL(url, window.location.origin);
     // Allow only http(s) protocols, and optionally data:image.
@@ -29,10 +29,7 @@ function isSafeImageUrl(url) {
       return true;
     }
     // Allow certain data image URIs
-    if (
-      parsed.protocol === "data:" &&
-      /^data:image\//.test(url)
-    ) {
+    if (parsed.protocol === "data:" && /^data:image\//.test(url)) {
       return true;
     }
     return false;
