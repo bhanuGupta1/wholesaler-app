@@ -32,12 +32,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Run gitleaks (produce SARIF)
-        uses: gitleaks/gitleaks-action@v2
         with:
-          # --no-git = scan working tree only; --redact hides secret values
-          args: detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
+          fetch-depth: 0               # IMPORTANT: allow gitleaks to diff history
+
+      - name: Run gitleaks (produces SARIF)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          redact: true
+          report_format: sarif
+          report_path: gitleaks.sarif   # output file written by the action
 
       - name: Upload Gitleaks SARIF
         uses: github/codeql-action/upload-sarif@v3
@@ -82,11 +87,11 @@ jobs:
         with:
           sarif_file: semgrep.sarif
 
-  # -------------------- Your existing CI chain ---------------------------
+  # -------------------- Lint • Test • Build ------------------------------
   test:
     name: Lint • Test • Build
     runs-on: ubuntu-latest
-    needs: [gitleaks, semgrep]   # gate CI on security checks
+    needs: [gitleaks, semgrep]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -106,7 +111,7 @@ jobs:
   # -------------------- Deploy to Firebase Hosting -----------------------
   deploy:
     name: Deploy to Firebase Hosting
-    needs: [test]                 # indirectly depends on gitleaks + semgrep
+    needs: [test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
