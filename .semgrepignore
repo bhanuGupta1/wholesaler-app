@@ -1,0 +1,16 @@
+# build artifacts / vendors
+node_modules/
+dist/
+build/
+coverage/
+
+# vcs / meta
+.git/
+.github/
+
+# maps & bundles
+*.min.js
+*.map
+
+# env files
+.env*
