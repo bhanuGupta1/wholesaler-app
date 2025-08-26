@@ -19,6 +19,28 @@ import { useAccessControl } from "../hooks/useAccessControl";
 import ImageUploader from "../components/common/ImageUploader";
 import { productsRef } from "../firebase/productService";
 
+// Simple scheme whitelist for image URLs.
+function isSafeImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    // Allow only http(s) protocols, and optionally data:image.
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return true;
+    }
+    // Allow certain data image URIs
+    if (
+      parsed.protocol === "data:" &&
+      /^data:image\//.test(url)
+    ) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 const AddProduct = () => {
   const { darkMode } = useTheme();
   const { user } = useAuth();
@@ -1175,7 +1197,7 @@ const AddProduct = () => {
 
                     {/* Additional images */}
                     {formData.imageUrls
-                      .filter((url) => url)
+                      .filter((url) => isSafeImageUrl(url))
                       .map((url, index) => (
                         <div
                           key={index}
