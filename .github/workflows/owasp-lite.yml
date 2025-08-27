@@ -15,7 +15,7 @@ jobs:
   gitleaks:   # ---- Secrets scanning (OWASP A08) ----
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: gitleaks/gitleaks-action@v2
         with:
           # Scans working tree only; avoids noisy history hits while you rotate keys.
@@ -24,7 +24,7 @@ jobs:
   semgrep:    # ---- SAST (OWASP Top 10) ----
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Semgrep CLI
         run: |
