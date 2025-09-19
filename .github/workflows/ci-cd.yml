@@ -1,131 +1,124 @@
-﻿name: "🚀 CI/CD Pipeline"
+# ------------------------------
+# 🚀 CI/CD Pipeline (Student Version)
+# ------------------------------
+# This workflow does:
+# 1. Secrets scan (Gitleaks) -> catches API keys or passwords in repo
+# 2. SAST scan (Semgrep OWASP Top 10) -> finds code security issues
+# 3. Tests with Vitest -> checks code correctness + coverage report
+# 4. Deploy to Firebase Hosting -> only if branch = main
+# ------------------------------
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+name: "🚀 CI/CD (Student Simple)"  # The workflow name shown in GitHub Actions UI
 
-env:
-  NODE_VERSION: 20
-  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+on:                                 # Defines when this pipeline will run
+  push:                             # Trigger when pushing commits
+    branches: [main, develop]       # Run if push is on "main" or "develop" branch
+  pull_request:                     # Trigger when creating/updating PRs
+    branches: [main]                # Run for PRs targeting "main" branch
+
+env:                                # Global environment variables for all jobs
+  NODE_VERSION: 20                  # Use Node.js v20 for consistency
+  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}   # Firebase secret keys
   VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
   VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
   VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
   VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
   VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
-permissions:
-  contents: read
-  pull-requests: write
-  security-events: write
+permissions:                        # GitHub token permissions for this workflow
+  contents: read                    # Needed to checkout repo code
+  pull-requests: write              # Allow posting comments/status on PRs
+  security-events: write            # Allow uploading SARIF results to GitHub Security tab
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+concurrency:                        # Prevents multiple runs from clashing
+  group: ${{ github.workflow }}-${{ github.ref }}  # Group by workflow + branch ref
+  cancel-in-progress: true          # Cancel old runs if new one starts on same branch
 
-jobs:
-  # ---------- Secrets (OWASP A08) ----------
-  gitleaks:
-    name: Secrets scan (A08)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+jobs:                               # Define workflow jobs
+
+  ci:                               # First job: security + tests
+    name: Security + Tests          # Job name shown in GitHub Actions UI
+    runs-on: ubuntu-latest          # Run on GitHub’s Ubuntu VM
+    steps:                          # Each step runs one action/command
+
+      - uses: actions/checkout@v4   # Step 1: Checkout repo (pulls source code into VM)
+        # Without this, the runner doesn’t have access to your project files
+
+      - uses: actions/setup-node@v4 # Step 2: Setup Node.js environment
         with:
-          fetch-depth: 0
-      - name: Run Gitleaks (non-blocking) -> SARIF
-        uses: gitleaks/gitleaks-action@v2
-        continue-on-error: true
+          node-version: ${{ env.NODE_VERSION }}  # Use version 20 from env
+
+      - run: npm ci --no-audit --progress=false  # Step 3: Install dependencies cleanly
+        # npm ci is faster & reproducible compared to npm install
+        # --no-audit skips vulnerability checks (faster)
+        # --progress=false disables logs clutter
+
+      # -------- Secrets scan (Gitleaks) --------
+      - name: Secrets scan (Gitleaks)            # Step 4: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2        # Official Gitleaks action
+        continue-on-error: true                  # Don’t fail the pipeline if secrets found
         with:
-          redact: true
-          report_format: sarif
-          report_path: gitleaks.sarif
-      - name: Upload Gitleaks SARIF (if present)
-        if: always() && hashFiles('gitleaks.sarif') != ''
+          redact: true                           # Hide actual secrets in logs
+          report_format: sarif                   # Output format for GitHub Security
+          report_path: gitleaks.sarif            # Save to file "gitleaks.sarif"
+
+      - name: Upload Gitleaks SARIF              # Step 5: Upload Gitleaks results
+        if: always() && hashFiles('gitleaks.sarif') != ''  # Only upload if report exists
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: gitleaks.sarif
+          sarif_file: gitleaks.sarif             # Upload report to Security tab
 
-  # ---------- SAST (OWASP A01–A10) ----------
-  semgrep:
-    name: SAST OWASP Top 10
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      # -------- Static code analysis (Semgrep) --------
+      - name: SAST (Semgrep OWASP Top 10)        # Step 6: Run Semgrep
+        uses: returntocorp/semgrep-action@v1     # Official Semgrep GitHub Action
+        continue-on-error: true                  # Non-blocking (just reports issues)
         with:
-          python-version: "3.x"
+          config: p/owasp-top-ten                # Use OWASP Top 10 ruleset
+          generateSarif: true                    # Generate SARIF output
+          uploadSarif: true                      # Upload automatically to GitHub Security
+          sarifFile: semgrep.sarif               # Save as semgrep.sarif
+          auditOn: never                         # Never break build on warnings
+          exclude: node_modules,dist,build,.git  # Skip heavy folders (faster scan)
 
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/semgrep
-          key: semgrep-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            semgrep-${{ runner.os }}-
+      # -------- Run tests with Vitest --------
+      - name: Run tests with coverage            # Step 7: Run unit tests
+        run: npm run test:coverage               # Generates coverage report (lcov)
 
-      - name: Install Semgrep CLI
-        run: |
-          python -m pip install --upgrade pip
-          pip install "semgrep>=1.73.0"
-
-      - name: Run Semgrep (non-blocking) -> SARIF
-        run: |
-          semgrep \
-            --config p/owasp-top-ten \
-            --exclude node_modules --exclude dist --exclude build --exclude .git \
-            --sarif --output semgrep.sarif || true
-
-      - name: Upload Semgrep SARIF (if present)
-        if: always() && hashFiles('semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: semgrep.sarif
-
-  # ---------- Tests (Vitest) ----------
-  test:
-    name: Tests (Vitest)
-    runs-on: ubuntu-latest
-    needs: [gitleaks, semgrep]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci --no-audit --progress=false
-      - run: npm run test:coverage
-      - name: Upload coverage HTML (artifact)
+      - name: Upload coverage HTML (artifact)    # Step 8: Save coverage as artifact
         if: always() && hashFiles('coverage/lcov-report/index.html') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-html
-          path: coverage/lcov-report
-          retention-days: 3
+          name: coverage-html                    # Artifact name in Actions UI
+          path: coverage/lcov-report             # Folder to upload
+          retention-days: 3                      # Keep for 3 days only
 
-  # ---------- Deploy (main only) ----------
-  deploy:
-    name: Deploy to Firebase Hosting
-    needs: [test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+  deploy:                                        # Second job: deployment
+    name: Deploy to Firebase (main only)         # Name shown in Actions UI
+    runs-on: ubuntu-latest                       # Run on Ubuntu VM
+    needs: ci                                    # Must finish "ci" job first
+    if: github.ref == 'refs/heads/main'          # Only run if branch is main
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - uses: actions/checkout@v4                # Checkout code again for build
+
+      - uses: actions/setup-node@v4              # Setup Node.js again
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci --no-audit --progress=false
-      - run: npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+
+      - run: npm ci --no-audit --progress=false  # Install dependencies again
+      - run: npm run build                       # Build production-ready app
+
+      - name: Firebase Hosting deploy            # Step: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-      - name: Print Hosting URL (and add to summary)
+          repoToken: ${{ secrets.GITHUB_TOKEN }} # Auth token for GitHub
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }} # Firebase auth
+          channelId: live                        # Deploy to "live" channel
+          projectId: ${{ secrets.VITE_FIREBASE_PROJECT_ID }} # Firebase project
+
+      - name: Show URL                           # Step: Print deployed URL
         run: |
-          echo "Deployed to: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
+          echo "Deployed: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
           {
             echo "### Deployment"
             echo "- Live: https://${{ secrets.VITE_FIREBASE_PROJECT_ID }}.web.app"
