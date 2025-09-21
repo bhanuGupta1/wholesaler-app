@@ -44,7 +44,7 @@ jobs:                               # Define workflow jobs
       - uses: actions/checkout@v4   # Step 1: Checkout repo (pulls source code into VM)
         # Without this, the runner doesn’t have access to your project files
 
-      - uses: actions/setup-node@v4 # Step 2: Setup Node.js environment
+      - uses: actions/setup-node@v5 # Step 2: Setup Node.js environment
         with:
           node-version: ${{ env.NODE_VERSION }}  # Use version 20 from env
 
@@ -101,7 +101,7 @@ jobs:                               # Define workflow jobs
 
       - uses: actions/checkout@v4                # Checkout code again for build
 
-      - uses: actions/setup-node@v4              # Setup Node.js again
+      - uses: actions/setup-node@v5              # Setup Node.js again
         with:
           node-version: ${{ env.NODE_VERSION }}
 
