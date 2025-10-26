@@ -86,7 +86,7 @@ jobs:                               # Define workflow jobs
 
       - name: Upload coverage HTML (artifact)    # Step 8: Save coverage as artifact
         if: always() && hashFiles('coverage/lcov-report/index.html') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-html                    # Artifact name in Actions UI
           path: coverage/lcov-report             # Folder to upload
